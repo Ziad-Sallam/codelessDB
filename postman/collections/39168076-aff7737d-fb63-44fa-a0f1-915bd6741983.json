@@ -1,0 +1,33 @@
+{
+	"info": {
+		"_postman_id": "39168076-aff7737d-fb63-44fa-a0f1-915bd6741983",
+		"name": "codelessdb",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"id": "39168076-d9a812b4-2c99-4f6a-b9f4-a18bd51338a7",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "هات جاسون",
+			"id": "39168076-bb5e5777-e3c6-4c8d-9a96-4cdb3bd2a2c3",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
