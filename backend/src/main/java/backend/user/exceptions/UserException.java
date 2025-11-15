@@ -13,6 +13,12 @@ public class UserException {
 			super(message);
 		}
 	}
+	
+	public static class UsernameAlreadyExistsException extends RuntimeException {
+		public UsernameAlreadyExistsException(String message) {
+			super(message);
+		}
+	}
 
 	public static class InvalidTokenException extends RuntimeException {
 		public InvalidTokenException(String message) {

@@ -31,15 +31,14 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String userName;
+    private String username;
 
     @Column(nullable = false, unique = true, length = 100)
     @NotBlank(message = "Email is mandatory")
