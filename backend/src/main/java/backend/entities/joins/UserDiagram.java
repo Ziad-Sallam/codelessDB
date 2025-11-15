@@ -16,7 +16,7 @@ import jakarta.persistence.MapsId;
 public class UserDiagram {
 
     @EmbeddedId
-    private UserDiagramId id = new UserDiagramId();
+    private UserDiagramId UUID = new UserDiagramId();
 
     @ManyToOne
     @MapsId("userId")

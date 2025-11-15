@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 public class CannedQueriesDiagrams {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  private int id;
 
   @Column(nullable = false, columnDefinition = "TEXT")
   private String query;

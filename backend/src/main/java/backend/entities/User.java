@@ -1,14 +1,14 @@
 package backend.entities;
 
-import backend.entities.joins.UserDiagram;
-
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import backend.entities.joins.UserDiagram;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,8 +28,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 @Entity
 @Table(name = "users")
 @Data
@@ -38,7 +36,7 @@ import java.util.Set;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private int id;
 
     @Column(nullable = false, unique = true, length = 50)
     private String userName;
@@ -49,7 +47,11 @@ public class User {
     @Size(max = 100, message = "Email must be at most 100 characters")
     private String email;
 
-    @Column(nullable = false) // ADD fixed length
+    /**
+     * Password field to store the user's password.
+     * `Should be hashed by Bycrypt before storing for security.`
+     */
+    @Column(nullable = false, length = 60)
     @NotBlank(message = "Password is mandatory")
     private String password;
 
