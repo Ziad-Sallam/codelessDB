@@ -7,15 +7,19 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 
 import backend.entities.User;
 import backend.user.exceptions.UserException.*;
 
 import java.sql.Date;
 
-class UserServiceTest {
+@SpringBootTest
+@ActiveProfiles("test")
+public class UserServiceTest {
 
 	@InjectMocks
 	private UserService userService;
@@ -80,16 +84,16 @@ class UserServiceTest {
 	void testLoginSuccess() {
 		User user = new User();
 		user.setEmail("john@example.com");
+		// encode once for stored password
 		String encoded = new BCryptPasswordEncoder().encode("password123");
 		user.setPassword(encoded);
-
-    	userRepository.save(user);
 
 		when(userRepository.findByEmail("john@example.com")).thenReturn(user);
 
 		// test login with raw password
 		assertDoesNotThrow(() -> userService.login("john@example.com", "password123"));
 	}
+
 
 	@Test
 	void testLoginUserNotFound() {

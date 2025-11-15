@@ -3,6 +3,7 @@ package backend.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import backend.entities.User;
@@ -38,15 +39,14 @@ public class UserService {
 		userRepository.save(newUser);
 	}
 
-	public void login(String email, String password) throws RuntimeException {
+	public void login(String email, String rawPassword) throws RuntimeException {
 		User user = userRepository.findByEmail(email);
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
 		}
 
-		password = encodePassword(password);
-		if (!user.getPassword().matches(password)) {
-			throw new BadCredentialsException("Invalid credentials");
+		if (!new BCryptPasswordEncoder().matches(rawPassword, user.getPassword())) {
+			throw new BadCredentialsException("Invalid credentials, Password mismatch");
 		}
 
 		// return JWT generation token
