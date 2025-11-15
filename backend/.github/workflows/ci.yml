@@ -1,0 +1,26 @@
+name: Simple CI
+
+on:
+  push:
+    branches:
+      - main
+      - milestone1
+      - SCRUM-14-schema-to-sql-generation
+  pull_request: # optional, also run on PRs
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Run tests
+        run: mvn test
