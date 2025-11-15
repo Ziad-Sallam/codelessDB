@@ -1,0 +1,106 @@
+{
+  "entities": [
+    {
+      "name": "Employee",
+      "attributes": [
+        {
+          "name": "id",
+          "dataType": {
+            "name": "INT",
+            "length": null,
+            "precision": null,
+            "scale": null
+          },
+          "indexed": true,
+          "constraints": [
+            { "type": "PRIMARY_KEY" },
+            { "type": "NOT_NULL" }
+          ]
+        },
+        {
+          "name": "name",
+          "dataType": {
+            "name": "VARCHAR",
+            "length": 100,
+            "precision": null,
+            "scale": null
+          },
+          "indexed": false,
+          "constraints": [
+            { "type": "NOT_NULL" }
+          ]
+        },
+        {
+          "name": "salary",
+          "dataType": {
+            "name": "DECIMAL",
+            "length": null,
+            "precision": 10,
+            "scale": 2
+          },
+          "indexed": false,
+          "constraints": [
+            {
+              "type": "CHECK",
+              "expression": "salary > 0"
+            },
+            {
+              "type": "DEFAULT",
+              "defaultValue": "1000"
+            }
+          ]
+        },
+        {
+          "name": "department_id",
+          "dataType": {
+            "name": "INT",
+            "length": null,
+            "precision": null,
+            "scale": null
+          },
+          "indexed": false,
+          "constraints": [
+            {
+              "type": "FOREIGN_KEY",
+              "referencedTable": "Department",
+              "referencedColumn": "id",
+              "onDelete": "CASCADE",
+              "onUpdate": "NO_ACTION"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Department",
+      "attributes": [
+        {
+          "name": "id",
+          "dataType": {
+            "name": "INT",
+            "length": null,
+            "precision": null,
+            "scale": null
+          },
+          "indexed": true,
+          "constraints": [
+            { "type": "PRIMARY_KEY" }
+          ]
+        },
+        {
+          "name": "name",
+          "dataType": {
+            "name": "VARCHAR",
+            "length": 100,
+            "precision": null,
+            "scale": null
+          },
+          "indexed": false,
+          "constraints": [
+            { "type": "NOT_NULL" }
+          ]
+        }
+      ]
+    }
+  ]
+}
