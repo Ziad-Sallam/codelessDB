@@ -9,9 +9,8 @@ import lombok.*;
 public class DefaultConstraintDTO implements ConstraintDTO {
     private String defaultValue;
 
-
     @Override
-    public ConstraintType getType() {
-        return  ConstraintType.DEFAULT;
+    public String toSQL() {
+        return "DEFAULT " + defaultValue;
     }
 }

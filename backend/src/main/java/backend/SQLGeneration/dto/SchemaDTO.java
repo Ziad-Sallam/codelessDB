@@ -8,5 +8,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SchemaDTO {
+    private String schemaName;
     private List<EntityDTO> entities;
 }

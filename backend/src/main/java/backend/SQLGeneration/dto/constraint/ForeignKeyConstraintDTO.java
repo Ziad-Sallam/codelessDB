@@ -9,11 +9,13 @@ import lombok.*;
 public class ForeignKeyConstraintDTO implements ConstraintDTO {
     private String referencedTable;
     private String referencedColumn;
-    private Action onDelete;
-    private Action onUpdate;
+    private ForeignKeyAction onDelete;
+    private ForeignKeyAction onUpdate;
 
     @Override
-    public ConstraintType getType() {
-        return ConstraintType.FOREIGN_KEY;
+    public String toSQL(String columnName) {
+        return "FOREIGN KEY (" + columnName + ") REFERENCES " + referencedTable + "(" + referencedColumn + ")" +
+                " ON DELETE " + onDelete.getSql() +
+                " ON UPDATE " + onUpdate.getSql();
     }
 }

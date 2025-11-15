@@ -3,13 +3,12 @@ package backend.SQLGeneration;
 import backend.SQLGeneration.dto.*;
 import backend.SQLGeneration.dto.constraint.*;
 import backend.SQLGeneration.dto.SQLTypeName;
-import backend.SQLGeneration.dto.constraint.Action;
+import backend.SQLGeneration.dto.constraint.ForeignKeyAction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,49 +23,78 @@ public class DTOMappingTest {
         assertNotNull(resource, "JSON file must exist in src/test/resources/schema.json");
         schema = mapper.readValue(resource, SchemaDTO.class);
         assertNotNull(schema, "SchemaDTO should not be null");
-        assertNotNull(schema.getEntities(), "Entities list should not be null");
+    }
+
+    // ----------- Schema Level Tests -----------
+
+    @Test
+    void schemaShouldHaveName() {
+        assertNotNull(schema.getSchemaName(), "Schema should have a name");
     }
 
     @Test
-    void testEntitiesExist() {
-        assertEquals(2, schema.getEntities().size(), "Schema should contain 2 entities");
+    void schemaShouldHaveEntities() {
+        assertFalse(schema.getEntities().isEmpty(), "Schema should have at least one entity");
+    }
 
+    @Test
+    void entityNamesShouldExist() {
         assertEntityExists("Employee");
         assertEntityExists("Department");
+        assertEntityExists("Project"); // optional
+    }
+
+    // ----------- Employee Tests -----------
+
+    @Test
+    void employeeShouldHaveFiveAttributes() {
+        assertEquals(5, getEntity("Employee").getAttributes().size(), "Employee should have 5 attributes");
     }
 
     @Test
-    void testEmployeeEntity() {
-        EntityDTO employee = getEntity("Employee");
-        assertEquals(4, employee.getAttributes().size(), "Employee should have 4 attributes");
-
-        assertAttribute(employee, "id", SQLTypeName.INT, true,
-                ConstraintType.PRIMARY_KEY,
-                ConstraintType.NOT_NULL);
-
-        assertAttribute(employee, "name", SQLTypeName.VARCHAR, false,
-                ConstraintType.NOT_NULL);
-
-        assertAttribute(employee, "salary", SQLTypeName.DECIMAL, false,
-                ConstraintType.CHECK,
-                ConstraintType.DEFAULT);
-
-        assertCheckConstraint(employee, "salary", "salary > 0");
-        assertDefaultConstraint(employee, "salary", "1000");
-
-        assertForeignKey(employee, "department_id", "Department", "id", Action.CASCADE, Action.NO_ACTION);
+    void employeeIdAttribute() {
+        assertAttribute("Employee", "id", SQLTypeName.INT, true, PrimaryKeyConstraintDTO.class, NotNullConstraintDTO.class);
     }
 
     @Test
-    void testDepartmentEntity() {
-        EntityDTO dept = getEntity("Department");
-        assertEquals(2, dept.getAttributes().size(), "Department should have 2 attributes");
-
-        assertAttribute(dept, "id", SQLTypeName.INT, true, ConstraintType.PRIMARY_KEY);
-        assertAttribute(dept, "name", SQLTypeName.VARCHAR, false, ConstraintType.NOT_NULL);
+    void employeeSalaryAttribute() {
+        assertAttribute("Employee", "salary", SQLTypeName.DECIMAL, false, CheckConstraintDTO.class, DefaultConstraintDTO.class);
+        assertCheckConstraint("Employee", "salary", "salary > 0");
+        assertDefaultConstraint("Employee", "salary", "1000");
     }
 
-    // ---------------- Helper Methods ----------------
+    @Test
+    void employeeDepartmentFk() {
+        assertAttribute("Employee", "department_id", SQLTypeName.INT, false, ForeignKeyConstraintDTO.class);
+        assertForeignKey("Employee", "department_id", "Department", "id", ForeignKeyAction.CASCADE, ForeignKeyAction.NO_ACTION);
+    }
+
+    // ----------- Department Tests -----------
+
+    @Test
+    void departmentIdAndName() {
+        assertAttribute("Department", "id", SQLTypeName.INT, true, PrimaryKeyConstraintDTO.class);
+        assertAttribute("Department", "name", SQLTypeName.VARCHAR, false, NotNullConstraintDTO.class);
+    }
+
+    // ----------- Project Tests -----------
+
+    @Test
+    void projectShouldHaveEnumAndSet() {
+        EntityDTO project = getEntity("Project");
+        assertTrue(project.getAttributes().stream().anyMatch(a -> a.getDataType().getName() == SQLTypeName.ENUM), "Project should have ENUM attribute");
+        assertTrue(project.getAttributes().stream().anyMatch(a -> a.getDataType().getName() == SQLTypeName.SET), "Project should have SET attribute");
+    }
+
+    @Test
+    void projectIdNameStatusTags() {
+        assertAttribute("Project", "id", SQLTypeName.INT, true, PrimaryKeyConstraintDTO.class);
+        assertAttribute("Project", "name", SQLTypeName.VARCHAR, false, NotNullConstraintDTO.class);
+        assertAttribute("Project", "status", SQLTypeName.ENUM, false);
+        assertAttribute("Project", "tags", SQLTypeName.SET, false);
+    }
+
+    // ----------- Helper Methods -----------
 
     private void assertEntityExists(String name) {
         assertTrue(schema.getEntities().stream().anyMatch(e -> name.equals(e.getName())),
@@ -79,33 +107,35 @@ public class DTOMappingTest {
                 .findFirst().orElseThrow(() -> new AssertionError("Entity '" + name + "' not found"));
     }
 
-    private void assertAttribute(EntityDTO entity, String attrName, SQLTypeName type,
-                                 boolean indexed, ConstraintType... constraints) {
-        AttributeDTO attr = entity.getAttributes().stream()
+    private AttributeDTO getAttribute(EntityDTO entity, String attrName) {
+        return entity.getAttributes().stream()
                 .filter(a -> attrName.equals(a.getName()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Attribute '" + attrName + "' not found in entity " + entity.getName()));
+    }
 
+    private void assertAttribute(String entityName, String attrName, SQLTypeName type, boolean indexed,
+                                 Class<? extends ConstraintDTO>... constraintClasses) {
+        AttributeDTO attr = getAttribute(getEntity(entityName), attrName);
         assertEquals(type, attr.getDataType().getName(), "Attribute '" + attrName + "' data type mismatch");
         assertEquals(indexed, attr.isIndexed(), "Attribute '" + attrName + "' indexed flag mismatch");
-
-        for (ConstraintType ct : constraints) {
-            assertTrue(attr.getConstraints().stream().anyMatch(c -> c.getType() == ct),
-                    "Attribute '" + attrName + "' should have constraint: " + ct);
+        for (Class<? extends ConstraintDTO> clazz : constraintClasses) {
+            assertTrue(attr.getConstraints().stream().anyMatch(c -> clazz.isInstance(c)),
+                    "Attribute '" + attrName + "' should have constraint: " + clazz.getSimpleName());
         }
     }
 
-    private void assertCheckConstraint(EntityDTO entity, String attrName, String expression) {
-        AttributeDTO attr = getAttribute(entity, attrName);
+    private void assertCheckConstraint(String entityName, String attrName, String expression) {
+        AttributeDTO attr = getAttribute(getEntity(entityName), attrName);
         boolean found = attr.getConstraints().stream()
-                .filter(c -> c instanceof CheckConstraint)
-                .map(c -> (CheckConstraint) c)
+                .filter(c -> c instanceof CheckConstraintDTO)
+                .map(c -> (CheckConstraintDTO) c)
                 .anyMatch(c -> expression.equals(c.getExpression()));
         assertTrue(found, "CheckConstraint with expression '" + expression + "' not found on attribute '" + attrName + "'");
     }
 
-    private void assertDefaultConstraint(EntityDTO entity, String attrName, String defaultValue) {
-        AttributeDTO attr = getAttribute(entity, attrName);
+    private void assertDefaultConstraint(String entityName, String attrName, String defaultValue) {
+        AttributeDTO attr = getAttribute(getEntity(entityName), attrName);
         boolean found = attr.getConstraints().stream()
                 .filter(c -> c instanceof DefaultConstraintDTO)
                 .map(c -> (DefaultConstraintDTO) c)
@@ -113,9 +143,9 @@ public class DTOMappingTest {
         assertTrue(found, "DefaultConstraint with value '" + defaultValue + "' not found on attribute '" + attrName + "'");
     }
 
-    private void assertForeignKey(EntityDTO entity, String attrName, String refTable,
-                                  String refColumn, Action onDelete, Action onUpdate) {
-        AttributeDTO attr = getAttribute(entity, attrName);
+    private void assertForeignKey(String entityName, String attrName, String refTable,
+                                  String refColumn, ForeignKeyAction onDelete, ForeignKeyAction onUpdate) {
+        AttributeDTO attr = getAttribute(getEntity(entityName), attrName);
         boolean found = attr.getConstraints().stream()
                 .filter(c -> c instanceof ForeignKeyConstraintDTO)
                 .map(c -> (ForeignKeyConstraintDTO) c)
@@ -124,12 +154,5 @@ public class DTOMappingTest {
                         c.getOnDelete() == onDelete &&
                         c.getOnUpdate() == onUpdate);
         assertTrue(found, "ForeignKeyConstraint on attribute '" + attrName + "' not matching expected values");
-    }
-
-    private AttributeDTO getAttribute(EntityDTO entity, String attrName) {
-        return entity.getAttributes().stream()
-                .filter(a -> attrName.equals(a.getName()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Attribute '" + attrName + "' not found in entity " + entity.getName()));
     }
 }

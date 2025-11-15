@@ -6,9 +6,8 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 public class PrimaryKeyConstraintDTO implements ConstraintDTO {
-
     @Override
-    public ConstraintType getType() {
-        return  ConstraintType.PRIMARY_KEY;
+    public String toSQL() {
+        return "PRIMARY KEY";
     }
 }

@@ -9,7 +9,8 @@ import java.util.List;
 public class AttributeDTO {
     private String name;
     private SQLDataType dataType;
-    private boolean indexed;
+    private boolean autoIncrement;
     private List<ConstraintDTO> constraints;
+    private boolean indexed;
 }
 

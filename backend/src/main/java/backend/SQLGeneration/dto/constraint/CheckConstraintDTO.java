@@ -6,11 +6,11 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CheckConstraint implements ConstraintDTO {
+public class CheckConstraintDTO implements ConstraintDTO {
     private String expression;
 
     @Override
-    public ConstraintType getType() {
-        return ConstraintType.CHECK;
+    public String toSQL() {
+        return "CHECK (" + expression + ")";
     }
 }

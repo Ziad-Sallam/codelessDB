@@ -7,7 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 public class NotNullConstraintDTO implements ConstraintDTO {
     @Override
-    public ConstraintType getType() {
-        return ConstraintType.NOT_NULL;
+    public String toSQL() {
+        return "NOT NULL";
     }
 }

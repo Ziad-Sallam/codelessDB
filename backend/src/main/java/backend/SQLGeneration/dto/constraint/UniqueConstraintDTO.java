@@ -7,7 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 public class UniqueConstraintDTO implements ConstraintDTO {
     @Override
-    public ConstraintType getType() {
-        return  ConstraintType.UNIQUE;
+    public String toSQL() {
+        return "UNIQUE";
     }
 }
