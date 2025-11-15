@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import backend.config.ErrorResponse;
+import static backend.user.exceptions.UserException.*;
 
 @ControllerAdvice
 public class UserExceptionHandler {
