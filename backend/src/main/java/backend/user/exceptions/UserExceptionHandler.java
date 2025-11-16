@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import backend.config.ErrorResponse;
+import io.jsonwebtoken.ExpiredJwtException;
+
 import static backend.user.exceptions.UserException.*;
 
 @ControllerAdvice
@@ -52,6 +54,11 @@ public class UserExceptionHandler {
 
    @ExceptionHandler(InvalidTokenException.class)
    public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex) {
+      return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
+   }
+
+   @ExceptionHandler(ExpiredJwtException.class)
+   public ResponseEntity<ErrorResponse> handleExpiredToken(ExpiredJwtException ex) {
       return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
    }
 
