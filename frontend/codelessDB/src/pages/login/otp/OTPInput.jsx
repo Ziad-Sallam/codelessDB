@@ -1,9 +1,10 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { RecoveryContext } from "../../../App";
 import { useNavigate } from "react-router-dom";
+import { RecoveryContext } from "../../../App";
+import "./OTPInput.css";
 
-export const OTPInput = () => {
+const OTPInput = () => {
   const navigate = useNavigate();
   const { email, otp } = useContext(RecoveryContext);
   const [otpInput, setOtpInput] = useState(["", "", "", ""]);
@@ -12,21 +13,17 @@ export const OTPInput = () => {
 
   function resendOTP() {
     if (disable) return;
-
     axios
-      .post("http://localhost:5000/api/resend-otp", {
+      .post("http://localhost:5000/send_recovery_email", {
         OTP: otp,
         recipient_email: email,
       })
-      .then((response) => {
-        console.log(response.data);
+      .then((res) => {
+        alert("OTP resent successfully!");
         setDisable(true);
         setTimer(60);
-        alert("OTP resent successfully!");
       })
-      .catch((error) => {
-        console.error("There was an error resending the OTP!", error);
-      });
+      .catch((err) => console.error(err));
   }
 
   function verifyOTP() {
@@ -53,67 +50,56 @@ export const OTPInput = () => {
   }, []);
 
   return (
-    <div className="flex justify-center items-center w-screen h-screen bg-gray-50">
-      <div className="bg-white px-6 pt-10 pb-9 shadow-xl w-full max-w-lg rounded-2xl">
+    <div className="bg">
+      <div className="title-section">
+        <h1 className="Title">CodeLess</h1>
+        <p className="slogon">Skip the code. Draw your data</p>
+      </div>
 
-        <div className="flex flex-col items-center text-center space-y-2">
-          <p className="font-semibold text-3xl">Email Verification</p>
-          <p className="text-sm text-gray-500">
+      <div className="main">
+        <div className="wrapper">
+          <h1>Email Verification</h1>
+          <p style={{ fontSize: "14px", color: "#555", textAlign: "center", marginBottom: "30px" }}>
             We have sent a code to your email: {email}
           </p>
-        </div>
 
-        <form onSubmit={(e) => e.preventDefault()} className="mt-10 space-y-10">
-          
-          {/* OTP INPUT BOXES */}
-          <div className="flex justify-between max-w-xs mx-auto">
-            {otpInput.map((value, index) => (
+          <div className="otp-container">
+            {otpInput.map((val, idx) => (
               <input
-                key={index}
+                key={idx}
+                type="text"
                 maxLength="1"
-                className="w-16 h-16 text-center border border-gray-300 rounded-xl text-xl outline-none focus:ring-2 ring-blue-500"
+                value={val}
                 onChange={(e) => {
-                  const val = e.target.value;
                   const newOtp = [...otpInput];
-                  newOtp[index] = val;
+                  newOtp[idx] = e.target.value;
                   setOtpInput(newOtp);
-
-                  // Auto-move to next input
-                  if (val && index < 3) {
-                    e.target.nextSibling?.focus();
-                  }
+                  if (e.target.value && idx < 3) e.target.nextSibling.focus();
                 }}
               />
             ))}
           </div>
 
-          {/* VERIFY BUTTON */}
-          <button
-            onClick={verifyOTP}
-            className="w-full py-4 bg-blue-700 text-white rounded-xl shadow-md hover:bg-blue-800 transition"
-          >
-            Verify Account
-          </button>
+          <button onClick={verifyOTP}>Verify Account</button>
 
-          {/* RESEND OTP */}
-          <div className="text-center text-sm">
-            <p className="text-gray-600">
-              Didnt receive the code?
+          <div className="register" style={{ marginTop: "20px", textAlign: "center" }}>
+            <p style={{ fontSize: "14px", color: "#555" }}>
+              Didn't receive the code?{" "}
               <span
+                style={{
+                  color: disable ? "gray" : "#000",
+                  cursor: disable ? "default" : "pointer",
+                  textDecoration: disable ? "none" : "underline",
+                }}
                 onClick={resendOTP}
-                className={`ml-1 ${
-                  disable
-                    ? "text-gray-400"
-                    : "text-blue-600 underline cursor-pointer"
-                }`}
               >
                 {disable ? `Resend in ${timer}s` : "Resend OTP"}
               </span>
             </p>
           </div>
-
-        </form>
+        </div>
       </div>
     </div>
   );
 };
+export default OTPInput;

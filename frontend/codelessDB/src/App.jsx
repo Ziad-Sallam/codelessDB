@@ -2,7 +2,7 @@ import { useState, createContext } from 'react';
 import './App.css';
 import LogIn from './pages/login/LogIn.jsx';
 // import SignUp from './pages/signup/SignUp.jsx';
-import {OTPInput} from './pages/login/otp/OTPInput.jsx';
+import OTPInput from './pages/login/otp/OTPInput.jsx';
 // import Reset from './pages/reset/Reset.jsx';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 

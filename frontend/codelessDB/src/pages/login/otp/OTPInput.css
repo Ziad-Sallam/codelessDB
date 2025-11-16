@@ -200,6 +200,29 @@
 .register p a:hover {
     text-decoration: underline;
 }
+/* OTP Inputs aligned next to each other */
+.otp-container {
+  display: flex;
+  justify-content: space-between;
+  max-width: 300px;
+  margin: 20px auto 30px auto;
+}
+
+.otp-container input {
+  width: 60px;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  border: 2px solid #000;
+  border-radius: 5px;
+  outline: none;
+  background: none;
+}
+
+.otp-container input:focus {
+  box-shadow: 0 0 10px #ff9900;
+}
+
 
 @keyframes glow {
     0% {
