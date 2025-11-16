@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState ,useEffect,useContext } from "react";
 import "./LogIn.css";
 
 import { FaUser } from "react-icons/fa";
@@ -6,8 +6,11 @@ import { TbLockPassword } from "react-icons/tb";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 import { Link, useNavigate } from "react-router-dom";
+import { RecoveryContext } from "../../App";
 
 const LogIn = () => {
+  const navigate = useNavigate();
+  const { setEmail } = useContext(RecoveryContext);
   const [mail, setMail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,6 +19,14 @@ const LogIn = () => {
   useEffect(() => {
     document.title = "Login | CodeLess";
   }, []);
+  const handleforgotPassword = () => {
+    if(!mail){
+      setError("Please enter your email to reset password");
+      return;
+    }
+    setEmail(mail);
+    navigate('/otp');
+  }
 
   return (
     <div className="bg">
@@ -26,7 +37,7 @@ const LogIn = () => {
 
       <div className="main">
         <div className="wrapper">
-          <form>
+          <form onSubmit={(e) => e.preventDefault()}>
             <h1>Log In</h1>
 
             {/* Username */}
@@ -34,9 +45,12 @@ const LogIn = () => {
               <FaUser className="icon" />
               <input
                 type="text"
-                placeholder="Username"
+                placeholder="Email"
                 value={mail}
-                onChange={(e) => setMail(e.target.value)}
+                onChange={(e) => {
+                  setMail(e.target.value)
+                  setError('');}
+                }
                 required
               />
             </div>
@@ -63,8 +77,8 @@ const LogIn = () => {
             </div>
 
             <div className="forgot-password">
-              <p>
-                <Link to="/ForgotPassword">Forgot Password?</Link>
+               <p onClick={handleforgotPassword} style={{ cursor: "pointer" }}>
+                Forgot Password?
               </p>
             </div>
 
@@ -75,7 +89,7 @@ const LogIn = () => {
             </div>
 
             <button type="submit">Log In</button>
-            {error && <p>{error}</p>}
+             {error && <p style={{ color: "red" }}>{error}</p>}
 
             <div className="register">
               <p>
