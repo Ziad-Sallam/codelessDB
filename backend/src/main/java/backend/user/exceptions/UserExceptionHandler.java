@@ -37,7 +37,7 @@ public class UserExceptionHandler {
 
    @ExceptionHandler(InvalidEmailException.class)
    public ResponseEntity<ErrorResponse> handleInvalidEmail(InvalidEmailException ex) {
-      return build(HttpStatus.CONFLICT, ex.getMessage());
+      return build(HttpStatus.BAD_REQUEST, ex.getMessage());
    }
 
    @ExceptionHandler(BadCredentialsException.class)

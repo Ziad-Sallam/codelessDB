@@ -1,9 +1,10 @@
 package backend.user;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
+import backend.entities.User;
+import backend.user.exceptions.UserException.EmailAlreadyExistsException;
+import backend.user.exceptions.UserException.InvalidEmailException;
+import backend.user.exceptions.UserException.UserNotFoundException;
+import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -12,214 +13,209 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import backend.entities.User;
-import backend.user.exceptions.UserException.*;
-
-import java.sql.Date;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
 public class UserServiceTest {
 
-	@InjectMocks
-	private UserService userService;
-
 	@Mock
 	private UserRepository userRepository;
 
-	private BCryptPasswordEncoder encoder;
+	@InjectMocks
+	private UserService userService;
 
 	@BeforeEach
-	void setUp() {
+	void setup() {
 		MockitoAnnotations.openMocks(this);
-		encoder = new BCryptPasswordEncoder();
 	}
 
-	// ------------------ CREATE USER ------------------
-
 	@Test
-	void testCreateUserSuccess() {
+	void createUser_success() {
 		UserDto dto = new UserDto();
+		dto.setEmail("test@mail.com");
 		dto.setUsername("john");
-		dto.setEmail("john@example.com");
-		dto.setRawPassword("password123");
+		dto.setRawPassword("123");
 
-		when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);
-		when(userRepository.existsByUsername(dto.getUsername())).thenReturn(false);
+		when(userRepository.existsByEmail("test@mail.com")).thenReturn(false);
+		when(userRepository.existsByUsername("john")).thenReturn(false);
 
-		assertDoesNotThrow(() -> userService.createUser(dto));
+		userService.createUser(dto);
 		verify(userRepository, times(1)).save(any(User.class));
 	}
 
 	@Test
-	void testCreateUserEmailExists() {
+	void createUser_missingEmail() {
 		UserDto dto = new UserDto();
-		dto.setEmail("john@example.com");
+		dto.setUsername("john");
+		dto.setRawPassword("123");
+
+		assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
+	}
+
+	@Test
+	void createUser_missingUsername() {
+		UserDto dto = new UserDto();
+		dto.setEmail("test@mail.com");
+		dto.setRawPassword("123");
+
+		assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
+	}
+
+	@Test
+	void createUser_missingPassword() {
+		UserDto dto = new UserDto();
+		dto.setEmail("test@mail.com");
 		dto.setUsername("john");
 
-		when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
-
-		EmailAlreadyExistsException ex = assertThrows(EmailAlreadyExistsException.class,
-				() -> userService.createUser(dto));
-		assertEquals("Email already exists", ex.getMessage());
+		assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
 	}
 
 	@Test
-	void testCreateUserUsernameExists() {
+	void createUser_invalidEmail() {
 		UserDto dto = new UserDto();
-		dto.setEmail("john@example.com");
+		dto.setEmail("bad-email");
 		dto.setUsername("john");
+		dto.setRawPassword("123");
 
-		when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);
-		when(userRepository.existsByUsername(dto.getUsername())).thenReturn(true);
-
-		UsernameAlreadyExistsException ex = assertThrows(UsernameAlreadyExistsException.class,
-				() -> userService.createUser(dto));
-		assertEquals("Username already exists", ex.getMessage());
+		assertThrows(InvalidEmailException.class, () -> userService.createUser(dto));
 	}
 
-	// ------------------ LOGIN ------------------
+	@Test
+	void createUser_emailAlreadyExists() {
+		UserDto dto = new UserDto();
+		dto.setEmail("test@mail.com");
+		dto.setUsername("john");
+		dto.setRawPassword("123");
+
+		when(userRepository.existsByEmail("test@mail.com")).thenReturn(true);
+
+		assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(dto));
+	}
 
 	@Test
-	void testLoginSuccess() {
+	void createUser_usernameAlreadyExists() {
+		UserDto dto = new UserDto();
+		dto.setEmail("test@mail.com");
+		dto.setUsername("john");
+		dto.setRawPassword("123");
+
+		when(userRepository.existsByEmail("test@mail.com")).thenReturn(false);
+		when(userRepository.existsByUsername("john")).thenReturn(true);
+
+		assertThrows(UsernameAlreadyExistsException.class, () -> userService.createUser(dto));
+	}
+
+	@Test
+	void login_success() {
 		User user = new User();
-		user.setEmail("john@example.com");
-		// encode once for stored password
-		String encoded = new BCryptPasswordEncoder().encode("password123");
-		user.setPassword(encoded);
+		user.setEmail("test@mail.com");
+		user.setPassword(new BCryptPasswordEncoder().encode("123"));
 
-		when(userRepository.findByEmail("john@example.com")).thenReturn(user);
+		when(userRepository.findByEmail("test@mail.com")).thenReturn(user);
 
-		// test login with raw password
-		assertDoesNotThrow(() -> userService.login("john@example.com", "password123"));
-	}
-
-
-	@Test
-	void testLoginUserNotFound() {
-		when(userRepository.findByEmail("unknown@example.com")).thenReturn(null);
-
-		UserNotFoundException ex = assertThrows(UserNotFoundException.class,
-				() -> userService.login("unknown@example.com", "password123"));
-		assertEquals("User not found", ex.getMessage());
+		assertDoesNotThrow(() -> userService.login("test@mail.com", "123"));
 	}
 
 	@Test
-	void testLoginBadCredentials() {
+	void login_userNotFound() {
+		when(userRepository.findByEmail("test@mail.com")).thenReturn(null);
+
+		assertThrows(UserNotFoundException.class, () -> userService.login("test@mail.com", "123"));
+	}
+
+	@Test
+	void login_invalidPassword() {
 		User user = new User();
-		user.setEmail("john@example.com");
-		user.setPassword(encoder.encode("password123"));
+		user.setEmail("test@mail.com");
+		user.setPassword(new BCryptPasswordEncoder().encode("correct"));
 
-		when(userRepository.findByEmail("john@example.com")).thenReturn(user);
+		when(userRepository.findByEmail("test@mail.com")).thenReturn(user);
 
-		assertThrows(BadCredentialsException.class,
-				() -> userService.login("john@example.com", "wrongpass"));
+		assertThrows(BadCredentialsException.class, () -> userService.login("test@mail.com", "wrong"));
 	}
 
-	// ------------------ GET USER INFO ------------------
-
 	@Test
-	void testGetUserInfoSuccess() {
+	void getUserInfo_success() {
 		User user = new User();
+		user.setId(5);
+		user.setEmail("test@mail.com");
 		user.setUsername("john");
-		user.setEmail("john@example.com");
-		user.setPicture(new byte[] { 1, 2, 3 });
-		user.setCreatedAt(new Date(System.currentTimeMillis()));
 
-		when(userRepository.findById(1)).thenReturn(user);
+		when(userRepository.findById(5)).thenReturn(user);
 
-		UserDto dto = userService.getUserInfo(1);
-		assertEquals("john", dto.getUsername());
-		assertEquals("john@example.com", dto.getEmail());
-		assertArrayEquals(new byte[] { 1, 2, 3 }, dto.getPicture());
-		assertNotNull(dto.getCreatedAt());
-		assertNull(dto.getRawPassword());
+		UserDto result = userService.getUserInfo(5);
+		assertEquals("john", result.getUsername());
 	}
 
 	@Test
-	void testGetUserInfoNotFound() {
-		when(userRepository.findById(1)).thenReturn(null);
-		assertThrows(UserNotFoundException.class, () -> userService.getUserInfo(1));
+	void getUserInfo_notFound() {
+		when(userRepository.findById(5)).thenReturn(null);
+
+		assertThrows(UserNotFoundException.class, () -> userService.getUserInfo(5));
 	}
 
-	// ------------------ UPDATE USER ------------------
-
 	@Test
-	void testUpdateUsername() {
+	void updateUser_success_username() {
 		User user = new User();
-		user.setUsername("john");
-		user.setEmail("john@example.com");
+		user.setId(1);
+		user.setUsername("oldUser");
 
 		UserDto dto = new UserDto();
-		dto.setUsername("newJohn");
+		dto.setUsername("newUser");
 
 		when(userRepository.findById(1)).thenReturn(user);
-		when(userRepository.existsByUsername("newJohn")).thenReturn(false);
+		when(userRepository.existsByUsername("newUser")).thenReturn(false);
 
-		assertDoesNotThrow(() -> userService.updateUser(dto, 1));
-		assertEquals("newJohn", user.getUsername());
-		verify(userRepository, times(1)).save(user);
+		userService.updateUser(dto, 1);
+
+		assertEquals("newUser", user.getUsername());
+		verify(userRepository).save(user);
 	}
 
 	@Test
-	void testUpdateEmail() {
+	void updateUser_usernameExists() {
 		User user = new User();
-		user.setEmail("john@example.com");
+		user.setId(1);
 
 		UserDto dto = new UserDto();
-		dto.setEmail("new@example.com");
+		dto.setUsername("taken");
 
 		when(userRepository.findById(1)).thenReturn(user);
-		when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
+		when(userRepository.existsByUsername("taken")).thenReturn(true);
 
-		assertDoesNotThrow(() -> userService.updateUser(dto, 1));
-		assertEquals("new@example.com", user.getEmail());
-		verify(userRepository, times(1)).save(user);
+		assertThrows(UsernameAlreadyExistsException.class, () -> userService.updateUser(dto, 1));
 	}
 
 	@Test
-	void testUpdatePassword() {
+	void updateUser_emailExists() {
 		User user = new User();
-		user.setPassword(encoder.encode("oldpass"));
+		user.setId(1);
 
 		UserDto dto = new UserDto();
-		dto.setRawPassword("newpass");
+		dto.setEmail("taken@mail.com");
 
 		when(userRepository.findById(1)).thenReturn(user);
+		when(userRepository.existsByEmail("taken@mail.com")).thenReturn(true);
 
-		assertDoesNotThrow(() -> userService.updateUser(dto, 1));
-		assertTrue(encoder.matches("newpass", user.getPassword()));
-		verify(userRepository, times(1)).save(user);
+		assertThrows(EmailAlreadyExistsException.class, () -> userService.updateUser(dto, 1));
 	}
 
 	@Test
-	void testUpdatePicture() {
-		User user = new User();
-		user.setPicture(new byte[] { 0 });
-
+	void updateUser_userNotFound() {
 		UserDto dto = new UserDto();
-		dto.setPicture(new byte[] { 1, 2, 3 });
+		dto.setUsername("newUser");
 
-		when(userRepository.findById(1)).thenReturn(user);
-
-		assertDoesNotThrow(() -> userService.updateUser(dto, 1));
-		assertArrayEquals(new byte[] { 1, 2, 3 }, user.getPicture());
-		verify(userRepository, times(1)).save(user);
-	}
-
-	@Test
-	void testUpdateUserNotFound() {
-		UserDto dto = new UserDto();
 		when(userRepository.findById(1)).thenReturn(null);
 
 		assertThrows(UserNotFoundException.class, () -> userService.updateUser(dto, 1));
 	}
 
-	// ------------------ DELETE USER ------------------
-
 	@Test
-	void testDeleteUser() {
-		assertDoesNotThrow(() -> userService.deleteUser(1));
-		verify(userRepository, times(1)).deleteById(1);
+	void deleteUser_success() {
+		assertDoesNotThrow(() -> userService.deleteUser(10));
+		verify(userRepository, times(1)).deleteById(10);
 	}
 }

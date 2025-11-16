@@ -43,7 +43,6 @@ public class UserService {
 		User newUser = new User();
 
 		EmailValidator emailValidator = new EmailValidator();
-		// emailValidator.initialize(null);
 		if (!emailValidator.isValid(userDto.getEmail(), null)) {
 			throw new InvalidEmailException("Invalid email format");
 		}
