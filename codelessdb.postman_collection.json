@@ -1,9 +1,10 @@
 {
 	"info": {
-		"_postman_id": "b4c31274-e23c-4560-ac78-645fb9c6931f",
+		"_postman_id": "55667b2d-b62a-4a3b-870e-f77dd75b4322",
 		"name": "codelessdb",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "39257982"
+		"_exporter_id": "39168076",
+		"_collection_link": "https://backenders-6160.postman.co/workspace/CodelessDB-APIs~e5f72c98-2e75-411e-b39b-4884f61297d1/collection/39168076-55667b2d-b62a-4a3b-870e-f77dd75b4322?action=share&source=collection_link&creator=39168076"
 	},
 	"item": [
 		{
@@ -280,16 +281,6 @@
 					"response": []
 				}
 			],
-			"auth": {
-				"type": "bearer",
-				"bearer": [
-					{
-						"key": "token",
-						"value": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjMsInVzZXJuYW1lIjoiYWhtZWRfcmFneTMiLCJzdWIiOiIzIiwiaWF0IjoxNzYzMzI0MTQwLCJleHAiOjE3NjM0MTA1NDB9.uZYjTtg5H0keYvKUZ6ErcWC9GAg13LHZ0Qmy4BR681E",
-						"type": "string"
-					}
-				]
-			},
 			"event": [
 				{
 					"listen": "prerequest",
@@ -316,6 +307,9 @@
 			]
 		}
 	],
+	"auth": {
+		"type": "bearer"
+	},
 	"event": [
 		{
 			"listen": "prerequest",
