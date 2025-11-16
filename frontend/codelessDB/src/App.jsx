@@ -3,7 +3,8 @@ import './App.css';
 import LogIn from './pages/login/LogIn.jsx';
 // import SignUp from './pages/signup/SignUp.jsx';
 import OTPInput from './pages/login/otp/OTPInput.jsx';
-// import Reset from './pages/reset/Reset.jsx';
+import Reset from './pages/login/reset/Reset.jsx';
+import Recovered from './pages/login/Recovered/Recovered.jsx';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 export const RecoveryContext = createContext();
@@ -23,12 +24,15 @@ function App() {
     {
       path: '/otp',
       element: <OTPInput />
+    },
+    {
+      path: '/reset',
+      element: <Reset />
+    },
+    {
+      path: '/recovered',
+      element: <Recovered />
     }
-    // ,
-    // {
-    //   path: '/reset',
-    //   element: <Reset />
-    // }
   ]);
   return (
     <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
