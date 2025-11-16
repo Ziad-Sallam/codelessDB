@@ -1,11 +1,19 @@
 package backend.user;
 
-import backend.security.AuthUser;
-import backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import backend.security.AuthUser;
+import backend.security.JwtUtil;
 
 @RestController
 @RequestMapping("/user")
@@ -15,8 +23,8 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+	@Autowired
+	private JwtUtil jwtUtil;
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> signup(@RequestBody UserDto userDto) {
@@ -24,18 +32,18 @@ public class UserController {
 		return ResponseEntity.ok(jwtUtil.generateToken(id, userDto.getUsername()));
 	}
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDto userDto) {
-        AuthUser user = userService.login(userDto.getEmail(), userDto.getRawPassword());
-        String token = jwtUtil.generateToken(user.userId(), user.username());
-        return ResponseEntity.ok(token);
-    }
+	@PostMapping("/login")
+	public ResponseEntity<?> login(@RequestBody UserDto userDto) {
+		AuthUser user = userService.login(userDto.getEmail(), userDto.getRawPassword());
+		String token = jwtUtil.generateToken(user.userId(), user.username());
+		return ResponseEntity.ok(token);
+	}
 
-    @GetMapping("/login")
-    public ResponseEntity<?> login(@AuthenticationPrincipal AuthUser authUser) {
-        UserDto userDto = userService.getUserInfo(authUser.userId());
-        return ResponseEntity.ok(userDto);
-    }
+	@GetMapping("/login")
+	public ResponseEntity<?> login(@AuthenticationPrincipal AuthUser authUser) {
+		UserDto userDto = userService.getUserInfo(authUser.userId());
+		return ResponseEntity.ok(userDto);
+	}
 
 	@GetMapping("/info")
 	public ResponseEntity<?> getUserInfo(@AuthenticationPrincipal AuthUser authUser) {

@@ -1,19 +1,26 @@
 package backend.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
 @Component
 public class JwtUtil {
 
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long jwtExpirationMs = 24 * 60 * 60 * 1000; // 1 day
+
+    @Value("${jwt.expiration-ms}")
+    private long jwtExpirationMs;
 
     /**
      * Generate a token with userId + username
@@ -21,9 +28,8 @@ public class JwtUtil {
     public String generateToken(int userId, String username) {
 
         Map<String, Object> claims = Map.of(
-            "userId", userId,
-            "username", username
-        );
+                "userId", userId,
+                "username", username);
 
         return Jwts.builder()
                 .setClaims(claims)

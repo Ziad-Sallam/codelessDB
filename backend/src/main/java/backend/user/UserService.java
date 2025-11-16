@@ -1,6 +1,5 @@
 package backend.user;
 
-import backend.security.AuthUser;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -8,12 +7,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import backend.entities.User;
+import backend.security.AuthUser;
 import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
@@ -60,7 +59,7 @@ public class UserService {
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
 		userRepository.save(newUser);
 
-        return newUser.getId();
+		return newUser.getId();
 	}
 
 	public AuthUser login(String email, String rawPassword) throws RuntimeException {
@@ -73,7 +72,7 @@ public class UserService {
 			throw new BadCredentialsException("Invalid credentials, Password mismatch");
 		}
 
-        return new AuthUser(user.getId(), user.getUsername());
+		return new AuthUser(user.getId(), user.getUsername());
 	}
 
 	public UserDto getUserInfo(int id) throws RuntimeException {
@@ -116,5 +115,13 @@ public class UserService {
 	public void deleteUser(int id) throws RuntimeException {
 		userRepository.deleteById(id);
 		// diagrams (if the user is the only owner), servers deletion logic here
+	}
+
+	public User findUserByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
+
+	public Object findUserByUsername(String username) {
+		return userRepository.findByUsername(username);
 	}
 }
