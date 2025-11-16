@@ -1,17 +1,22 @@
 package backend.user;
 
+import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import backend.entities.User;
-import static backend.user.exceptions.UserException.*;
+import backend.user.exceptions.UserException.EmailAlreadyExistsException;
+import backend.user.exceptions.UserException.InvalidEmailException;
+import backend.user.exceptions.UserException.UserNotFoundException;
+import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
 
 	@Autowired
@@ -23,7 +28,25 @@ public class UserService {
 	}
 
 	public void createUser(UserDto userDto) throws RuntimeException {
+		if (userDto.getEmail() == null) {
+			throw new IllegalArgumentException("Email is required");
+		}
+
+		if (userDto.getUsername() == null) {
+			throw new IllegalArgumentException("Username is required");
+		}
+
+		if (userDto.getRawPassword() == null) {
+			throw new IllegalArgumentException("Password is required");
+		}
+
 		User newUser = new User();
+
+		EmailValidator emailValidator = new EmailValidator();
+		// emailValidator.initialize(null);
+		if (!emailValidator.isValid(userDto.getEmail(), null)) {
+			throw new InvalidEmailException("Invalid email format");
+		}
 
 		if (userRepository.existsByEmail(userDto.getEmail())) {
 			throw new EmailAlreadyExistsException("Email already exists");
@@ -66,19 +89,19 @@ public class UserService {
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
 		}
-		
+
 		if (userDto.getUsername() != null) {
 			if (userRepository.existsByUsername(userDto.getUsername())) {
 				throw new UsernameAlreadyExistsException("Username already exists");
 			}
 			user.setUsername(userDto.getUsername());
-		
+
 		} else if (userDto.getPicture() != null) {
 			user.setPicture(userDto.getPicture());
-		
+
 		} else if (userDto.getRawPassword() != null) {
 			user.setPassword(encodePassword(userDto.getRawPassword()));
-		
+
 		} else if (userDto.getEmail() != null) {
 			if (userRepository.existsByEmail(userDto.getEmail())) {
 				throw new EmailAlreadyExistsException("Email already exists");

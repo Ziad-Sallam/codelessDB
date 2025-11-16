@@ -14,27 +14,34 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class LoggingAspect {
 
-    // Log method entry
-    @Before("execution(* backend.user.*(..))")
-    public void logBefore(JoinPoint joinPoint) {
-        log.info("Entering method: {} with arguments: {}",
-                joinPoint.getSignature(),
-                joinPoint.getArgs());
-    }
+   // logged files only
+   private static final String LOG_FILES = """
+      execution(* backend.user.UserService.*(..)) || 
+      execution(* backend.user.UserController.*(..))
+   """;
 
-    // Log method exit
-    @AfterReturning(pointcut = "execution(* backend.user.*(..))", returning = "result")
-    public void logAfterReturning(JoinPoint joinPoint, Object result) {
-        log.info("Exiting method: {} with result: {}",
-                joinPoint.getSignature(),
-                result);
-    }
+   // Log method entry
+   @Before(LOG_FILES)
+   public void logBefore(JoinPoint joinPoint) {
+      log.info("\n -> Entering: {} \n args = {}\n",
+            joinPoint.getSignature(),
+            joinPoint.getArgs());
+   }
 
-    // Log exceptions
-    @AfterThrowing(pointcut = "execution(* backend.user.*(..))", throwing = "error")
-    public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
-        log.error("Exception in method: {} with cause: {}",
-                joinPoint.getSignature(),
-                error.getMessage(), error);
-    }
+   // Log method exit
+   @AfterReturning(pointcut = LOG_FILES, returning = "result")
+   public void logAfterReturning(JoinPoint joinPoint, Object result) {
+      log.info("\n -> Exiting: {} \n return = {}\n",
+            joinPoint.getSignature(),
+            result);
+   }
+
+   // Log exceptions
+   @AfterThrowing(pointcut = LOG_FILES, throwing = "error")
+   public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
+      log.error("\n ---> Exception in: {} \n  message = {}\n",
+            joinPoint.getSignature(),
+            error.getMessage(),
+            error);
+   }
 }

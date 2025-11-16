@@ -2,6 +2,8 @@ package backend.user;
 
 import java.sql.Date;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import backend.entities.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +13,10 @@ import lombok.NoArgsConstructor;
 public class UserDto {
 	private String username;
 	private String email;
+
+	@JsonProperty("password")
 	private String rawPassword;
+	
 	private byte[] picture;
 	private Date createdAt;
 
