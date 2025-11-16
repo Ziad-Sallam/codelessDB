@@ -10,11 +10,16 @@ from cryptography.fernet import Fernet
 import sys
 
 argv = sys.argv
-url=""
-# ---------------- Script-specific config ----------------
-SCRIPT_ID = input("Enter a unique script name/ID: ")
+
+if len(argv) < 3:
+        print("Usage: python client.py <websocket_url> <unique_id>")
+        sys.exit(1)
+    
+    
+SCRIPT_ID = argv[2]
 CONFIG_FILE = f"client_config_{SCRIPT_ID}.json"
 KEY_FILE = f"client_key_{SCRIPT_ID}.key"
+url = argv[1]
 
 # ---------------- Encryption helpers ----------------
 def generate_key():
@@ -87,7 +92,7 @@ def ensure_container_running():
             container.start()
             time.sleep(10)
             print(f"Container '{container_name}' started.")
-    except docker.errors.NotFound:
+    except:
         print(f"Container '{container_name}' not found. Aborting.")
         exit(1)
 
@@ -124,24 +129,24 @@ def on_message(ws, message):
     print("SERVER:", message)
     ensure_mysql_connection()
     try:
-        cursor.execute(message)
-        if cursor.with_rows:
-            rows = cursor.fetchall()
+        cursor.execute(message) # type: ignore
+        if cursor.with_rows: # type: ignore
+            rows = cursor.fetchall() # type: ignore
             for row in rows:
                 print(row)
         else:
-            connection.commit()
+            connection.commit() # type: ignore
     except (OperationalError, InterfaceError) as e:
         print("MySQL lost connection. Reconnecting...", e)
         connect_to_mysql()
         try:
-            cursor.execute(message)
-            if cursor.with_rows:
-                rows = cursor.fetchall()
+            cursor.execute(message) # type: ignore
+            if cursor.with_rows: # type: ignore
+                rows = cursor.fetchall() # type: ignore
                 for row in rows:
                     print(row)
             else:
-                connection.commit()
+                connection.commit() # type: ignore
         except Exception as e2:
             print("Failed to execute SQL after reconnect:", e2)
     except Exception as e:
@@ -195,10 +200,6 @@ def input_loop():
 
 # ---------------- Main ----------------
 if __name__ == '__main__':
-    if len(argv) < 2:
-        print("Usage: python client.py <websocket_url>")
-        sys.exit(1)
-    url = argv[1]
     threading.Thread(target=input_loop, daemon=True).start()
     connect_to_mysql()
     start_websocket()

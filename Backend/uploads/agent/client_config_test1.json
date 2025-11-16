@@ -1,9 +1,0 @@
-{
-    "host": "localhost",
-    "port": 3306,
-    "user": "root",
-    "password": "gAAAAABpGNXgVkGN0thlJNP57nyDxYy7ruXidu1SNTlTJ8liqjibN2QedNW4hJjHuCK6CsztM9Xv0kuY97_NvUOSRYv3Ur22CQ==",
-    "database": "db2",
-    "container_name": "mysql2",
-    "ws_url": "ws://localhost:8765"
-}

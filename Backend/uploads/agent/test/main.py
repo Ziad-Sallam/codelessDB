@@ -19,6 +19,8 @@ class ContainerResponse(BaseModel):
     database_name: str
     message: str
     password: str
+    ws_url: Optional[str] = None
+    container_id: Optional[str] = None
 
 
 # Sample data
@@ -30,7 +32,10 @@ data = {
         "password": "password1",
         "image": "mysql:8.0",
         "container_name": "mysql1",
+        "ws_url": "ws://localhost:8765",
+        "container_id": "1",
     },
+
     2: {
         "name": "mysql2",
         "database_name": "db2",
@@ -38,6 +43,8 @@ data = {
         "password": "password2",
         "image": "mysql:8.0",
         "container_name": "mysql2",
+        "ws_url": "ws://localhost:8765",
+        "container_id": "2",
     },
 }
 
@@ -61,6 +68,7 @@ async def create_mysql_container(request: ContainerRequest):
         password = container_data["password"]
         image = container_data["image"]
 
+
         # Print the received data
         print("Received container creation request:")
         print(json.dumps(container_data, indent=4))
@@ -74,7 +82,9 @@ async def create_mysql_container(request: ContainerRequest):
             volume_name=volume_name,
             database_name=database,
             password=password,
-            message=f"MySQL container '{container_name}' creation initiated"
+            message=f"MySQL container '{container_name}' creation initiated",
+            ws_url= container_data["ws_url"],
+            container_id= container_data["container_id"],
         )
 
     except Exception as e:
