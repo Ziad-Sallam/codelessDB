@@ -1,3 +1,5 @@
+## create_container.py
+
 import docker
 import time
 import json
@@ -52,7 +54,7 @@ def create_mysql_container(id: int):
     )
     data = req.json()
 
-    container_name = data["container_name"]
+    container_name = data["database_name"]
     volume_name = f"{container_name}_data"
     database = data["database_name"]
     password = data["password"]
@@ -120,21 +122,24 @@ def create_mysql_container(id: int):
     print("Waiting for MySQL to initialize (15s)...")
     time.sleep(10)
 
+    container.reload()  # refresh info
+    host_port = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostPort"]
+    host_ip = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostIp"]
+    print("MySQL is exposed on port:", host_port)
+
     print(f"MySQL container '{container_name}' is ready.")
     print(f"Container ID: {container.short_id}")
 
     env = os.environ.copy()
     env["WS_URL"] = data["ws_url"]
-    env["CONTAINER_NAME"] = container_name
+    
 
     subprocess.run(
-    [sys.executable, "communicate.py", data["ws_url"], data["container_id"]],
+    [sys.executable, "communicate.py", data["ws_url"], data["container_id"], host_ip, host_port, "root", password, database],
     env=env
     )
 
-
     return 0
-
 
 if __name__ == "__main__":
     if len(argv) < 2:

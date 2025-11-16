@@ -28,7 +28,7 @@ data = {
     1: {
         "name": "mysql1",
         "database_name": "db1",
-        "volume_name": "mysql1_data",
+       
         "password": "password1",
         "image": "mysql:8.0",
         "container_name": "mysql1",
@@ -39,7 +39,7 @@ data = {
     2: {
         "name": "mysql2",
         "database_name": "db2",
-        "volume_name": "mysql2_data",
+        
         "password": "password2",
         "image": "mysql:8.0",
         "container_name": "mysql2",

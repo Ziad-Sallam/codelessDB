@@ -1,3 +1,5 @@
+### communicate.py
+
 import json
 import os
 import threading
@@ -52,13 +54,13 @@ def load_or_create_config():
             return config
     else:
         config = {}
-        config["host"] = input("MySQL host (e.g., localhost): ")
-        config["port"] = int(input("MySQL port (e.g., 3306): "))
-        config["user"] = input("MySQL user: ")
-        password = input("MySQL password: ")
+        config["host"] = "localhost"  if len(argv) > 3 else input("MySQL host (e.g., localhost): ")
+        config["port"] = argv[4]  if len(argv) > 4 else int(input("MySQL port (e.g., 3306): "))
+        config["user"] = argv[5]  if len(argv) > 5 else input("MySQL user: ")
+        password = argv[6]  if len(argv) > 6 else input("MySQL password: ")
         config["password"] = encrypt_password(password)  # store encrypted
-        config["database"] = input("MySQL database name: ")
-        config["container_name"] = input("Docker container name: ")
+        config["database"] = argv[7]  if len(argv) > 7 else input("MySQL database name: ")
+        
         
 
         with open(CONFIG_FILE, "w") as f:
@@ -76,7 +78,7 @@ port = config["port"]
 user = config["user"]
 password = config["password"]
 database = config["database"]
-container_name = config["container_name"]
+container_name = config["database"]
 
 connection = None
 cursor = None

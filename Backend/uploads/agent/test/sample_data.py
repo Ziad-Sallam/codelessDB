@@ -1,9 +1,11 @@
+## sample_data.py
+
 import mysql.connector
 from mysql.connector import Error
 
 # Connection parameters
 host = "localhost"        # container mapped to host
-port = 3306               # port we mapped in Docker
+port = 57029               # port we mapped in Docker
 user = "root"
 password = "password2"
 database = "db2"
