@@ -1,5 +1,6 @@
 package backend.user;
 
+import backend.security.AuthUser;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
-@Slf4j
 public class UserService {
 
 	@Autowired
@@ -27,7 +27,7 @@ public class UserService {
 		return encoder.encode(rawPassword);
 	}
 
-	public void createUser(UserDto userDto) throws RuntimeException {
+	public int createUser(UserDto userDto) throws RuntimeException {
 		if (userDto.getEmail() == null) {
 			throw new IllegalArgumentException("Email is required");
 		}
@@ -59,9 +59,11 @@ public class UserService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
 		userRepository.save(newUser);
+
+        return newUser.getId();
 	}
 
-	public void login(String email, String rawPassword) throws RuntimeException {
+	public AuthUser login(String email, String rawPassword) throws RuntimeException {
 		User user = userRepository.findByEmail(email);
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
@@ -71,7 +73,7 @@ public class UserService {
 			throw new BadCredentialsException("Invalid credentials, Password mismatch");
 		}
 
-		// return JWT generation token
+        return new AuthUser(user.getId(), user.getUsername());
 	}
 
 	public UserDto getUserInfo(int id) throws RuntimeException {
