@@ -41,7 +41,6 @@ public class LoggingAspect {
    public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
       log.error("\n ---> Exception in: {} \n  message = {}\n",
             joinPoint.getSignature(),
-            error.getMessage(),
-            error);
+            error.getMessage());
    }
 }
