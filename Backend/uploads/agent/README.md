@@ -60,12 +60,6 @@ python connection_test.py
 
 2. Ensure Docker is installed and running. On Windows/macOS, Docker Desktop is recommended.
 
-3. Install Python dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
 ---
 
 ## Usage
@@ -97,14 +91,19 @@ python communicate.py <websocket_url> <unique_id> <host> <port> <user> <password
 
 ### 3. Test WebSocket Server
 
-Use `connection_test.py` for development and testing:
+1. Use `connection_test.py` for development and testing:
 
 ```bash
 python connection_test.py
 ```
 
-* Connects on `ws://localhost:8765`
-* Allows sending messages to connected clients
+  * Connects on `ws://localhost:8765`
+  * Allows sending messages to connected clients
+2. Use `main.py` to run the sample users
+```bash
+python main.py
+```
+
 
 ---
 

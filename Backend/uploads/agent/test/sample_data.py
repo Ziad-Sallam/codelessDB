@@ -5,10 +5,10 @@ from mysql.connector import Error
 
 # Connection parameters
 host = "localhost"        # container mapped to host
-port = 57029               # port we mapped in Docker
+port = 59557               # port we mapped in Docker
 user = "root"
-password = "password2"
-database = "db2"
+password = "password1"
+database = "db1"
 
 try:
     # Connect to MySQL
@@ -47,6 +47,7 @@ try:
         # Example 3: Query data
         cursor.execute("SELECT * FROM users")
         rows = cursor.fetchall()
+        
         for row in rows:
             print(row)
 

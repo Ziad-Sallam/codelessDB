@@ -15,7 +15,7 @@ class ContainerRequest(BaseModel):
 class ContainerResponse(BaseModel):
     status: str
     container_name: str
-    volume_name: str
+    
     database_name: str
     message: str
     password: str
@@ -28,7 +28,7 @@ data = {
     1: {
         "name": "mysql1",
         "database_name": "db1",
-       
+        
         "password": "password1",
         "image": "mysql:8.0",
         "container_name": "mysql1",
@@ -57,13 +57,14 @@ async def create_mysql_container(request: ContainerRequest):
     try:
         # Get the container data by ID
         container_data = data.get(request.id)
+        print("Container data for ID", request.id, ":", container_data)
 
         if not container_data:
             raise HTTPException(status_code=404, detail=f"Container with ID {request.id} not found")
 
         # Extract values from dictionary (using key access, not attribute access)
         container_name = container_data["name"]
-        volume_name = container_data["volume_name"]
+        
         database = container_data["database_name"]
         password = container_data["password"]
         image = container_data["image"]
@@ -79,7 +80,7 @@ async def create_mysql_container(request: ContainerRequest):
         return ContainerResponse(
             status="success",
             container_name=container_name,
-            volume_name=volume_name,
+            
             database_name=database,
             password=password,
             message=f"MySQL container '{container_name}' creation initiated",

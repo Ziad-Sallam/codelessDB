@@ -136,6 +136,7 @@ def on_message(ws, message):
             rows = cursor.fetchall() # type: ignore
             for row in rows:
                 print(row)
+            ws.send(json.dumps({"result": rows}))
         else:
             connection.commit() # type: ignore
     except (OperationalError, InterfaceError) as e:
@@ -145,8 +146,10 @@ def on_message(ws, message):
             cursor.execute(message) # type: ignore
             if cursor.with_rows: # type: ignore
                 rows = cursor.fetchall() # type: ignore
+                
                 for row in rows:
                     print(row)
+                ws.send(json.dumps({"result": rows}))
             else:
                 connection.commit() # type: ignore
         except Exception as e2:
@@ -200,7 +203,7 @@ def input_loop():
         else:
             print("WebSocket not connected. Waiting...")
 
-# ---------------- Main ----------------
+# ---------------- Main ---------------- #
 if __name__ == '__main__':
     threading.Thread(target=input_loop, daemon=True).start()
     connect_to_mysql()

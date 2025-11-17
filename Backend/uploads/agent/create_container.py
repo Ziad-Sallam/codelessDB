@@ -4,14 +4,24 @@ import docker
 import time
 import json
 import requests
-
 import shutil
 import sys
 import platform
 import subprocess
 import os
+import socket
 
 argv = sys.argv
+
+def select_random_port():
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('', 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
 def ensure_docker_installed():
     # Check if `docker` command exists
     if shutil.which("docker") is not None:
@@ -53,7 +63,8 @@ def create_mysql_container(id: int):
         data=json.dumps({"id": id})
     )
     data = req.json()
-
+    print("Received container data:-----------------")
+    print(data)
     container_name = data["database_name"]
     volume_name = f"{container_name}_data"
     database = data["database_name"]
@@ -116,7 +127,7 @@ def create_mysql_container(id: int):
         volumes={
             volume_name: {"bind": "/var/lib/mysql", "mode": "rw"},
         },
-        ports={"3306/tcp": None},
+        ports={"3306/tcp": select_random_port()},
     )
 
     print("Waiting for MySQL to initialize (15s)...")
@@ -125,6 +136,7 @@ def create_mysql_container(id: int):
     container.reload()  # refresh info
     host_port = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostPort"]
     host_ip = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostIp"]
+    
     print("MySQL is exposed on port:", host_port)
 
     print(f"MySQL container '{container_name}' is ready.")
@@ -146,5 +158,5 @@ if __name__ == "__main__":
         print("Usage: python create_container.py <container_id>")
         sys.exit(1)
     
-    
+    print("Creating MySQL container with ID:", argv[1])
     create_mysql_container(int(argv[1]))
