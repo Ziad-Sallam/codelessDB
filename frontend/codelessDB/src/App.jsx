@@ -1,35 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, createContext } from 'react';
+import './App.css';
+import LogIn from './pages/login/LogIn.jsx';
+import SignUp from './pages/signup/SignUp.jsx';
+import OTPInput from './pages/login/otp/OTPInput.jsx';
+import Reset from './pages/login/reset/Reset.jsx';
+import Recovered from './pages/login/Recovered/Recovered.jsx';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+
+export const RecoveryContext = createContext();
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  const [email, setEmail] = useState("");
+  const [otp, setOTP] = useState("");
+  const router = createBrowserRouter([
+    {
+      path: '/login',
+      element: <LogIn />
+    },
+    {
+      path: '/signup',
+      element: <SignUp />
+    },
+    {
+      path: '/otp',
+      element: <OTPInput />
+    },
+    {
+      path: '/reset',
+      element: <Reset />
+    },
+    {
+      path: '/recovered',
+      element: <Recovered />
+    }
+  ]);
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
+      <div className="App">
+        <RouterProvider router={router} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </RecoveryContext.Provider>
+  );
 }
 
-export default App
+export default App;

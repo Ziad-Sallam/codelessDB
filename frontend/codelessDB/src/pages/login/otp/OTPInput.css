@@ -1,0 +1,250 @@
+.bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100%;
+    background: linear-gradient(70deg, #ff00ff, #00ffff, #ff9900, #ff00ff);
+    background-size: 400%;
+
+    animation: glow 30s linear infinite;
+}
+
+.bg .title-section {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    text-align: center;
+}
+
+.bg .Title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 70px;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+
+}
+
+.bg .slogon {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    width: 80%;
+    transform: translate(-50%, -50%);
+    font-weight: 700;
+    font-size: 20px;
+    color: #000000;
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.main {
+    width: 50vw;
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #19183B;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    background-size: cover;
+    background-position: center;
+}
+
+
+.wrapper {
+    min-width: 300px;
+    width: 80%;
+    max-width: 400px;
+    background: rgb(255, 255, 255);
+    border: 2px solid rgba(255, 255, 255, .2);
+    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(30px);
+    color: #101010;
+    border-radius: 5px;
+    padding: 30px 40px;
+}
+
+
+.wrapper h1 {
+    font-size: 36px;
+    text-align: center;
+}
+
+.wrapper .input-box {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    margin: 30px 0 0 0;
+}
+
+.input-box input {
+    width: 100%;
+    height: 100%;
+    background: none;
+    border: 2px solid rgb(0, 0, 0);
+    outline: none;
+    border-radius: 5px;
+    font-size: 16px;
+    color: #000000;
+    padding: 20px 45px 20px 20px;
+}
+
+.input-box input:focus {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border-radius: 5px;
+    box-shadow:
+        0 0 10px 1px #ff9900;
+    z-index: -1;
+    transition: all 0.3s ease;
+}
+
+.input-box .icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+}
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 20px;
+  color: #000000;
+}
+
+.forgot-password {
+    color: #000000;
+    text-align: left;
+    font-size: 14.5px;
+}
+.forgot-password p a {
+    color: #000000;
+    text-decoration: none;
+    font-weight: 500;
+}
+.forgot-password p a:hover {
+    text-decoration: underline;
+}
+
+.wrapper .remember-forget {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14.5;
+    margin: 15px 0 15px;
+}
+
+.remember-forget label input {
+    accent-color: #fff;
+    margin-right: 4px;
+}
+
+.remember-forget a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.remember-forget a:hover {
+    text-decoration: underline;
+}
+
+.wrapper .submit {
+    width: 100%;
+    height: 45px;
+    background-color: #fff;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    color: #333;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.wrapper .submit:hover {
+    background: linear-gradient(70deg, #ff00ff, #00ffff, #ff9900, #ff00ff);
+    background-size: 400%;
+    color: #000;
+    animation: glow 6s linear infinite;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+.wrapper .register {
+    font-size: 14.5px;
+    text-align: center;
+    margin: 20px 0 15px;
+}
+
+.register p a {
+    color: #000000;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.register p a:hover {
+    text-decoration: underline;
+}
+/* OTP Inputs aligned next to each other */
+.otp-container {
+  display: flex;
+  justify-content: space-between;
+  max-width: 300px;
+  margin: 20px auto 30px auto;
+}
+
+.otp-container input {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 24px;
+  border: 2px solid #000;
+  border-radius: 5px;
+  outline: none;
+  background: none;
+  
+}
+
+.otp-container input:focus {
+  box-shadow: 0 0 10px #ff9900;
+}
+
+
+@keyframes glow {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes waveAnim {
+    0% {
+        background-position-x: 0;
+    }
+
+    100% {
+        background-position-x: 1000px;
+    }
+}
