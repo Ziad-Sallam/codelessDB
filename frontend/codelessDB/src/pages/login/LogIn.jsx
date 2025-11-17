@@ -1,4 +1,5 @@
 import React, { useState ,useEffect,useContext } from "react";
+import emailjs from '@emailjs/browser';
 import "./LogIn.css";
 
 import { FaUser } from "react-icons/fa";
@@ -19,15 +20,35 @@ const LogIn = () => {
   useEffect(() => {
     document.title = "Login | CodeLess";
   }, []);
-  const handleforgotPassword = () => {
+  const handleforgotPassword = async () => {
     if(!mail){
       setError("Please enter your email to reset password");
       return;
     }
-    setEmail(mail);
-    navigate('/otp');
+    const generatedOTP = Math.floor(10000 + Math.random() * 90000).toString();
+    try {
+      const response = await emailjs.send(
+        "service_hnqs4gv",
+        "template_pvxxkx3",
+        {
+          user_email: mail,
+          otp: generatedOTP,
+        },
+        "tfheOwRas0U6Mibcz"
+      );
+      console.log("Email sent successfully:", response.status, response.text);
+   if (response.status === 200) {
+      console.log("OTP email sent!");
+    }
+  } catch (err) {
+    console.error("EmailJS Error:", err);
+    setError("Failed to send OTP. Try again.");
+    return;
   }
-
+  setEmail(mail);
+  localStorage.setItem("otp", generatedOTP);
+  navigate("/otp");
+};
   return (
     <div className="bg">
       <div className="title-section">

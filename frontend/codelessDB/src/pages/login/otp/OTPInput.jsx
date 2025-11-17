@@ -1,40 +1,55 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import emailjs from "@emailjs/browser";
 import { useNavigate } from "react-router-dom";
 import { RecoveryContext } from "../../../App";
 import "./OTPInput.css";
 
 const OTPInput = () => {
   const navigate = useNavigate();
-  const { email, otp } = useContext(RecoveryContext);
-  const [otpInput, setOtpInput] = useState(["", "", "", ""]);
+  const { email, otp, setOTP } = useContext(RecoveryContext);
+  const [otpInput, setOtpInput] = useState(["", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [disable, setDisable] = useState(true);
 
-  function resendOTP() {
+  const sendOTP = (newOTP) => {
+    return emailjs.send(
+        "service_hnqs4gv",
+        "template_pvxxkx3",
+      {
+        user_email: email,
+        otp: newOTP,
+      },
+      "tfheOwRas0U6Mibcz"
+    );
+  };
+  const resendOTP = async () => {
     if (disable) return;
-    axios
-      .post("http://localhost:5000/send_recovery_email", {
-        OTP: otp,
-        recipient_email: email,
-      })
-      .then((res) => {
-        alert("OTP resent successfully!");
-        setDisable(true);
-        setTimer(60);
-      })
-      .catch((err) => console.error(err));
-  }
+    const newOTP = Math.floor(10000 + Math.random() * 90000);
+    try {
+      await sendOTP(newOTP);
+      alert("OTP sent successfully!");
 
-  function verifyOTP() {
-    const enteredOTP = otpInput.join("");
-    if (parseInt(enteredOTP) === otp) {
-      navigate("/reset");
-    } else {
-      alert("Invalid OTP. Please try again.");
+      setOTP(newOTP);
+      localStorage.setItem("otp", newOTP);
+
+      setDisable(true);
+      setTimer(60);
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send OTP");
     }
-  }
-
+  };
+  const verifyOTP = () => {
+    const entered = otpInput.join("");
+    const saved = localStorage.getItem("otp");
+    if (entered === saved) {
+      navigate("/reset");
+      console.log("OTP verified!");
+    } else {
+      alert("Invalid OTP. Try again.");
+    }
+  };
   useEffect(() => {
     let interval = setInterval(() => {
       setTimer((prev) => {
@@ -48,7 +63,6 @@ const OTPInput = () => {
 
     return () => clearInterval(interval);
   }, []);
-
   return (
     <div className="bg">
       <div className="title-section">
@@ -58,9 +72,10 @@ const OTPInput = () => {
 
       <div className="main">
         <div className="wrapper">
+
           <h1>Email Verification</h1>
-          <p style={{ fontSize: "14px", color: "#555", textAlign: "center", marginBottom: "30px" }}>
-            We have sent a code to your email: {email}
+          <p style={{ fontSize: "14px", textAlign: "center", marginBottom: "30px" }}>
+            We sent a 6-digit code to: <b>{email}</b>
           </p>
 
           <div className="otp-container">
@@ -71,35 +86,40 @@ const OTPInput = () => {
                 maxLength="1"
                 value={val}
                 onChange={(e) => {
-                  const newOtp = [...otpInput];
-                  newOtp[idx] = e.target.value;
-                  setOtpInput(newOtp);
-                  if (e.target.value && idx < 3) e.target.nextSibling.focus();
+                  const newArr = [...otpInput];
+                  newArr[idx] = e.target.value;
+                  setOtpInput(newArr);
+
+                  if (e.target.value && idx < 5) {
+                    e.target.nextSibling.focus();
+                  }
                 }}
               />
             ))}
           </div>
 
-          <button onClick={verifyOTP}>Verify Account</button>
+          <button onClick={verifyOTP}>Verify Code</button>
 
-          <div className="register" style={{ marginTop: "20px", textAlign: "center" }}>
-            <p style={{ fontSize: "14px", color: "#555" }}>
-              Didn't receive the code?{" "}
+          <div style={{ marginTop: "20px", textAlign: "center" }}>
+            <p style={{ fontSize: "14px" }}>
+              Didn’t receive the code?{" "}
               <span
+                onClick={resendOTP}
                 style={{
-                  color: disable ? "gray" : "#000",
+                  color: disable ? "gray" : "black",
                   cursor: disable ? "default" : "pointer",
                   textDecoration: disable ? "none" : "underline",
                 }}
-                onClick={resendOTP}
               >
                 {disable ? `Resend in ${timer}s` : "Resend OTP"}
               </span>
             </p>
           </div>
+
         </div>
       </div>
     </div>
   );
 };
+
 export default OTPInput;
