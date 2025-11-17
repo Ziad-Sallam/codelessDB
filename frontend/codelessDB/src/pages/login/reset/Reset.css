@@ -162,7 +162,7 @@
     text-decoration: underline;
 }
 
-.wrapper button {
+.wrapper .submit {
     width: 100%;
     height: 45px;
     background-color: #fff;
@@ -176,7 +176,7 @@
     font-weight: 700;
 }
 
-.wrapper button:hover {
+.wrapper .submit:hover {
     background: linear-gradient(70deg, #ff00ff, #00ffff, #ff9900, #ff00ff);
     background-size: 400%;
     color: #000;

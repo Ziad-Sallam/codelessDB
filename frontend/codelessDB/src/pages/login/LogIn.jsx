@@ -50,6 +50,7 @@ const LogIn = () => {
   navigate("/otp");
 };
   return (
+    <div className="login">
     <div className="bg">
       <div className="title-section">
         <h1 className="Title">CodeLess</h1>
@@ -109,7 +110,7 @@ const LogIn = () => {
               </label>
             </div>
 
-            <button type="submit">Log In</button>
+            <button type="submit" className="submit">Log In</button>
              {error && <p style={{ color: "red" }}>{error}</p>}
 
             <div className="register">
@@ -121,6 +122,7 @@ const LogIn = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 

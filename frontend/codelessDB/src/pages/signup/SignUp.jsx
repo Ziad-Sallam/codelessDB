@@ -45,7 +45,6 @@ const SignUp = () => {
 
     reader.readAsDataURL(file); // <-- Converts to Base64
 
-    console.log("ghg",userImage)
   };
 
 
@@ -103,6 +102,10 @@ const SignUp = () => {
               <h1>Sign Up</h1>
 
               <div className="image-upload-container">
+                {userImage!= null && <button type="button" className="remove-image-button" onClick={() => {
+                  setUserImage(null);
+                  setPreview(null);
+                }}>x</button>}
                 <label htmlFor="userImage" className="image-label">
                   {preview ? (
                     <img src={preview} alt="Preview" className="profile-preview" />
@@ -202,7 +205,7 @@ const SignUp = () => {
                 </span>
               </div>
 
-              <button type="submit">Sign Up</button>
+              <button type="submit" className="submit">Sign Up</button>
 
               {error && <p className="error-message">{error}</p>}
 

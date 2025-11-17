@@ -98,7 +98,7 @@ const OTPInput = () => {
             ))}
           </div>
 
-          <button onClick={verifyOTP}>Verify Code</button>
+          <button onClick={verifyOTP} className="submit">Verify Code</button>
 
           <div style={{ marginTop: "20px", textAlign: "center" }}>
             <p style={{ fontSize: "14px" }}>

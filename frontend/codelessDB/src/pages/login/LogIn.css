@@ -1,4 +1,4 @@
-.bg {
+.login .bg {
     position: fixed;
     top: 0;
     left: 0;
@@ -10,7 +10,7 @@
     animation: glow 30s linear infinite;
 }
 
-.bg .title-section {
+.login .bg .title-section {
     position: absolute;
     top: 0;
     left: 0;
@@ -43,7 +43,7 @@
     text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
-.main {
+.login .main {
     width: 50vw;
     min-height: 100vh;
     position: fixed;
@@ -60,7 +60,7 @@
 }
 
 
-.wrapper {
+.login .wrapper {
     min-width: 300px;
     width: 80%;
     max-width: 400px;
@@ -74,7 +74,7 @@
 }
 
 
-.wrapper h1 {
+.login .wrapper h1 {
     font-size: 36px;
     text-align: center;
 }
@@ -134,12 +134,12 @@
     text-align: left;
     font-size: 14.5px;
 }
-.forgot-password p a {
+.forgot-password p  {
     color: #000000;
     text-decoration: none;
     font-weight: 500;
 }
-.forgot-password p a:hover {
+.forgot-password p:hover {
     text-decoration: underline;
 }
 
@@ -164,7 +164,7 @@
     text-decoration: underline;
 }
 
-.wrapper button {
+.login .wrapper .submit {
     width: 100%;
     height: 45px;
     background-color: #fff;
@@ -178,7 +178,7 @@
     font-weight: 700;
 }
 
-.wrapper button:hover {
+.login .wrapper .submit:hover {
     background: linear-gradient(70deg, #ff00ff, #00ffff, #ff9900, #ff00ff);
     background-size: 400%;
     color: #000;

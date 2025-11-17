@@ -14,10 +14,10 @@ export default function Recovered() {
       <div className="main">
         <div className="wrapper text-center">
           <h1 className="mb-4 text-2xl font-bold">Password Successfully Set</h1>
-          <p className="text-gray-700 mb-6">Welcome HOME</p>
           <button
-            className="bg-blue-700 text-white py-3 px-6 rounded-xl shadow hover:bg-blue-800 transition"
+            className="submit"
             onClick={() => window.location.href = "/login"}
+            style={{marginTop: '20px'}}
           >
             Go to Login
           </button>
