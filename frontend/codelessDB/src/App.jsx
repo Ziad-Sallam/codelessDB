@@ -1,7 +1,7 @@
 import { useState, createContext } from 'react';
 import './App.css';
 import LogIn from './pages/login/LogIn.jsx';
-// import SignUp from './pages/signup/SignUp.jsx';
+import SignUp from './pages/signup/SignUp.jsx';
 import OTPInput from './pages/login/otp/OTPInput.jsx';
 import Reset from './pages/login/reset/Reset.jsx';
 import Recovered from './pages/login/Recovered/Recovered.jsx';
@@ -17,10 +17,10 @@ function App() {
       path: '/login',
       element: <LogIn />
     },
-    // {
-    //   path: '/signup',
-    //   element: <SignUp />
-    // },
+    {
+      path: '/signup',
+      element: <SignUp />
+    },
     {
       path: '/otp',
       element: <OTPInput />
