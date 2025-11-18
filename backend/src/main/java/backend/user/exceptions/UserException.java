@@ -31,4 +31,10 @@ public class UserException {
 			super(message);
 		}
 	}
+
+	public static class ExpiredTokenException extends RuntimeException {
+		public ExpiredTokenException(String message) {
+			super(message);
+		}
+	}
 }
