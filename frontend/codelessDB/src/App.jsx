@@ -1,46 +1,24 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, createContext } from 'react';
 import './App.css';
-import LogIn from './pages/login/LogIn.jsx';
-import SignUp from './pages/signup/SignUp.jsx';
-import OTPInput from './pages/login/otp/OTPInput.jsx';
-import Reset from './pages/login/reset/Reset.jsx';
-import Recovered from './pages/login/Recovered/Recovered.jsx';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+
+import { routes } from './routes.jsx';
 
 export const RecoveryContext = createContext();
 
 function App() {
-  const [email, setEmail] = useState("");
-  const [otp, setOTP] = useState("");
-  const router = createBrowserRouter([
-    {
-      path: '/login',
-      element: <LogIn />
-    },
-    {
-      path: '/signup',
-      element: <SignUp />
-    },
-    {
-      path: '/otp',
-      element: <OTPInput />
-    },
-    {
-      path: '/reset',
-      element: <Reset />
-    },
-    {
-      path: '/recovered',
-      element: <Recovered />
-    }
-  ]);
-  return (
-    <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
-      <div className="App">
-        <RouterProvider router={router} />
-      </div>
-    </RecoveryContext.Provider>
-  );
+   const [email, setEmail] = useState("");
+   const [otp, setOTP] = useState("");
+   const router = createBrowserRouter(routes);
+   
+   return (
+      <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
+         <div className="App">
+            <RouterProvider router={router} />
+         </div>
+      </RecoveryContext.Provider>
+   );
 }
 
 export default App;
