@@ -7,16 +7,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import backend.entities.User;
+import backend.security.AuthUser;
 import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
-@Slf4j
 public class UserService {
 
 	@Autowired
@@ -27,7 +26,7 @@ public class UserService {
 		return encoder.encode(rawPassword);
 	}
 
-	public void createUser(UserDto userDto) throws RuntimeException {
+	public int createUser(UserDto userDto) throws RuntimeException {
 		if (userDto.getEmail() == null) {
 			throw new IllegalArgumentException("Email is required");
 		}
@@ -59,9 +58,11 @@ public class UserService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
 		userRepository.save(newUser);
+
+		return newUser.getId();
 	}
 
-	public void login(String email, String rawPassword) throws RuntimeException {
+	public AuthUser login(String email, String rawPassword) throws RuntimeException {
 		User user = userRepository.findByEmail(email);
 		if (user == null) {
 			throw new UserNotFoundException("User not found");
@@ -71,7 +72,7 @@ public class UserService {
 			throw new BadCredentialsException("Invalid credentials, Password mismatch");
 		}
 
-		// return JWT generation token
+		return new AuthUser(user.getId(), user.getUsername());
 	}
 
 	public UserDto getUserInfo(int id) throws RuntimeException {
@@ -114,5 +115,13 @@ public class UserService {
 	public void deleteUser(int id) throws RuntimeException {
 		userRepository.deleteById(id);
 		// diagrams (if the user is the only owner), servers deletion logic here
+	}
+
+	public User findUserByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
+
+	public Object findUserByUsername(String username) {
+		return userRepository.findByUsername(username);
 	}
 }
