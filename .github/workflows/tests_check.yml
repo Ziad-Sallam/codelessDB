@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - milestone1
-      - SCRUM-14-schema-to-sql-generation
+      # - SCRUM-14-schema-to-sql-generation
   pull_request: # optional, also run on PRs
 
 jobs:
