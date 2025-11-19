@@ -1,28 +1,32 @@
 package backend.user;
 
 import backend.entities.User;
-import static backend.user.exceptions.UserException.*;
+import backend.security.AuthUser;
+import backend.security.JwtUtil;
+import backend.user.exceptions.UserException.EmailAlreadyExistsException;
+import backend.user.exceptions.UserException.UserNotFoundException;
+import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import backend.user.exceptions.UserExceptionHandler;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -31,215 +35,295 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(UserExceptionHandler.class)
 public class UserControllerTest {
 
-   @Autowired
-   private MockMvc mockMvc;
+      @Autowired
+      private MockMvc mockMvc;
 
-   @SuppressWarnings("removal")
-   @MockBean
-   private UserService userService;
+      @MockitoBean
+      private UserService userService;
 
-   private static final ObjectMapper mapper = new ObjectMapper();
+      @MockitoBean
+      private JwtUtil jwtUtil;
 
-   private String toJson(Object obj) throws Exception {
-      return mapper.writeValueAsString(obj);
-   }
+      private static final ObjectMapper mapper = new ObjectMapper();
 
-   private UserDto createDto(String username, String email, String password) {
-      UserDto dto = new UserDto();
-      dto.setUsername(username);
-      dto.setEmail(email);
-      dto.setRawPassword(password);
-      return dto;
-   }
-
-   @Nested
-   @DisplayName("Signup API Tests")
-   class SignupTests {
-
-      @Test
-      @DisplayName("Signup success")
-      void testSignupSuccess() throws Exception {
-
-         doNothing().when(userService).createUser(any(UserDto.class));
-
-         UserDto dto = createDto("john", "john@example.com", "12345");
-
-         mockMvc.perform(
-               post("/user/signup")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().isOk())
-               .andExpect(content().string("User registered"));
+      private String toJson(Object obj) throws Exception {
+            return mapper.writeValueAsString(obj);
       }
 
-      @Test
-      @DisplayName("Signup fails: email exists")
-      void testSignupEmailExists() throws Exception {
-
-         doThrow(new EmailAlreadyExistsException("Email already exists"))
-               .when(userService).createUser(any(UserDto.class));
-
-         UserDto dto = createDto("john", "john@example.com", "12345");
-
-         mockMvc.perform(
-               post("/user/signup")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().is4xxClientError());
+      private UserDto createDto(String username, String email, String password) {
+            UserDto dto = new UserDto();
+            dto.setUsername(username);
+            dto.setEmail(email);
+            dto.setRawPassword(password);
+            return dto;
       }
 
-      @Test
-      @DisplayName("Signup fails: username exists")
-      void testSignupUsernameExists() throws Exception {
-
-         doThrow(new UsernameAlreadyExistsException("Username exists"))
-               .when(userService).createUser(any(UserDto.class));
-
-         UserDto dto = createDto("john", "john@example.com", "12345");
-
-         mockMvc.perform(
-               post("/user/signup")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().is4xxClientError());
+      private void setAuthentication(AuthUser authUser) {
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(authUser, null,
+                        null);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
       }
 
-      @Test
-      @DisplayName("Signup fails: missing field")
-      void testSignupMissingField() throws Exception {
-
-         doThrow(new IllegalArgumentException("Username, Password is required"))
-               .when(userService).createUser(any(UserDto.class));
-
-         UserDto dto = createDto(null, "john@example.com", null);
-
-         mockMvc.perform(
-               post("/user/signup")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().isBadRequest());
-      }
-   }
-
-   @Nested
-   @DisplayName("Login API Tests")
-   class LoginTests {
-
-      @Test
-      @DisplayName("Login success")
-      void testLoginSuccess() throws Exception {
-
-         doNothing().when(userService).login("john@example.com", "12345");
-
-         UserDto dto = createDto(null, "john@example.com", "12345");
-
-         mockMvc.perform(
-               post("/user/login")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().isOk());
+      private void clearAuthentication() {
+            SecurityContextHolder.clearContext();
       }
 
-      @Test
-      @DisplayName("Login fails: user not found")
-      void testLoginUserNotFound() throws Exception {
+      // ---------------- Signup tests ----------------
+      @Nested
+      @DisplayName("Signup API Tests")
+      class SignupTests {
 
-         doThrow(new UserNotFoundException("User not found"))
-               .when(userService).login(eq("ghost@example.com"), eq("12345"));
+            @Test
+            @DisplayName("Signup success")
+            void testSignupSuccess() throws Exception {
+                  when(userService.createUser(any(UserDto.class))).thenReturn(10);
+                  when(jwtUtil.generateToken(10, "john")).thenReturn("fake-token");
 
-         UserDto dto = createDto(null, "ghost@example.com", "12345");
+                  UserDto dto = createDto("john", "john@example.com", "12345");
 
-         mockMvc.perform(
-               post("/user/login")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().is4xxClientError());
+                  mockMvc.perform(
+                              post("/user/signup")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(toJson(dto)))
+                              .andExpect(status().isOk())
+                              .andExpect(content().string("fake-token"));
+            }
+
+            @Test
+            @DisplayName("Signup fails: email exists")
+            void testSignupEmailExists() throws Exception {
+                  when(userService.createUser(any(UserDto.class)))
+                              .thenThrow(new EmailAlreadyExistsException("Email already exists"));
+
+                  UserDto dto = createDto("john", "john@example.com", "12345");
+
+                  mockMvc.perform(
+                              post("/user/signup")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(toJson(dto)))
+                              .andExpect(status().is4xxClientError());
+            }
+
+            @Test
+            @DisplayName("Signup fails: username exists")
+            void testSignupUsernameExists() throws Exception {
+                  when(userService.createUser(any(UserDto.class)))
+                              .thenThrow(new UsernameAlreadyExistsException("Username exists"));
+
+                  UserDto dto = createDto("john", "john@example.com", "12345");
+
+                  mockMvc.perform(
+                              post("/user/signup")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(toJson(dto)))
+                              .andExpect(status().is4xxClientError());
+            }
+
+            @Test
+            @DisplayName("Signup fails: missing fields")
+            void testSignupMissingField() throws Exception {
+                  when(userService.createUser(any(UserDto.class)))
+                              .thenThrow(new IllegalArgumentException("Username, Password required"));
+
+                  UserDto dto = createDto(null, "john@example.com", null);
+
+                  mockMvc.perform(
+                              post("/user/signup")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(toJson(dto)))
+                              .andExpect(status().isBadRequest());
+            }
       }
 
-      @Test
-      @DisplayName("Login fails: wrong password")
-      void testLoginWrongPassword() throws Exception {
+      // ---------------- Login tests ----------------
+      @Nested
+      @DisplayName("Login API Tests")
+      class LoginTests {
 
-         doThrow(new BadCredentialsException("Invalid"))
-               .when(userService).login(eq("john@example.com"), eq("wrong"));
+            @Test
+            @DisplayName("Login success")
+            void testLoginSuccess() throws Exception {
+                  AuthUser mockAuth = new AuthUser(1, "john");
+                  when(userService.login("john@example.com", "12345")).thenReturn(mockAuth);
+                  when(jwtUtil.generateToken(1, "john")).thenReturn("login-token");
 
-         UserDto dto = createDto(null, "john@example.com", "wrong");
+                  UserDto dto = createDto(null, "john@example.com", "12345");
 
-         mockMvc.perform(
-               post("/user/login")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().is4xxClientError());
+                  mockMvc.perform(
+                              post("/user/login")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(toJson(dto)))
+                              .andExpect(status().isOk())
+                              .andExpect(content().string("login-token"));
+            }
+
+            @Test
+            @DisplayName("Login fails: user not found")
+            void testLoginUserNotFound() throws Exception {
+                  when(userService.login(eq("ghost@example.com"), eq("12345")))
+                              .thenThrow(new UserNotFoundException("User not found"));
+
+                  UserDto dto = createDto(null, "ghost@example.com", "12345");
+
+                  mockMvc.perform(
+                              post("/user/login")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(toJson(dto)))
+                              .andExpect(status().is4xxClientError());
+            }
+
+            @Test
+            @DisplayName("Login fails: wrong password")
+            void testLoginWrongPassword() throws Exception {
+                  when(userService.login(eq("john@example.com"), eq("wrong")))
+                              .thenThrow(new BadCredentialsException("Invalid"));
+
+                  UserDto dto = createDto(null, "john@example.com", "wrong");
+
+                  mockMvc.perform(
+                              post("/user/login")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(toJson(dto)))
+                              .andExpect(status().is4xxClientError());
+            }
       }
-   }
 
-   @Nested
-   @DisplayName("Get User Info Tests")
-   class GetUserInfoTests {
+      // ---------------- Get user info ----------------
+      @Nested
+      @DisplayName("Authenticated Get User Info")
+      class InfoTests {
 
-      @Test
-      @DisplayName("Get user info success")
-      void testGetUserInfoSuccess() throws Exception {
+            @Test
+            @DisplayName("Get info success")
+            void testGetInfoSuccess() throws Exception {
+                  User user = new User();
+                  user.setUsername("john");
+                  user.setEmail("john@example.com");
 
-         User user = new User();
-         user.setUsername("john");
-         user.setEmail("john@example.com");
+                  when(userService.getUserInfo(1)).thenReturn(new UserDto(user));
 
-         when(userService.getUserInfo(1)).thenReturn(new UserDto(user));
+                  AuthUser auth = new AuthUser(1, "john");
+                  setAuthentication(auth);
 
-         mockMvc.perform(get("/user/info/1"))
-               .andExpect(status().isOk())
-               .andExpect(jsonPath("$.username").value("john"))
-               .andExpect(jsonPath("$.email").value("john@example.com"));
+                  try {
+                        mockMvc.perform(
+                                    get("/user/info"))
+                                    .andExpect(status().isOk())
+                                    .andExpect(jsonPath("$.username").value("john"))
+                                    .andExpect(jsonPath("$.email").value("john@example.com"));
+                  } finally {
+                        clearAuthentication();
+                  }
+            }
+
+            @Test
+            @DisplayName("Get info fails: user not found")
+            void testGetInfoNotFound() throws Exception {
+                  when(userService.getUserInfo(99)).thenThrow(new UserNotFoundException("User not found"));
+
+                  AuthUser auth = new AuthUser(99, "ghost");
+                  setAuthentication(auth);
+
+                  try {
+                        mockMvc.perform(
+                                    get("/user/info"))
+                                    .andExpect(status().is4xxClientError());
+                  } finally {
+                        clearAuthentication();
+                  }
+            }
       }
 
-      @Test
-      @DisplayName("Get user info fails: user not found")
-      void testGetUserNotFound() throws Exception {
+      // ---------------- Update user ----------------
+      @Nested
+      @DisplayName("Update user")
+      class UpdateTests {
 
-         doThrow(new UserNotFoundException("User not found"))
-               .when(userService).getUserInfo(99);
+            @Test
+            @DisplayName("Update success")
+            void testUpdateSuccess() throws Exception {
+                  UserDto dto2 = new UserDto();
+                  dto2.setUsername("newName");
 
-         mockMvc.perform(get("/user/info/99"))
-               .andExpect(status().is4xxClientError());
+                  doNothing().when(userService).updateUser(any(UserDto.class), eq(1));
+
+                  AuthUser auth = new AuthUser(1, "john");
+                  setAuthentication(auth);
+
+                  try {
+                        mockMvc.perform(
+                                    put("/user/update")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(toJson(dto2)))
+                                    .andExpect(status().isOk())
+                                    .andExpect(content().string("User updated"));
+                  } finally {
+                        clearAuthentication();
+                  }
+            }
+
+            @Test
+            @DisplayName("Update fails: username exists")
+            void testUpdateUsernameExists() throws Exception {
+                  UserDto dto2 = new UserDto();
+                  dto2.setUsername("taken");
+
+                  doThrow(new UsernameAlreadyExistsException("Username exists"))
+                              .when(userService).updateUser(any(UserDto.class), eq(1));
+
+                  AuthUser auth = new AuthUser(1, "john");
+                  setAuthentication(auth);
+
+                  try {
+                        mockMvc.perform(
+                                    put("/user/update")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(toJson(dto2)))
+                                    .andExpect(status().is4xxClientError());
+                  } finally {
+                        clearAuthentication();
+                  }
+            }
       }
-   }
 
-   @Nested
-   @DisplayName("Update User Tests")
-   class UpdateTests {
+      // ---------------- Delete user ----------------
+      @Nested
+      @DisplayName("Delete user")
+      class DeleteTests {
 
-      @Test
-      @DisplayName("Update success")
-      void testUpdateSuccess() throws Exception {
+            @Test
+            @DisplayName("Delete success")
+            void testDeleteSuccess() throws Exception {
+                  doNothing().when(userService).deleteUser(1);
 
-         doNothing().when(userService).updateUser(any(UserDto.class), eq(1));
+                  AuthUser auth = new AuthUser(1, "john");
+                  setAuthentication(auth);
 
-         UserDto dto = new UserDto();
-         dto.setUsername("newName");
+                  try {
+                        mockMvc.perform(
+                                    delete("/user/delete"))
+                                    .andExpect(status().isOk())
+                                    .andExpect(content().string("User deleted"));
+                  } finally {
+                        clearAuthentication();
+                  }
+            }
 
-         mockMvc.perform(
-               put("/user/update/1")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(toJson(dto)))
-               .andExpect(status().isOk())
-               .andExpect(content().string("User updated"));
+            @Test
+            @DisplayName("Delete fails: repository error (mapped by handler)")
+            void testDeleteFails() throws Exception {
+                  doThrow(new RuntimeException("db error")).when(userService).deleteUser(1);
+
+                  AuthUser auth = new AuthUser(1, "john");
+                  setAuthentication(auth);
+
+                  try {
+                        mockMvc.perform(
+                                    delete("/user/delete"))
+                                    .andExpect(status().is5xxServerError());
+                  } finally {
+                        clearAuthentication();
+                  }
+            }
       }
-   }
-
-   @Nested
-   @DisplayName("Delete User Tests")
-   class DeleteTests {
-
-      @Test
-      @DisplayName("Delete success")
-      void testDeleteSuccess() throws Exception {
-
-         doNothing().when(userService).deleteUser(1);
-
-         mockMvc.perform(delete("/user/delete/1"))
-               .andExpect(status().isOk())
-               .andExpect(content().string("User deleted"));
-      }
-   }
 }
