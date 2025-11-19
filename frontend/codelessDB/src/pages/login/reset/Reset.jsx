@@ -3,20 +3,25 @@ import { RecoveryContext } from "../../../App";
 import "./Reset.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Reset() {
   const { setPage } = useContext(RecoveryContext);
+  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [checkboxChecked, setCheckboxChecked] = useState(false);
 
-  function changePassword() {
+  async function changePassword() {
+
     if (!checkboxChecked) {
       setError("You must accept the Terms and Conditions.");
       return;
     }
+
     if (!password || !confirmPassword) {
       setError("Please fill in both fields");
       return;
@@ -32,7 +37,30 @@ export default function Reset() {
       return;
     }
     setError("");
-    setPage("recovered");
+
+    const token = localStorage.getItem("authToken");
+    // console.log(token);
+    
+    try {
+      const response = await axios.put(
+        "http://localhost:8080/user/update",
+        {
+          password: password
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      console.log("Password updated:", response.data);
+      navigate("/recovered");
+    
+    } catch (err) {
+      console.error(err);
+      setError("Failed to change password. Try again.");
+    }
   }
 
   function getPasswordChecks(pass) {
@@ -44,6 +72,7 @@ export default function Reset() {
       symbol: /[^A-Za-z0-9]/.test(pass),
     };
   }
+  
   const checks = getPasswordChecks(password);
 
   function checkStrength(pass) {
@@ -113,7 +142,7 @@ export default function Reset() {
 
           <div className="remember-forget" style={{ justifyContent: "center" }}>
             <label>
-              <input type="checkbox" value={checkboxChecked} onChange={()=>setCheckboxChecked(!checkboxChecked)}/>
+              <input type="checkbox" value={checkboxChecked} onChange={() => setCheckboxChecked(!checkboxChecked)} />
               <span style={{ marginLeft: "5px" }}>
                 I accept the{" "}
                 <a href="#" style={{ textDecoration: "underline", color: "#000" }}>

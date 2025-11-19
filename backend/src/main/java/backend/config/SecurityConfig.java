@@ -8,38 +8,55 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import backend.security.GoogleSuccessHandler;
 import backend.security.JwtAuthenticationFilter;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-   @Autowired
-   private JwtAuthenticationFilter jwtFilter;
+        @Autowired
+        private JwtAuthenticationFilter jwtFilter;
 
-   @Autowired
-   private GoogleSuccessHandler googleSuccessHandler;
+        @Autowired
+        private GoogleSuccessHandler googleSuccessHandler;
 
-   @Bean
-   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-      // Backend -> Google
-      // oauth2/auth/google
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/user/oauth2/**", "/user/login/**", "/user/signup/**",
+                                                                "/auth/send-otp", "/user/forgot-password")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .oauth2Login(oauth -> oauth
+                                                .authorizationEndpoint(a -> a.baseUri("/oauth2/auth/google"))
+                                                .redirectionEndpoint(r -> r.baseUri("/login/oauth2/google/**"))
+                                                .successHandler(googleSuccessHandler))
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-      // Google -> Backend (redirect url)
-      // /login/oauth2/google
-      http
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                  .requestMatchers("/oauth2/**", "/login/**", "/signup/**")
-                  .permitAll().anyRequest().authenticated())
-            .oauth2Login(oauth -> oauth
-                  .authorizationEndpoint(a -> a.baseUri("/oauth2/auth/google"))
-                  .redirectionEndpoint(r -> r.baseUri("/login/oauth2/google/**"))
-                  .successHandler(googleSuccessHandler))
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                return http.build();
+        }
 
-      return http.build();
-   }
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // Specific headers only
+                configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration); // CORS on all paths
+                return source;
+        }
 }

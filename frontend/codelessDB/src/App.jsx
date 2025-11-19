@@ -4,7 +4,7 @@ import LogIn from './pages/login/LogIn.jsx';
 import SignUp from './pages/signup/SignUp.jsx';
 import OTPInput from './pages/login/otp/OTPInput.jsx';
 import Reset from './pages/login/reset/Reset.jsx';
-import Recovered from './pages/login/Recovered/Recovered.jsx';
+import Recovered from './pages/login/recovered/Recovered.jsx';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 export const RecoveryContext = createContext();

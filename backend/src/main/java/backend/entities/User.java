@@ -31,7 +31,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 @Data
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,8 +56,8 @@ public class User {
     private String password;
 
     @Lob
-    @Column(columnDefinition = "BLOB")
-    private byte[] picture;
+    @Column(columnDefinition = "LONGTEXT")
+    private String picture;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

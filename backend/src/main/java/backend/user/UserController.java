@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import backend.entities.User;
 import backend.security.AuthUser;
 import backend.security.JwtUtil;
 
@@ -37,6 +38,15 @@ public class UserController {
 		AuthUser user = userService.login(userDto.getEmail(), userDto.getRawPassword());
 		String token = jwtUtil.generateToken(user.userId(), user.username());
 		return ResponseEntity.ok(token);
+	}
+
+	@PostMapping("/forgot-password")
+	public ResponseEntity<?> checkEmailExists(@RequestBody UserDto userDto) {
+		User user = userService.findUserByEmail(userDto.getEmail());
+		if(user == null) {
+			return ResponseEntity.badRequest().body("Email does not exist");
+		}
+		return ResponseEntity.ok(jwtUtil.generateToken(user.getId(), user.getUsername()));
 	}
 
 	@GetMapping("/login")

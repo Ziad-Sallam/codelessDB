@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import backend.entities.User;
 import backend.security.AuthUser;
@@ -26,6 +27,7 @@ public class UserService {
 		return encoder.encode(rawPassword);
 	}
 
+	@Transactional
 	public int createUser(UserDto userDto) throws RuntimeException {
 		if (userDto.getEmail() == null) {
 			throw new IllegalArgumentException("Email is required");
@@ -57,11 +59,16 @@ public class UserService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
+
+		if (userDto.getPicture() != null) {
+			newUser.setPicture(userDto.getPicture());
+		}
 		userRepository.save(newUser);
 
 		return newUser.getId();
 	}
 
+	@Transactional
 	public AuthUser login(String email, String rawPassword) throws RuntimeException {
 		User user = userRepository.findByEmail(email);
 		if (user == null) {
@@ -84,6 +91,7 @@ public class UserService {
 		return new UserDto(user);
 	}
 
+	@Transactional
 	public void updateUser(UserDto userDto, int id) throws RuntimeException {
 		User user = userRepository.findById(id);
 		if (user == null) {
@@ -112,6 +120,7 @@ public class UserService {
 		userRepository.save(user);
 	}
 
+	@Transactional
 	public void deleteUser(int id) throws RuntimeException {
 		userRepository.deleteById(id);
 		// diagrams (if the user is the only owner), servers deletion logic here

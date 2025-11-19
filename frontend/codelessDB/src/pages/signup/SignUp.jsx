@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./SignUp.css";
+import axios from "axios";
 
 import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
 import { IoIosMail } from "react-icons/io";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,18 +20,15 @@ const SignUp = () => {
   const [preview, setPreview] = useState(null);
   const [imageError, setImageError] = useState("");
 
-
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Must be an image
     if (!file.type.startsWith("image/")) {
       setImageError("Only image files are allowed.");
       return;
     }
 
-    // Must be <= 1MB
     if (file.size > 1024 * 1024) {
       setImageError("Image must be less than 1MB.");
       return;
@@ -36,17 +36,14 @@ const SignUp = () => {
 
     setImageError("");
 
-    // Convert image to Base64 binary string
     const reader = new FileReader();
     reader.onloadend = () => {
-      setUserImage(reader.result); // Base64 string
-      setPreview(URL.createObjectURL(file)); // Live preview
+      setUserImage(reader.result);
+      setPreview(URL.createObjectURL(file));
     };
 
-    reader.readAsDataURL(file); // <-- Converts to Base64
-
+    reader.readAsDataURL(file);
   };
-
 
   function getPasswordChecks(pass) {
     return {
@@ -59,33 +56,55 @@ const SignUp = () => {
   }
   const checks = getPasswordChecks(password);
 
-
   useEffect(() => {
     document.title = "SignUp | CodeLess";
   }, []);
 
-  // 🔍 Password strength function
   function checkStrength(pass) {
     const c = getPasswordChecks(pass);
     return c.length && c.upper && c.lower && c.number && c.symbol;
   }
 
-  // 🚫 Prevent submit if weak
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!checkStrength(password)) {
       setError("Password is weak.");
       return;
     }
-
     if (password !== confirmPass) {
       setError("Passwords do not match.");
       return;
     }
-
     setError("");
-    alert("Form Submitted Successfully!");
+
+    try {
+      // Send OTP first
+      const response = await axios.post("http://localhost:8080/auth/send-otp", {
+        email: mail
+      });
+
+      const otp = response.data;
+      console.log("Received OTP:", otp);
+
+      // Store OTP and signup data temporarily
+      localStorage.setItem("otp", otp);
+      localStorage.setItem("email", mail);
+      localStorage.setItem("otpPurpose", "signup"); // Track purpose
+      localStorage.setItem("signupData", JSON.stringify({
+        username,
+        email: mail,
+        password,
+        picture: userImage
+      }));
+
+      alert("OTP sent to your email!");
+      navigate("/otp");
+
+    } catch (err) {
+      console.error(err);
+      setError("Failed to send OTP. Try again.");
+    }
   };
 
   return (
@@ -102,7 +121,7 @@ const SignUp = () => {
               <h1>Sign Up</h1>
 
               <div className="image-upload-container">
-                {userImage!= null && <button type="button" className="remove-image-button" onClick={() => {
+                {userImage != null && <button type="button" className="remove-image-button" onClick={() => {
                   setUserImage(null);
                   setPreview(null);
                 }}>x</button>}
@@ -127,7 +146,6 @@ const SignUp = () => {
 
               {imageError && <p className="error">{imageError}</p>}
 
-              {/* Username */}
               <div className="input-box">
                 <FaUser className="icon" />
                 <input
@@ -139,7 +157,6 @@ const SignUp = () => {
                 />
               </div>
 
-              {/* Email */}
               <div className="input-box">
                 <IoIosMail className="icon" />
                 <input
@@ -151,7 +168,6 @@ const SignUp = () => {
                 />
               </div>
 
-              {/* Password */}
               <div className="input-box">
                 <TbLockPassword className="icon" />
                 <input
@@ -187,7 +203,6 @@ const SignUp = () => {
                 </li>
               </ul>
 
-              {/* Confirm Password */}
               <div className="input-box">
                 <TbLockPassword className="icon" />
                 <input
