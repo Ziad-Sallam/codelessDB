@@ -1,12 +1,15 @@
-name: Check java tests
+name: Check Java Tests
 
 on:
   push:
     branches:
       - main
       - milestone1
-      # - SCRUM-14-schema-to-sql-generation
-  pull_request: # optional, also run on PRs
+  
+  pull_request:
+    branches:
+      - main
+      - milestone1
 
 jobs:
   test:
@@ -21,8 +24,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: maven
 
       - name: Run tests
         run: |
-          cd ./backend
-          mvn test
+          cd backend
+          mvn -B test
