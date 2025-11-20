@@ -9,12 +9,12 @@ import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 public interface IUserDiagramService {
     UUID createDiagram(int userId, DiagramCreateRequestDto request);
-    LocalDateTime updateDiagram(int userId, DiagramUpdateRequestDto request);
+    Date updateDiagram(int userId, DiagramUpdateRequestDto request);
     void deleteDiagram(int userId, UUID id);
     DiagramDto searchDiagramById(int userId, UUID id);
     Page<DiagramDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable);

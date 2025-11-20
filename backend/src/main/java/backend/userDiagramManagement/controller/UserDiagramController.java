@@ -16,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @RestController
@@ -46,7 +47,7 @@ public class UserDiagramController {
         int userId = authUser.userId();
         request.setId(id);
 
-        LocalDateTime updateDate = userDiagramService.updateDiagram(userId, request);
+        Date updateDate = userDiagramService.updateDiagram(userId, request);
 
         return ResponseEntity.ok(updateDate);
     }
