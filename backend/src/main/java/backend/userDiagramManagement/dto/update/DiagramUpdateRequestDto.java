@@ -9,4 +9,5 @@ public class DiagramUpdateRequestDto {
     private UUID id;
     private String name;
     private String jsonContent;
+    private byte[] thumbnail;
 }
