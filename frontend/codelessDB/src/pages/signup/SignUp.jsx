@@ -5,8 +5,9 @@ import axios from "axios";
 import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
 import { IoIosMail } from "react-icons/io";
+import { FcGoogle } from "react-icons/fc";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const SignUp = () => {
   const [userImage, setUserImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [imageError, setImageError] = useState("");
+  const [searchParams] = useSearchParams();
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -65,9 +67,33 @@ const SignUp = () => {
     return c.length && c.upper && c.lower && c.number && c.symbol;
   }
 
+  const handleGoogleSignUp = () => {
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  };
+
+  useEffect(() => {
+    document.title = "SignUp | CodeLess";
+
+    const token = searchParams.get('token');
+    const oauthError = searchParams.get('error');
+
+    if (token) {
+      localStorage.setItem('authToken', token);
+      console.log('OAuth signup successful');
+
+      window.history.replaceState({}, document.title, "/SignUp");
+      navigate('/');
+
+    } else if (oauthError) {
+      setError('Google signup failed. Please try again.');
+
+      window.history.replaceState({}, document.title, "/SignUp");
+    }
+  }, [searchParams, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!checkStrength(password)) {
       setError("Password is weak.");
       return;
@@ -90,7 +116,7 @@ const SignUp = () => {
       // Store OTP and signup data temporarily
       localStorage.setItem("otp", otp);
       localStorage.setItem("email", mail);
-      localStorage.setItem("otpPurpose", "signup"); // Track purpose
+      localStorage.setItem("otpPurpose", "signup");
       localStorage.setItem("signupData", JSON.stringify({
         username,
         email: mail,
@@ -223,6 +249,19 @@ const SignUp = () => {
               <button type="submit" className="submit">Sign Up</button>
 
               {error && <p className="error-message">{error}</p>}
+
+              <div className="divider">
+                <span>OR</span>
+              </div>
+
+              <button
+                type="button"
+                className="google-button"
+                onClick={handleGoogleSignUp}
+              >
+                <FcGoogle className="google-icon" />
+                Sign up with Google
+              </button>
 
               <div className="register">
                 <p>

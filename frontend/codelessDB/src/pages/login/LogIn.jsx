@@ -5,8 +5,9 @@ import axios from "axios";
 import { FaUser } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { RecoveryContext } from "../../App";
 
 const LogIn = () => {
@@ -16,10 +17,31 @@ const LogIn = () => {
    const [password, setPassword] = useState('');
    const [error, setError] = useState('');
    const [showPassword, setShowPassword] = useState(false);
+   const [searchParams] = useSearchParams();
 
    useEffect(() => {
       document.title = "Login | CodeLess";
-   }, []);
+
+      const token = searchParams.get('token');
+      const oauthError = searchParams.get('error');
+
+      if (token) {
+         localStorage.setItem('authToken', token);
+         console.log('OAuth login successful');
+
+         window.history.replaceState({}, document.title, "/login");
+         navigate('/');
+
+      } else if (oauthError) {
+         setError('Google login failed. Please try again.');
+
+         window.history.replaceState({}, document.title, "/login");
+      }
+   }, [searchParams, navigate]);
+
+   const handleGoogleLogin = () => {
+      window.location.href = "http://localhost:8080/oauth2/authorization/google";
+   };
 
    const handleLogin = async () => {
       if (!mail || !password) {
@@ -35,7 +57,7 @@ const LogIn = () => {
          const token = response.data;
          localStorage.setItem("authToken", token);
          alert("Login successful!");
-         // navigate("/");
+         navigate("/");
       }
       catch (err) {
          console.error(err);
@@ -75,7 +97,7 @@ const LogIn = () => {
             localStorage.setItem("email", mail);
             localStorage.setItem("otpPurpose", "reset");
             setEmail(mail);
-            
+
             alert("OTP sent to your email!");
             navigate("/otp");
          }
@@ -148,6 +170,19 @@ const LogIn = () => {
 
                      <button type="submit" className="submit" onClick={handleLogin}>Log In</button>
                      {error && <p style={{ color: "red" }}>{error}</p>}
+
+                     <div className="divider">
+                        <span>OR</span>
+                     </div>
+
+                     <button
+                        type="button"
+                        className="google-button"
+                        onClick={handleGoogleLogin}
+                     >
+                        <FcGoogle className="google-icon" />
+                        Sign in with Google
+                     </button>
 
                      <div className="register">
                         <p>

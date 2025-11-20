@@ -16,56 +16,85 @@ import backend.user.UserDto;
 import backend.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-    @Autowired
-    private UserService userService;
+  @Autowired
+  private UserService userService;
 
-    @Value("${frontend.url}")
-    private String frontUrl;
+  @Value("${frontend.url}")
+  private String frontUrl;
 
-    @Override
-    public void onAuthenticationSuccess(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Authentication authentication) throws IOException {
+  @Override
+  public void onAuthenticationSuccess(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      Authentication authentication) throws IOException {
 
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+    log.info("Request URL: {}", request.getRequestURL());
+    log.info("Request URI: {}", request.getRequestURI());
 
-        String email = oAuth2User.getAttribute("email");
-        String username = oAuth2User.getAttribute("name");
-        // String picture = oAuth2User.getAttribute("picture"); // profile picture URL,
-        // need to get byte[] from this
+    try {
+      OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        // if user exists, get user id
-        User user = userService.findUserByEmail(email);
+      String email = oAuth2User.getAttribute("email");
+      String username = oAuth2User.getAttribute("name");
+      String picture = oAuth2User.getAttribute("picture");
 
-        if (user == null) { // create a new user
-            UserDto userDto = new UserDto();
-            userDto.setEmail(email);
-            userDto.setRawPassword(UUID.randomUUID().toString());
+      log.info("=== Google OAuth Success ===");
+      log.info("Email: {}", email);
+      log.info("Username: {}", username);
+      log.info("Request URI: {}", request.getRequestURI());
 
-            int attempt = new Random().nextInt(1, 100);
-            while (userService.findUserByUsername(username) != null) {
-                username = username + attempt;
-                attempt++;
-            }
-            userDto.setUsername(username);
+      // Check if user exists
+      User user = userService.findUserByEmail(email);
 
-            userService.createUser(userDto);
+      if (user == null) {
+        // Create a new user
+        log.info("Creating new user for email: {}", email);
 
-        } else {
-            username = user.getUsername();
+        UserDto userDto = new UserDto();
+        userDto.setEmail(email);
+        userDto.setRawPassword(UUID.randomUUID().toString());
+
+        // Ensure unique username
+        String uniqueUsername = username;
+        int attempt = new Random().nextInt(1, 100);
+        while (userService.findUserByUsername(uniqueUsername) != null) {
+          uniqueUsername = username + attempt;
+          attempt++;
         }
+        userDto.setUsername(uniqueUsername);
 
-        String jwt = jwtUtil.generateToken(user.getId(), username);
+        // Create user and get the userId
+        int userId = userService.createUser(userDto);
+        log.info("New user created with ID: {}", userId);
 
-        String redirectUrl = frontUrl + "/login/oauth2/google?token=" + jwt;
-        response.sendRedirect(redirectUrl);
+        // Fetch the created user from database
+        user = userService.findUserByEmail(email);
+
+      } else {
+        log.info("Existing user found with ID: {}", user.getId());
+      }
+
+      // Generate JWT token
+      String jwt = jwtUtil.generateToken(user.getId(), user.getUsername());
+
+      // Redirect to frontend with token
+      String redirectUrl = frontUrl + "/login?token=" + jwt;
+
+      log.info("Redirecting to: {}", redirectUrl);
+      response.sendRedirect(redirectUrl);
+
+    } catch (Exception e) {
+      log.error("Error in Google OAuth authentication", e);
+      response.sendRedirect(frontUrl + "/login?error=oauth_failed");
     }
+  }
 }

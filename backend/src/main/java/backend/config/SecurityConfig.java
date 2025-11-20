@@ -21,42 +21,48 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-        @Autowired
-        private JwtAuthenticationFilter jwtFilter;
+	@Autowired
+	private JwtAuthenticationFilter jwtFilter;
 
-        @Autowired
-        private GoogleSuccessHandler googleSuccessHandler;
+	@Autowired
+	private GoogleSuccessHandler googleSuccessHandler;
 
-        @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-                http
-                                .csrf(AbstractHttpConfigurer::disable)
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/user/oauth2/**", "/user/login/**", "/user/signup/**",
-                                                                "/auth/send-otp", "/user/forgot-password")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
-                                .oauth2Login(oauth -> oauth
-                                                .authorizationEndpoint(a -> a.baseUri("/oauth2/auth/google"))
-                                                .redirectionEndpoint(r -> r.baseUri("/login/oauth2/google/**"))
-                                                .successHandler(googleSuccessHandler))
-                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http
+				.csrf(AbstractHttpConfigurer::disable)
+				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers(
+								"/user/login/**",
+								"/user/signup/**",
+								"/auth/send-otp",
+								"/user/forgot-password",
+								"/oauth2/**",
+								"/login/oauth2/**")
+						.permitAll()
+						.anyRequest().authenticated())
+				.oauth2Login(oauth -> oauth
+						.redirectionEndpoint(redirect -> redirect
+								.baseUri("/login/oauth2/google"))
+						.successHandler(googleSuccessHandler)
+						.failureUrl("/login?error=true")) // check me
+				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-                return http.build();
-        }
+		return http.build();
+	}
 
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // Specific headers only
-                configuration.setAllowCredentials(true);
-                configuration.setMaxAge(3600L);
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // Specific headers only
+		configuration.setAllowCredentials(true);
+		configuration.setMaxAge(3600L);
 
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", configuration); // CORS on all paths
-                return source;
-        }
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration); // CORS on all paths
+		return source;
+	}
 }
