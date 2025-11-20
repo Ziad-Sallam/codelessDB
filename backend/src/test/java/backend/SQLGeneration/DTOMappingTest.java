@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -154,5 +155,64 @@ public class DTOMappingTest {
                         c.getOnDelete() == onDelete &&
                         c.getOnUpdate() == onUpdate);
         assertTrue(found, "ForeignKeyConstraint on attribute '" + attrName + "' not matching expected values");
+    }
+
+    @Test
+    void checkConstraintDTO_gettersSetters() {
+        CheckConstraintDTO check = new CheckConstraintDTO("x > 0");
+        assertEquals("x > 0", check.getExpression());
+    }
+
+    @Test
+    void defaultConstraintDTO_gettersSetters() {
+        DefaultConstraintDTO def = new DefaultConstraintDTO("100");
+        assertEquals("100", def.getDefaultValue());
+    }
+
+    @Test
+    void foreignKeyConstraintDTO_gettersSetters() {
+        ForeignKeyConstraintDTO fk = new ForeignKeyConstraintDTO(
+                "Employee", "id", ForeignKeyAction.CASCADE, ForeignKeyAction.NO_ACTION
+        );
+        assertEquals("Employee", fk.getReferencedTable());
+        assertEquals("id", fk.getReferencedColumn());
+        assertEquals(ForeignKeyAction.CASCADE, fk.getOnDelete());
+        assertEquals(ForeignKeyAction.NO_ACTION, fk.getOnUpdate());
+    }
+
+    @Test
+    void primaryKeyConstraintDTO_test() {
+        PrimaryKeyConstraintDTO pk = new PrimaryKeyConstraintDTO();
+        assertNotNull(pk);
+    }
+
+    @Test
+    void sqlTypeNameEnumTest() {
+        for (SQLTypeName name : SQLTypeName.values()) {
+            assertNotNull(name.name());
+        }
+    }
+
+    @Test
+    void sqlDataTypeTest() {
+        SQLDataType intType = new SQLDataType(SQLTypeName.INT, null, null, null, null);
+        assertEquals(SQLTypeName.INT, intType.getName());
+        SQLDataType varcharType = new SQLDataType(SQLTypeName.VARCHAR, 100, null, null, null);
+        assertEquals(100, varcharType.getLength());
+    }
+
+    @Test
+    void foreignKeyActionEnumTest() {
+        for (ForeignKeyAction action : ForeignKeyAction.values()) {
+            assertNotNull(action.name());
+        }
+    }
+
+    @Test
+    void checkConstraintEqualsHash() {
+        CheckConstraintDTO c1 = new CheckConstraintDTO("x>0");
+        CheckConstraintDTO c2 = new CheckConstraintDTO("x>0");
+        assertEquals(c1, c2);
+        assertEquals(c1.hashCode(), c2.hashCode());
     }
 }

@@ -1,67 +1,98 @@
 package backend.SQLGeneration.service.util;
 
 import backend.SQLGeneration.dto.*;
-import backend.SQLGeneration.dto.constraint.ForeignKeyConstraintDTO;
-import org.springframework.stereotype.Service;
+import backend.SQLGeneration.dto.constraint.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-@Service
 public class SchemaValidatorService {
-    public void validateSchema(SchemaDTO schemaDTO) {
+
+    /**
+     * Validates the given schema for:
+     * 1. Null or empty schema/entities
+     * 2. Duplicate entity names
+     * 3. Foreign key references (table + column)
+     * Throws SchemaValidationException if invalid
+     */
+    public void validateSchema(SchemaDTO schema) {
+        if (schema == null) throw new SchemaValidationException("SchemaDTO is null");
+
+        List<EntityDTO> entities = schema.getEntities();
+        if (entities == null || entities.isEmpty())
+            throw new SchemaValidationException("Schema has no entities");
+
+        Map<String, EntityDTO> entityMap = buildEntityMap(entities);
+
+        entities.forEach(entity -> validateEntity(entity, entityMap));
+    }
+
+    /**
+     * Builds a map of entity name → EntityDTO
+     * Checks for duplicate entity names
+     */
+    private Map<String, EntityDTO> buildEntityMap(List<EntityDTO> entities) {
         Map<String, EntityDTO> entityMap = new HashMap<>();
-
-        for (EntityDTO entity : schemaDTO.getEntities()) {
-            if (entity.getName() == null || entity.getName().isBlank()) {
-                throw new SchemaValidationException("Entity with null or blank name found");
+        for (EntityDTO e : entities) {
+            String name = e.getName();
+            if (entityMap.containsKey(name)) {
+                throw new SchemaValidationException("Duplicate entity: " + name);
             }
-            if (entityMap.containsKey(entity.getName())) {
-                throw new SchemaValidationException("Duplicate entity name: " + entity.getName());
-            }
-            entityMap.put(entity.getName(), entity);
+            entityMap.put(name, e);
+        }
+        return entityMap;
+    }
 
-            Set<String> attrNames = new HashSet<>();
-            if (entity.getAttributes() != null) {
-                for (AttributeDTO attr : entity.getAttributes()) {
-                    if (attr.getName() == null || attr.getName().isBlank()) {
-                        throw new SchemaValidationException("Attribute with null or blank name in entity: " + entity.getName());
-                    }
-                    if (!attrNames.add(attr.getName())) {
-                        throw new SchemaValidationException("Duplicate attribute name '" + attr.getName() + "' in entity: " + entity.getName());
-                    }
+    /**
+     * Validates all attributes of an entity
+     */
+    private void validateEntity(EntityDTO entity, Map<String, EntityDTO> entityMap) {
+        if (entity.getAttributes() == null) return;
 
-                    // Check foreign keys
-                    if (attr.getConstraints() != null) {
-                        for (ConstraintDTO c : attr.getConstraints()) {
-                            if (c instanceof ForeignKeyConstraintDTO fk) {
-                                String refTable = fk.getReferencedTable();
-                                String refColumn = fk.getReferencedColumn();
+        entity.getAttributes().forEach(attr -> validateAttribute(attr, entity, entityMap));
+    }
 
-                                if (!entityMap.containsKey(refTable)) {
-                                    throw new SchemaValidationException(
-                                            "Invalid FK in " + entity.getName() + "." + attr.getName() +
-                                                    ": referenced table '" + refTable + "' does not exist"
-                                    );
-                                }
+    /**
+     * Validates constraints for a single attribute
+     */
+    private void validateAttribute(AttributeDTO attr, EntityDTO entity, Map<String, EntityDTO> entityMap) {
+        if (attr.getConstraints() == null) return;
 
-                                EntityDTO referenced = entityMap.get(refTable);
-                                boolean columnExists = referenced.getAttributes().stream()
-                                        .anyMatch(a -> a.getName().equals(refColumn));
-                                if (!columnExists) {
-                                    throw new SchemaValidationException(
-                                            "Invalid FK in " + entity.getName() + "." + attr.getName() +
-                                                    ": referenced column '" + refColumn + "' does not exist in table " + refTable
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
+        for (ConstraintDTO cons : attr.getConstraints()) {
+            if (cons instanceof ForeignKeyConstraintDTO fk) {
+                validateForeignKey(fk, attr, entity, entityMap);
             }
         }
     }
 
+    /**
+     * Validates a foreign key:
+     * - referenced table exists
+     * - referenced column exists in that table
+     */
+    private void validateForeignKey(ForeignKeyConstraintDTO fk, AttributeDTO attr, EntityDTO entity, Map<String, EntityDTO> entityMap) {
+        String refTable = fk.getReferencedTable();
+        if (refTable == null || !entityMap.containsKey(refTable)) {
+            throw new SchemaValidationException(
+                    String.format("Invalid FK in '%s.%s': referenced table '%s' does not exist.",
+                            entity.getName(), attr.getName(), refTable)
+            );
+        }
+
+        String refColumn = fk.getReferencedColumn();
+        if (!columnExists(refColumn, entityMap.get(refTable))) {
+            throw new SchemaValidationException(
+                    String.format("Invalid FK in '%s.%s': referenced column '%s' does not exist in table '%s'.",
+                            entity.getName(), attr.getName(), refColumn, refTable)
+            );
+        }
+    }
+
+    /**
+     * Checks if a column exists in the given entity
+     */
+    private boolean columnExists(String columnName, EntityDTO entity) {
+        if (entity.getAttributes() == null) return false;
+        return entity.getAttributes().stream()
+                .anyMatch(attr -> attr.getName().equals(columnName));
+    }
 }
