@@ -1,0 +1,163 @@
+.table-node {
+  min-width: 250px;
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 4px;
+  font-family: monospace;
+  
+}
+
+.table-header {
+  background: #333;
+  padding: 5px;
+  text-align: center;
+}
+
+.table-name-input {
+  width: 80%;
+  background: transparent;
+  border: none;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  font-family: inherit;
+  font-size: 14px;
+}
+.table-name-input:focus {
+  outline: 1px solid #666;
+  background: #222;
+}
+
+.table-column {
+  position: relative;
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+}
+
+.column-inputs {
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  transition: all 0.7s ease;
+}
+
+/* Inputs inside columns */
+.column-name-input {
+  width: 80px; /* Fixed width or flex */
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  margin-right: 5px;
+}
+
+.column-type-select {
+  width: 70px;
+  border: none;
+  background: #f0f0f0;
+  font-size: 10px;
+  border-radius: 2px;
+}
+.constraints-btn {
+  position: absolute;
+  right: 20px;
+  top: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #000000;
+  transition: transform 0.3s ease;
+}
+
+.column-constraints {
+  position: relative;
+  background-color: #ececec;
+  margin-top: 5px;
+  padding-top: 5px;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.check-constraint {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  
+}
+
+.check-condition-select{
+  width: 40px;
+  border: none;
+  background: #f0f0f0;
+  font-size: 15px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.check-condition-input {
+  width: 80px;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.default-value-input {
+  width: 100px;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+
+
+.foreign-key-action-select {
+  width: 70px;
+  border: none;
+  background: #f0f0f0;
+  font-size: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+
+
+.add-btn {
+  width: 100%;
+  border: none;
+  background: #eee;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #555;
+}
+.add-btn:hover {
+  background: #ddd;
+}
+
+.delete-btn {
+    background: transparent;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    color: red;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Handles */
+.react-flow__handle {
+  width: 6px;
+  height: 6px;
+  background: #333;
+}

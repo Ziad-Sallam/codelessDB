@@ -7,6 +7,7 @@ import Reset from './pages/login/reset/Reset.jsx';
 import Recovered from './pages/login/recovered/Recovered.jsx';
 import Home from './pages/Home.jsx';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import Schema from './pages/schemaDrawing/schema.jsx';
 
 export const RecoveryContext = createContext();
 
@@ -18,6 +19,10 @@ function App() {
     {
       path: '/',
       element: <Home />
+    },
+    {
+      path: '/digram',
+      element: <Schema />
     },
     {
       path: '/login',
