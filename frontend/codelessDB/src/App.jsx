@@ -6,6 +6,7 @@ import OTPInput from './pages/login/otp/OTPInput.jsx';
 import Reset from './pages/login/reset/Reset.jsx';
 import Recovered from './pages/login/Recovered/Recovered.jsx';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import Schema from './pages/schemaDrawing/schema.jsx';
 
 export const RecoveryContext = createContext();
 
@@ -13,6 +14,10 @@ function App() {
   const [email, setEmail] = useState("");
   const [otp, setOTP] = useState("");
   const router = createBrowserRouter([
+    {
+      path: '/',
+      element: <Schema />
+    },
     {
       path: '/login',
       element: <LogIn />
