@@ -50,6 +50,7 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
       log.info("=== Google OAuth Success ===");
       log.info("Email: {}", email);
       log.info("Username: {}", username);
+      log.info("Picture: {}", picture);
       log.info("Request URI: {}", request.getRequestURI());
 
       // Check if user exists
@@ -71,6 +72,7 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
           attempt++;
         }
         userDto.setUsername(uniqueUsername);
+        userDto.setPicture(picture);
 
         // Create user and get the userId
         int userId = userService.createUser(userDto);
