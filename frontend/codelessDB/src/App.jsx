@@ -13,10 +13,11 @@ export const RecoveryContext = createContext();
 function App() {
   const [email, setEmail] = useState("");
   const [otp, setOTP] = useState("");
+
   const router = createBrowserRouter([
     {
       path: '/',
-      element: <Home/>
+      element: <Home />
     },
     {
       path: '/login',
@@ -39,6 +40,7 @@ function App() {
       element: <Recovered />
     }
   ]);
+  
   return (
     <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
       <div className="App">

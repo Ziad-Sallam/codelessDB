@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { RecoveryContext } from "../../../App";
+import { useState, useEffect } from "react";
 import "./Reset.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
@@ -7,20 +6,21 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Reset() {
-  const { setPage } = useContext(RecoveryContext);
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [checkboxChecked, setCheckboxChecked] = useState(false);
+
+  useEffect(() => {
+    const otpPurpose = localStorage.getItem("otpPurpose");
+
+    if (otpPurpose !== "reset") {
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
 
   async function changePassword() {
-
-    if (!checkboxChecked) {
-      setError("You must accept the Terms and Conditions.");
-      return;
-    }
 
     if (!password || !confirmPassword) {
       setError("Please fill in both fields");
@@ -38,9 +38,8 @@ export default function Reset() {
     }
     setError("");
 
-    const token = localStorage.getItem("authToken");
-    // console.log(token);
-    
+    const token = localStorage.getItem("token for_reset");
+
     try {
       const response = await axios.put(
         "http://localhost:8080/user/update",
@@ -53,10 +52,14 @@ export default function Reset() {
           },
         }
       );
-      
-      console.log("Password updated:", response.data);
+
+      localStorage.removeItem('token for_reset');
+      localStorage.removeItem('otp');
+      localStorage.removeItem('otpPurpose');
+      localStorage.removeItem('email');
+
       navigate("/recovered");
-    
+
     } catch (err) {
       console.error(err);
       setError("Failed to change password. Try again.");
@@ -72,7 +75,7 @@ export default function Reset() {
       symbol: /[^A-Za-z0-9]/.test(pass),
     };
   }
-  
+
   const checks = getPasswordChecks(password);
 
   function checkStrength(pass) {
@@ -142,13 +145,6 @@ export default function Reset() {
 
           <div className="remember-forget" style={{ justifyContent: "center" }}>
             <label>
-              <input type="checkbox" value={checkboxChecked} onChange={() => setCheckboxChecked(!checkboxChecked)} />
-              <span style={{ marginLeft: "5px" }}>
-                I accept the{" "}
-                <a href="#" style={{ textDecoration: "underline", color: "#000" }}>
-                  Terms and Conditions
-                </a>
-              </span>
             </label>
           </div>
 

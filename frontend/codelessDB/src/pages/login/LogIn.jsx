@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import "./LogIn.css";
 import axios from "axios";
 
@@ -20,23 +20,25 @@ const LogIn = () => {
    const [searchParams] = useSearchParams();
 
    useEffect(() => {
-      document.title = "Login | CodeLess";
+      document.title = "Log in | CodeLess";
+
+      const existingToken = localStorage.getItem('authToken');
+      if (existingToken) {
+         navigate('/', { replace: true });
+         return;
+      }
 
       const token = searchParams.get('token');
       const oauthError = searchParams.get('error');
 
       if (token) {
          localStorage.setItem('authToken', token);
-         console.log('OAuth login successful');
-
-         window.history.replaceState({}, document.title, "/login");
          navigate('/');
-
       } else if (oauthError) {
          setError('Google login failed. Please try again.');
-
-         window.history.replaceState({}, document.title, "/login");
       }
+
+      window.history.replaceState({}, document.title, "/login");
    }, [searchParams, navigate]);
 
    const handleGoogleLogin = () => {
@@ -56,7 +58,6 @@ const LogIn = () => {
          });
          const token = response.data;
          localStorage.setItem("authToken", token);
-         alert("Login successful!");
          navigate("/");
       }
       catch (err) {
@@ -72,27 +73,20 @@ const LogIn = () => {
       }
 
       try {
-         // First, check if email exists and get token
          const checkResponse = await axios.post("http://localhost:8080/user/forgot-password", {
             email: mail
          });
 
          if (checkResponse.status === 200) {
             const token = checkResponse.data;
-            console.log("Email verified. Token received. Sending OTP to:", mail);
+            localStorage.setItem("token for_reset", token);
 
-            // Store the token for password reset
-            localStorage.setItem("authToken", token);
-
-            // Email exists, now send OTP
             const otpResponse = await axios.post("http://localhost:8080/auth/send-otp", {
                email: mail
             });
 
             const otp = otpResponse.data;
-            console.log("Received OTP:", otp);
 
-            // Store OTP and mark purpose as reset
             localStorage.setItem("otp", otp);
             localStorage.setItem("email", mail);
             localStorage.setItem("otpPurpose", "reset");
@@ -157,15 +151,9 @@ const LogIn = () => {
                      </div>
 
                      <div className="forgot-password">
-                        <p onClick={handleForgotPassword} style={{ cursor: "pointer" }}>
+                        <p onClick={handleForgotPassword} style={{ cursor: "pointer", margin: "6px"}}>
                            Forgot Password?
                         </p>
-                     </div>
-
-                     <div className="remember-forget">
-                        <label>
-                           <input type="checkbox" /> Remember me
-                        </label>
                      </div>
 
                      <button type="submit" className="submit" onClick={handleLogin}>Log In</button>
@@ -181,12 +169,12 @@ const LogIn = () => {
                         onClick={handleGoogleLogin}
                      >
                         <FcGoogle className="google-icon" />
-                        Sign in with Google
+                        Log in with Google
                      </button>
 
                      <div className="register">
                         <p>
-                           Don't Have Account <Link to="/SignUp">signUp</Link>
+                           Don't Have Account ? <Link to="/SignUp">Sign Up</Link>
                         </p>
                      </div>
                   </form>

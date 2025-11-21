@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { RecoveryContext } from "../../../App";
 import "./OTPInput.css";
@@ -13,19 +13,24 @@ const OTPInput = () => {
   const [otpPurpose, setOtpPurpose] = useState("");
 
   useEffect(() => {
-    // Get the purpose from localStorage
+    const otp = localStorage.getItem("otp");
+    const storedEmail = localStorage.getItem("email");
     const purpose = localStorage.getItem("otpPurpose");
+
+    if (!otp || !storedEmail || !purpose) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     setOtpPurpose(purpose);
-  }, []);
+  }, [navigate]);
 
   const verifyOTP = async () => {
     const entered = otpInput.join("");
     const saved = localStorage.getItem("otp");
 
     if (entered === saved) {
-      // Check the purpose and handle accordingly
       if (otpPurpose === "signup") {
-        // Complete signup process
         try {
           const signupData = JSON.parse(localStorage.getItem("signupData"));
 
@@ -39,7 +44,6 @@ const OTPInput = () => {
           const token = response.data;
           localStorage.setItem("authToken", token);
 
-          // Clean up temporary data
           localStorage.removeItem("signupData");
           localStorage.removeItem("otp");
           localStorage.removeItem("otpPurpose");
@@ -50,7 +54,7 @@ const OTPInput = () => {
 
         } catch (error) {
           console.error("Signup Error:", error);
-          alert("Failed to create account. Please try again."); // take error from back
+          alert("Failed to create account. Please try again.");
         }
       } else if (otpPurpose === "reset") {
         navigate("/reset");
@@ -64,7 +68,6 @@ const OTPInput = () => {
     if (disable) return;
 
     const emailToUse = email || localStorage.getItem("email");
-    console.log("Resending OTP to email:", emailToUse);
 
     try {
       const response = await axios.post("http://localhost:8080/auth/send-otp", {
@@ -81,6 +84,14 @@ const OTPInput = () => {
       console.error(err);
       alert("Failed to resend OTP.");
     }
+  };
+
+  const handleCancel = () => {
+    localStorage.removeItem("otp");
+    localStorage.removeItem("email");
+    localStorage.removeItem("otpPurpose");
+    localStorage.removeItem("signupData");
+    navigate("/login");
   };
 
   useEffect(() => {
@@ -137,6 +148,17 @@ const OTPInput = () => {
           </div>
 
           <button onClick={verifyOTP} className="submit">Verify Code</button>
+
+          <button 
+            onClick={handleCancel} 
+            className="submit" 
+            style={{ 
+              backgroundColor: "#6c757d", 
+              marginTop: "10px" 
+            }}
+          >
+            Cancel
+          </button>
 
           <div style={{ marginTop: "20px", textAlign: "center" }}>
             <p style={{ fontSize: "14px" }}>

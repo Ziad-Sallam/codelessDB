@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./SignUp.css";
 import axios from "axios";
 
@@ -21,6 +21,28 @@ const SignUp = () => {
   const [preview, setPreview] = useState(null);
   const [imageError, setImageError] = useState("");
   const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    document.title = "Sign Up | CodeLess";
+
+    const existingToken = localStorage.getItem('authToken');
+    if (existingToken) {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    const token = searchParams.get('token');
+    const oauthError = searchParams.get('error');
+
+    if (token) {
+      localStorage.setItem('authToken', token);
+      navigate('/');
+    } else if (oauthError) {
+      setError('Google signup failed. Please try again.');
+    }
+
+    window.history.replaceState({}, document.title, "/SignUp");
+  }, [searchParams, navigate]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -58,10 +80,6 @@ const SignUp = () => {
   }
   const checks = getPasswordChecks(password);
 
-  useEffect(() => {
-    document.title = "SignUp | CodeLess";
-  }, []);
-
   function checkStrength(pass) {
     const c = getPasswordChecks(pass);
     return c.length && c.upper && c.lower && c.number && c.symbol;
@@ -70,26 +88,6 @@ const SignUp = () => {
   const handleGoogleSignUp = () => {
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
-
-  useEffect(() => {
-    document.title = "SignUp | CodeLess";
-
-    const token = searchParams.get('token');
-    const oauthError = searchParams.get('error');
-
-    if (token) {
-      localStorage.setItem('authToken', token);
-      console.log('OAuth signup successful');
-
-      window.history.replaceState({}, document.title, "/SignUp");
-      navigate('/');
-
-    } else if (oauthError) {
-      setError('Google signup failed. Please try again.');
-
-      window.history.replaceState({}, document.title, "/SignUp");
-    }
-  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -105,15 +103,12 @@ const SignUp = () => {
     setError("");
 
     try {
-      // Send OTP first
       const response = await axios.post("http://localhost:8080/auth/send-otp", {
         email: mail
       });
 
       const otp = response.data;
-      console.log("Received OTP:", otp);
 
-      // Store OTP and signup data temporarily
       localStorage.setItem("otp", otp);
       localStorage.setItem("email", mail);
       localStorage.setItem("otpPurpose", "signup");
@@ -265,7 +260,7 @@ const SignUp = () => {
 
               <div className="register">
                 <p>
-                  Already Have Account? <Link to="/login">Login</Link>
+                  Already Have Account ? <Link to="/login">Log In</Link>
                 </p>
               </div>
             </form>
