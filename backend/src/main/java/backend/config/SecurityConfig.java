@@ -37,7 +37,6 @@ public class SecurityConfig {
 								"/user/login/**",
 								"/user/signup/**",
 								"/auth/send-otp",
-								"/user/forgot-password",
 								"/oauth2/**",
 								"/login/oauth2/**")
 						.permitAll()
@@ -46,7 +45,7 @@ public class SecurityConfig {
 						.redirectionEndpoint(redirect -> redirect
 								.baseUri("/login/oauth2/google"))
 						.successHandler(googleSuccessHandler)
-						.failureUrl("/login?error=true")) // check me
+						.failureUrl("/login?error=true"))
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();

@@ -1,6 +1,24 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Recovered.css";
 
 export default function Recovered() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const existingToken = localStorage.getItem("authToken");
+
+    if (existingToken) {
+      navigate('/', { replace: true });
+    }
+    
+    const isRecovered = localStorage.getItem('recovered')
+    
+    if (!isRecovered) {
+      navigate('/login', { replace: true });
+    }
+    
+  }, [navigate]);
 
   return (
     <div className="bg">
@@ -17,8 +35,11 @@ export default function Recovered() {
           </p>
           <button
             className="submit"
-            onClick={() => window.location.href = "/login"}
-            style={{marginTop: '20px'}}
+            onClick={() =>{
+              window.location.href = "/login"
+              localStorage.removeItem('recovered')
+            }}
+            style={{ marginTop: '20px' }}
           >
             Go to Login
           </button>

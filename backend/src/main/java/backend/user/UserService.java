@@ -130,7 +130,19 @@ public class UserService {
 		return userRepository.findByEmail(email);
 	}
 
-	public Object findUserByUsername(String username) {
+	public User findUserByUsername(String username) {
 		return userRepository.findByUsername(username);
+	}
+
+	public void validateSignUp(UserDto userDto) {
+		User userByEmail = findUserByEmail(userDto.getEmail());
+		if (userByEmail != null) {
+			throw new EmailAlreadyExistsException("Email already exists");
+		}
+		
+		User userByUsername = findUserByUsername(userDto.getUsername());
+		if (userByUsername != null) {
+			throw new UsernameAlreadyExistsException("Username already exists");
+		}
 	}
 }

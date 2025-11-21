@@ -73,7 +73,7 @@ const LogIn = () => {
       }
 
       try {
-         const checkResponse = await axios.post("http://localhost:8080/user/forgot-password", {
+         const checkResponse = await axios.post("http://localhost:8080/user/login/forgot-password", {
             email: mail
          });
 
@@ -87,6 +87,8 @@ const LogIn = () => {
 
             const otp = otpResponse.data;
 
+            console.log(otp);
+
             localStorage.setItem("otp", otp);
             localStorage.setItem("email", mail);
             localStorage.setItem("otpPurpose", "reset");
@@ -97,7 +99,6 @@ const LogIn = () => {
          }
 
       } catch (err) {
-         console.error(err);
          if (err.response && err.response.data) {
             setError(err.response.data);
          } else {
@@ -151,7 +152,7 @@ const LogIn = () => {
                      </div>
 
                      <div className="forgot-password">
-                        <p onClick={handleForgotPassword} style={{ cursor: "pointer", margin: "6px"}}>
+                        <p onClick={handleForgotPassword} style={{ cursor: "pointer", margin: "6px" }}>
                            Forgot Password?
                         </p>
                      </div>

@@ -58,6 +58,8 @@ export default function Reset() {
       localStorage.removeItem('otpPurpose');
       localStorage.removeItem('email');
 
+      localStorage.setItem('recovered', true)
+
       navigate("/recovered");
 
     } catch (err) {

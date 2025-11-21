@@ -33,6 +33,16 @@ public class UserController {
 		return ResponseEntity.ok(jwtUtil.generateToken(id, userDto.getUsername()));
 	}
 
+	@PostMapping("/signup/validate")
+	public ResponseEntity<?> signupValidation(@RequestBody UserDto userDto) {
+		try {
+			userService.validateSignUp(userDto);
+			return ResponseEntity.ok("Valid signup data");
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+	}
+
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody UserDto userDto) {
 		AuthUser user = userService.login(userDto.getEmail(), userDto.getRawPassword());
@@ -40,10 +50,10 @@ public class UserController {
 		return ResponseEntity.ok(token);
 	}
 
-	@PostMapping("/forgot-password")
+	@PostMapping("/login/forgot-password")
 	public ResponseEntity<?> checkEmailExists(@RequestBody UserDto userDto) {
 		User user = userService.findUserByEmail(userDto.getEmail());
-		if(user == null) {
+		if (user == null) {
 			return ResponseEntity.badRequest().body("Email does not exist");
 		}
 		return ResponseEntity.ok(jwtUtil.generateToken(user.getId(), user.getUsername()));

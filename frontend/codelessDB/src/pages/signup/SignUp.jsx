@@ -103,28 +103,38 @@ const SignUp = () => {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:8080/auth/send-otp", {
-        email: mail
+      const response1 = await axios.post("http://localhost:8080/user/signup/validate", {
+        email: mail,
+        username: username
       });
 
-      const otp = response.data;
-
-      localStorage.setItem("otp", otp);
-      localStorage.setItem("email", mail);
-      localStorage.setItem("otpPurpose", "signup");
-      localStorage.setItem("signupData", JSON.stringify({
-        username,
-        email: mail,
-        password,
-        picture: userImage
-      }));
-
-      alert("OTP sent to your email!");
-      navigate("/otp");
+      if(response1.status === 200) {
+        const response = await axios.post("http://localhost:8080/auth/send-otp", {
+          email: mail
+        });
+  
+        const otp = response.data;
+        
+        console.log(otp);
+  
+        localStorage.setItem("otp", otp);
+        localStorage.setItem("email", mail);
+        localStorage.setItem("otpPurpose", "signup");
+        localStorage.setItem("signupData", JSON.stringify({
+          username,
+          email: mail,
+          password,
+          picture: userImage
+        }));
+  
+        alert("OTP sent to your email!");
+        navigate("/otp");
+      }
 
     } catch (err) {
-      console.error(err);
-      setError("Failed to send OTP. Try again.");
+      if(err.response?.data != null) {
+        setError(err.response?.data)
+      }
     }
   };
 
