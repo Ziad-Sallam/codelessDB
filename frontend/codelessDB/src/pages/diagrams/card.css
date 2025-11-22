@@ -1,0 +1,87 @@
+.diagram-card {
+	height: 350px;
+	border-radius: 14px;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+
+	box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.12);
+	background: #fff;
+
+	/* smoother, more premium animation curve */
+	transition:
+		transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+		border-color 0.3s ease;
+}
+
+/* Hover effect */
+.diagram-card:hover {
+	transform: translateY(-6px) scale(1.025);
+
+	/* deeper + softer shadow */
+	box-shadow:
+		0px 10px 26px rgba(0, 0, 0, 0.18),
+		0px 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Thumbnail zoom + parallax feel */
+.thumbnail {
+	transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+	transform-origin: center center;
+}
+
+.diagram-card:hover .thumbnail {
+	transform: scale(1.08);
+}
+
+/* Placeholder thumbnail */
+.thumbnail-placeholder {
+	height: 210px;
+	background-color: #f3f5f7;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Card content slight slide-up + fade in */
+.card-content {
+	flex-grow: 1;
+	transition:
+		transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+		opacity 0.45s ease;
+	transform: translateY(6px);
+	opacity: 0.95;
+}
+
+.diagram-card:hover .card-content {
+	transform: translateY(0px);
+	opacity: 1;
+}
+
+/* Row layout */
+.content-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.text-section {
+	flex: 1;
+}
+
+/* icon slide + fade */
+.open-icon {
+	opacity: 0;
+	transform: translateY(4px);
+	transition:
+		opacity 0.35s ease,
+		transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.diagram-card:hover .open-icon {
+	opacity: 1;
+	transform: translateY(0px);
+}
