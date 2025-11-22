@@ -1,5 +1,6 @@
 package backend.userDiagramManagement.dto.share;
 
+import backend.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -8,5 +9,5 @@ import lombok.Data;
 public class DiagramShareResponseDto {
     private String message;
     private String sharedWith;
-    private String role;
+    private Role role;
 }

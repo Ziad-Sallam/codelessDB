@@ -16,10 +16,7 @@ public class DiagramDto {
     private UUID id;
     private String name;
     private String content;
-    private byte[] thumbnail;
-    private Date createdAt;
-    private Date lastModified;
-    private String role;
+    private Role role;
 
     public static DiagramDto toDto(Diagram diagram, Role role) {
         return DiagramDto
@@ -27,12 +24,7 @@ public class DiagramDto {
                 .id(diagram.getId())
                 .name(diagram.getName())
                 .content(diagram.getContent())
-                .thumbnail(diagram.getThumbnail())
-                .thumbnail(diagram.getThumbnail())
-                .createdAt(diagram.getCreatedAt())
-                .lastModified(diagram.getLastModified())
-                .role(role.name())
+                .role(role)
                 .build();
     }
 }
-

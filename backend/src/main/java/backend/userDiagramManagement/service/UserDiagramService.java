@@ -7,7 +7,9 @@ import backend.entities.joins.UserDiagramId;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
+import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
+import backend.userDiagramManagement.dto.get.DiagramGetInfoRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.sql.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,31 +34,67 @@ public class UserDiagramService implements IUserDiagramService {
     private final UserRepository userRepository;
     private final UserDiagramRepository userDiagramRepository;
 
-    private void assertUserExists(int userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserException.UserNotFoundException("User not found");
-        }
-    }
-
-    @Override
-    public UUID createDiagram(int userId, DiagramCreateRequestDto request) {
+    private User getUserOrThrow(int userId) {
         User user = userRepository.findById(userId);
         if (user == null) {
             throw new UserException.UserNotFoundException("User not found");
         }
+        return user;
+    }
 
-        Diagram diagram = request.toDiagram();
-        diagram = diagramRepository.save(diagram);
+    private Diagram getDiagramOrThrow(UUID diagramId) {
+        return diagramRepository.findById(diagramId)
+                .orElseThrow(() -> new DiagramException.DiagramNotFoundException(
+                        "Diagram with id " + diagramId + " not found"));
+    }
 
-        UserDiagramId joinId = UserDiagramId
-                .builder()
-                .userId(userId)
-                .diagramId(diagram.getId())
-                .build();
+    private UserDiagram getUserDiagramOrThrow(int userId, UUID diagramId) {
+        return userDiagramRepository.findByUser_IdAndDiagram_Id(userId, diagramId)
+                .orElseThrow(() -> new DiagramException.PermissionDeniedException(
+                        "User does not have permission for diagram " + diagramId));
+    }
 
-        UserDiagram join = UserDiagram
-                .builder()
-                .UUID(joinId)
+    private List<DiagramInfoDto.Contributor> getContributors(UUID diagramId) {
+        return userDiagramRepository.findByDiagram_Id(diagramId)
+                .stream()
+                .map(ud -> new DiagramInfoDto.Contributor(
+                            ud.getUser().getUsername(),
+                            ud.getRole()
+                        )
+                ).toList();
+    }
+
+    private void checkOwner(UserDiagram userDiagram, String action) {
+        if (userDiagram.getRole() != Role.OWNER) {
+            throw new DiagramException.PermissionDeniedException(
+                    "Only the owner can " + action + ", user's role is " + userDiagram.getRole());
+        }
+    }
+
+    private Date parseDateOrDefault(String dateStr, String defaultDate) {
+        return dateStr != null ? Date.valueOf(dateStr) : Date.valueOf(defaultDate);
+    }
+
+    @Override
+    public Page<DiagramInfoDto> getDiagramsByUserId(int userId, DiagramGetInfoRequestDto request, Pageable pageable) {
+        getUserOrThrow(userId);
+        return userDiagramRepository
+                .findByUser_Id(userId, pageable)
+                .map(ud -> DiagramInfoDto.toDto(
+                            ud.getDiagram(),
+                            ud.getRole(),
+                            getContributors(ud.getDiagram().getId())
+                        )
+                );
+    }
+
+    @Override
+    public UUID createDiagram(int userId, DiagramCreateRequestDto request) {
+        User user = getUserOrThrow(userId);
+        Diagram diagram = diagramRepository.save(request.toDiagram());
+
+        UserDiagram join = UserDiagram.builder()
+                .UUID(UserDiagramId.builder().userId(userId).diagramId(diagram.getId()).build())
                 .user(user)
                 .diagram(diagram)
                 .role(Role.OWNER)
@@ -66,163 +105,80 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
-    public Date updateDiagram(int userId, DiagramUpdateRequestDto request) {
-        assertUserExists(userId);
+    public Date updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
+        getUserOrThrow(userId);
+        Diagram diagram = getDiagramOrThrow(diagramId);
+        UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
 
-        Diagram diagram = diagramRepository.findById(request.getId())
-                .orElseThrow(() -> new DiagramException.DiagramNotFoundException(
-                        "Diagram with id " + request.getId() + " not found"));
+        if (userDiagram.getRole() == Role.READER)
+            throw new DiagramException.PermissionDeniedException("Only the owner can update this diagram");
 
-        UserDiagram userDiagram = userDiagramRepository
-                .findByUser_IdAndDiagram_Id(userId, diagram.getId())
-                .orElseThrow(() -> new DiagramException.PermissionDeniedException(
-                        "User does not have permission to update this diagram"));
+        if (request.getName() != null) diagram.setName(request.getName());
+        if (request.getJsonContent() != null) diagram.setContent(request.getJsonContent());
 
-        if (userDiagram.getRole() != Role.OWNER) {
-            throw new DiagramException.PermissionDeniedException(
-                    "Only the owner can update this diagram, the user's role is " +  userDiagram.getRole());
-        }
-
-        if (request.getName() != null)
-            diagram.setName(request.getName());
-
-        if (request.getJsonContent() != null)
-            diagram.setContent(request.getJsonContent());
-
-        if (request.getThumbnail() != null)
-            diagram.setThumbnail(request.getThumbnail());
-
-        Diagram updatedDiagram = diagramRepository.save(diagram);
-        return updatedDiagram.getLastModified();
+        return diagramRepository.save(diagram).getLastModified();
     }
 
     @Override
-    public void deleteDiagram(int userId, UUID id) {
-        assertUserExists(userId);
+    public void deleteDiagram(int userId, UUID diagramId) {
+        getUserOrThrow(userId);
+        UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
 
-        Diagram diagram = diagramRepository.findById(id)
-                .orElseThrow(() -> new DiagramException.DiagramNotFoundException(
-                        "Diagram with id " + id + " not found"));
+        userDiagramRepository.delete(userDiagram);
 
-        UserDiagram userDiagram = userDiagramRepository
-                .findByUser_IdAndDiagram_Id(userId, id)
-                .orElseThrow(() -> new DiagramException.PermissionDeniedException(
-                        "User does not have permission to delete this diagram"));
-
-        if (userDiagram.getRole() != Role.OWNER) {
-            throw new DiagramException.PermissionDeniedException(
-                    "Only the owner can update this diagram, the user's role is " +  userDiagram.getRole());
-        }
-
-        diagramRepository.delete(diagram);
+        if (!userDiagramRepository.existsByDiagram_Id(diagramId))
+            diagramRepository.delete(getDiagramOrThrow(diagramId));
     }
 
     @Override
-    public DiagramDto searchDiagramById(int userId, UUID id) {
-        assertUserExists(userId);
-
-        Diagram diagram = diagramRepository.findById(id)
-                .orElseThrow(() -> new DiagramException.DiagramNotFoundException(
-                        "Diagram with id " + id + " not found"));
-
-        UserDiagram userDiagram = userDiagramRepository
-                .findByUser_IdAndDiagram_Id(userId, id)
-                .orElseThrow(() -> new DiagramException.PermissionDeniedException(
-                        "User does not have permission to delete this diagram"));
-
+    public DiagramDto searchDiagramById(int userId, UUID diagramId) {
+        getUserOrThrow(userId);
+        Diagram diagram = getDiagramOrThrow(diagramId);
+        UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
         return DiagramDto.toDto(diagram, userDiagram.getRole());
     }
 
     @Override
     public Page<DiagramDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserException.UserNotFoundException("User not found");
-        }
+        getUserOrThrow(userId);
 
         String nameFilter = request.getName() != null ? request.getName() : "";
+        Date startDate = parseDateOrDefault(request.getStart(), "1970-01-01");
+        Date endDate = parseDateOrDefault(request.getEnd(), "2100-12-31");
 
-        Date startDate = null;
-        Date endDate = null;
-
-        try {
-            if (request.getStart() != null)
-                startDate = java.sql.Date.valueOf(request.getStart());
-            if (request.getEnd() != null)
-                endDate = java.sql.Date.valueOf(request.getEnd());
-        } catch (IllegalArgumentException e) {
-            throw new DiagramException.InvalidDiagramDataException("Invalid date format. Use yyyy-MM-dd.");
-        }
-
-        if (startDate == null) {
-            startDate = java.sql.Date.valueOf("1970-01-01");
-        }
-        if (endDate == null) {
-            endDate = java.sql.Date.valueOf("2100-12-31");
-        }
-
-        Page<UserDiagram> userDiagramsPage = userDiagramRepository
+        return userDiagramRepository
                 .findAllByUser_IdAndDiagram_NameContainingIgnoreCaseAndDiagram_CreatedAtBetween(
                         userId,
                         nameFilter,
                         startDate,
                         endDate,
                         pageable
-                );
-
-        return userDiagramsPage.map(userDiagram -> DiagramDto.toDto(userDiagram.getDiagram(), userDiagram.getRole()));
+                ).map(ud -> DiagramDto.toDto(ud.getDiagram(), ud.getRole()));
     }
 
     @Override
     public DiagramShareResponseDto shareDiagram(int userId, DiagramShareRequestDto request) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserException.UserNotFoundException("User not found");
-        }
-
-        Diagram diagram = diagramRepository.findById(request.getDiagramId())
-                .orElseThrow(() -> new DiagramException.DiagramNotFoundException(
-                        "Diagram not found with id " + request.getDiagramId()));
-
-        UserDiagram ownerLink = userDiagramRepository
-                .findByUser_IdAndDiagram_Id(userId, request.getDiagramId())
-                .orElseThrow(() -> new DiagramException.PermissionDeniedException(
-                        "You don't have permission to share this diagram"));
-
-        if (ownerLink.getRole() != Role.OWNER) {
-            throw new DiagramException.PermissionDeniedException(
-                    "Only the owner can share this diagram");
-        }
+        getUserOrThrow(userId);
+        Diagram diagram = getDiagramOrThrow(request.getDiagramId());
+        UserDiagram ownerLink = getUserDiagramOrThrow(userId, diagram.getId());
+        checkOwner(ownerLink, "share this diagram");
 
         User targetUser = userRepository.findByUsername(request.getToUserName());
-        if (targetUser == null) {
-            throw new UserException.UserNotFoundException(
-                    "Target user not found: " + request.getToUserName());
-        }
+        if (targetUser == null)
+            throw new UserException.UserNotFoundException("Target user not found: " + request.getToUserName());
 
-        boolean alreadyShared = userDiagramRepository
-                .existsByUser_IdAndDiagram_Id(targetUser.getId(), diagram.getId());
-        if (alreadyShared) {
-            throw new DiagramException.InvalidDiagramDataException(
-                    "Diagram is already shared with user " + targetUser.getUsername());
-        }
-
-        UserDiagramId joinId = UserDiagramId.builder()
-                .userId(targetUser.getId())
-                .diagramId(diagram.getId())
-                .build();
+        if (userDiagramRepository.existsByUser_IdAndDiagram_Id(targetUser.getId(), diagram.getId()))
+            throw new DiagramException.InvalidDiagramDataException("Diagram is already shared with user " + targetUser.getUsername());
 
         UserDiagram join = UserDiagram.builder()
-                .UUID(joinId)
+                .UUID(UserDiagramId.builder().userId(targetUser.getId()).diagramId(diagram.getId()).build())
                 .user(targetUser)
                 .diagram(diagram)
-                .role(Role.valueOf(request.getRole()))
+                .role(request.getRole())
                 .build();
 
         userDiagramRepository.save(join);
 
-        return new DiagramShareResponseDto(
-                "Diagram shared successfully",
-                targetUser.getUsername(),
-                request.getRole()
-        );
+        return new DiagramShareResponseDto("Diagram shared successfully", targetUser.getUsername(), request.getRole());
     }
 }

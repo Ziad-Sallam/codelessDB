@@ -7,7 +7,7 @@ import lombok.Data;
 public class DiagramCreateRequestDto {
     private String name;
     private String jsonContent;
-    private byte[] thumbnail;
+    private String thumbnail;
 
     public Diagram toDiagram() {
         return Diagram.builder()
