@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./SignUp.css";
+import axios from "axios";
 
 import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
 import { IoIosMail } from "react-icons/io";
+import { FcGoogle } from "react-icons/fc";
 import { Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,19 +20,39 @@ const SignUp = () => {
   const [userImage, setUserImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [imageError, setImageError] = useState("");
+  const [searchParams] = useSearchParams();
 
+  useEffect(() => {
+    document.title = "Sign Up | CodeLess";
+
+    const existingToken = localStorage.getItem('authToken');
+    if (existingToken) {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    const token = searchParams.get('token');
+    const oauthError = searchParams.get('error');
+
+    if (token) {
+      localStorage.setItem('authToken', token);
+      navigate('/');
+    } else if (oauthError) {
+      setError('Google signup failed. Please try again.');
+    }
+
+    window.history.replaceState({}, document.title, "/SignUp");
+  }, [searchParams, navigate]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Must be an image
     if (!file.type.startsWith("image/")) {
       setImageError("Only image files are allowed.");
       return;
     }
 
-    // Must be <= 1MB
     if (file.size > 1024 * 1024) {
       setImageError("Image must be less than 1MB.");
       return;
@@ -36,17 +60,14 @@ const SignUp = () => {
 
     setImageError("");
 
-    // Convert image to Base64 binary string
     const reader = new FileReader();
     reader.onloadend = () => {
-      setUserImage(reader.result); // Base64 string
-      setPreview(URL.createObjectURL(file)); // Live preview
+      setUserImage(reader.result);
+      setPreview(URL.createObjectURL(file));
     };
 
-    reader.readAsDataURL(file); // <-- Converts to Base64
-
+    reader.readAsDataURL(file);
   };
-
 
   function getPasswordChecks(pass) {
     return {
@@ -59,33 +80,69 @@ const SignUp = () => {
   }
   const checks = getPasswordChecks(password);
 
-
-  useEffect(() => {
-    document.title = "SignUp | CodeLess";
-  }, []);
-
-  // 🔍 Password strength function
   function checkStrength(pass) {
     const c = getPasswordChecks(pass);
     return c.length && c.upper && c.lower && c.number && c.symbol;
   }
 
-  // 🚫 Prevent submit if weak
-  const handleSubmit = (e) => {
+  const handleGoogleSignUp = () => {
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!checkStrength(password)) {
       setError("Password is weak.");
       return;
     }
-
     if (password !== confirmPass) {
       setError("Passwords do not match.");
       return;
     }
-
     setError("");
-    alert("Form Submitted Successfully!");
+
+    try {
+      const response1 = await axios.post("http://localhost:8080/user/signup/validate", {
+        email: mail,
+        username: username
+      });
+
+      if (response1.status === 200) {
+        try {
+          const response = await axios.post(`http://localhost:8080/user/signup/send-otp/${mail}`);
+
+          const otp = response.data;
+
+          localStorage.setItem("otp", otp);
+          localStorage.setItem("email", mail);
+          localStorage.setItem("otpPurpose", "signup");
+          localStorage.setItem("signupData", JSON.stringify({
+            username,
+            email: mail,
+            password,
+            picture: userImage
+          }));
+
+          navigate("/otp");
+          
+        } catch (err) {
+          const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+            || "Server unavailable. Please try again later.";
+
+          setError(String(serverMsg));
+        }
+      }
+    } catch (err) {
+            const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+            || "Server unavailable. Please try again later.";
+
+            setError(String(serverMsg));
+        }
   };
 
   return (
@@ -102,7 +159,7 @@ const SignUp = () => {
               <h1>Sign Up</h1>
 
               <div className="image-upload-container">
-                {userImage!= null && <button type="button" className="remove-image-button" onClick={() => {
+                {userImage != null && <button type="button" className="remove-image-button" onClick={() => {
                   setUserImage(null);
                   setPreview(null);
                 }}>x</button>}
@@ -127,7 +184,6 @@ const SignUp = () => {
 
               {imageError && <p className="error">{imageError}</p>}
 
-              {/* Username */}
               <div className="input-box">
                 <FaUser className="icon" />
                 <input
@@ -139,7 +195,6 @@ const SignUp = () => {
                 />
               </div>
 
-              {/* Email */}
               <div className="input-box">
                 <IoIosMail className="icon" />
                 <input
@@ -151,7 +206,6 @@ const SignUp = () => {
                 />
               </div>
 
-              {/* Password */}
               <div className="input-box">
                 <TbLockPassword className="icon" />
                 <input
@@ -187,7 +241,6 @@ const SignUp = () => {
                 </li>
               </ul>
 
-              {/* Confirm Password */}
               <div className="input-box">
                 <TbLockPassword className="icon" />
                 <input
@@ -209,9 +262,22 @@ const SignUp = () => {
 
               {error && <p className="error-message">{error}</p>}
 
+              <div className="divider">
+                <span>OR</span>
+              </div>
+
+              <button
+                type="button"
+                className="google-button"
+                onClick={handleGoogleSignUp}
+              >
+                <FcGoogle className="google-icon" />
+                Sign up with Google
+              </button>
+
               <div className="register">
                 <p>
-                  Already Have Account? <Link to="/login">Login</Link>
+                  Already Have Account ? <Link to="/login">Log In</Link>
                 </p>
               </div>
             </form>

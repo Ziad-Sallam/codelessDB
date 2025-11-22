@@ -31,4 +31,10 @@ public class UserException {
 			super(message);
 		}
 	}
+	
+	public static class OtpSendFailedException extends RuntimeException {
+		public OtpSendFailedException(String message) {
+			super(message);
+		}
+	}
 }

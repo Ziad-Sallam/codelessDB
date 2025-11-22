@@ -1,55 +1,108 @@
-import React, { useState, useEffect, useContext } from "react";
-import emailjs from "@emailjs/browser";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { RecoveryContext } from "../../../App";
 import "./OTPInput.css";
+import axios from "axios";
 
 const OTPInput = () => {
   const navigate = useNavigate();
-  const { email, otp, setOTP } = useContext(RecoveryContext);
+  const { email } = useContext(RecoveryContext);
   const [otpInput, setOtpInput] = useState(["", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [disable, setDisable] = useState(true);
+  const [otpPurpose, setOtpPurpose] = useState("");
+  const [error, setError] = useState("");
 
-  const sendOTP = (newOTP) => {
-    return emailjs.send(
-        "service_hnqs4gv",
-        "template_pvxxkx3",
-      {
-        user_email: email,
-        otp: newOTP,
-      },
-      "tfheOwRas0U6Mibcz"
-    );
-  };
-  const resendOTP = async () => {
-    if (disable) return;
-    const newOTP = Math.floor(10000 + Math.random() * 90000);
-    try {
-      await sendOTP(newOTP);
-      alert("OTP sent successfully!");
+  useEffect(() => {
+    const otp = localStorage.getItem("otp");
+    const storedEmail = localStorage.getItem("email");
+    const purpose = localStorage.getItem("otpPurpose");
 
-      setOTP(newOTP);
-      localStorage.setItem("otp", newOTP);
-
-      setDisable(true);
-      setTimer(60);
-
-    } catch (err) {
-      console.error(err);
-      alert("Failed to send OTP");
+    if (!otp || !storedEmail || !purpose) {
+      navigate('/login', { replace: true });
+      return;
     }
-  };
-  const verifyOTP = () => {
+
+    setOtpPurpose(purpose);
+  }, [navigate]);
+
+  const verifyOTP = async () => {
     const entered = otpInput.join("");
     const saved = localStorage.getItem("otp");
+
     if (entered === saved) {
-      navigate("/reset");
-      console.log("OTP verified!");
+      if (otpPurpose === "signup") {
+        try {
+          const signupData = JSON.parse(localStorage.getItem("signupData"));
+
+          const response = await axios.post("http://localhost:8080/user/signup", {
+            username: signupData.username,
+            email: signupData.email,
+            password: signupData.password,
+            picture: signupData.picture
+          });
+
+          const token = response.data;
+          localStorage.setItem("authToken", token);
+
+          localStorage.removeItem("signupData");
+          localStorage.removeItem("otp");
+          localStorage.removeItem("otpPurpose");
+          localStorage.removeItem("email");
+
+          alert("Account Created Successfully!");
+          navigate("/login");
+
+        } catch (err) {
+          const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+            || "Server unavailable. Please try again later.";
+
+          setError(String(serverMsg));
+        }
+      } else if (otpPurpose === "reset") {
+        navigate("/reset");
+      }
     } else {
-      alert("Invalid OTP. Try again.");
+ 
+      setError("Invalid OTP. Try again.");
     }
   };
+
+  const resendOTP = async () => {
+    if (disable) return;
+
+    const emailToUse = email || localStorage.getItem("email");
+
+    try {
+      const response = await axios.post(`http://localhost:8080/user/signup/send-otp/${emailToUse}`);
+
+      const otp = response.data;
+
+      localStorage.setItem("otp", otp);
+
+      setTimer(60);
+      setDisable(true);
+
+    } catch (err) {
+      const serverMsg = err.response?.data?.message
+        || err.response?.data
+        || err.message
+        || "Server unavailable. Please try again later.";
+
+      setError(String(serverMsg));
+    }
+  };
+
+  const handleCancel = () => {
+    localStorage.removeItem("otp");
+    localStorage.removeItem("email");
+    localStorage.removeItem("otpPurpose");
+    localStorage.removeItem("signupData");
+    navigate("/login");
+  };
+
   useEffect(() => {
     let interval = setInterval(() => {
       setTimer((prev) => {
@@ -62,7 +115,8 @@ const OTPInput = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [timer]);
+
   return (
     <div className="bg">
       <div className="title-section">
@@ -72,10 +126,9 @@ const OTPInput = () => {
 
       <div className="main">
         <div className="wrapper">
-
           <h1>Email Verification</h1>
           <p style={{ fontSize: "14px", textAlign: "center", marginBottom: "30px" }}>
-            We sent a 6-digit code to: <b>{email}</b>
+            We sent a 5-digit code to: <b>{email || localStorage.getItem("email")}</b>
           </p>
 
           <div className="otp-container">
@@ -90,19 +143,37 @@ const OTPInput = () => {
                   newArr[idx] = e.target.value;
                   setOtpInput(newArr);
 
-                  if (e.target.value && idx < 5) {
-                    e.target.nextSibling.focus();
+                  if (e.target.value && idx < 4) {
+                    e.target.nextSibling?.focus();
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Backspace" && !val && idx > 0) {
+                    e.target.previousSibling?.focus();
                   }
                 }}
               />
             ))}
           </div>
 
+          {error && <p className="error-message" style={{marginBottom: "25px"}}>{error}</p>}
+
           <button onClick={verifyOTP} className="submit">Verify Code</button>
+
+          <button
+            onClick={handleCancel}
+            className="submit"
+            style={{
+              backgroundColor: "#6c757d",
+              marginTop: "10px"
+            }}
+          >
+            Cancel
+          </button>
 
           <div style={{ marginTop: "20px", textAlign: "center" }}>
             <p style={{ fontSize: "14px" }}>
-              Didn’t receive the code?{" "}
+              Didn't receive the code?{" "}
               <span
                 onClick={resendOTP}
                 style={{
@@ -115,7 +186,6 @@ const OTPInput = () => {
               </span>
             </p>
           </div>
-
         </div>
       </div>
     </div>

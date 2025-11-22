@@ -93,9 +93,14 @@ public class UserExceptionHandler {
       return build(HttpStatus.NOT_ACCEPTABLE, ex.getMessage());
    }
 
+   @ExceptionHandler(OtpSendFailedException.class)
+   public ResponseEntity<ErrorResponse> handleOtpSendFailed(OtpSendFailedException ex) {
+      return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+   }
+
    @ExceptionHandler(Exception.class)
    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
       ex.printStackTrace();
-      return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+      return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
    }
 }

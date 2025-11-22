@@ -16,9 +16,10 @@ public class LoggingAspect {
 
    // logged files only
    private static final String LOG_FILES = """
-      execution(* backend.user.UserService.*(..)) || 
-      execution(* backend.user.UserController.*(..))
-   """;
+            execution(* backend.user.UserService.*(..)) ||
+            execution(* backend.user.UserController.*(..)) ||
+            execution(* package backend.security.JwtAuthenticationFilter.*(..))
+         """;
 
    // Log method entry
    @Before(LOG_FILES)

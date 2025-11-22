@@ -17,7 +17,7 @@ public class UserDto {
 	@JsonProperty("password")
 	private String rawPassword;
 	
-	private byte[] picture;
+	private String picture;
 	private Date createdAt;
 
 	public UserDto(User user) {

@@ -1,129 +1,196 @@
-import React, { useState ,useEffect,useContext } from "react";
-import emailjs from '@emailjs/browser';
+import { useState, useEffect, useContext } from "react";
 import "./LogIn.css";
+import axios from "axios";
 
 import { FaUser } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { RecoveryContext } from "../../App";
 
 const LogIn = () => {
-  const navigate = useNavigate();
-  const { setEmail } = useContext(RecoveryContext);
-  const [mail, setMail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+   const navigate = useNavigate();
+   const { setEmail } = useContext(RecoveryContext);
+   const [mail, setMail] = useState('');
+   const [password, setPassword] = useState('');
+   const [error, setError] = useState('');
+   const [showPassword, setShowPassword] = useState(false);
+   const [searchParams] = useSearchParams();
 
-  useEffect(() => {
-    document.title = "Login | CodeLess";
-  }, []);
-  const handleforgotPassword = async () => {
-    if(!mail){
-      setError("Please enter your email to reset password");
-      return;
-    }
-    const generatedOTP = Math.floor(10000 + Math.random() * 90000).toString();
-    try {
-      const response = await emailjs.send(
-        "service_hnqs4gv",
-        "template_pvxxkx3",
-        {
-          user_email: mail,
-          otp: generatedOTP,
-        },
-        "tfheOwRas0U6Mibcz"
-      );
-      console.log("Email sent successfully:", response.status, response.text);
-   if (response.status === 200) {
-      console.log("OTP email sent!");
-    }
-  } catch (err) {
-    console.error("EmailJS Error:", err);
-    setError("Failed to send OTP. Try again.");
-    return;
-  }
-  setEmail(mail);
-  localStorage.setItem("otp", generatedOTP);
-  navigate("/otp");
-};
-  return (
-    <div className="login">
-    <div className="bg">
-      <div className="title-section">
-        <h1 className="Title">CodeLess</h1>
-        <p className="slogon">Skip the code. Draw your data</p>
+   useEffect(() => {
+      document.title = "Log in | CodeLess";
+
+      const existingToken = localStorage.getItem('authToken');
+      if (existingToken) {
+         navigate('/', { replace: true });
+         return;
+      }
+
+      const token = searchParams.get('token');
+      const oauthError = searchParams.get('error');
+
+      if (token) {
+         localStorage.setItem('authToken', token);
+         navigate('/');
+      } else if (oauthError) {
+         setError('Google login failed. Please try again.');
+      }
+
+      window.history.replaceState({}, document.title, "/login");
+   }, [searchParams, navigate]);
+
+   const handleGoogleLogin = () => {
+      window.location.href = "http://localhost:8080/oauth2/authorization/google";
+   };
+
+   const handleLogin = async () => {
+      if (!mail || !password) {
+         setError("Email and password are required");
+         return;
+      }
+
+      try {
+         const response = await axios.post("http://localhost:8080/user/login", {
+            email: mail,
+            password: password
+         });
+         const token = response.data;
+         localStorage.setItem("authToken", token);
+         navigate("/");
+      } catch (err) {
+         const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+            || "Server unavailable. Please try again later.";
+
+         setError(String(serverMsg));
+      }
+   };
+
+   const handleForgotPassword = async () => {
+      if (!mail) {
+         setError("Please enter your email");
+         return;
+      }
+
+      try {
+         const checkResponse = await axios.post(`http://localhost:8080/user/login/forgot-password/${mail}`);
+
+         if (checkResponse.status === 200) {
+            const token = checkResponse.data;
+            localStorage.setItem("token for_reset", token);
+
+            try {
+               const otpResponse = await axios.post(`http://localhost:8080/user/signup/send-otp/${mail}`);
+
+               const otp = otpResponse.data;
+
+               localStorage.setItem("otp", otp);
+               localStorage.setItem("email", mail);
+               localStorage.setItem("otpPurpose", "reset");
+               setEmail(mail);
+
+
+               navigate("/otp");
+            } catch (err) {
+               const serverMsg = err.response?.data?.message
+                  || err.response?.data
+                  || err.message
+                  || "Server unavailable. Please try again later.";
+
+               setError(String(serverMsg));
+            }
+         }
+
+      } catch (err) {
+         const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+         || "Server unavailable. Please try again later.";
+
+         setError(String(serverMsg));
+      }
+   };
+
+   return (
+      <div className="login">
+         <div className="bg">
+            <div className="title-section">
+               <h1 className="Title">CodeLess</h1>
+               <p className="slogon">Skip the code. Draw your data</p>
+            </div>
+
+            <div className="main">
+               <div className="wrapper">
+                  <form onSubmit={(e) => e.preventDefault()}>
+                     <h1>Log In</h1>
+
+                     <div className="input-box">
+                        <FaUser className="icon" />
+                        <input
+                           type="text"
+                           placeholder="Email"
+                           value={mail}
+                           onChange={(e) => {
+                              setMail(e.target.value)
+                              setError('');
+                           }}
+                           required
+                        />
+                     </div>
+
+                     <div className="input-box">
+                        <TbLockPassword className="icon" />
+                        <input
+                           type={showPassword ? "text" : "password"}
+                           placeholder="Password"
+                           value={password}
+                           onChange={(e) => setPassword(e.target.value)}
+                           required
+                        />
+                        <span
+                           className="toggle-password"
+                           onClick={() => setShowPassword(!showPassword)}
+                        >
+                           {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </span>
+                     </div>
+
+                     <div className="forgot-password">
+                        <p onClick={handleForgotPassword} style={{ cursor: "pointer", margin: "6px" }}>
+                           Forgot Password?
+                        </p>
+                     </div>
+
+                     <button type="submit" className="submit" onClick={handleLogin}>Log In</button>
+                     {error && <p style={{ color: "red" }}>{error}</p>}
+
+                     <div className="divider">
+                        <span>OR</span>
+                     </div>
+
+                     <button
+                        type="button"
+                        className="google-button"
+                        onClick={handleGoogleLogin}
+                     >
+                        <FcGoogle className="google-icon" />
+                        Log in with Google
+                     </button>
+
+                     <div className="register">
+                        <p>
+                           Don't Have Account ? <Link to="/SignUp">Sign Up</Link>
+                        </p>
+                     </div>
+                  </form>
+               </div>
+            </div>
+         </div>
       </div>
-
-      <div className="main">
-        <div className="wrapper">
-          <form onSubmit={(e) => e.preventDefault()}>
-            <h1>Log In</h1>
-
-            {/* Username */}
-            <div className="input-box">
-              <FaUser className="icon" />
-              <input
-                type="text"
-                placeholder="Email"
-                value={mail}
-                onChange={(e) => {
-                  setMail(e.target.value)
-                  setError('');}
-                }
-                required
-              />
-            </div>
-
-            {/* Password */}
-            <div className="input-box">
-              <TbLockPassword className="icon" />
-
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-
-              {/* 👁️ Show/Hide icon */}
-              <span
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
-            </div>
-
-            <div className="forgot-password">
-               <p onClick={handleforgotPassword} style={{ cursor: "pointer" }}>
-                Forgot Password?
-              </p>
-            </div>
-
-            <div className="remember-forget">
-              <label>
-                <input type="checkbox" /> Remember me
-              </label>
-            </div>
-
-            <button type="submit" className="submit">Log In</button>
-             {error && <p style={{ color: "red" }}>{error}</p>}
-
-            <div className="register">
-              <p>
-                Don't Have Account <Link to="/SignUp">signUp</Link>
-              </p>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-  );
+   );
 };
 
 export default LogIn;

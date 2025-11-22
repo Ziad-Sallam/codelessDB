@@ -2,9 +2,12 @@ package backend.user;
 
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import backend.entities.User;
 import backend.security.AuthUser;
@@ -12,6 +15,7 @@ import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
+import backend.user.exceptions.UserException.OtpSendFailedException;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -21,11 +25,15 @@ public class UserService {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private JavaMailSender mailSender;
+
 	private String encodePassword(String rawPassword) {
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 		return encoder.encode(rawPassword);
 	}
 
+	@Transactional
 	public int createUser(UserDto userDto) throws RuntimeException {
 		if (userDto.getEmail() == null) {
 			throw new IllegalArgumentException("Email is required");
@@ -57,11 +65,16 @@ public class UserService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
+
+		if (userDto.getPicture() != null) {
+			newUser.setPicture(userDto.getPicture());
+		}
 		userRepository.save(newUser);
 
 		return newUser.getId();
 	}
 
+	@Transactional
 	public AuthUser login(String email, String rawPassword) throws RuntimeException {
 		User user = userRepository.findByEmail(email);
 		if (user == null) {
@@ -84,6 +97,7 @@ public class UserService {
 		return new UserDto(user);
 	}
 
+	@Transactional
 	public void updateUser(UserDto userDto, int id) throws RuntimeException {
 		User user = userRepository.findById(id);
 		if (user == null) {
@@ -112,6 +126,7 @@ public class UserService {
 		userRepository.save(user);
 	}
 
+	@Transactional
 	public void deleteUser(int id) throws RuntimeException {
 		userRepository.deleteById(id);
 		// diagrams (if the user is the only owner), servers deletion logic here
@@ -121,7 +136,38 @@ public class UserService {
 		return userRepository.findByEmail(email);
 	}
 
-	public Object findUserByUsername(String username) {
+	public User findUserByUsername(String username) {
 		return userRepository.findByUsername(username);
+	}
+
+	public void validateSignUp(UserDto userDto) {
+		User userByEmail = findUserByEmail(userDto.getEmail());
+		if (userByEmail != null) {
+			throw new EmailAlreadyExistsException("Email already exists");
+		}
+
+		User userByUsername = findUserByUsername(userDto.getUsername());
+		if (userByUsername != null) {
+			throw new UsernameAlreadyExistsException("Username already exists");
+		}
+	}
+
+	public String sendOtpEmail(String email) {
+		try {
+			SimpleMailMessage message = new SimpleMailMessage();
+			String otp = String.format("%05d", (int) (Math.random() * 100000));
+
+			message.setFrom("legendboudy@gmail.com");
+			message.setTo(email);
+			message.setSubject("Your Password Reset OTP");
+			message.setText("Your OTP is: " + otp + "");
+
+			mailSender.send(message);
+
+			return otp;
+
+		} catch (Exception e) {
+			throw new OtpSendFailedException("Failed to send OTP. Please try again.");
+		}
 	}
 }

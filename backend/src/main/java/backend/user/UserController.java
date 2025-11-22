@@ -6,12 +6,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import backend.entities.User;
 import backend.security.AuthUser;
 import backend.security.JwtUtil;
 
@@ -26,10 +28,26 @@ public class UserController {
 	@Autowired
 	private JwtUtil jwtUtil;
 
+	@PostMapping("/signup/validate")
+	public ResponseEntity<?> signupValidation(@RequestBody UserDto userDto) {
+		try {
+			userService.validateSignUp(userDto);
+			return ResponseEntity.ok("Valid signup data");
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+	}
+
 	@PostMapping("/signup")
 	public ResponseEntity<?> signup(@RequestBody UserDto userDto) {
 		int id = userService.createUser(userDto);
 		return ResponseEntity.ok(jwtUtil.generateToken(id, userDto.getUsername()));
+	}
+
+	@PostMapping("/signup/send-otp/{email}")
+	public ResponseEntity<?> sendOtp(@PathVariable String email) {
+		String otp = userService.sendOtpEmail(email);
+		return ResponseEntity.ok(otp);
 	}
 
 	@PostMapping("/login")
@@ -37,6 +55,15 @@ public class UserController {
 		AuthUser user = userService.login(userDto.getEmail(), userDto.getRawPassword());
 		String token = jwtUtil.generateToken(user.userId(), user.username());
 		return ResponseEntity.ok(token);
+	}
+
+	@PostMapping("/login/forgot-password/{email}")
+	public ResponseEntity<?> checkEmailExists(@PathVariable String email) {
+		User user = userService.findUserByEmail(email);
+		if (user == null) {
+			return ResponseEntity.badRequest().body("Email does not exist");
+		}
+		return ResponseEntity.ok(jwtUtil.generateToken(user.getId(), user.getUsername()));
 	}
 
 	@GetMapping("/login")

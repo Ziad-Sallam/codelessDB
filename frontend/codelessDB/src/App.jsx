@@ -4,7 +4,8 @@ import LogIn from './pages/login/LogIn.jsx';
 import SignUp from './pages/signup/SignUp.jsx';
 import OTPInput from './pages/login/otp/OTPInput.jsx';
 import Reset from './pages/login/reset/Reset.jsx';
-import Recovered from './pages/login/Recovered/Recovered.jsx';
+import Recovered from './pages/login/recovered/Recovered.jsx';
+import Home from './pages/Home.jsx';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 export const RecoveryContext = createContext();
@@ -12,7 +13,12 @@ export const RecoveryContext = createContext();
 function App() {
   const [email, setEmail] = useState("");
   const [otp, setOTP] = useState("");
+
   const router = createBrowserRouter([
+    {
+      path: '/',
+      element: <Home />
+    },
     {
       path: '/login',
       element: <LogIn />
@@ -34,6 +40,7 @@ function App() {
       element: <Recovered />
     }
   ]);
+  
   return (
     <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
       <div className="App">
