@@ -1,3 +1,4 @@
+
 package backend.SQLGeneration.service.impl;
 
 import backend.SQLGeneration.dto.*;
@@ -85,15 +86,15 @@ public class MySQLSchemaService implements SchemaService {
         sb.append("\n);");
 
         for (AttributeDTO attr : attributes) {
-            boolean isPk = false;
-            for (ConstraintDTO c : attr.getConstraints()) {
-                if (c instanceof PrimaryKeyConstraintDTO) {
-                    isPk = true;
-                    break;
-                }
-            }
-            if (isPk)
-                continue;
+//            boolean isPk = false;
+//            for (ConstraintDTO c : attr.getConstraints()) {
+//                if (c instanceof PrimaryKeyConstraintDTO) {
+//                    isPk = true;
+//                    break;
+//                }
+//            }
+//            if (isPk)
+//                continue;
             if (attr.isIndexed()) {
                 sb.append("\nCREATE INDEX idx_")
                         .append(entity.getName()).append("_").append(attr.getName())
