@@ -2,6 +2,8 @@ package backend.user;
 
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
+import backend.user.exceptions.UserException.OtpSendFailedException;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -21,6 +24,9 @@ public class UserService {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private JavaMailSender mailSender;
 
 	private String encodePassword(String rawPassword) {
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -139,10 +145,29 @@ public class UserService {
 		if (userByEmail != null) {
 			throw new EmailAlreadyExistsException("Email already exists");
 		}
-		
+
 		User userByUsername = findUserByUsername(userDto.getUsername());
 		if (userByUsername != null) {
 			throw new UsernameAlreadyExistsException("Username already exists");
+		}
+	}
+
+	public String sendOtpEmail(String email) {
+		try {
+			SimpleMailMessage message = new SimpleMailMessage();
+			String otp = String.format("%05d", (int) (Math.random() * 100000));
+
+			message.setFrom("legendboudy@gmail.com");
+			message.setTo(email);
+			message.setSubject("Your Password Reset OTP");
+			message.setText("Your OTP is: " + otp + "");
+
+			mailSender.send(message);
+
+			return otp;
+
+		} catch (Exception e) {
+			throw new OtpSendFailedException("Failed to send OTP. Please try again.");
 		}
 	}
 }

@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,12 +28,6 @@ public class UserController {
 	@Autowired
 	private JwtUtil jwtUtil;
 
-	@PostMapping("/signup")
-	public ResponseEntity<?> signup(@RequestBody UserDto userDto) {
-		int id = userService.createUser(userDto);
-		return ResponseEntity.ok(jwtUtil.generateToken(id, userDto.getUsername()));
-	}
-
 	@PostMapping("/signup/validate")
 	public ResponseEntity<?> signupValidation(@RequestBody UserDto userDto) {
 		try {
@@ -43,6 +38,18 @@ public class UserController {
 		}
 	}
 
+	@PostMapping("/signup")
+	public ResponseEntity<?> signup(@RequestBody UserDto userDto) {
+		int id = userService.createUser(userDto);
+		return ResponseEntity.ok(jwtUtil.generateToken(id, userDto.getUsername()));
+	}
+
+	@PostMapping("/signup/send-otp/{email}")
+	public ResponseEntity<?> sendOtp(@PathVariable String email) {
+		String otp = userService.sendOtpEmail(email);
+		return ResponseEntity.ok(otp);
+	}
+
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody UserDto userDto) {
 		AuthUser user = userService.login(userDto.getEmail(), userDto.getRawPassword());
@@ -50,9 +57,9 @@ public class UserController {
 		return ResponseEntity.ok(token);
 	}
 
-	@PostMapping("/login/forgot-password")
-	public ResponseEntity<?> checkEmailExists(@RequestBody UserDto userDto) {
-		User user = userService.findUserByEmail(userDto.getEmail());
+	@PostMapping("/login/forgot-password/{email}")
+	public ResponseEntity<?> checkEmailExists(@PathVariable String email) {
+		User user = userService.findUserByEmail(email);
 		if (user == null) {
 			return ResponseEntity.badRequest().body("Email does not exist");
 		}

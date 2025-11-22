@@ -22,17 +22,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        return "OPTIONS".equalsIgnoreCase(request.getMethod()) ||
+                path.startsWith("/user/login") ||
+                path.startsWith("/user/signup") ||
+                path.startsWith("/oauth2") ||
+                path.startsWith("/login/oauth2");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain)
             throws ServletException, IOException {
-
-        // Skip JWT validation for OPTIONS requests (CORS preflight) ###########################################################
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
+                
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {

@@ -36,7 +36,6 @@ public class SecurityConfig {
 						.requestMatchers(
 								"/user/login/**",
 								"/user/signup/**",
-								"/auth/send-otp",
 								"/oauth2/**",
 								"/login/oauth2/**")
 						.permitAll()

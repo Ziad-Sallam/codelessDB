@@ -11,6 +11,7 @@ const OTPInput = () => {
   const [timer, setTimer] = useState(60);
   const [disable, setDisable] = useState(true);
   const [otpPurpose, setOtpPurpose] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const otp = localStorage.getItem("otp");
@@ -52,15 +53,20 @@ const OTPInput = () => {
           alert("Account Created Successfully!");
           navigate("/login");
 
-        } catch (error) {
-          console.error("Signup Error:", error);
-          alert("Failed to create account. Please try again.");
+        } catch (err) {
+          const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+            || "Server unavailable. Please try again later.";
+
+          setError(String(serverMsg));
         }
       } else if (otpPurpose === "reset") {
         navigate("/reset");
       }
     } else {
-      alert("Invalid OTP. Try again.");
+      // alert("Invalid OTP. Try again.");
+      setError("Invalid OTP. Try again.");
     }
   };
 
@@ -70,19 +76,24 @@ const OTPInput = () => {
     const emailToUse = email || localStorage.getItem("email");
 
     try {
-      const response = await axios.post("http://localhost:8080/auth/send-otp", {
-        email: emailToUse
-      });
+      const response = await axios.post(`http://localhost:8080/user/signup/send-otp/${emailToUse}`);
 
       const otp = response.data;
+
+      // console.log(otp);
+
       localStorage.setItem("otp", otp);
-      alert("OTP resent to your email!");
+      // alert("OTP resent to your email!");
       setTimer(60);
       setDisable(true);
 
     } catch (err) {
-      console.error(err);
-      alert("Failed to resend OTP.");
+      const serverMsg = err.response?.data?.message
+        || err.response?.data
+        || err.message
+        || "Server unavailable. Please try again later.";
+
+      setError(String(serverMsg));
     }
   };
 
@@ -147,14 +158,16 @@ const OTPInput = () => {
             ))}
           </div>
 
+          {error && <p className="error-message" style={{marginBottom: "25px"}}>{error}</p>}
+
           <button onClick={verifyOTP} className="submit">Verify Code</button>
 
-          <button 
-            onClick={handleCancel} 
-            className="submit" 
-            style={{ 
-              backgroundColor: "#6c757d", 
-              marginTop: "10px" 
+          <button
+            onClick={handleCancel}
+            className="submit"
+            style={{
+              backgroundColor: "#6c757d",
+              marginTop: "10px"
             }}
           >
             Cancel

@@ -63,8 +63,12 @@ export default function Reset() {
       navigate("/recovered");
 
     } catch (err) {
-      console.error(err);
-      setError("Failed to change password. Try again.");
+      const serverMsg = err.response?.data?.message
+        || err.response?.data
+        || err.message
+        || "Server unavailable. Please try again later.";
+
+      setError(String(serverMsg));
     }
   }
 

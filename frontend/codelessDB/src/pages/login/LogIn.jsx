@@ -59,10 +59,13 @@ const LogIn = () => {
          const token = response.data;
          localStorage.setItem("authToken", token);
          navigate("/");
-      }
-      catch (err) {
-         console.error(err);
-         setError("Invalid email or password");
+      } catch (err) {
+         const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+            || "Server unavailable. Please try again later.";
+
+         setError(String(serverMsg));
       }
    };
 
@@ -73,37 +76,43 @@ const LogIn = () => {
       }
 
       try {
-         const checkResponse = await axios.post("http://localhost:8080/user/login/forgot-password", {
-            email: mail
-         });
+         const checkResponse = await axios.post(`http://localhost:8080/user/login/forgot-password/${mail}`);
 
          if (checkResponse.status === 200) {
             const token = checkResponse.data;
             localStorage.setItem("token for_reset", token);
 
-            const otpResponse = await axios.post("http://localhost:8080/auth/send-otp", {
-               email: mail
-            });
+            try {
+               const otpResponse = await axios.post(`http://localhost:8080/user/signup/send-otp/${mail}`);
 
-            const otp = otpResponse.data;
+               const otp = otpResponse.data;
 
-            console.log(otp);
+               // console.log(otp);
 
-            localStorage.setItem("otp", otp);
-            localStorage.setItem("email", mail);
-            localStorage.setItem("otpPurpose", "reset");
-            setEmail(mail);
+               localStorage.setItem("otp", otp);
+               localStorage.setItem("email", mail);
+               localStorage.setItem("otpPurpose", "reset");
+               setEmail(mail);
 
-            alert("OTP sent to your email!");
-            navigate("/otp");
+               // alert("OTP sent to your email!");
+               navigate("/otp");
+            } catch (err) {
+               const serverMsg = err.response?.data?.message
+                  || err.response?.data
+                  || err.message
+                  || "Server unavailable. Please try again later.";
+
+               setError(String(serverMsg));
+            }
          }
 
       } catch (err) {
-         if (err.response && err.response.data) {
-            setError(err.response.data);
-         } else {
-            setError("Failed to send OTP. Try again.");
-         }
+         const serverMsg = err.response?.data?.message
+            || err.response?.data
+            || err.message
+         || "Server unavailable. Please try again later.";
+
+         setError(String(serverMsg));
       }
    };
 
