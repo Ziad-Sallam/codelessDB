@@ -60,7 +60,10 @@ const Node = ({ id, data }) => {
       id: `col_${Date.now()}`, // simple unique ID generation
       name: 'new_column',
       dataType: 'VARCHAR',
-      
+      dataTypeLength: 45,
+      dataTypePrecision: 10,
+      dataTypeScale: 0,
+      dataTypeValues: ["tsest" , "tt"],
       constraints: {
         PRIMARY_KEY: false, NOT_NULL: false,
         FOREIGN_KEY: false, ForeignKeyOnDelete: "", ForeignKeyOnUpdate: "",
@@ -117,8 +120,48 @@ const Node = ({ id, data }) => {
                   </option>
                 ))}
               </select>
-              
+              {(col.dataType === 'VARCHAR'||col.dataType === 'CHAR') && (
+                <input
+                  title='Length'
+                  type="number"
+                  className="nodrag data-type-params"
+                  placeholder="Length"
+                  value={col.dataTypeLength || ''}
+                  onChange={(e) => onColumnChange(col.id, 'dataTypeLength', e.target.value)}
+                />
+              )}
 
+              {(col.dataType === 'DECIMAL' || col.dataType === 'NUMERIC') && (
+                <>
+                  <input
+                    type="number"
+                    className="nodrag data-type-params"
+                    placeholder="Precision"
+                    title='Percision'
+                    value={col.dataTypePrecision || ''}
+                    onChange={(e) => onColumnChange(col.id, 'dataTypePrecision', e.target.value)}
+                  />
+                  <input
+                    type="number"
+                    className="nodrag data-type-params"
+                    placeholder="Scale"
+                    title='Scale'
+                    value={col.dataTypeScale}
+                    onChange={(e) => onColumnChange(col.id, 'dataTypeScale', e.target.value)}
+                  />
+                </>
+              )}
+              {(col.dataType === 'ENUM' || col.dataType === 'SET') && (
+                <input
+                  type="text"
+                  className="nodrag data-type-enums"
+                  placeholder="Values (comma separated)"
+                  value={col.dataTypeValues ? col.dataTypeValues.join(', ') : ''}
+                  onChange={(e) => onColumnChange(col.id, 'dataTypeValues', e.target.value.split(',').map(v => v.trim()))}
+                />
+              )}
+              
+              {/* Constraints Toggle Button */}
               <button className="nodrag constraints-btn" onClick={() => toggleConstraint(col.id)}>{constraintsWindow[col.id] ? <MdExpandLess /> : <MdExpandMore />}</button>
               {/* Constraints Checkboxes */}
               {constraintsWindow[col.id] && <div className="column-constraints">
