@@ -59,6 +59,7 @@ public class UserDiagramService implements IUserDiagramService {
                 .stream()
                 .map(ud -> new DiagramInfoDto.Contributor(
                             ud.getUser().getUsername(),
+                            ud.getUser().getPicture(),
                             ud.getRole()
                         )
                 ).toList();
