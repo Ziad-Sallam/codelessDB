@@ -57,10 +57,4 @@ public class DiagramExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnsupported(UnsupportedOperationException ex) {
         return build(HttpStatus.NOT_ACCEPTABLE, ex.getMessage());
     }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
-        ex.printStackTrace();
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
-    }
 }
