@@ -114,8 +114,6 @@ const SignUp = () => {
 
           const otp = response.data;
 
-          // console.log(otp);
-
           localStorage.setItem("otp", otp);
           localStorage.setItem("email", mail);
           localStorage.setItem("otpPurpose", "signup");
@@ -126,8 +124,8 @@ const SignUp = () => {
             picture: userImage
           }));
 
-          // alert("OTP sent to your email!");
           navigate("/otp");
+          
         } catch (err) {
           const serverMsg = err.response?.data?.message
             || err.response?.data

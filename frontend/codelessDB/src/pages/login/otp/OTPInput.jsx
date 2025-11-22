@@ -65,7 +65,7 @@ const OTPInput = () => {
         navigate("/reset");
       }
     } else {
-      // alert("Invalid OTP. Try again.");
+ 
       setError("Invalid OTP. Try again.");
     }
   };
@@ -80,10 +80,8 @@ const OTPInput = () => {
 
       const otp = response.data;
 
-      // console.log(otp);
-
       localStorage.setItem("otp", otp);
-      // alert("OTP resent to your email!");
+
       setTimer(60);
       setDisable(true);
 
