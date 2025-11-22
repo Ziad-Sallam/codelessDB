@@ -43,9 +43,7 @@ public class Diagram {
   @Column(columnDefinition = "JSON")
   private String content; // to be continued
 
-  @Lob
-  @Column(columnDefinition = "BLOB")
-  private byte[] thumbnail;
+  private String thumbnail;
 
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
