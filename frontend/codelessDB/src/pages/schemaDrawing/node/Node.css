@@ -7,6 +7,10 @@
   
 }
 
+.table-node input:focus {
+  outline: none;
+}
+
 .table-header {
   background: #333;
   padding: 5px;
@@ -107,6 +111,10 @@
   font-size: 15px;
   color: #666;
   transition: all 0.3s ease;
+}
+
+.column-constraints label input {
+  margin-left: 4px;
 }
 
 .column-constraints label {

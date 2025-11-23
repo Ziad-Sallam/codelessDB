@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import './Node.css';
 import dataTypes from './dataTypes';
-import { MdExpandMore ,MdExpandLess } from "react-icons/md";
+import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 const Node = ({ id, data }) => {
   const { setNodes } = useReactFlow();
@@ -63,7 +63,7 @@ const Node = ({ id, data }) => {
       dataTypeLength: 45,
       dataTypePrecision: 10,
       dataTypeScale: 0,
-      dataTypeValues: ["tsest" , "tt"],
+      dataTypeValues: ["tsest", "tt"],
       constraints: {
         PRIMARY_KEY: false, NOT_NULL: false,
         FOREIGN_KEY: false, ForeignKeyOnDelete: "", ForeignKeyOnUpdate: "",
@@ -93,13 +93,11 @@ const Node = ({ id, data }) => {
           onChange={onNameChange}
         />
       </div>
-
+      {/* Left Handle */}
+      <Handle type="target" position={Position.Left} id={`${id}-target`} style={{ top: '50%' }} />
       <div className="table-body">
         {data.columns.map((col) => (
           <div key={col.id} className="table-column">
-            {/* Left Handle */}
-            <Handle type="target" position={Position.Left} id={`${col.id}-target`} style={{ top: '50%' }} />
-
             <div className="column-inputs">
               {/* Column Name */}
               <input
@@ -120,7 +118,7 @@ const Node = ({ id, data }) => {
                   </option>
                 ))}
               </select>
-              {(col.dataType === 'VARCHAR'||col.dataType === 'CHAR') && (
+              {(col.dataType === 'VARCHAR' || col.dataType === 'CHAR') && (
                 <input
                   title='Length'
                   type="number"
@@ -160,7 +158,7 @@ const Node = ({ id, data }) => {
                   onChange={(e) => onColumnChange(col.id, 'dataTypeValues', e.target.value.split(',').map(v => v.trim()))}
                 />
               )}
-              
+
               {/* Constraints Toggle Button */}
               <button className="nodrag constraints-btn" onClick={() => toggleConstraint(col.id)}>{constraintsWindow[col.id] ? <MdExpandLess /> : <MdExpandMore />}</button>
               {/* Constraints Checkboxes */}
@@ -216,41 +214,41 @@ const Node = ({ id, data }) => {
                 </label>
                 <div className='forginKey-constraint'>
                   <label title="Foreign Key">
-                  FK
-                  <input
-                    type="checkbox"
-                    className="nodrag"
-                    checked={col.constraints.FOREIGN_KEY || false}
-                    onChange={(e) => onColumnChange(col.id, 'FOREIGN_KEY', e.target.checked, true)}
-                  />
-                </label>
+                    FK
+                    <input
+                      type="checkbox"
+                      className="nodrag"
+                      checked={col.constraints.FOREIGN_KEY || false}
+                      onChange={(e) => onColumnChange(col.id, 'FOREIGN_KEY', e.target.checked, true)}
+                    />
+                  </label>
                   {col.constraints.FOREIGN_KEY &&
                     <>
-                    OnDelete:
-                    <select
-                      className="nodrag foreign-key-action-select"
-                      value={col.constraints.ForeignKeyOnDelete || ""}
-                      onChange={(e) => onColumnChange(col.id, 'ForeignKeyOnDelete', e.target.value, true)}
-                    >
-                      <option value="CASCADE">CASCADE</option>
-                      <option value="SET NULL">SET NULL</option>
-                      <option value="RESTRICT">RESTRICT</option>
-                      <option value="SET DEFAULT">SET DEFAULT</option>
-                      <option value="NO ACTION">NO ACTION</option>
-                    </select>
-                    OnUpdate:
-                    <select
-                      className="nodrag foreign-key-action-select"
-                      value={col.constraints.ForeignKeyOnUpdate || ""}
-                      onChange={(e) => onColumnChange(col.id, 'ForeignKeyOnUpdate', e.target.value, true)}
-                    >
-                      <option value="CASCADE">CASCADE</option>
-                      <option value="SET NULL">SET NULL</option>
-                      <option value="RESTRICT">RESTRICT</option>
-                      <option value="SET DEFAULT">SET DEFAULT</option>
-                      <option value="NO ACTION">NO ACTION</option>
-                    </select>
-                    
+                      OnDelete:
+                      <select
+                        className="nodrag foreign-key-action-select"
+                        value={col.constraints.ForeignKeyOnDelete || ""}
+                        onChange={(e) => onColumnChange(col.id, 'ForeignKeyOnDelete', e.target.value, true)}
+                      >
+                        <option value="CASCADE">CASCADE</option>
+                        <option value="SET NULL">SET NULL</option>
+                        <option value="RESTRICT">RESTRICT</option>
+                        <option value="SET DEFAULT">SET DEFAULT</option>
+                        <option value="NO ACTION">NO ACTION</option>
+                      </select>
+                      OnUpdate:
+                      <select
+                        className="nodrag foreign-key-action-select"
+                        value={col.constraints.ForeignKeyOnUpdate || ""}
+                        onChange={(e) => onColumnChange(col.id, 'ForeignKeyOnUpdate', e.target.value, true)}
+                      >
+                        <option value="CASCADE">CASCADE</option>
+                        <option value="SET NULL">SET NULL</option>
+                        <option value="RESTRICT">RESTRICT</option>
+                        <option value="SET DEFAULT">SET DEFAULT</option>
+                        <option value="NO ACTION">NO ACTION</option>
+                      </select>
+
                     </>}
                 </div>
                 <div className='check-constraint'>
@@ -312,12 +310,11 @@ const Node = ({ id, data }) => {
               {/* Delete Button */}
               <button className="nodrag delete-btn" onClick={() => deleteColumn(col.id)}>×</button>
             </div>
-
-            {/* Right Handle */}
-            < Handle type="source" position={Position.Right} id={`${col.id}-source`} style={{ top: '50%' }} />
           </div>
         ))}
       </div>
+      {/* Right Handle */}
+      < Handle type="source" position={Position.Right} id={`${id}-source`} style={{ top: '50%' }} />
 
       {/* Add Column Button */}
       <button className="nodrag add-btn" onClick={addColumn}>
