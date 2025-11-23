@@ -22,7 +22,12 @@ public class AgentController {
 
         System.out.println("User " + username + " sent: " + message.getContent());
 
-        simpMessagingTemplate.convertAndSend("/topic/messages", message);
+            // send ONLY to this user
+        simpMessagingTemplate.convertAndSendToUser(
+                                                    username,                     // user
+                                                    "/queue/reply",               // destination
+                                                    message                       // payload
+                                                );
     }
 
 

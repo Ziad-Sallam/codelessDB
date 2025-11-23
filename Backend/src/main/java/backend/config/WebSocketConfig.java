@@ -1,5 +1,6 @@
 package backend.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -13,10 +14,14 @@ import backend.agent.WebSocketHandler.*;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+	@Autowired
+    private StompUserInterceptor stompUserInterceptor;
+
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.enableSimpleBroker("/topic"); // Broker prefix for outgoing messages
+		registry.enableSimpleBroker("/topic", "/queue"); // Broker prefix for outgoing messages
 		registry.setApplicationDestinationPrefixes("/app"); // Prefix for incoming messages
+		registry.setUserDestinationPrefix("/user");
 	}
 
 	@Override
@@ -28,7 +33,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	}
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.interceptors(new StompUserInterceptor());	
+		registration.interceptors(stompUserInterceptor);	
 	}
 
 }

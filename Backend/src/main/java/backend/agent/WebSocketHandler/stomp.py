@@ -55,8 +55,8 @@ def on_open(ws):
     time.sleep(0.1)
 
     # Subscribe to topic
-    ws.send(stomp_subscribe("/topic/messages"))
-    print("📡 Subscribed to /topic/messages")
+    ws.send(stomp_subscribe("/user/queue/reply"))
+    print("📡 Subscribed to personal queue")
 
     # Input thread
     def input_thread():
@@ -66,7 +66,7 @@ def on_open(ws):
                 ws.close()
                 break
 
-            payload = json.dumps({"sender": "PythonUser", "content": msg})
+            payload = json.dumps({"sender": user, "content": msg})
             ws.send(stomp_send("/app/test", payload))
             print("📤 Sent:", msg)
 
