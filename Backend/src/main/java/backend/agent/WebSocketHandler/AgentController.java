@@ -23,11 +23,14 @@ public class AgentController {
         System.out.println("User " + username + " sent: " + message.getContent());
 
             // send ONLY to this user
-        simpMessagingTemplate.convertAndSendToUser(
-                                                    username,                     // user
+        simpMessagingTemplate.convertAndSendToUser( username,                     // user
                                                     "/queue/reply",               // destination
                                                     message                       // payload
                                                 );
+    }
+
+    public void sendToUser(String username, AgentMessageDTO message) {
+        simpMessagingTemplate.convertAndSendToUser(username, "/queue/reply", message);
     }
 
 

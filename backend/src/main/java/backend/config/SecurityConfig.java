@@ -38,7 +38,9 @@ public class SecurityConfig {
 								"/user/signup/**",
 								"/oauth2/**",
 								"/agent-ws/**",
-								"/login/oauth2/**")
+								"/login/oauth2/**",
+								"/api/messages/send"
+								)
 						.permitAll()
 						.anyRequest().authenticated())
 				.oauth2Login(oauth -> oauth
