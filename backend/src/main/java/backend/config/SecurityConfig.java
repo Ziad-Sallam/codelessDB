@@ -1,5 +1,7 @@
 package backend.config;
 
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +16,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import backend.security.GoogleSuccessHandler;
 import backend.security.JwtAuthenticationFilter;
-
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -37,6 +37,7 @@ public class SecurityConfig {
 								"/user/login/**",
 								"/user/signup/**",
 								"/oauth2/**",
+								"/agent-ws/**",
 								"/login/oauth2/**")
 						.permitAll()
 						.anyRequest().authenticated())
