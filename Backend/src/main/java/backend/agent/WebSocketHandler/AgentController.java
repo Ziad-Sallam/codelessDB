@@ -11,11 +11,11 @@ public class AgentController {
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
 
-@MessageMapping("/test")
-public void send(AgentMessageDTO message) {  // <-- now expects MessageDTO
-    simpMessagingTemplate.convertAndSend("/topic/messages", message);
-    System.out.println("Server sent: " + message.getSender() + " says: " + message.getContent());
-}
+    @MessageMapping("/test")
+    public void send(AgentMessageDTO message) {  
+        simpMessagingTemplate.convertAndSend("/topic/messages", message);
+        System.out.println("Server sent: " + message.getSender() + " says: " + message.getContent());
+    }
 
 
 }

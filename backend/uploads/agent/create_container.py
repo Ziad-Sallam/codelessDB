@@ -11,6 +11,8 @@ import subprocess
 import os
 import socket
 
+from cryptography.fernet import Fernet
+
 argv = sys.argv
 
 def select_random_port():
@@ -131,23 +133,47 @@ def create_mysql_container(id: int):
     )
 
     print("Waiting for MySQL to initialize (15s)...")
-    time.sleep(10)
+    time.sleep(15)
 
     container.reload()  # refresh info
     host_port = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostPort"]
-    host_ip = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostIp"]
-    
+    host_ip = "localhost"
+
+    print("MySQL is exposed on host:", host_ip)
     print("MySQL is exposed on port:", host_port)
+
 
     print(f"MySQL container '{container_name}' is ready.")
     print(f"Container ID: {container.short_id}")
 
     env = os.environ.copy()
     env["WS_URL"] = data["ws_url"]
-    
 
+    SCRIPT_ID = data["container_id"]
+    CONFIG_FILE = f"client_config_{SCRIPT_ID}.json"
+    KEY_FILE = f"client_key_{SCRIPT_ID}.key"
+    url =  data["ws_url"]
+
+    key = Fernet.generate_key()
+    with open(KEY_FILE, "wb") as f:
+        f.write(key)
+    
+    password_encrypted = Fernet(key).encrypt(password.encode()).decode()
+
+    config = {
+            "id" : data["container_id"],
+            "host": host_ip,
+            "port": host_port,
+            "user": "root",
+            "password": password_encrypted,
+            "database": database
+    }
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(config, f, indent=4)
+
+    
     subprocess.run(
-    [sys.executable, "communicate.py", data["ws_url"], data["container_id"], host_ip, host_port, "root", password, database],
+    [sys.executable, "communicate.py", data["ws_url"], data["container_id"]],
     env=env
     )
 

@@ -34,7 +34,7 @@ def load_key():
     if os.path.exists(KEY_FILE):
         return open(KEY_FILE, "rb").read()
     else:
-        return generate_key()
+        raise FileNotFoundError("Key file not found. Cannot load encryption key.")
 
 fernet = Fernet(load_key())
 
@@ -45,7 +45,7 @@ def decrypt_password(token: str) -> str:
     return fernet.decrypt(token.encode()).decode()
 
 # ---------------- Config file ----------------
-def load_or_create_config():
+def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r") as f:
             config = json.load(f)
@@ -53,25 +53,11 @@ def load_or_create_config():
             config["password"] = decrypt_password(config["password"])
             return config
     else:
-        config = {}
-        config["host"] = "localhost"  if len(argv) > 3 else input("MySQL host (e.g., localhost): ")
-        config["port"] = argv[4]  if len(argv) > 4 else int(input("MySQL port (e.g., 3306): "))
-        config["user"] = argv[5]  if len(argv) > 5 else input("MySQL user: ")
-        password = argv[6]  if len(argv) > 6 else input("MySQL password: ")
-        config["password"] = encrypt_password(password)  # store encrypted
-        config["database"] = argv[7]  if len(argv) > 7 else input("MySQL database name: ")
+        raise FileNotFoundError("Config file not found. Cannot load configuration.")
         
-        
-
-        with open(CONFIG_FILE, "w") as f:
-            json.dump(config, f, indent=4)
-
-        # decrypt before returning
-        config["password"] = password
-        return config
 
 # ---------------- Globals ----------------
-config = load_or_create_config()
+config = load_config()
 
 host = config["host"]
 port = config["port"]

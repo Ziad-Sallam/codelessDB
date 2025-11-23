@@ -46,6 +46,16 @@ data = {
         "ws_url": "ws://localhost:8765",
         "container_id": "2",
     },
+    3: {
+        "name": "mysql3",
+        "database_name": "db3",
+        
+        "password": "password3",
+        "image": "mysql:8.0",
+        "container_name": "mysql3",
+        "ws_url": "ws://localhost:8765",
+        "container_id": "3",
+    },
 }
 
 
