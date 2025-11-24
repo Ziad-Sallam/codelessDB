@@ -52,11 +52,13 @@ public class DTOMappingTest {
         assertEquals(5, getEntity("Employee").getAttributes().size(), "Employee should have 5 attributes");
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void employeeIdAttribute() {
         assertAttribute("Employee", "id", SQLTypeName.INT, true, PrimaryKeyConstraintDTO.class, NotNullConstraintDTO.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void employeeSalaryAttribute() {
         assertAttribute("Employee", "salary", SQLTypeName.DECIMAL, false, CheckConstraintDTO.class, DefaultConstraintDTO.class);
@@ -64,6 +66,7 @@ public class DTOMappingTest {
         assertDefaultConstraint("Employee", "salary", "1000");
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void employeeDepartmentFk() {
         assertAttribute("Employee", "department_id", SQLTypeName.INT, false, ForeignKeyConstraintDTO.class);
@@ -72,6 +75,7 @@ public class DTOMappingTest {
 
     // ----------- Department Tests -----------
 
+    @SuppressWarnings("unchecked")
     @Test
     void departmentIdAndName() {
         assertAttribute("Department", "id", SQLTypeName.INT, true, PrimaryKeyConstraintDTO.class);
@@ -87,6 +91,7 @@ public class DTOMappingTest {
         assertTrue(project.getAttributes().stream().anyMatch(a -> a.getDataType().getName() == SQLTypeName.SET), "Project should have SET attribute");
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void projectIdNameStatusTags() {
         assertAttribute("Project", "id", SQLTypeName.INT, true, PrimaryKeyConstraintDTO.class);
@@ -116,7 +121,7 @@ public class DTOMappingTest {
     }
 
     private void assertAttribute(String entityName, String attrName, SQLTypeName type, boolean indexed,
-                                 Class<? extends ConstraintDTO>... constraintClasses) {
+                                 @SuppressWarnings("unchecked")  Class<? extends ConstraintDTO>... constraintClasses) {
         AttributeDTO attr = getAttribute(getEntity(entityName), attrName);
         assertEquals(type, attr.getDataType().getName(), "Attribute '" + attrName + "' data type mismatch");
         assertEquals(indexed, attr.isIndexed(), "Attribute '" + attrName + "' indexed flag mismatch");

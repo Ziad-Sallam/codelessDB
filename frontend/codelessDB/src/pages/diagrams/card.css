@@ -1,8 +1,43 @@
+/* avatar stacking */
+.avatar-stack {
+	display: flex;
+	align-items: center;
+	/* ensure overflow visible so avatars can overlap outside the container if needed */
+	overflow: visible;
+}
+
+/* tighten the spacing and make overlap nicer on smaller screens */
+.avatar-stack .MuiAvatar-root {
+	border: 2px solid #ffffff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+	transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.avatar-stack .MuiAvatar-root:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+/* contributor detail small card (keeps same look as screenshot) */
+.contributor-detail {
+	pointer-events: auto;
+}
+
+/* ensure the card allows visible overflow for the popover */
 .diagram-card {
-	height: 350px;
-	border-radius: 14px;
+	overflow: visible;
+}
+
+
+.diagram-card {
+	height: auto;
+	width: 310px;
+
+	border-radius: 10px;
+
 	cursor: pointer;
 	display: flex;
+
 	flex-direction: column;
 	overflow: hidden;
 
@@ -18,28 +53,31 @@
 
 /* Hover effect */
 .diagram-card:hover {
-	transform: translateY(-6px) scale(1.025);
+	transform: translateY(-6px) scale(1.02);
+	transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 
-	/* deeper + softer shadow */
+	/* softer, less deep shadow */
 	box-shadow:
-		0px 10px 26px rgba(0, 0, 0, 0.18),
-		0px 6px 18px rgba(0, 0, 0, 0.12);
+		0px 6px 16px rgba(0, 0, 0, 0.14),
+		0px 3px 8px rgba(0, 0, 0, 0.10);
+}
+
+.css-15nkqkj-MuiPaper-root-MuiCard-root {
+	border-radius: 10px !important;
 }
 
 /* Thumbnail zoom + parallax feel */
 .thumbnail {
+	width: 100%;
+	height: 210px;
 	transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 	transform-origin: center center;
-}
-
-.diagram-card:hover .thumbnail {
-	transform: scale(1.08);
 }
 
 /* Placeholder thumbnail */
 .thumbnail-placeholder {
 	height: 210px;
-	background-color: #f3f5f7;
+	background-color: #082043;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -49,14 +87,13 @@
 .card-content {
 	flex-grow: 1;
 	transition:
-		transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-		opacity 0.45s ease;
-	transform: translateY(6px);
+		transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+		opacity 0.75s ease;
 	opacity: 0.95;
 }
 
 .diagram-card:hover .card-content {
-	transform: translateY(0px);
+	transform: translateY(-4px);
 	opacity: 1;
 }
 
