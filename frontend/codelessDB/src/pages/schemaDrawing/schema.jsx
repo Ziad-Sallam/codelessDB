@@ -11,29 +11,30 @@ import {
 } from "@xyflow/react";
 import '@xyflow/react/dist/style.css';
 import { nodeTypes,edgeTypes } from './index';
+import dataTypes from './node/dataTypes';
 // import './Schema.css';
 
 
 
 const initialNodes = [
-  {
-    id: 'n1', position: { x: 0, y: 0 }, data: {
-      tableName: 'users',
-      columns: [
-        { id: 'col1', name: 'id', dataType: 'INT', constraints: { PRIMARY_KEY: true } },
-        { id: 'col2', name: 'username', dataType: 'VARCHAR', constraints: {} },
-      ]
-    }, type: "Defult-Node"
-  },
-  {
-    id: 'n2', position: { x: 0, y: 200 }, data: {
-      tableName: 'orders',
-      columns: [
-        { id: 'col1', name: 'id', dataType: 'INT', constraints: { PRIMARY_KEY: true } },
-        { id: 'col2', name: 'total', dataType: 'DECIMAL', constraints: {} },
-      ]
-    }, type: "Defult-Node"
-  },
+  // {
+  //   id: 'n1', position: { x: 0, y: 0 }, data: {
+  //     tableName: 'users',
+  //     columns: [
+  //       { id: 'col1', name: 'id', dataType: 'INT', constraints: { PRIMARY_KEY: true } },
+  //       { id: 'col2', name: 'username', dataType: 'VARCHAR', constraints: {} },
+  //     ]
+  //   }, type: "Defult-Node"
+  // },
+  // {
+  //   id: 'n2', position: { x: 0, y: 200 }, data: {
+  //     tableName: 'orders',
+  //     columns: [
+  //       { id: 'col1', name: 'id', dataType: 'INT', constraints: { PRIMARY_KEY: true } },
+  //       { id: 'col2', name: 'total', dataType: 'DECIMAL', constraints: {} },
+  //     ]
+  //   }, type: "Defult-Node"
+  // },
 ];
 
 export default function Schema() {
@@ -48,7 +49,7 @@ export default function Schema() {
     if (!node || !node.data || !Array.isArray(node.data.columns)) return null;
     return node.data.columns.find(c => {
       const cons = c.constraints || {};
-      return cons.PRIMARY_KEY === true || cons.isPrimaryKey === true || cons.PRIMARYKEY === true || c.isPrimary === true;
+      return cons.PRIMARY_KEY === true;
     }) || null;
   };
 
@@ -58,6 +59,10 @@ export default function Schema() {
       id: fkId,
       name: `${pkCol.name}_fk`,
       dataType: pkCol.dataType,
+      dataTypeLength: pkCol.dataTypeLength,
+      dataTypePrecision: pkCol.dataTypePrecision,
+      dataTypeScale: pkCol.dataTypeScale,
+      dataTypeValues: pkCol.dataTypeValues,
       constraints: { FOREIGN_KEY: true },
       references: { tableName: refNode.name, columnName: pkCol.name }
     };
@@ -181,6 +186,8 @@ export default function Schema() {
 
   const addNode = () => {
     const id = `${nodes.length + 1}`;
+    console.log(nodes)
+    console.log(edges)
     setNodes((nds) => [
       ...nds,
       {
@@ -194,6 +201,7 @@ export default function Schema() {
       },
     ]);
   };
+
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>

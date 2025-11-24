@@ -38,15 +38,49 @@ const Node = ({ id, data }) => {
   };
 
   // 2. Handle Column Changes (Name, Type, Constraints)
-  const onColumnChange = (colId, field, value, isConstraint = false) => {
+    const onColumnChange = (colId, field, value, isConstraint = false) => {
     const newColumns = data.columns.map((col) => {
       if (col.id === colId) {
         if (isConstraint) {
+          let newConstraints = { ...col.constraints, [field]: value };
+          
+          // If PRIMARY_KEY is checked, uncheck UNIQUE (redundant)
+          if (field === 'PRIMARY_KEY' && value === true) {
+            newConstraints.UNIQUE = false;
+          }
+          
+          // If UNIQUE is checked and PRIMARY_KEY is already checked, keep PK
+          if (field === 'UNIQUE' && value === true && col.constraints.PRIMARY_KEY) {
+            newConstraints.UNIQUE = false;
+          }
+
+          // Auto Increment only for integer types
+          if (field === 'autoIncrement' && value === true) {
+            const intTypes = ['INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'MEDIUMINT'];
+            if (!intTypes.includes(col.dataType)) {
+              alert('Auto Increment can only be applied to integer types');
+              return col;
+            }
+          }
+
           return {
             ...col,
-            constraints: { ...col.constraints, [field]: value }
+            constraints: newConstraints
           };
         }
+        
+        // When changing dataType, reset AI if not integer
+        if (field === 'dataType') {
+          const intTypes = ['INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'MEDIUMINT'];
+          if (!intTypes.includes(value) && col.constraints.autoIncrement) {
+            return {
+              ...col,
+              [field]: value,
+              constraints: { ...col.constraints, autoIncrement: false }
+            };
+          }
+        }
+        
         return { ...col, [field]: value };
       }
       return col;
@@ -63,7 +97,7 @@ const Node = ({ id, data }) => {
       dataTypeLength: 45,
       dataTypePrecision: 10,
       dataTypeScale: 0,
-      dataTypeValues: ["tsest", "tt"],
+      dataTypeValues: [],
       constraints: {
         PRIMARY_KEY: false, NOT_NULL: false,
         FOREIGN_KEY: false, ForeignKeyOnDelete: "", ForeignKeyOnUpdate: "",
@@ -81,6 +115,12 @@ const Node = ({ id, data }) => {
     updateNodeData({ columns: newColumns });
   };
 
+  
+  const isIntegerType = (dataType) => {
+    const intTypes = ['INT', 'BIGINT', 'SMALLINT', 'TINYINT', 'MEDIUMINT'];
+    return intTypes.includes(dataType);
+  }
+
 
 
   return (
@@ -93,12 +133,30 @@ const Node = ({ id, data }) => {
           onChange={onNameChange}
         />
       </div>
-      {/* Left Handle */}
-      <Handle type="target" position={Position.Left} id={`${id}-target`} style={{ top: '50%' }} />
+      {/* Handles - Top, Right, Bottom, Left */}
+      <Handle type="source" position={Position.Top} id={`${id}-top`} style={{ background: '#2c3e50' }} />
+      <Handle type="target" position={Position.Top} id={`${id}-top-target`} style={{ background: '#2c3e50' }} />
+      
+      <Handle type="source" position={Position.Right} id={`${id}-right`} style={{ background: '#2c3e50' }} />
+      <Handle type="target" position={Position.Right} id={`${id}-right-target`} style={{ background: '#2c3e50' }} />
+      
+      <Handle type="source" position={Position.Bottom} id={`${id}-bottom`} style={{ background: '#2c3e50' }} />
+      <Handle type="target" position={Position.Bottom} id={`${id}-bottom-target`} style={{ background: '#2c3e50' }} />
+      
+      <Handle type="source" position={Position.Left} id={`${id}-left`} style={{ background: '#2c3e50' }} />
+      <Handle type="target" position={Position.Left} id={`${id}-left-target`} style={{ background: '#2c3e50' }} />
+
       <div className="table-body">
         {data.columns.map((col) => (
-          <div key={col.id} className="table-column">
+          <div key={col.id} className="table-column"
+          style={{ background: col.constraints.PRIMARY_KEY ? '#fff5f5' : col.constraints.FOREIGN_KEY ? '#f0f8ff' : '#fff'}}>
             <div className="column-inputs">
+              {/* Constraint Indicators */}
+              <span style={{ minWidth: '30px', fontSize: '11px', fontWeight: 'bold' }}>
+                {col.constraints.PRIMARY_KEY && <span style={{ color: '#e74c3c' }} title="Primary Key">PK</span>}
+                {col.constraints.FOREIGN_KEY && <span style={{ color: '#3498db' }} title="Foreign Key">FK</span>}
+              </span>
+
               {/* Column Name */}
               <input
                 className="nodrag column-name-input"
@@ -189,6 +247,7 @@ const Node = ({ id, data }) => {
                     type="checkbox"
                     className="nodrag"
                     checked={col.constraints.UNIQUE || false}
+                    disabled={col.constraints.PRIMARY_KEY}
                     onChange={(e) => onColumnChange(col.id, 'UNIQUE', e.target.checked, true)}
                   />
                 </label>
@@ -199,6 +258,7 @@ const Node = ({ id, data }) => {
                     type="checkbox"
                     className="nodrag"
                     checked={col.constraints.autoIncrement || false}
+                    disabled={!isIntegerType(col.dataType)}
                     onChange={(e) => onColumnChange(col.id, 'autoIncrement', e.target.checked, true)}
                   />
                 </label>
@@ -313,8 +373,7 @@ const Node = ({ id, data }) => {
           </div>
         ))}
       </div>
-      {/* Right Handle */}
-      < Handle type="source" position={Position.Right} id={`${id}-source`} style={{ top: '50%' }} />
+  
 
       {/* Add Column Button */}
       <button className="nodrag add-btn" onClick={addColumn}>
