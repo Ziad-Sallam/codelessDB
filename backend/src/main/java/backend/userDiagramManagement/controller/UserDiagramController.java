@@ -4,7 +4,6 @@ import backend.security.AuthUser;
 import backend.userDiagramManagement.dto.*;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateResponseDto;
-import backend.userDiagramManagement.dto.get.DiagramGetInfoRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
@@ -26,24 +25,24 @@ import java.util.Date;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/diagram")
+@RequestMapping("/diagrams")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UserDiagramController {
 
     private final IUserDiagramService userDiagramService;
 
-    private int userId(AuthUser authUser) {
+    private int id(AuthUser authUser) {
         return authUser.userId();
     }
 
     @PostMapping("/get")
     public ResponseEntity<Page<DiagramInfoDto>> getDiagramsByUserId(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestBody DiagramGetInfoRequestDto request) {
+            @RequestParam(defaultValue = "0") int pageNumber, @RequestParam(defaultValue = "10") int pageSize) {
 
-        Pageable pageable = PageRequest.of(request.getPageNumber(), request.getPageSize());
-        Page<DiagramInfoDto> result = userDiagramService.getDiagramsByUserId(userId(authUser), request, pageable);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<DiagramInfoDto> result = userDiagramService.getDiagramsByUserId(id(authUser), pageable);
 
         return ResponseEntity.ok(result);
     }
@@ -53,7 +52,7 @@ public class UserDiagramController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody DiagramCreateRequestDto request) {
 
-        UUID diagramId = userDiagramService.createDiagram(userId(authUser), request);
+        UUID diagramId = userDiagramService.createDiagram(id(authUser), request);
 
         return ResponseEntity.ok(new DiagramCreateResponseDto(
                 "Diagram created successfully",
@@ -67,7 +66,7 @@ public class UserDiagramController {
             @PathVariable UUID id,
             @RequestBody DiagramUpdateRequestDto request) {
 
-        Date updateDate = userDiagramService.updateDiagram(userId(authUser), request, id);
+        Date updateDate = userDiagramService.updateDiagram(id(authUser), request, id);
 
         return ResponseEntity.ok(new DiagramUpdateResponseDto(
                 "Diagram updated successfully",
@@ -81,7 +80,7 @@ public class UserDiagramController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable UUID id) {
 
-        userDiagramService.deleteDiagram(userId(authUser), id);
+        userDiagramService.deleteDiagram(id(authUser), id);
 
         return ResponseEntity.ok(new DiagramDeleteResponseDto(
                 "Diagram deleted successfully",
@@ -94,17 +93,19 @@ public class UserDiagramController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable UUID id) {
 
-        DiagramDto result = userDiagramService.searchDiagramById(userId(authUser), id);
+        DiagramDto result = userDiagramService.searchDiagramById(id(authUser), id);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/search")
     public ResponseEntity<Page<DiagramDto>> searchDiagrams(
             @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam int pageNumber,
+            @RequestParam int pageSize,
             @RequestBody DiagramSearchRequestDto request) {
 
-        Pageable pageable = PageRequest.of(request.getPageNumber(), request.getPageSize());
-        Page<DiagramDto> result = userDiagramService.searchDiagrams(userId(authUser), request, pageable);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<DiagramDto> result = userDiagramService.searchDiagrams(id(authUser), request, pageable);
 
         return ResponseEntity.ok(result);
     }
@@ -114,7 +115,7 @@ public class UserDiagramController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody DiagramShareRequestDto request) {
 
-        DiagramShareResponseDto response = userDiagramService.shareDiagram(userId(authUser), request);
+        DiagramShareResponseDto response = userDiagramService.shareDiagram(id(authUser), request);
         return ResponseEntity.ok(response);
     }
 }

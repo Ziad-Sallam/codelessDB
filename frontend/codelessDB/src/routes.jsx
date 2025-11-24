@@ -3,9 +3,17 @@ import SignUp from './pages/signup/SignUp.jsx';
 import OTPInput from './pages/login/otp/OTPInput.jsx';
 import Reset from './pages/login/reset/Reset.jsx';
 import Recovered from './pages/login/Recovered/Recovered.jsx';
-import Diagram from './pages/diagrams/Diagram.jsx';
+import DiagramPage from './pages/diagrams/DiagramPage.jsx';
 
 export const routes = [
+	{
+		path: '/',
+		element: <DiagramPage />
+	},
+	// {
+	// 	path: '/',
+	// 	element: <LogIn />
+	// },
 	{
 		path: '/login',
 		element: <LogIn />
@@ -28,6 +36,6 @@ export const routes = [
 	},
 	{
 		path: '/diagrams',
-		element: <Diagram />
+		element: <DiagramPage />
 	}
 ]

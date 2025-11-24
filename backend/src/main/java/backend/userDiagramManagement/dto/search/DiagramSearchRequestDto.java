@@ -13,6 +13,4 @@ public class DiagramSearchRequestDto {
     private String name;   // partial or full diagram name
     private String start;  // "yyyy-MM-dd" format
     private String end;    // "yyyy-MM-dd" format
-    private int pageNumber = 0;
-    private int pageSize = 10;
 }

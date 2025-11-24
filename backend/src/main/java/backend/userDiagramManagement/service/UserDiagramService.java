@@ -9,7 +9,6 @@ import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
-import backend.userDiagramManagement.dto.get.DiagramGetInfoRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
@@ -77,7 +76,7 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
-    public Page<DiagramInfoDto> getDiagramsByUserId(int userId, DiagramGetInfoRequestDto request, Pageable pageable) {
+    public Page<DiagramInfoDto> getDiagramsByUserId(int userId, Pageable pageable) {
         getUserOrThrow(userId);
         return userDiagramRepository
                 .findByUser_Id(userId, pageable)
