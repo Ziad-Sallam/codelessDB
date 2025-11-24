@@ -1,25 +1,21 @@
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage } from "../../firebase/firebase.config";
-import sampleImage from '../../assets/empty_thumbnail.png';
-
 const API_URL = import.meta.env.VITE_BACKEND_URL;
 
-export async function uploadImage(file) {
-	if (!file) return null;
-	const response = await fetch(sampleImage);
-  	const blob = await response.blob();
+// export async function uploadImage(file) {
+// 	if (!file) return null;
+// 	const response = await fetch(sampleImage);
+//   	const blob = await response.blob();
 
-	// file.name is unique
-	const imageRef = ref(storage, `diagrams/${file.name}`);
+// 	// file.name is unique
+// 	const imageRef = ref(storage, `diagrams/${file.name}`);
 
-	// Upload file
-	await uploadBytes(imageRef, file);
+// 	// Upload file
+// 	await uploadBytes(imageRef, file);
 
-	// Retrieve its download URL
-	const url = await getDownloadURL(imageRef);
+// 	// Retrieve its download URL
+// 	const url = await getDownloadURL(imageRef);
 
-	return url;
-}
+// 	return url;
+// }
 
 
 export async function fetchDiagrams(pageNumber = 0, pageSize = 10) {

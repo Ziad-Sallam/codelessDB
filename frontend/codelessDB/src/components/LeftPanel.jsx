@@ -37,11 +37,11 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 			}}
 		>
 			<Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
-				<Avatar sx={{ bgcolor: "white", color: "background.dark" }}>A</Avatar>
+				<Avatar sx={{ bgcolor: "white", color: "background.dark" }}>C</Avatar>
 				<Box>
-					<Typography variant="subtitle1">Ahmed Ragy</Typography>
+					<Typography variant="h6">CodelessDB</Typography>
 					<Typography variant="caption" sx={{ opacity: 0.85 }}>
-						Personal workspace
+						Shared workspace
 					</Typography>
 				</Box>
 			</Box>
@@ -99,9 +99,6 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 			<Box sx={{ flexGrow: 1 }} />
 
 			<Divider sx={{ borderColor: "rgba(255,255,255,0.06)", my: 1 }} />
-			<Typography variant="caption" sx={{ color: "rgba(255,255,255,0.7)" }}>
-				Tip: Click a diagram to open it
-			</Typography>
 		</Drawer>
 	);
 }
