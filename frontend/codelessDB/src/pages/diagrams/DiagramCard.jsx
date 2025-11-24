@@ -28,14 +28,14 @@ export default function DiagramCard({ d, onOpen }) {
 				/>
 			) : (
 				<Box className="thumbnail thumbnail-placeholder">
-					<InsertPhotoIcon sx={{ fontSize: 56, color: "#9aa4b2" }} />
+					<InsertPhotoIcon sx={{ fontSize: 56, color: "background.light", opacity: 0.5 }} />
 				</Box>
 			)}
 
 			<CardContent className="card-content">
 				<Box className="content-row">
 					<Box className="text-section">
-						<Typography variant="h6" noWrap sx={{ fontSize: 16 }}>
+						<Typography variant="h5" noWrap sx={{ fontSize: 18, fontWeight: 530 }}>
 							{d.name}
 						</Typography>
 

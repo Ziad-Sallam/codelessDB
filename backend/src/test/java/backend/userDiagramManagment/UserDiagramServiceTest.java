@@ -9,7 +9,6 @@ import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
 import backend.userDiagramManagement.dto.*;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
-import backend.userDiagramManagement.dto.get.DiagramGetInfoRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
@@ -76,7 +75,7 @@ class UserDiagramServiceTest {
                 .thenReturn(new PageImpl<>(List.of(ownerLink)));
 
         Page<DiagramInfoDto> result =
-                service.getDiagramsByUserId(1, new DiagramGetInfoRequestDto(), PageRequest.of(0, 10));
+                service.getDiagramsByUserId(1, PageRequest.of(0, 10));
 
         assertEquals(1, result.getContent().size());
     }

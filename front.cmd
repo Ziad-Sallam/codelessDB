@@ -1,0 +1,1 @@
+cd ./frontend/codelessDB && npm run dev
