@@ -1,12 +1,43 @@
+/* avatar stacking */
+.avatar-stack {
+	display: flex;
+	align-items: center;
+	/* ensure overflow visible so avatars can overlap outside the container if needed */
+	overflow: visible;
+}
+
+/* tighten the spacing and make overlap nicer on smaller screens */
+.avatar-stack .MuiAvatar-root {
+	border: 2px solid #ffffff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+	transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.avatar-stack .MuiAvatar-root:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+/* contributor detail small card (keeps same look as screenshot) */
+.contributor-detail {
+	pointer-events: auto;
+}
+
+/* ensure the card allows visible overflow for the popover */
+.diagram-card {
+	overflow: visible;
+}
+
+
 .diagram-card {
 	height: auto;
 	width: 310px;
-	
+
 	border-radius: 10px;
-	
+
 	cursor: pointer;
 	display: flex;
-	
+
 	flex-direction: column;
 	overflow: hidden;
 
