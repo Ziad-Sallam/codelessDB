@@ -17,6 +17,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { nodeTypes, edgeTypes as initialEdgeTypes } from './index';
 import dataTypes from './node/dataTypes';
+import "./Schema.css";
 
 // --- MATH HELPERS FOR SHORTEST DISTANCE (Floating Edge) ---
 function getIntersection(n, n2) {
@@ -41,15 +42,15 @@ function getIntersection(n, n2) {
   if (dx === 0 && dy === 0) return { x: xx1, y: yy1 };
 
   const slope = dy / (dx || 1);
-  
+
   if (Math.abs(dx) * h > Math.abs(dy) * w) {
-      const hitX = dx > 0 ? x + w : x;
-      const hitY = yy1 + slope * (hitX - xx1);
-      return { x: hitX, y: hitY };
+    const hitX = dx > 0 ? x + w : x;
+    const hitY = yy1 + slope * (hitX - xx1);
+    return { x: hitX, y: hitY };
   } else {
-      const hitY = dy > 0 ? y + h : y;
-      const hitX = xx1 + (hitY - yy1) / slope;
-      return { x: hitX, y: hitY };
+    const hitY = dy > 0 ? y + h : y;
+    const hitX = xx1 + (hitY - yy1) / slope;
+    return { x: hitX, y: hitY };
   }
 }
 
@@ -115,7 +116,7 @@ function FloatingEdge({ id, source, target, markerEnd, style, data }) {
     targetY: ty,
     targetPosition: targetPos,
     borderRadius: 10,
-    offset: 20 
+    offset: 20
   });
 
   // Split the type string "1:N" into ["1", "N"]
@@ -142,13 +143,13 @@ function FloatingEdge({ id, source, target, markerEnd, style, data }) {
   return (
     <>
       <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />
-      
+
       <EdgeLabelRenderer>
         {/* Source Label (e.g., '1') */}
         <div style={{ ...labelStyle, left: sourceLabelPos.x, top: sourceLabelPos.y }}>
           {startLabel}
         </div>
-        
+
         {/* Target Label (e.g., 'N') */}
         <div style={{ ...labelStyle, left: targetLabelPos.x, top: targetLabelPos.y }}>
           {endLabel}
@@ -172,7 +173,7 @@ export default function Schema() {
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
   const [selectedRelationType, setSelectedRelationType] = useState('1:N');
-  
+
   const onNodesChange = useCallback((changes) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
   const onEdgesChange = useCallback((changes) => setEdges((es) => applyEdgeChanges(changes, es)), []);
 
@@ -225,13 +226,17 @@ export default function Schema() {
     } else if (relation === 'M:N') {
       const junctionId = `jn_${srcId}_${tgtId}_${Date.now()}`;
       const junctionName = `${srcClone.data.tableName}_${tgtClone.data.tableName}`;
-      
+
       const junctionColumns = [];
       srcPKs.forEach(pk => {
         junctionColumns.push({
           id: `jcn_${srcId}_${pk.name}_${Date.now()}`,
           name: `${srcClone.data.tableName}_${pk.name}`,
           dataType: pk.dataType || 'INT',
+          dataTypeLength: pk.dataTypeLength,
+          dataTypePrecision: pk.dataTypePrecision,
+          dataTypeScale: pk.dataTypeScale,
+          dataTypeValues: pk.dataTypeValues,
           constraints: { PRIMARY_KEY: true, FOREIGN_KEY: true },
           references: { tableName: srcClone.data.tableName, columnName: pk.name }
         });
@@ -241,6 +246,10 @@ export default function Schema() {
           id: `jcn_${tgtId}_${pk.name}_${Date.now()}`,
           name: `${tgtClone.data.tableName}_${pk.name}`,
           dataType: pk.dataType || 'INT',
+          dataTypeLength: pk.dataTypeLength,
+          dataTypePrecision: pk.dataTypePrecision,
+          dataTypeScale: pk.dataTypeScale,
+          dataTypeValues: pk.dataTypeValues,
           constraints: { PRIMARY_KEY: true, FOREIGN_KEY: true },
           references: { tableName: tgtClone.data.tableName, columnName: pk.name }
         });
@@ -256,21 +265,21 @@ export default function Schema() {
 
       setEdges((eds) => [
         ...eds,
-        { 
-          id: `e_${srcId}_${junctionId}`, 
-          source: srcId, 
-          target: junctionId, 
-          type: 'oneToMany', 
+        {
+          id: `e_${srcId}_${junctionId}`,
+          source: srcId,
+          target: junctionId,
+          type: 'oneToMany',
           // markerEnd: { type: MarkerType.ArrowClosed },
-          data: { type: '1:M' } 
+          data: { type: '1:M' }
         },
-        { 
-          id: `e_${junctionId}_${tgtId}`, 
-          source: junctionId, 
-          target: tgtId, 
-          type: 'manyToOne', 
+        {
+          id: `e_${junctionId}_${tgtId}`,
+          source: junctionId,
+          target: tgtId,
+          type: 'manyToOne',
           // markerEnd: { type: MarkerType.ArrowClosed },
-          data: { type: 'M:1' } 
+          data: { type: 'M:1' }
         },
       ]);
     }
@@ -316,8 +325,8 @@ export default function Schema() {
     ]);
   };
 
-  return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+ return (
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#f8fafc' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -329,39 +338,40 @@ export default function Schema() {
         fitView
         connectionMode="loose"
         defaultEdgeOptions={{
-          style: { strokeWidth: 2, stroke: '#555' },
+          style: { strokeWidth: 2, stroke: '#94a3b8' },
         }}
       >
-        <MiniMap />
-        <Controls />
-        <Background />
+        <MiniMap style={{ borderRadius: 8, border: '1px solid #e2e8f0' }} nodeColor="#cbd5e1" maskColor="rgba(241, 245, 249, 0.6)" />
+        <Controls style={{ borderRadius: 8, overflow: 'hidden', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+        <Background color="#cbd5e1" gap={20} size={1} />
       </ReactFlow>
 
-      <div style={{
-        position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 12, display: 'flex', gap: 8, zIndex: 9999, background: 'rgba(255,255,255,0.95)', padding: 8, borderRadius: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.12)'
-      }}>
-        <RelationButton active={selectedRelationType === '1:1'} color="#007bff" onClick={() => setSelectedRelationType('1:1')} label="1 : 1" />
-        <RelationButton active={selectedRelationType === '1:N'} color="#00d26a" onClick={() => setSelectedRelationType('1:N')} label="1 : N" />
-        <RelationButton active={selectedRelationType === 'N:1'} color="#ffb300" onClick={() => setSelectedRelationType('N:1')} label="N : 1" />
-        <RelationButton active={selectedRelationType === 'M:N'} color="#d00000" onClick={() => setSelectedRelationType('M:N')} label="M : N" />
-        <button onClick={addNode} style={{ padding: '6px 10px' }}>Add Node</button>
+      {/* NEW TOOLBAR STRUCTURE */}
+      <div className="schema-toolbar">
+        <RelationButton active={selectedRelationType === '1:1'} color="#3b82f6" onClick={() => setSelectedRelationType('1:1')} label="1 : 1" />
+        <RelationButton active={selectedRelationType === '1:N'} color="#10b981" onClick={() => setSelectedRelationType('1:N')} label="1 : N" />
+        <RelationButton active={selectedRelationType === 'N:1'} color="#f59e0b" onClick={() => setSelectedRelationType('N:1')} label="N : 1" />
+        <RelationButton active={selectedRelationType === 'M:N'} color="#ef4444" onClick={() => setSelectedRelationType('M:N')} label="M : N" />
+        <div style={{ width: 1, height: 24, background: '#e2e8f0', margin: '0 4px' }}></div>
+        <button className="add-node-btn" onClick={addNode}>+ Add Table</button>
       </div>
+      <button className='generate' >Generate SQL</button>
     </div>
   );
 }
 
+// Updated Button Component to use new classes
 function RelationButton({ active, color, onClick, label }) {
   return (
-    <button onClick={onClick}
-      style={{
-        padding: '8px 12px',
-        borderRadius: 6,
-        border: active ? `2px solid ${color}` : '1px solid #ccc',
-        background: active ? `${color}11` : 'transparent',
-        cursor: 'pointer',
-        fontWeight: 600
-      }}>
-      <span style={{ display: 'inline-block', width: 10, height: 10, background: color, borderRadius: 3, marginRight: 8 }} />
+    <button 
+      onClick={onClick} 
+      className={`relation-btn ${active ? 'active' : ''}`}
+      style={active ? { borderColor: color, color: color } : {}}
+    >
+      <span 
+        className="relation-color-indicator" 
+        style={{ background: color }} 
+      />
       {label}
     </button>
   );
