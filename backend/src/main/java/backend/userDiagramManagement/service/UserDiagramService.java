@@ -9,6 +9,7 @@ import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
+import backend.userDiagramManagement.dto.create.DiagramCreateResponseDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
@@ -89,7 +90,7 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
-    public UUID createDiagram(int userId, DiagramCreateRequestDto request) {
+    public DiagramCreateResponseDto createDiagram(int userId, DiagramCreateRequestDto request) {
         User user = getUserOrThrow(userId);
         Diagram diagram = diagramRepository.save(request.toDiagram());
 
@@ -101,7 +102,7 @@ public class UserDiagramService implements IUserDiagramService {
                 .build();
 
         userDiagramRepository.save(join);
-        return diagram.getId();
+        return new DiagramCreateResponseDto(diagram.getId(), diagram.getCreatedAt(), diagram.getLastModified());
     }
 
     @Override

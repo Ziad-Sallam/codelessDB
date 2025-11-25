@@ -133,16 +133,16 @@ export default function DiagramCard({ d = {}, onOpen }) {
 			<CardContent className="card-content">
 				<Box className="content-row" sx={{ alignItems: "flex-start" }}>
 					<Box className="text-section" sx={{ pr: 1 }}>
-						<Typography variant="h5" noWrap sx={{ fontSize: 18, fontWeight: 530 }}>
-							{d?.name || "Untitled diagram"}
+						<Typography variant="h6" noWrap>
+							{d?.name}
 						</Typography>
 
-						<Typography variant="caption" color="text.secondary" display="block">
+						<Typography variant="subtitle" color="text.secondary" display="block">
 							Created: {d?.createdAt ? new Date(d.createdAt).toLocaleDateString() : "—"}
 						</Typography>
 
-						<Typography variant="caption" color="text.secondary" display="block">
-							Modified: {d?.modifiedAt ? new Date(d.modifiedAt).toLocaleDateString() : "—"}
+						<Typography variant="subtitle" color="text.secondary" display="block">
+							Modified: {d?.lastModified ? new Date(d.lastModified).toLocaleDateString() : "—"}
 						</Typography>
 					</Box>
 
@@ -157,7 +157,9 @@ export default function DiagramCard({ d = {}, onOpen }) {
 				{/* Avatar stack (overlapped) - now clickable */}
 				<Box
 					className="avatar-stack"
-					sx={{ display: "flex", alignItems: "center", mt: 1, cursor: "pointer" }}
+					sx={{ display: "flex", alignItems: "center", mt: 2, cursor: "pointer", justifyContent: "flex-end", mt: 2 }}
+					// anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+					// transformOrigin={{ vertical: "top", horizontal: "left" }}
 					onClick={handleContributorsClick}
 				>
 					{contributors.slice(0, 6).map((c, i) => (

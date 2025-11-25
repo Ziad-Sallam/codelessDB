@@ -13,7 +13,9 @@ function App() {
    const [msg, setMsg] = useState("");
    
    useEffect(() => {
-      setMsg("test Notification")
+      // setMsg("test Notification")
+      const token = "eyJhbGciOiJIUzM4NCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWhtZWRfcmFneTMiLCJzdWIiOiIxIiwiaWF0IjoxNzY0MDM0OTAyLCJleHAiOjE3NjQxMjEzMDJ9.3Gr4XfnK9Wy1qpiyawmECHh1AD2n4BZWjsex7c9h-Bz4Qf3r1qRkKvbCW8f0omtY";
+      localStorage.setItem("authToken" , token)
    }, []);
 
    return (

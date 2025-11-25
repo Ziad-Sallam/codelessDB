@@ -1,9 +1,10 @@
 {
 	"info": {
-		"_postman_id": "b4c31274-e23c-4560-ac78-645fb9c6931f",
+		"_postman_id": "f3405e22-68c3-42bb-bc22-09af650e39e7",
 		"name": "codelessdb",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "39257982"
+		"_exporter_id": "39168076",
+		"_collection_link": "https://backenders-6160.postman.co/workspace/CodelessDB-APIs~e5f72c98-2e75-411e-b39b-4884f61297d1/collection/39168076-f3405e22-68c3-42bb-bc22-09af650e39e7?action=share&source=collection_link&creator=39168076"
 	},
 	"item": [
 		{
@@ -38,6 +39,9 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -328,16 +332,31 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"pageNumber\": 0,\n    \"pageSize\": 10\n}"
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagram/get",
+							"raw": "{{base_url}}/diagrams/get?pageNumber=0&pageSize=10",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagram",
+								"diagrams",
 								"get"
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
 							]
 						}
 					},
@@ -353,11 +372,12 @@
 							"raw": "{\n    \"diagramId\": \"id\",\n    \"toUserName\": \"hi\",\n    \"role\": \"WRITER\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/share",
+							"raw": "{{base_url}}/diagrams/share",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"diagrams",
 								"share"
 							]
 						}
@@ -371,15 +391,20 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"hi\",\n    \"jsonContent\": \"{}\"\n}"
+							"raw": "{\n    \"name\": \"hi\",\n    \"jsonContent\": \"{}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagram/update/{id}",
+							"raw": "{{base_url}}/diagrams/update/{id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagram",
+								"diagrams",
 								"update",
 								"{id}"
 							]
@@ -397,12 +422,12 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{base_url}}/diagram/delete/{id}",
+							"raw": "{{base_url}}/diagrams/delete/{id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagram",
+								"diagrams",
 								"delete",
 								"{id}"
 							]
@@ -417,15 +442,20 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"abc\",\n    \"jsonContent\": \"{}\"\n    \"thumbnail\": \"\"\n}"
+							"raw": "{\n    \"name\": \"abc\",\n    \"jsonContent\": \"{}\",\n    \"thumbnail\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagram/create",
+							"raw": "{{base_url}}/diagrams/create",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagram",
+								"diagrams",
 								"create"
 							]
 						}
@@ -445,12 +475,12 @@
 							"raw": "{\n    \"email\": \"ahmed3@example.com\",\n    \"password\": \"Str0ngP@ssw0rd!\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/diagram/search/{id}",
+							"raw": "{{base_url}}/diagrams/search/{id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagram",
+								"diagrams",
 								"search",
 								"{id}"
 							]
@@ -473,12 +503,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagram/search/{id}",
+							"raw": "{{base_url}}/diagrams/search/{id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagram",
+								"diagrams",
 								"search",
 								"{id}"
 							]
@@ -489,6 +519,16 @@
 			]
 		}
 	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzM4NCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWhtZWRfcmFneTMiLCJzdWIiOiIxIiwiaWF0IjoxNzY0MDM0OTAyLCJleHAiOjE3NjQxMjEzMDJ9.3Gr4XfnK9Wy1qpiyawmECHh1AD2n4BZWjsex7c9h-Bz4Qf3r1qRkKvbCW8f0omtY",
+				"type": "string"
+			}
+		]
+	},
 	"event": [
 		{
 			"listen": "prerequest",

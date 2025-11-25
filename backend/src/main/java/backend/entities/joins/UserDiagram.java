@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserDiagram {
 
+    @Builder.Default
     @EmbeddedId
     private UserDiagramId UUID = new UserDiagramId();
 

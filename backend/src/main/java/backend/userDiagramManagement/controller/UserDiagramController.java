@@ -36,10 +36,11 @@ public class UserDiagramController {
         return authUser.userId();
     }
 
-    @PostMapping("/get")
+    @GetMapping("/get")
     public ResponseEntity<Page<DiagramInfoDto>> getDiagramsByUserId(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestParam(defaultValue = "0") int pageNumber, @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "0") int pageNumber, 
+            @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<DiagramInfoDto> result = userDiagramService.getDiagramsByUserId(id(authUser), pageable);
@@ -52,12 +53,9 @@ public class UserDiagramController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody DiagramCreateRequestDto request) {
 
-        UUID diagramId = userDiagramService.createDiagram(id(authUser), request);
+        DiagramCreateResponseDto diagram = userDiagramService.createDiagram(id(authUser), request);
 
-        return ResponseEntity.ok(new DiagramCreateResponseDto(
-                "Diagram created successfully",
-                diagramId
-        ));
+        return ResponseEntity.ok(diagram);
     }
 
     @PutMapping("/update/{id}")

@@ -91,7 +91,7 @@ class UserDiagramServiceTest {
         DiagramCreateRequestDto request = new DiagramCreateRequestDto();
         request.setName("New");
 
-        UUID id = service.createDiagram(1, request);
+        UUID id = service.createDiagram(1, request).getDiagramId();
 
         assertNotNull(id);
         verify(userDiagramRepository, times(1)).save(any(UserDiagram.class));
