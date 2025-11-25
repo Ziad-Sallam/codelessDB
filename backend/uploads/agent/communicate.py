@@ -24,12 +24,6 @@ KEY_FILE = f"client_key_{SCRIPT_ID}.key"
 url = argv[1]
 
 # ---------------- Encryption helpers ----------------
-def generate_key():
-    key = Fernet.generate_key()
-    with open(KEY_FILE, "wb") as f:
-        f.write(key)
-    return key
-
 def load_key():
     if os.path.exists(KEY_FILE):
         return open(KEY_FILE, "rb").read()
@@ -59,6 +53,7 @@ def load_config():
 # ---------------- Globals ----------------
 config = load_config()
 
+id = config["id"]
 host = config["host"]
 port = config["port"]
 user = config["user"]
@@ -70,6 +65,79 @@ connection = None
 cursor = None
 ws_global = None
 docker_client = docker.from_env()
+
+# -----------------------------
+# STOMP Frame Builders
+# -----------------------------
+
+def stomp_connect(url,username):
+    return (
+        "CONNECT\n"
+        "accept-version:1.2\n"
+        f"host:{url}\n"     #localhost
+        f"Authorization:{username}\n"
+        "\n\x00"
+    )
+
+def stomp_subscribe(destination, sid="sub-0"):
+    return (
+        f"SUBSCRIBE\n"
+        f"destination:{destination}\n"    #/user/queue/reply
+        f"id:{sid}\n"
+        "\n\x00"
+    )
+
+def stomp_send(destination, body, content_type="application/json"):
+    return (
+        f"SEND\n"
+        f"destination:{destination}\n"
+        f"content-type:{content_type}\n"
+        "\n"
+        f"{body}\x00"
+    )
+
+
+# ----------------- Message Parsing & Handling -----------------
+
+def parse_stomp_message(frame: str):
+    """
+    Parse a STOMP MESSAGE frame and return the body JSON.
+    """
+
+    # Remove trailing null byte if exists
+    frame = frame.rstrip("\x00")
+
+    # Split headers and body (first blank line)
+    parts = frame.split("\n\n", 1)
+    if len(parts) != 2:
+        return None  # Invalid frame
+
+    header_block, body = parts
+
+    # Parse headers into dict
+    headers = {}
+    header_lines = header_block.split("\n")
+    # First line is the command (MESSAGE), skip it
+    command = header_lines[0].strip()
+
+    for line in header_lines[1:]:
+        if ":" in line:
+            key, val = line.split(":", 1)
+            headers[key.strip()] = val.strip()
+
+    # Try to parse body as JSON
+    try:
+        body_json = json.loads(body)
+    except json.JSONDecodeError:
+        body_json = None
+
+    return {
+        "command": command,
+        "headers": headers,
+        "body": body,
+        "json": body_json
+    }
+
 
 # ---------------- Docker & MySQL ----------------
 def ensure_container_running():
@@ -114,34 +182,54 @@ def ensure_mysql_connection():
 # ---------------- WebSocket ----------------
 def on_message(ws, message):
     global cursor, connection
+    print("------------------------------")
     print("SERVER:", message)
+    print("------------------------------")
     ensure_mysql_connection()
-    try:
-        cursor.execute(message) # type: ignore
-        if cursor.with_rows: # type: ignore
-            rows = cursor.fetchall() # type: ignore
-            for row in rows:
-                print(row)
-            ws.send(json.dumps({"result": rows}))
-        else:
-            connection.commit() # type: ignore
-    except (OperationalError, InterfaceError) as e:
-        print("MySQL lost connection. Reconnecting...", e)
-        connect_to_mysql()
+
+    
+    if message.startswith("MESSAGE"):
+        message_data = parse_stomp_message(message)
+        if message_data and message_data["json"]:
+            content = message_data["json"]
+            if not content:
+                return
+        print("Parsed message content:", content["content"])    
         try:
-            cursor.execute(message) # type: ignore
+            cursor.execute(content["content"]) # type: ignore
             if cursor.with_rows: # type: ignore
                 rows = cursor.fetchall() # type: ignore
-                
                 for row in rows:
                     print(row)
-                ws.send(json.dumps({"result": rows}))
+                
+                payload = json.dumps({"result": str(rows), "correlationId": content["correlationId"]}) 
+                print("Payload to send:", payload)
+                ws.send(stomp_send("/app/response", payload))
             else:
                 connection.commit() # type: ignore
-        except Exception as e2:
-            print("Failed to execute SQL after reconnect:", e2)
-    except Exception as e:
-        print("SQL Error:", e)
+        except (OperationalError, InterfaceError) as e:
+            print("MySQL lost connection. Reconnecting...", e)
+            connect_to_mysql()
+            try:
+                
+                cursor.execute(content["content"]) # type: ignore
+                if cursor.with_rows: # type: ignore
+                    rows = cursor.fetchall() # type: ignore
+                    
+                    for row in rows:
+                        print(row)
+                    payload = json.dumps({"result": str(rows), "correlationId": content["correlationId"]}) 
+                    ws.send(stomp_send("/app/response", payload))
+                else:
+                    connection.commit() # type: ignore
+            except Exception as e2:
+                print("Failed to execute SQL after reconnect:", e2)
+                payload = json.dumps({"result": "Failed to execute SQL after reconnect: " + str(e2), "correlationId": content["correlationId"]})
+                ws.send(stomp_send("/app/response", payload))
+        except Exception as e:
+            print("SQL Error:", e)
+            payload = json.dumps({"result": "SQL Error: " + str(e), "correlationId": content["correlationId"]})
+            ws.send(stomp_send("/app/response", payload))
 
 def on_error(ws, error):
     print("WebSocket error:", error)
@@ -155,7 +243,9 @@ def on_open(ws):
     global ws_global
     ws_global = ws
     print("### WebSocket opened ###")
-    ws.send(json.dumps({"command": "start"}))
+    ws.send(stomp_connect("localhost", id))
+    time.sleep(0.2)
+    ws.send(stomp_subscribe("/user/queue/reply", sid="reply-0"))
 
 def start_websocket():
     backoff = 1

@@ -1,6 +1,7 @@
 package backend.agent.WebSocketHandler;
 
 import java.security.Principal;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -15,24 +16,18 @@ public class AgentController {
     private SimpMessagingTemplate simpMessagingTemplate;
 
 
-    @MessageMapping("/test")
-    public void send(Principal principal, AgentMessageDTO message) {
-
-        String username = principal != null ? principal.getName() : "unknown";
-
-        System.out.println("User " + username + " sent: " + message.getContent());
-
-            // send ONLY to this user
-        simpMessagingTemplate.convertAndSendToUser( username,                     // user
-                                                    "/queue/reply",               // destination
-                                                    message                       // payload
-                                                );
-    }
-
     public void sendToUser(String username, AgentMessageDTO message) {
-        simpMessagingTemplate.convertAndSendToUser(username, "/queue/reply", message);
+
+    System.out.println("Sending message to " + username + " with correlationId " + message.getCorrelationId());
+    simpMessagingTemplate.convertAndSendToUser(username, "/queue/reply", message);
     }
 
+    @MessageMapping("/response")
+    public void handleClientResponse(ClientResponseDTO response) {
+        System.out.println("Received response for correlationId " + response.getCorrelationId() + ": " + response.getResult());
+
+        // Optional: store response somewhere or notify a waiting thread
+    }
 
 
 }
