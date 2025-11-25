@@ -45,7 +45,7 @@ public class DiagramExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
-        return build(HttpStatus.CONFLICT, "Data conflict: " + ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.NOT_ACCEPTABLE, "Data conflict: " + ex.getMostSpecificCause().getMessage());
     }
 
     @ExceptionHandler(IllegalStateException.class)

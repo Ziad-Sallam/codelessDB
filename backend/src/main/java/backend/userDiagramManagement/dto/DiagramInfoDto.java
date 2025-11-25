@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DiagramInfoDto {
-    private UUID id;
+    private UUID diagramId;
     private String name;
     private String thumbnail;
     private Date createdAt;
@@ -29,7 +29,7 @@ public class DiagramInfoDto {
     public static DiagramInfoDto toDto(Diagram diagram, Role role, List<Contributor> contributors) {
         return DiagramInfoDto
                 .builder()
-                .id(diagram.getId())
+                .diagramId(diagram.getId())
                 .name(diagram.getName())
                 .thumbnail(diagram.getThumbnail())
                 .createdAt(diagram.getCreatedAt())

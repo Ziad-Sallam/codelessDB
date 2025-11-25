@@ -1,29 +1,39 @@
 const API_URL = import.meta.env.VITE_BACKEND_URL;
 
-// export async function uploadImage(file) {
-// 	if (!file) return null;
-// 	const response = await fetch(sampleImage);
-//   	const blob = await response.blob();
+export async function uploadImageToDrive(fileName = "uploaded-image.png") {
+	// Load local asset from /assets
+	const response = await fetch("/assets/sample.png");
+	const blob = await response.blob();
 
-// 	// file.name is unique
-// 	const imageRef = ref(storage, `diagrams/${file.name}`);
+	const form = new FormData();
+	form.append("metadata", new Blob([JSON.stringify({
+		name: fileName,
+		mimeType: blob.type,
+	})], { type: "application/json" }));
+	form.append("file", blob);
 
-// 	// Upload file
-// 	await uploadBytes(imageRef, file);
+	// Upload to Google Drive
+	const uploadResponse = await fetch(
+		"https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+			},
+			body: form,
+		}
+	);
 
-// 	// Retrieve its download URL
-// 	const url = await getDownloadURL(imageRef);
-
-// 	return url;
-// }
-
+	const data = await uploadResponse.json();
+	return data;
+}
 
 export async function fetchDiagrams(pageNumber = 0, pageSize = 10) {
 	const response = await fetch(`${API_URL}/diagrams/get?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
-			"Authorization": `Bearer ${localStorage.getItem("token")}`,
+			"Authorization": `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		credentials: "include",
 	});
@@ -31,6 +41,7 @@ export async function fetchDiagrams(pageNumber = 0, pageSize = 10) {
 	if (!response.ok) {
 		throw new Error("Failed to fetch diagrams");
 	}
+
 	return await response.json();
 }
 
@@ -154,25 +165,27 @@ export async function createDiagram() {
 		]
 	};
 
-	const file = {
-		name: `diagram_${Date.now()}.png`,
-	}
-	const name = { "name": "Diagram_" + (Math.floor(Math.random() * 1000)) };
-	const url = await uploadImage(file);
-	return { id: "d9", name: "Onboarding", createdAt: "2025-07-01", modifiedAt: "2025-09-10", thumbnail: url };
+	const name = "Untitled Diagram"
+	const jsonContent = JSON.stringify(defaultDiagram)
+	const thumbnail = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+	// const url = await uploadImage(file);
+	// return { id: "d9", name: "Onboarding", createdAt: "2025-07-01", modifiedAt: "2025-09-10", thumbnail: url };
 
+	const body = { jsonContent, name, thumbnail }
+	console.log(body)
+	
 	const response = await fetch(`${API_URL}/diagrams/create`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
-			"Authorization": `Bearer ${localStorage.getItem("token")}`,
+			"Authorization": `Bearer ${localStorage.getItem("authToken")}`,
 		},
-		body: JSON.stringify({ ...defaultDiagram, ...name, ...thumbnail }),
+		body: JSON.stringify(body),
 		credentials: "include",
 	});
 
 	if (!response.ok) {
 		throw new Error("Failed to create diagram");
 	}
-	return await response.json();
+	return await { ...body, ...response.json() };
 }

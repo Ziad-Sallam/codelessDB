@@ -18,14 +18,14 @@ public class LoggingAspect {
    private static final String LOG_FILES = """
       execution(* backend.user.UserService.*(..)) ||
       execution(* backend.user.UserController.*(..)) ||
-      execution(* backend.userDiagramManagement.*(..)) ||
-      execution(* backend.SQLGeneration.*(..))
+      execution(* backend.userDiagramManagement.UserDiagramController.*(..)) ||
+      execution(* backend.SQLGeneration.SchemaController.*(..))
    """;
 
    // Log method entry
    @Before(LOG_FILES)
    public void logBefore(JoinPoint joinPoint) {
-      log.debug("\n -> Entering: {} \n args = {}\n",
+      log.info("\n -> Entering: {} \n args = {}\n",
             joinPoint.getSignature(),
             joinPoint.getArgs());
    }
@@ -33,7 +33,7 @@ public class LoggingAspect {
    // Log method exit
    @AfterReturning(pointcut = LOG_FILES, returning = "result")
    public void logAfterReturning(JoinPoint joinPoint, Object result) {
-      log.debug("\n -> Exiting: {} \n return = {}\n",
+      log.info("\n -> Exiting: {} \n return = {}\n",
             joinPoint.getSignature(),
             result);
    }

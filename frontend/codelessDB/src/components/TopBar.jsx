@@ -8,6 +8,7 @@ import {
 	Paper,
 	InputBase,
 	Box,
+	Link
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -41,7 +42,7 @@ export default function TopBar(props) {
 						alignItems: "center",
 						px: 2,
 						py: 0.8,
-						borderRadius: 4,
+						borderRadius: 7,
 						flex: 1,
 						maxWidth: 650,
 						bgcolor: "background.paper",
@@ -60,16 +61,35 @@ export default function TopBar(props) {
 						sx={{ flex: 1, fontSize: 15 }}
 					/>
 
+					<IconButton onClick={onFilterOpen}>
+						<FilterListIcon />
+					</IconButton>
 				</Paper>
 
-				<IconButton onClick={onFilterOpen}>
-					<FilterListIcon />
-				</IconButton>
 
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-					<Typography variant="body2" sx={{ width: 'auto', display: { sm: "block" } }}>
-						Ahmed Ragy
-					</Typography>
+
+
+					<Link
+						href="/profile"
+						style={{ textDecoration: "none" }} // removes underline
+					>
+						<Typography
+							variant="body2"
+							sx={{
+								width: "auto",
+								fontSize: 18,
+								marginRight: 2,
+								display: { sm: "block" },
+								cursor: "pointer",
+								fontFamily: "Inter, Roboto, Segoe UI, sans-serif", // professional font stack
+								fontWeight: 500, // medium weight for clean look
+								color: "text.primary" // uses theme color for consistency
+							}}
+						>
+							Ahmed Ragy
+						</Typography>
+					</Link>
 
 					<Avatar
 						onClick={() => navigate("/profile")}
