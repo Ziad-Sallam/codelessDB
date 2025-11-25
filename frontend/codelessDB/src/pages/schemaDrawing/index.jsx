@@ -1,13 +1,10 @@
-import Node from "./node/node.jsx";
-import OneToOneEdge from "./edge/OneToOneEdge.jsx";
-import OneToManyEdge from "./edge/OneToManyEdge.jsx";
-import ManyToOneEdge from "./edge/ManyToOneEdge.jsx";
-import ManyToManyEdge from "./edge/ManyToManyEdge.jsx";
+import Node from "./node/Node.jsx";
+import FloatingEdge from "./edge/Edge.jsx";
 
 export const nodeTypes = { "Defult-Node": Node };
 export const edgeTypes = {
-  oneToOne: OneToOneEdge,
-  oneToMany: OneToManyEdge,
-  manyToOne: ManyToOneEdge,
-  manyToMany: ManyToManyEdge
+  'oneToOne': FloatingEdge,
+  'oneToMany': FloatingEdge,
+  'manyToOne': FloatingEdge,
+  'manyToMany': FloatingEdge,
 };
