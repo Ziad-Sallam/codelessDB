@@ -7,50 +7,178 @@ import {
   ReactFlow,
   applyNodeChanges,
   applyEdgeChanges,
-  useReactFlow
+  useInternalNode,
+  getSmoothStepPath,
+  BaseEdge,
+  EdgeLabelRenderer,
+  Position,
+  MarkerType
 } from "@xyflow/react";
 import '@xyflow/react/dist/style.css';
-import { nodeTypes,edgeTypes } from './index';
+import { nodeTypes, edgeTypes as initialEdgeTypes } from './index';
 import dataTypes from './node/dataTypes';
-// import './Schema.css';
 
+// --- MATH HELPERS FOR SHORTEST DISTANCE (Floating Edge) ---
+function getIntersection(n, n2) {
+  const w = n.measured.width || 0;
+  const h = n.measured.height || 0;
+  const x = n.internals.positionAbsolute.x;
+  const y = n.internals.positionAbsolute.y;
 
+  const w2 = n2.measured.width || 0;
+  const h2 = n2.measured.height || 0;
+  const x2 = n2.internals.positionAbsolute.x;
+  const y2 = n2.internals.positionAbsolute.y;
 
-const initialNodes = [
-  // {
-  //   id: 'n1', position: { x: 0, y: 0 }, data: {
-  //     tableName: 'users',
-  //     columns: [
-  //       { id: 'col1', name: 'id', dataType: 'INT', constraints: { PRIMARY_KEY: true } },
-  //       { id: 'col2', name: 'username', dataType: 'VARCHAR', constraints: {} },
-  //     ]
-  //   }, type: "Defult-Node"
-  // },
-  // {
-  //   id: 'n2', position: { x: 0, y: 200 }, data: {
-  //     tableName: 'orders',
-  //     columns: [
-  //       { id: 'col1', name: 'id', dataType: 'INT', constraints: { PRIMARY_KEY: true } },
-  //       { id: 'col2', name: 'total', dataType: 'DECIMAL', constraints: {} },
-  //     ]
-  //   }, type: "Defult-Node"
-  // },
-];
+  const xx1 = x + w / 2;
+  const yy1 = y + h / 2;
+  const xx2 = x2 + w2 / 2;
+  const yy2 = y2 + h2 / 2;
+
+  const dx = xx2 - xx1;
+  const dy = yy2 - yy1;
+
+  if (dx === 0 && dy === 0) return { x: xx1, y: yy1 };
+
+  const slope = dy / (dx || 1);
+  
+  if (Math.abs(dx) * h > Math.abs(dy) * w) {
+      const hitX = dx > 0 ? x + w : x;
+      const hitY = yy1 + slope * (hitX - xx1);
+      return { x: hitX, y: hitY };
+  } else {
+      const hitY = dy > 0 ? y + h : y;
+      const hitX = xx1 + (hitY - yy1) / slope;
+      return { x: hitX, y: hitY };
+  }
+}
+
+function getEdgePosition(node, intersectionPoint) {
+  const n = node.internals.positionAbsolute;
+  const w = node.measured.width || 0;
+  const h = node.measured.height || 0;
+  const x = intersectionPoint.x;
+  const y = intersectionPoint.y;
+  const tolerance = 2;
+
+  if (Math.abs(y - n.y) < tolerance) return Position.Top;
+  if (Math.abs(y - (n.y + h)) < tolerance) return Position.Bottom;
+  if (Math.abs(x - n.x) < tolerance) return Position.Left;
+  if (Math.abs(x - (n.x + w)) < tolerance) return Position.Right;
+
+  return Position.Top;
+}
+
+function getEdgeParams(source, target) {
+  const sourceIntersection = getIntersection(source, target);
+  const targetIntersection = getIntersection(target, source);
+
+  const sourcePos = getEdgePosition(source, sourceIntersection);
+  const targetPos = getEdgePosition(target, targetIntersection);
+
+  return {
+    sx: sourceIntersection.x,
+    sy: sourceIntersection.y,
+    tx: targetIntersection.x,
+    ty: targetIntersection.y,
+    sourcePos,
+    targetPos,
+  };
+}
+
+// Calculates where to place the label relative to the intersection point
+function getLabelCoords(x, y, pos) {
+  const offset = 12; // Distance from the border
+  if (pos === Position.Top) return { x, y: y - offset };
+  if (pos === Position.Bottom) return { x, y: y + offset };
+  if (pos === Position.Left) return { x: x - offset, y };
+  if (pos === Position.Right) return { x: x + offset, y };
+  return { x, y };
+}
+
+// --- FLOATING SMOOTH STEP EDGE COMPONENT ---
+function FloatingEdge({ id, source, target, markerEnd, style, data }) {
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
+
+  if (!sourceNode || !targetNode) {
+    return null;
+  }
+
+  const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
+
+  const [edgePath] = getSmoothStepPath({
+    sourceX: sx,
+    sourceY: sy,
+    sourcePosition: sourcePos,
+    targetX: tx,
+    targetY: ty,
+    targetPosition: targetPos,
+    borderRadius: 10,
+    offset: 20 
+  });
+
+  // Split the type string "1:N" into ["1", "N"]
+  const relationType = data?.type || '1:N';
+  const [startLabel, endLabel] = relationType.split(':');
+
+  // Calculate positions for the labels
+  const sourceLabelPos = getLabelCoords(tx, ty, targetPos);
+  const targetLabelPos = getLabelCoords(sx, sy, sourcePos);
+
+  const labelStyle = {
+    position: 'absolute',
+    background: 'white', // White background to hide line behind text
+    padding: '0px 3px',
+    borderRadius: 3,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+    pointerEvents: 'none',
+    zIndex: 10,
+    transform: 'translate(-50%, -50%)', // Center the div on the coordinate
+  };
+
+  return (
+    <>
+      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />
+      
+      <EdgeLabelRenderer>
+        {/* Source Label (e.g., '1') */}
+        <div style={{ ...labelStyle, left: sourceLabelPos.x, top: sourceLabelPos.y }}>
+          {startLabel}
+        </div>
+        
+        {/* Target Label (e.g., 'N') */}
+        <div style={{ ...labelStyle, left: targetLabelPos.x, top: targetLabelPos.y }}>
+          {endLabel}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
+
+const customEdgeTypes = {
+  ...initialEdgeTypes,
+  'oneToOne': FloatingEdge,
+  'oneToMany': FloatingEdge,
+  'manyToOne': FloatingEdge,
+  'manyToMany': FloatingEdge,
+};
+
+const initialNodes = [];
 
 export default function Schema() {
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState([]);
-  const [selectedRelationType, setSelectedRelationType] = useState('1:N'); // default selection
+  const [selectedRelationType, setSelectedRelationType] = useState('1:N');
+  
   const onNodesChange = useCallback((changes) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
   const onEdgesChange = useCallback((changes) => setEdges((es) => applyEdgeChanges(changes, es)), []);
 
-  // helpers
-  const findPrimaryKeyColumn = (node) => {
-    if (!node || !node.data || !Array.isArray(node.data.columns)) return null;
-    return node.data.columns.find(c => {
-      const cons = c.constraints || {};
-      return cons.PRIMARY_KEY === true;
-    }) || null;
+  const findPrimaryKeyColumns = (node) => {
+    if (!node?.data?.columns) return [];
+    return node.data.columns.filter(c => c.constraints?.PRIMARY_KEY === true);
   };
 
   const buildForeignKeyColumn = (refNode, pkCol) => {
@@ -64,109 +192,96 @@ export default function Schema() {
       dataTypeScale: pkCol.dataTypeScale,
       dataTypeValues: pkCol.dataTypeValues,
       constraints: { FOREIGN_KEY: true },
-      references: { tableName: refNode.name, columnName: pkCol.name }
+      references: { tableName: refNode.data.name, columnName: pkCol.name }
     };
   };
 
   const applyRelationLogic = (srcId, tgtId, relation) => {
     const srcNode = nodes.find(n => n.id === srcId);
     const tgtNode = nodes.find(n => n.id === tgtId);
-    if (srcNode === tgtNode) return; // prevent self-referencing for now
+    if (srcNode === tgtNode) return;
     if (!srcNode || !tgtNode) return;
 
-    // deep clone nodes array for immutability
     let newNodes = nodes.map(n => ({ ...n, data: { ...n.data, columns: n.data.columns ? [...n.data.columns] : [] }, position: n.position }));
-
     const srcClone = newNodes.find(n => n.id === srcId);
     const tgtClone = newNodes.find(n => n.id === tgtId);
-    const srcPK = findPrimaryKeyColumn(srcClone);
-    const tgtPK = findPrimaryKeyColumn(tgtClone);
+    const srcPKs = findPrimaryKeyColumns(srcClone);
+    const tgtPKs = findPrimaryKeyColumns(tgtClone);
 
-    const addFKtoNode = (targetNodeToModify, refNode, refPK) => {
-      if (!refPK) return;
-      const fkCol = buildForeignKeyColumn(refNode, refPK);
-      targetNodeToModify.data.columns = [...(targetNodeToModify.data.columns || []), fkCol];
+    const addFKsToNode = (targetNodeToModify, refNode, refPKs) => {
+      if (!refPKs || refPKs.length === 0) return;
+      refPKs.forEach(pkCol => {
+        const fkCol = buildForeignKeyColumn(refNode, pkCol);
+        targetNodeToModify.data.columns.push(fkCol);
+      });
     };
 
     if (relation === '1:1') {
-      if (srcPK) addFKtoNode(tgtClone, srcClone, srcPK);
-      else {
-        tgtClone.data.columns.push({
-          id: `fk_${srcClone.id}_id_${Date.now()}`,
-          name: `${srcClone.data.tableName}_id_fk`,
-          dataType: 'INT',
-          constraints: { FOREIGN_KEY: true },
-          references: { tableName: srcClone.name, columnName: 'id' }
-        });
-      }
+      addFKsToNode(srcClone, tgtClone, tgtPKs);
     } else if (relation === '1:N') {
-      // treat target as N side
-      if (srcPK) addFKtoNode(tgtClone, srcClone, srcPK);
-      else tgtClone.data.columns.push({
-        id: `fk_${srcClone.id}_id_${Date.now()}`,
-        name: `${srcClone.data.tableName}_id_fk`,
-        dataType: 'INT',
-        constraints: { FOREIGN_KEY: true },
-        references: { tableName: srcClone.name, columnName: 'id' }
-      });
+      addFKsToNode(srcClone, tgtClone, tgtPKs);
     } else if (relation === 'N:1') {
-      // source is N side
-      if (tgtPK) addFKtoNode(srcClone, tgtClone, tgtPK);
-      else srcClone.data.columns.push({
-        id: `fk_${tgtClone.id}_id_${Date.now()}`,
-        name: `${tgtClone.data.tableName}_id_fk`,
-        dataType: 'INT',
-        constraints: { FOREIGN_KEY: true },
-        references: { tableName: tgtClone.name, columnName: 'id' }
-      });
+      addFKsToNode(tgtClone, srcClone, srcPKs);
     } else if (relation === 'M:N') {
-      const pkA = srcPK ? srcPK : { name: `${srcClone.data.tableName}_id`, dataType: 'INT', constraints: { PRIMARY_KEY: true } };
-      const pkB = tgtPK ? tgtPK : { name: `${tgtClone.data.tableName}_id`, dataType: 'INT', constraints: { PRIMARY_KEY: true } };
-
-      const colA = {
-        id: `jcn_${srcId}_${pkA.name}_${Date.now()}`,
-        name: `${srcClone.data.tableName}_${pkA.name}`,
-        dataType: pkA.dataType || 'INT',
-        constraints: { PRIMARY_KEY: true, FOREIGN_KEY: true },
-        references: { tableName: srcClone.name, columnName: pkA.name }
-      };
-      const colB = {
-        id: `jcn_${tgtId}_${pkB.name}_${Date.now()}`,
-        name: `${tgtClone.data.tableName}_${pkB.name}`,
-        dataType: pkB.dataType || 'INT',
-        constraints: { PRIMARY_KEY: true, FOREIGN_KEY: true },
-        references: { tableName: tgtClone.name, columnName: pkB.name }
-      };
-
       const junctionId = `jn_${srcId}_${tgtId}_${Date.now()}`;
-      const junctionName = `${srcClone.data.tableName}_${tgtClone.data.tableName}_junction`;
+      const junctionName = `${srcClone.data.tableName}_${tgtClone.data.tableName}`;
+      
+      const junctionColumns = [];
+      srcPKs.forEach(pk => {
+        junctionColumns.push({
+          id: `jcn_${srcId}_${pk.name}_${Date.now()}`,
+          name: `${srcClone.data.tableName}_${pk.name}`,
+          dataType: pk.dataType || 'INT',
+          constraints: { PRIMARY_KEY: true, FOREIGN_KEY: true },
+          references: { tableName: srcClone.data.tableName, columnName: pk.name }
+        });
+      });
+      tgtPKs.forEach(pk => {
+        junctionColumns.push({
+          id: `jcn_${tgtId}_${pk.name}_${Date.now()}`,
+          name: `${tgtClone.data.tableName}_${pk.name}`,
+          dataType: pk.dataType || 'INT',
+          constraints: { PRIMARY_KEY: true, FOREIGN_KEY: true },
+          references: { tableName: tgtClone.data.tableName, columnName: pk.name }
+        });
+      });
 
       const junctionNode = {
         id: junctionId,
         type: "Defult-Node",
-        position: { x: (srcClone.position.x+tgtClone.position.x)/2, y: (srcClone.position.y + tgtClone.position.y)/2 + 100 },
-        data: { tableName: junctionName, columns: [colA, colB] }
+        position: { x: (srcClone.position.x + tgtClone.position.x) / 2, y: (srcClone.position.y + tgtClone.position.y) / 2 + 100 },
+        data: { tableName: junctionName, columns: junctionColumns }
       };
       newNodes.push(junctionNode);
 
-      // create edges from junction to both tables (visual)
       setEdges((eds) => [
         ...eds,
-        { id: `e_${srcId}_${junctionId}`, source: srcId, target: junctionId, type: 'oneToMany', data: { type: '1:M' } },
-        { id: `e_${junctionId}_${tgtId}`, source: junctionId, target: tgtId, type: 'manyToOne', data: { type: 'M:1' } },
+        { 
+          id: `e_${srcId}_${junctionId}`, 
+          source: srcId, 
+          target: junctionId, 
+          type: 'oneToMany', 
+          // markerEnd: { type: MarkerType.ArrowClosed },
+          data: { type: '1:M' } 
+        },
+        { 
+          id: `e_${junctionId}_${tgtId}`, 
+          source: junctionId, 
+          target: tgtId, 
+          type: 'manyToOne', 
+          // markerEnd: { type: MarkerType.ArrowClosed },
+          data: { type: 'M:1' } 
+        },
       ]);
     }
-
     setNodes(newNodes);
   };
 
   const onConnect = useCallback((params) => {
-    // params: { source, target, sourceHandle, targetHandle }
     if (!params || !params.source || !params.target) return;
-    // apply relation logic (selectedRelationType)
-    applyRelationLogic(params.source, params.target, selectedRelationType);
 
-    // map selectedRelationType to an edge type key
+    applyRelationLogic(params.source, params.target, selectedRelationType, params);
+
     const typeKey = {
       '1:1': 'oneToOne',
       '1:N': 'oneToMany',
@@ -175,33 +290,31 @@ export default function Schema() {
     }[selectedRelationType] || 'oneToMany';
 
     const newEdge = {
-      id: `e_${params.source}_${params.target}_${Date.now()}`,
       source: params.source,
       target: params.target,
+      id: `e_${params.source}_${params.target}_${Date.now()}`,
       type: typeKey,
+      // markerEnd: { type: MarkerType.ArrowClosed, width: 20, height: 20 },
       data: { type: selectedRelationType }
     };
     setEdges((eds) => addEdge(newEdge, eds));
   }, [selectedRelationType, nodes]);
 
   const addNode = () => {
-    const id = `${nodes.length + 1}`;
-    console.log(nodes)
-    console.log(edges)
+    const id = `${nodes.length + 1}_${Date.now()}`;
     setNodes((nds) => [
       ...nds,
       {
         id,
         type: "Defult-Node",
         data: {
-          tableName: `Entity_${id}`,
+          tableName: `Entity_${nodes.length + 1}`,
           columns: [{ id: `attr1_${id}`, name: 'id', dataType: 'INT', constraints: { PRIMARY_KEY: true } }]
         },
         position: { x: Math.random() * 400, y: Math.random() * 400 },
       },
     ]);
   };
-
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -212,27 +325,20 @@ export default function Schema() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
+        edgeTypes={customEdgeTypes} 
         fitView
+        connectionMode="loose"
+        defaultEdgeOptions={{
+          style: { strokeWidth: 2, stroke: '#555' },
+        }}
       >
         <MiniMap />
         <Controls />
         <Background />
       </ReactFlow>
 
-      {/* toolbar bottom */}
       <div style={{
-        position: 'absolute',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        bottom: 12,
-        display: 'flex',
-        gap: 8,
-        zIndex: 9999,
-        background: 'rgba(255,255,255,0.95)',
-        padding: 8,
-        borderRadius: 8,
-        boxShadow: '0 6px 18px rgba(0,0,0,0.12)'
+        position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 12, display: 'flex', gap: 8, zIndex: 9999, background: 'rgba(255,255,255,0.95)', padding: 8, borderRadius: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.12)'
       }}>
         <RelationButton active={selectedRelationType === '1:1'} color="#007bff" onClick={() => setSelectedRelationType('1:1')} label="1 : 1" />
         <RelationButton active={selectedRelationType === '1:N'} color="#00d26a" onClick={() => setSelectedRelationType('1:N')} label="1 : N" />
