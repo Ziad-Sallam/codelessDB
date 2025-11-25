@@ -10,20 +10,17 @@ import {
 	ListItemIcon,
 	ListItemText,
 } from "@mui/material";
+
 import FolderIcon from "@mui/icons-material/Folder";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import PersonIcon from "@mui/icons-material/Person";
+import StorageIcon from "@mui/icons-material/Storage";
+import SchemaIcon from '@mui/icons-material/Schema';
+
 import { useNavigate } from "react-router-dom";
 
-const LEFT_BG = "#1E1E2F";
 
 export default function LeftPanel({ leftNav, setLeftNav }) {
 	const navigate = useNavigate();
-
-	const handleNavigation = (route, navKey) => {
-		setLeftNav(navKey);
-		navigate(route);
-	};
 
 	return (
 		<Drawer
@@ -31,21 +28,20 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 			sx={{
 				width: 240,
 				[`& .MuiDrawer-paper`]: {
-					width: 240,
+					width: 250,
 					boxSizing: "border-box",
 					p: 2,
-					bgcolor: LEFT_BG,
+					bgcolor: "background.dark",
 					color: "white",
-					borderRight: "0",
 				},
 			}}
 		>
 			<Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
-				<Avatar sx={{ bgcolor: "white", color: LEFT_BG }}>Ak</Avatar>
+				<Avatar sx={{ bgcolor: "white", color: "background.dark" }}>C</Avatar>
 				<Box>
-					<Typography variant="subtitle1">Abdelrhman khaled</Typography>
+					<Typography variant="h6">CodelessDB</Typography>
 					<Typography variant="caption" sx={{ opacity: 0.85 }}>
-						Personal workspace
+						Shared workspace
 					</Typography>
 				</Box>
 			</Box>
@@ -55,42 +51,54 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 			<List>
 				<ListItemButton
 					selected={leftNav === "recent"}
-					onClick={() => handleNavigation("/diagrams", "recent")}
+					onClick={() => navigate('/recent')}
 					sx={{ borderRadius: 1 }}
 				>
 					<ListItemIcon sx={{ color: "white" }}>
 						<AccessTimeIcon />
 					</ListItemIcon>
-					<ListItemText primary="Recents" primaryTypographyProps={{ fontWeight: 600 }} />
+
+					<ListItemText primary="Recents" />
 				</ListItemButton>
+				
 				<ListItemButton
 					selected={leftNav === "all"}
-					onClick={() => handleNavigation("/diagrams", "all")}
+					onClick={() => navigate('/diagrams')}
 					sx={{ borderRadius: 1, mb: 1 }}
 				>
 					<ListItemIcon sx={{ color: "white" }}>
-						<FolderIcon />
+						<SchemaIcon />
 					</ListItemIcon>
-					<ListItemText primary="All diagrams" primaryTypographyProps={{ fontWeight: 600 }} />
+					<ListItemText primary="Your diagrams" />
 				</ListItemButton>
+
 				<ListItemButton
-					selected={leftNav === "profile"}
-					onClick={() => handleNavigation("/userprofile", "profile")}
-					sx={{ borderRadius: 1 }}
+					selected={leftNav === "all"}
+					onClick={() => navigate('/public')}
+					sx={{ borderRadius: 1, mb: 1 }}
 				>
 					<ListItemIcon sx={{ color: "white" }}>
-						<PersonIcon />
+						<SchemaIcon />
 					</ListItemIcon>
-					<ListItemText primary="User Profile" primaryTypographyProps={{ fontWeight: 600 }} />
+					<ListItemText primary="Public diagrams" />
 				</ListItemButton>
+
+				<ListItemButton
+					selected={leftNav === "all"}
+					onClick={() => navigate('/servers')}
+					sx={{ borderRadius: 1, mb: 1 }}
+				>
+					<ListItemIcon sx={{ color: "white" }}>
+						<StorageIcon />
+					</ListItemIcon>
+					<ListItemText primary="Servers" />
+				</ListItemButton>
+
 			</List>
 
 			<Box sx={{ flexGrow: 1 }} />
 
 			<Divider sx={{ borderColor: "rgba(255,255,255,0.06)", my: 1 }} />
-			<Typography variant="caption" sx={{ color: "rgba(255,255,255,0.7)" }}>
-				Manage your account settings
-			</Typography>
 		</Drawer>
 	);
 }

@@ -6,21 +6,30 @@ import {
   Button,
   Card,
   CardContent,
-  Divider,
   TextField,
   Typography,
   Alert,
   Snackbar,
   CircularProgress,
-  Select,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Menu,
   MenuItem,
-  FormControl,
-  InputLabel,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import LeftPanel from "../diagrams/LeftPanel.jsx";
 import TopBar from "../diagrams/TopBar.jsx";
-import "./userprofile.css";
+import "./UserProfile.css";
 
 const APP_PRIMARY = "#0b3d91";
 
@@ -33,69 +42,179 @@ const theme = createTheme({
   typography: { fontFamily: "Inter, Roboto, Arial, sans-serif" },
 });
 
+const apiClient = axios.create({
+  baseURL: "http://localhost:8080",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      localStorage.removeItem("authToken");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 export default function UserProfile() {
+  const navigate = useNavigate();
   const [leftNav, setLeftNav] = useState("profile");
-  const [notifications] = useState([]);
-  
-  // Profile form state
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [picture, setPicture] = useState("");
   const [createdAt, setCreatedAt] = useState("");
-  const [server, setServer] = useState("");
-  
-  // Available servers list
-  const [servers, setServers] = useState([
-    { id: "us-east", name: "US East" },
-    { id: "us-west", name: "US West" },
-    { id: "eu-central", name: "EU Central" },
-    { id: "asia-pacific", name: "Asia Pacific" },
-  ]);
-  
-  // Password fields
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  
-  // UI state
+  const [editMode, setEditMode] = useState({
+    username: false,
+  });
+  const [tempData, setTempData] = useState({
+    username: "",
+  });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
-  const [errors, setErrors] = useState({});
+  const [snackbar, setSnackbar] = useState({ 
+    open: false, 
+    message: "", 
+    severity: "success" 
+  });
 
-  // Profile photo upload
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
     fetchUserInfo();
+    
+    const resetSuccess = localStorage.getItem('passwordResetSuccess');
+    if (resetSuccess === 'true') {
+      showSnackbar("Password reset successfully!", "success");
+      localStorage.removeItem('passwordResetSuccess');
+    }
   }, []);
 
   const fetchUserInfo = async () => {
     try {
-      const response = await fetch("/api/user/info", {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const token = localStorage.getItem("authToken");
       
-      if (response.ok) {
-        const data = await response.json();
-        setUsername(data.username || "");
-        setEmail(data.email || "");
-        setPicture(data.picture || "");
-        setCreatedAt(data.createdAt || "");
-        setServer(data.server || "us-east");
-        setPreviewUrl(data.picture || "");
-      } else {
-        showSnackbar("Failed to load user info", "error");
+      if (!token) {
+        showSnackbar("Please login to continue", "error");
+        navigate("/login");
+        return;
       }
+      
+      const response = await apiClient.get("/user/info");
+      
+      const data = response.data;
+      setUsername(data.username || "");
+      setEmail(data.email || "");
+      setPicture(data.picture || "");
+      setCreatedAt(data.createdAt || "");
+      setPreviewUrl(data.picture || "");
+      
     } catch (error) {
       console.error("Error fetching user info:", error);
-      showSnackbar("Error loading profile", "error");
+      
+      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
+        showSnackbar("Network error. Please check your connection.", "error");
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+      } else {
+        showSnackbar(error.response?.data?.message || "Error loading profile", "error");
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (field) => {
+    setEditMode({ ...editMode, [field]: true });
+    setTempData({ 
+      ...tempData, 
+      [field]: eval(field) 
+    });
+  };
+
+  const handleSave = async (field) => {
+    setSaving(true);
+    
+    try {
+      const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+        setSaving(false);
+        return;
+      }
+      
+      const updateDto = {
+        [field]: tempData[field]
+      };
+      
+      const response = await apiClient.put("/user/update", updateDto);
+
+      if (response.status === 200) {
+        if (field === "username") setUsername(tempData[field]);
+        
+        setEditMode({ ...editMode, [field]: false });
+        showSnackbar(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`, "success");
+      }
+      
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      
+      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
+        showSnackbar("Network error. Please check your connection.", "error");
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+      } else {
+        showSnackbar(error.response?.data?.message || `Error updating ${field}`, "error");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = (field) => {
+    setEditMode({ ...editMode, [field]: false });
+    setTempData({ ...tempData, [field]: "" });
+  };
+
+  const handleResetPassword = () => {
+    const token = localStorage.getItem("authToken");
+    
+    localStorage.setItem("token for_reset", token);
+    localStorage.setItem("otpPurpose", "reset");
+    localStorage.setItem("email", email);
+    localStorage.setItem("resetSource", "profile");
+    
+    navigate("/reset");
+  };
+
+  const handleCameraClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   const handleFileSelect = (event) => {
@@ -107,139 +226,106 @@ export default function UserProfile() {
         setPreviewUrl(reader.result);
       };
       reader.readAsDataURL(file);
+      uploadProfilePicture(file);
     }
+    handleMenuClose();
   };
 
-  const uploadProfilePicture = async () => {
-    if (!selectedFile) return picture;
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    try {
-      const response = await fetch("/api/user/upload-picture", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.pictureUrl;
-      } else {
-        showSnackbar("Failed to upload picture", "error");
-        return picture;
-      }
-    } catch (error) {
-      console.error("Error uploading picture:", error);
-      showSnackbar("Error uploading picture", "error");
-      return picture;
-    }
+  const handleUrlUpload = () => {
+    setShowUrlDialog(true);
+    handleMenuClose();
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!username.trim()) {
-      newErrors.username = "Username is required";
-    }
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!server) {
-      newErrors.server = "Please select a server";
-    }
-
-    // Password validation (only if user is trying to change password)
-    if (currentPassword || newPassword || confirmPassword) {
-      if (!currentPassword) {
-        newErrors.currentPassword = "Current password required to change password";
-      }
-      if (!newPassword) {
-        newErrors.newPassword = "New password is required";
-      } else if (newPassword.length < 6) {
-        newErrors.newPassword = "Password must be at least 6 characters";
-      }
-      if (newPassword !== confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validateForm()) {
-      showSnackbar("Please fix the errors", "error");
+  const handleUrlSubmit = async () => {
+    if (!imageUrl.trim()) {
+      showSnackbar("Please enter a valid URL", "error");
       return;
     }
 
-    setSaving(true);
-
     try {
-      // Upload picture first if there's a new file
-      let pictureUrl = picture;
-      if (selectedFile) {
-        pictureUrl = await uploadProfilePicture();
+      const token = localStorage.getItem("authToken");
+      console.log(token);
+      
+      if (!token) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+        return;
       }
-
-      // Prepare update payload
-      const updateData = {
-        username: username,
-        email: email,
-        picture: pictureUrl,
-        server: server,
+      
+      setPreviewUrl(imageUrl);
+      
+      const updateDto = {
+        picture: imageUrl
       };
+      console.log("Updating profile picture with URL:", imageUrl);
+      console.log(updateDto);
 
-      // Include password only if user is changing it
-      if (newPassword) {
-        updateData.password = newPassword;
+      const response = await apiClient.put("/user/update", updateDto);
+
+      if (response.status === 200) {
+        setPicture(imageUrl);
+        showSnackbar("Profile picture updated successfully", "success");
+        setShowUrlDialog(false);
+        setImageUrl("");
       }
-
-      const response = await fetch("/api/user/update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (response.ok) {
-        showSnackbar("Profile updated successfully", "success");
-        setPicture(pictureUrl);
-        setSelectedFile(null);
-        // Clear password fields
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      } else {
-        const errorData = await response.json();
-        showSnackbar(errorData.message || "Failed to update profile", "error");
-      }
+      
     } catch (error) {
-      console.error("Error updating profile:", error);
-      showSnackbar("Error updating profile", "error");
-    } finally {
-      setSaving(false);
+      console.error("Error uploading picture:", error);
+      
+      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
+        showSnackbar("Network error. Please check your connection.", "error");
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+      } else {
+        showSnackbar(error.response?.data?.message || "Error uploading picture", "error");
+      }
+      setPreviewUrl(picture);
     }
   };
 
-  const handleCancel = () => {
-    fetchUserInfo();
-    setSelectedFile(null);
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setErrors({});
-    showSnackbar("Changes cancelled", "info");
+  const uploadProfilePicture = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.put(
+        "http://localhost:8080/user/update",
+        formData,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const data = response.data;
+        setPicture(data.picture || imageUrl);
+        showSnackbar("Profile picture updated successfully", "success");
+      }
+      
+    } catch (error) {
+      console.error("Error uploading picture:", error);
+      
+      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
+        showSnackbar("Network error. Please check your connection.", "error");
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+      } else {
+        showSnackbar(error.response?.data?.message || "Error uploading picture", "error");
+      }
+      setPreviewUrl(picture);
+    }
   };
 
   const showSnackbar = (message, severity) => {
@@ -254,170 +340,180 @@ export default function UserProfile() {
     return username ? username.substring(0, 2).toUpperCase() : "U";
   };
 
+  const ProfileField = ({ label, field, icon: Icon, type = "text", editable = true }) => {
+    const isEditing = editMode[field];
+    const currentValue = eval(field);
+
+    return (
+      <Box className="profile-field">
+        <Box className="profile-field-header">
+          <Box className="profile-field-label">
+            <Icon sx={{ fontSize: 18, color: "text.secondary", mr: 1 }} />
+            <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
+              {label}
+            </Typography>
+          </Box>
+          {!isEditing && editable && (
+            <IconButton size="small" onClick={() => handleEdit(field)} className="edit-button">
+              <EditIcon fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
+
+        {isEditing ? (
+          <Box className="profile-field-edit">
+            <TextField
+              fullWidth
+              size="small"
+              type={type}
+              value={tempData[field]}
+              onChange={(e) => setTempData({ ...tempData, [field]: e.target.value })}
+            />
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => handleSave(field)}
+              disabled={saving}
+              className="save-button"
+            >
+              Save
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => handleCancel(field)}
+              className="cancel-button"
+            >
+              Close
+            </Button>
+          </Box>
+        ) : (
+          <Box className="profile-field-value">
+            <Typography variant="body1">
+              {currentValue}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  const PasswordField = () => {
+    return (
+      <Box className="profile-field">
+        <Box className="profile-field-header">
+          <Box className="profile-field-label">
+            <LockIcon sx={{ fontSize: 18, color: "text.secondary", mr: 1 }} />
+            <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
+              Password
+            </Typography>
+          </Box>
+          <Button 
+            size="small" 
+            onClick={handleResetPassword} 
+            className="reset-password-button"
+            variant="text"
+            sx={{ textTransform: 'none', fontSize: '0.875rem' }}
+          >
+            Reset Password
+          </Button>
+        </Box>
+
+        <Box className="profile-field-value">
+          <Typography variant="body1">
+            ••••••••
+          </Typography>
+        </Box>
+      </Box>
+    );
+  };
+
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <CircularProgress />
-      </Box>
+      <ThemeProvider theme={theme}>
+        <Box className="loading-container">
+          <CircularProgress />
+        </Box>
+      </ThemeProvider>
     );
   }
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
+      <Box className="profile-layout">
         <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
 
-        <Box component="main" sx={{ flexGrow: 1 }}>
-          <TopBar notifications={notifications} onNotifOpen={() => {}} />
+        <Box component="main" className="profile-main">
+          <TopBar search={""} setSearch={() => {}} onFilterOpen={() => {}} />
 
-          {/* Profile Content */}
           <Box className="profile-container">
-            <Box className="profile-header">
-              <Box>
-                <Typography variant="h5">Profile Information</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Manage your personal details and preferences
-                </Typography>
-              </Box>
-              <Button 
-                variant="contained" 
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? <CircularProgress size={24} /> : "Save Changes"}
-              </Button>
-            </Box>
+            {/* Header Card with Gradient */}
+            <Card className="profile-header-card">
+              <CardContent className="profile-header-content">
+                <Box className="profile-header-inner">
+                  <Box className="profile-avatar-container">
+                    <Avatar
+                      src={previewUrl}
+                      className="profile-avatar"
+                    >
+                      {!previewUrl && getInitials()}
+                    </Avatar>
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="upload-photo"
+                      type="file"
+                      onChange={handleFileSelect}
+                    />
+                    <IconButton
+                      onClick={handleCameraClick}
+                      className="camera-button"
+                      size="small"
+                    >
+                      <CameraAltIcon fontSize="small" />
+                    </IconButton>
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={Boolean(anchorEl)}
+                      onClose={handleMenuClose}
+                    >
+                      <MenuItem>
+                        <label htmlFor="upload-photo" style={{ cursor: 'pointer', width: '100%' }}>
+                          Upload from Computer
+                        </label>
+                      </MenuItem>
+                      <MenuItem onClick={handleUrlUpload}>
+                        Upload from URL
+                      </MenuItem>
+                    </Menu>
+                  </Box>
 
-            <Box className="profile-content">
-              {/* Profile Photo Card */}
-              <Card className="profile-photo-card">
-                <CardContent className="profile-photo-content">
-                  <Typography variant="subtitle1" className="profile-photo-title">
-                    Account Management
-                  </Typography>
-                  <Avatar 
-                    className="profile-avatar"
-                    src={previewUrl}
-                  >
-                    {!previewUrl && getInitials()}
-                  </Avatar>
-                  <input
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    id="upload-photo"
-                    type="file"
-                    onChange={handleFileSelect}
-                  />
-                  <label htmlFor="upload-photo">
-                    <Button variant="outlined" component="span" fullWidth sx={{ mb: 1 }}>
-                      Upload Photo
-                    </Button>
-                  </label>
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    Recommended: Square image, at least 400x400px
-                  </Typography>
-                  {createdAt && (
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 2 }}>
-                      Member since: {new Date(createdAt).toLocaleDateString()}
+                  <Box className="profile-header-info">
+                    <Typography variant="h4" className="profile-username">
+                      {username}
                     </Typography>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Profile Form */}
-              <Card className="profile-form-card">
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    Profile Information
-                  </Typography>
-
-                  <Box className="form-grid">
-                    <TextField
-                      label="Username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      fullWidth
-                      error={!!errors.username}
-                      helperText={errors.username}
-                    />
-                    <TextField
-                      label="Email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      fullWidth
-                      error={!!errors.email}
-                      helperText={errors.email}
-                    />
-                    <FormControl fullWidth error={!!errors.server}>
-                      <InputLabel>Server Region</InputLabel>
-                      <Select
-                        value={server}
-                        label="Server Region"
-                        onChange={(e) => setServer(e.target.value)}
-                      >
-                        {servers.map((s) => (
-                          <MenuItem key={s.id} value={s.id}>
-                            {s.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.server && (
-                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 2 }}>
-                          {errors.server}
-                        </Typography>
-                      )}
-                    </FormControl>
+                    {createdAt && (
+                      <Typography variant="body2" className="profile-member-since">
+                        Member since {new Date(createdAt).toLocaleDateString()}
+                      </Typography>
+                    )}
                   </Box>
+                </Box>
+              </CardContent>
+            </Card>
 
-                  <Divider sx={{ my: 3 }} />
+            {/* Profile Information Card */}
+            <Card className="profile-info-card">
+              <CardContent className="profile-info-content">
+                <Typography variant="h6" className="profile-info-title">
+                  Basic Info
+                </Typography>
 
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    Change Password
-                  </Typography>
-
-                  <Box className="form-grid">
-                    <TextField
-                      label="Current Password"
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      fullWidth
-                      error={!!errors.currentPassword}
-                      helperText={errors.currentPassword}
-                    />
-                    <Box /> {/* Empty space for grid alignment */}
-                    <TextField
-                      label="New Password"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      fullWidth
-                      error={!!errors.newPassword}
-                      helperText={errors.newPassword || "Minimum 6 characters"}
-                    />
-                    <TextField
-                      label="Confirm New Password"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      fullWidth
-                      error={!!errors.confirmPassword}
-                      helperText={errors.confirmPassword}
-                    />
-                  </Box>
-
-                  <Box className="form-actions">
-                    <Button variant="outlined" onClick={handleCancel} disabled={saving}>
-                      Cancel
-                    </Button>
-                    <Button variant="contained" onClick={handleSave} disabled={saving}>
-                      {saving ? <CircularProgress size={24} /> : "Update Profile"}
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Box>
+                <ProfileField label="Username" field="username" icon={PersonIcon} editable={true} />
+                <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
+                <PasswordField />
+              </CardContent>
+            </Card>
           </Box>
         </Box>
       </Box>
@@ -428,10 +524,43 @@ export default function UserProfile() {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* URL Upload Dialog */}
+      <Dialog open={showUrlDialog} onClose={() => setShowUrlDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Upload Profile Picture from URL</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Image URL"
+            type="url"
+            fullWidth
+            variant="outlined"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://example.com/image.jpg"
+            sx={{ mt: 2 }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            Enter a direct link to an image (jpg, png, gif, etc.)
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setShowUrlDialog(false); setImageUrl(""); }}>
+            Cancel
+          </Button>
+          <Button onClick={handleUrlSubmit} variant="contained">
+            Upload
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ThemeProvider>
   );
 }

@@ -39,6 +39,7 @@ export default function Reset() {
     setError("");
 
     const token = localStorage.getItem("token for_reset");
+    const resetSource = localStorage.getItem("resetSource"); // Check where user came from
 
     try {
       const response = await axios.put(
@@ -53,14 +54,23 @@ export default function Reset() {
         }
       );
 
+      // Clean up reset-specific tokens
       localStorage.removeItem('token for_reset');
-      localStorage.removeItem('otp');
       localStorage.removeItem('otpPurpose');
-      localStorage.removeItem('email');
+      localStorage.removeItem('resetSource');
 
-      localStorage.setItem('recovered', true)
-
-      navigate("/recovered");
+      // Navigate based on source
+      if (resetSource === "profile") {
+        // User came from profile page - go back to profile
+        localStorage.setItem('passwordResetSuccess', 'true');
+        navigate("/userprofile");
+      } else {
+        // User came from login/forgot password flow - go to recovered
+        localStorage.removeItem('otp');
+        localStorage.removeItem('email');
+        localStorage.setItem('recovered', true);
+        navigate("/recovered");
+      }
 
     } catch (err) {
       const serverMsg = err.response?.data?.message
