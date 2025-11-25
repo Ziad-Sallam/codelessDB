@@ -176,11 +176,12 @@ const Node = ({ id, data }) => {
                 <label title="Auto Increment">AI<input type="checkbox" className="nodrag" checked={col.constraints.autoIncrement || false} disabled={!isIntegerType(col.dataType)} onChange={(e) => onColumnChange(col.id, 'autoIncrement', e.target.checked, true)} /></label>
                 <label title="Indexed">IX<input type="checkbox" className="nodrag" checked={col.constraints.indexed || false} onChange={(e) => onColumnChange(col.id, 'indexed', e.target.checked, true)} /></label>
                 <div className='forginKey-constraint'>
-                  <label title="Foreign Key">FK<input type="checkbox" className="nodrag" checked={col.constraints.FOREIGN_KEY || false} onChange={(e) => onColumnChange(col.id, 'FOREIGN_KEY', e.target.checked, true)} /></label>
+                  <label title="Foreign Key">FK<input type="checkbox" className="nodrag" checked={col.constraints.FOREIGN_KEY || false} onChange={(e) => onColumnChange(col.id, 'FOREIGN_KEY', e.target.checked, true)} />
                   {col.constraints.FOREIGN_KEY && <>
                     OnDelete: <select className="nodrag foreign-key-action-select" value={col.constraints.ForeignKeyOnDelete || ""} onChange={(e) => onColumnChange(col.id, 'ForeignKeyOnDelete', e.target.value, true)}><option value="CASCADE">CASCADE</option><option value="SET NULL">SET NULL</option><option value="RESTRICT">RESTRICT</option><option value="SET DEFAULT">SET DEFAULT</option><option value="NO ACTION">NO ACTION</option></select>
                     OnUpdate: <select className="nodrag foreign-key-action-select" value={col.constraints.ForeignKeyOnUpdate || ""} onChange={(e) => onColumnChange(col.id, 'ForeignKeyOnUpdate', e.target.value, true)}><option value="CASCADE">CASCADE</option><option value="SET NULL">SET NULL</option><option value="RESTRICT">RESTRICT</option><option value="SET DEFAULT">SET DEFAULT</option><option value="NO ACTION">NO ACTION</option></select>
                   </>}
+                  </label>
                 </div>
                 <div className='check-constraint'>
                   <label title="Check">CH<input type="checkbox" className="nodrag" checked={col.constraints.CHECK || false} onChange={(e) => onColumnChange(col.id, 'CHECK', e.target.checked, true)} />
