@@ -24,7 +24,7 @@ public class DiagramInfoDto {
     private Role role;
     private List<Contributor> contributors;
 
-    public record Contributor(String name, byte[] picture, Role role) {}
+    public record Contributor(String name, String picture, Role role) {}
 
     public static DiagramInfoDto toDto(Diagram diagram, Role role, List<Contributor> contributors) {
         return DiagramInfoDto
