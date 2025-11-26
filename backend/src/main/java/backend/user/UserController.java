@@ -1,5 +1,7 @@
 package backend.user;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,6 +14,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import backend.entities.User;
 import backend.security.AuthUser;
@@ -27,6 +33,12 @@ public class UserController {
 
 	@Autowired
 	private JwtUtil jwtUtil;
+
+	@Autowired
+	private Cloudinary cloudinary;
+
+	@Value("${cloudinary.upload_preset}")
+	private String uploadPreset;
 
 	@PostMapping("/signup/validate")
 	public ResponseEntity<?> signupValidation(@RequestBody UserDto userDto) {
@@ -87,5 +99,23 @@ public class UserController {
 	public ResponseEntity<?> deleteUser(@AuthenticationPrincipal AuthUser authUser) {
 		userService.deleteUser(authUser.userId());
 		return ResponseEntity.ok("User deleted");
+	}
+
+	@GetMapping("/signature")
+	public Map<String, Object> getSignature() {
+		long timestamp = System.currentTimeMillis() / 1000;
+
+		Map<String, Object> paramsToSign = ObjectUtils.asMap(
+				"timestamp", timestamp,
+				"upload_preset", uploadPreset);
+
+		String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
+
+		return Map.of(
+				"signature", signature,
+				"timestamp", timestamp,
+				"apiKey", cloudinary.config.apiKey,
+				"cloudName", cloudinary.config.cloudName,
+				"uploadPreset", uploadPreset);
 	}
 }

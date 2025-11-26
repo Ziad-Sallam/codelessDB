@@ -36,6 +36,7 @@ public class SecurityConfig {
 						.requestMatchers(
 								"/user/login/**",
 								"/user/signup/**",
+								"/user/signature/**",
 								"/oauth2/**",
 								"/login/oauth2/**")
 						.permitAll()
