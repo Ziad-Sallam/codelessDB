@@ -14,7 +14,9 @@ import "./Schema.css";
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
 import { validateSchema } from "./generate/CheckCorrectness";
 import { convertToJSON } from "./generate/JsonConverter";
-import CodeEditor from "./code-editor/CodeEditor.jsx"
+import CodeEditor from "./code-editor/CodeEditor.jsx";
+import axios from "axios";
+import { generateSQLFromBackend } from "./fetch.js";
 
 export default function Schema() {
   const [nodes, setNodes] = useState([]);
@@ -22,6 +24,7 @@ export default function Schema() {
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
   const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
   const [generatedSql, setGeneratedSql] = useState("");
+  const [schemaName, setSchemaName] = useState("");
 
   const onNodesChange = useCallback(
     (changes) => setNodes((ns) => applyNodeChanges(changes, ns)),
@@ -89,7 +92,6 @@ export default function Schema() {
     ]);
   };
 
-
   const temp = `-- Generated SQL Code
     CREATE TABLE users (
       id INT PRIMARY KEY AUTO_INCREMENT,
@@ -106,40 +108,41 @@ export default function Schema() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );`;
 
-  const onGenerateSQL = () => {
+  const onGenerateSQL = async () => {
     const validation = validateSchema(nodes);
 
     if (!validation.isValid) {
       alert(`Validation Failed:\n- ${validation.errors.join("\n- ")}`);
       return;
     }
-    console.log(nodes);
-    const finalJson = convertToJSON(nodes);
-    console.log(JSON.stringify(finalJson));
 
-    // const sql = generateSQLFromDiagram();
-    const sql = temp;
-    setGeneratedSql(sql);
+    const finalJson = convertToJSON(schemaName,nodes);
+
+    try {
+      const response = await generateSQLFromBackend(finalJson);
+      setGeneratedSql(response.data);
+    } catch (err) {
+      console.log("ERROR:", err);
+    }
+
     setIsSqlPanelOpen(true);
   };
 
   return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        position: "relative",
-        background: "#f8fafc",
-      }}
-    >
-
+    <div className="drawing-container">
       {isSqlPanelOpen && (
         <CodeEditor
           initialCode={generatedSql}
           onClose={() => setIsSqlPanelOpen(false)}
         />
       )}
-
+      <div className="header">
+        <input
+          placeholder="Database Name"
+          value={schemaName}
+          onChange={(e) => setSchemaName(e.target.value)}
+        />
+      </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -171,44 +174,48 @@ export default function Schema() {
       </ReactFlow>
 
       {/* NEW TOOLBAR STRUCTURE */}
-      <div className="schema-toolbar">
-        <RelationButton
-          active={selectedRelationType === "1:1"}
-          color="#3b82f6"
-          onClick={() => setSelectedRelationType("1:1")}
-          label="1 : 1"
-        />
-        <RelationButton
-          active={selectedRelationType === "1:N"}
-          color="#10b981"
-          onClick={() => setSelectedRelationType("1:N")}
-          label="1 : N"
-        />
-        <RelationButton
-          active={selectedRelationType === "N:1"}
-          color="#f59e0b"
-          onClick={() => setSelectedRelationType("N:1")}
-          label="N : 1"
-        />
-        <RelationButton
-          active={selectedRelationType === "M:N"}
-          color="#ef4444"
-          onClick={() => setSelectedRelationType("M:N")}
-          label="M : N"
-        />
-        <div
-          style={{
-            width: 1,
-            height: 24,
-            background: "#e2e8f0",
-            margin: "0 4px",
-          }}
-        ></div>
-        <button className="add-node-btn" onClick={addNode}>
-          + Add Entity
-        </button>
-      </div>
-      <button className="generate" onClick={onGenerateSQL}>Generate SQL</button>
+      {!isSqlPanelOpen && (
+        <div className="schema-toolbar">
+          <RelationButton
+            active={selectedRelationType === "1:1"}
+            color="#3b82f6"
+            onClick={() => setSelectedRelationType("1:1")}
+            label="1 : 1"
+          />
+          <RelationButton
+            active={selectedRelationType === "1:N"}
+            color="#10b981"
+            onClick={() => setSelectedRelationType("1:N")}
+            label="1 : N"
+          />
+          <RelationButton
+            active={selectedRelationType === "N:1"}
+            color="#f59e0b"
+            onClick={() => setSelectedRelationType("N:1")}
+            label="N : 1"
+          />
+          <RelationButton
+            active={selectedRelationType === "M:N"}
+            color="#ef4444"
+            onClick={() => setSelectedRelationType("M:N")}
+            label="M : N"
+          />
+          <div
+            style={{
+              width: 1,
+              height: 24,
+              background: "#e2e8f0",
+              margin: "0 4px",
+            }}
+          ></div>
+          <button className="add-node-btn" onClick={addNode}>
+            + Add Entity
+          </button>
+        </div>
+      )}
+      <button className="generate" onClick={onGenerateSQL}>
+        Generate SQL
+      </button>
     </div>
   );
 }
