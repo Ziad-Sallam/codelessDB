@@ -48,10 +48,10 @@ export const convertToJSON = (nodes) => {
       if (col.constraints.FOREIGN_KEY) {
         constraints.push({
           type: "FOREIGN_KEY",
-          referencedTable: col.references?.table || null,
-          referencedColumn: col.references?.column || null,
-          onDelete: col.constraints.ForeignKeyOnDelete || null,
-          onUpdate: col.constraints.ForeignKeyOnUpdate || null,
+          referencedTable: col.references?.tableName || null,
+          referencedColumn: col.references?.columnName || null,
+          onDelete: col.constraints.ForeignKeyOnDelete || "CASCADE",
+          onUpdate: col.constraints.ForeignKeyOnUpdate || "CASCADE",
         });
       }
 
@@ -80,5 +80,8 @@ export const convertToJSON = (nodes) => {
   });
 
   // Return the final root object
-  return { entities };
+  return {
+    schemaName:"TEST"  ,
+    entities
+   };
 };
