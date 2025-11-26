@@ -13,6 +13,8 @@ import axios from "axios";
 import LeftPanel from "../diagrams/LeftPanel.jsx";
 import "./UserProfile.css";
 import theme from '../../theme.js';
+import { uploadToCloudinary } from "../../uploadToCloudinary.jsx";
+import { deleteFromCloudinary  } from "../../deleteFromCloudinary.jsx";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8080",
@@ -174,43 +176,6 @@ export default function UserProfile() {
     setAnchorEl(null);
   };
 
-  const handleUrlSubmit = async () => {
-    if (!imageUrl.trim()) {
-      showSnackbar("Please enter a valid URL", "error");
-      return;
-    }
-
-    try {
-
-      const updateDto = {
-        picture: imageUrl
-      };
-      console.log("Updating profile picture with URL:", imageUrl);
-      console.log(updateDto);
-
-      const response = await apiClient.put("/user/update", updateDto);
-
-      if (response.status === 200) {
-        setPicture(imageUrl);
-        showSnackbar("Profile picture updated successfully", "success");
-        setShowUrlDialog(false);
-        setImageUrl("");
-      }
-
-    } catch (error) {
-      console.error("Error uploading picture:", error);
-
-      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
-        showSnackbar("Network error. Please check your connection.", "error");
-      } else if (error.response?.status === 401 || error.response?.status === 403) {
-        showSnackbar("Session expired. Please login again.", "error");
-        navigate("/login");
-      } else {
-        showSnackbar(error.response?.data?.message || "Error uploading picture", "error");
-      }
-    }
-  };
-
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
   };
@@ -312,17 +277,77 @@ export default function UserProfile() {
     );
   };
 
+  const updateProfilePicture = async (url) => {
+    try {
+      
+      if (picture && picture.includes("cloudinary.com")) {
+        await deleteFromCloudinary(picture);
+      }
+
+      const updateDto = {
+        picture: url
+      };
+
+      const response = await apiClient.put("/user/update", updateDto);
+
+      if (response.status === 200) {
+        setPicture(url);
+        showSnackbar("Profile picture updated successfully", "success");
+        return true;
+      }
+      return false;
+
+    } catch (error) {
+      console.error("Error uploading picture:", error);
+
+      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
+        showSnackbar("Network error. Please check your connection.", "error");
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        showSnackbar("Session expired. Please login again.", "error");
+        navigate("/login");
+      } else {
+        showSnackbar(error.response?.data?.message || "Error uploading picture", "error");
+      }
+      return false;
+    }
+  };
+
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      // const url = await uploadToCloudinary(file);
+      try {
+        showSnackbar("Uploading image...", "info");
 
-      setImageUrl(url)
+        const url = await uploadToCloudinary(file);
 
-      handleUrlSubmit()
+        if (!url) {
+          showSnackbar("Failed to upload image", "error");
+          return;
+        }
+
+        await updateProfilePicture(url);
+
+      } catch (error) {
+        console.error("Error in file upload:", error);
+        showSnackbar("Error uploading picture", "error");
+      }
     }
 
     handleMenuClose();
+  };
+
+  const handleUrlSubmit = async () => {
+    if (!imageUrl.trim()) {
+      showSnackbar("Please enter a valid URL", "error");
+      return;
+    }
+
+    const success = await updateProfilePicture(imageUrl);
+
+    if (success) {
+      setShowUrlDialog(false);
+      setImageUrl("");
+    }
   };
 
   const handleUrlUpload = () => {
