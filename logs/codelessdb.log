@@ -1359,3 +1359,349 @@ io.jsonwebtoken.security.SignatureException: JWT signature does not match locall
 07:24:47 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
 07:24:47 INFO  HikariPool-2 - Shutdown initiated...
 07:24:47 INFO  HikariPool-2 - Shutdown completed.
+07:43:07 INFO  Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+07:43:07 INFO  For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+07:43:08 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:43:08 INFO  Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+07:43:09 INFO  Finished Spring Data repository scanning in 113 ms. Found 1 JPA repository interface.
+07:43:09 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:43:09 INFO  Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+07:43:09 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+07:43:09 INFO  Finished Spring Data repository scanning in 9 ms. Found 0 Redis repository interfaces.
+07:43:09 INFO  Tomcat initialized with port 8080 (http)
+07:43:09 INFO  Starting service [Tomcat]
+07:43:09 INFO  Starting Servlet engine: [Apache Tomcat/10.1.48]
+07:43:09 INFO  Initializing Spring embedded WebApplicationContext
+07:43:09 INFO  Root WebApplicationContext: initialization completed in 1796 ms
+07:43:09 INFO  HHH000204: Processing PersistenceUnitInfo [name: default]
+07:43:10 INFO  HHH000412: Hibernate ORM core version 6.6.33.Final
+07:43:10 INFO  HHH000026: Second-level cache disabled
+07:43:10 INFO  No LoadTimeWeaver setup: ignoring JPA class transformer
+07:43:10 INFO  HikariPool-1 - Starting...
+07:43:10 INFO  HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4b4b6d26
+07:43:10 INFO  HikariPool-1 - Start completed.
+07:43:10 INFO  HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 9.5
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+07:43:11 INFO  HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+07:43:11 INFO  Initialized JPA EntityManagerFactory for persistence unit 'default'
+07:43:12 WARN  spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+07:43:13 INFO  LiveReload server is running on port 35729
+07:43:13 INFO  Tomcat started on port 8080 (http) with context path '/'
+07:43:28 INFO  Initializing Spring DispatcherServlet 'dispatcherServlet'
+07:43:28 INFO  Initializing Servlet 'dispatcherServlet'
+07:43:28 INFO  Completed initialization in 1 ms
+07:43:32 INFO  Request URL: http://localhost:8080/login/oauth2/google
+07:43:32 INFO  Request URI: /login/oauth2/google
+07:43:32 INFO  === Google OAuth Success ===
+07:43:32 INFO  Email: noureldientaha@gmail.com
+07:43:32 INFO  Username: Nour Eldien
+07:43:32 INFO  Picture: https://lh3.googleusercontent.com/a/ACg8ocJ8iRj3cmLVWKPJGobJD6w0znTuNTS3mRzzTig8gOC2vSA5QQ=s96-c
+07:43:32 INFO  Request URI: /login/oauth2/google
+07:43:32 INFO  Existing user found with ID: 3
+07:43:32 INFO  Redirecting to: http://localhost:5173/login?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjMsInVzZXJuYW1lIjoibm91ciIsInN1YiI6IjMiLCJpYXQiOjE3NjQxNzkwMTIsImV4cCI6MTc2NDI2NTQxMn0.7v1DZeuOzvF_cssD5PN_lh2RiEVJlWIaeCL-Kiof9ng
+07:44:04 ERROR No JWT token found in request headers
+07:44:04 ERROR Authorization Header: null
+07:45:21 WARN  Resolved [backend.user.exceptions.UserException$UsernameAlreadyExistsException: Username already exists]
+07:48:42 INFO  Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+07:48:42 INFO  Commencing graceful shutdown. Waiting for active requests to complete
+07:48:42 INFO  Graceful shutdown complete
+07:48:42 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
+07:48:42 INFO  HikariPool-1 - Shutdown initiated...
+07:48:42 INFO  HikariPool-1 - Shutdown completed.
+07:48:42 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:48:42 INFO  Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+07:48:42 INFO  Finished Spring Data repository scanning in 12 ms. Found 1 JPA repository interface.
+07:48:42 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:48:42 INFO  Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+07:48:42 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+07:48:42 INFO  Finished Spring Data repository scanning in 4 ms. Found 0 Redis repository interfaces.
+07:48:43 INFO  Tomcat initialized with port 8080 (http)
+07:48:43 INFO  Starting service [Tomcat]
+07:48:43 INFO  Starting Servlet engine: [Apache Tomcat/10.1.48]
+07:48:43 INFO  Initializing Spring embedded WebApplicationContext
+07:48:43 INFO  Root WebApplicationContext: initialization completed in 544 ms
+07:48:43 INFO  HHH000204: Processing PersistenceUnitInfo [name: default]
+07:48:43 INFO  HHH000026: Second-level cache disabled
+07:48:43 INFO  No LoadTimeWeaver setup: ignoring JPA class transformer
+07:48:43 INFO  HikariPool-2 - Starting...
+07:48:43 INFO  HikariPool-2 - Added connection com.mysql.cj.jdbc.ConnectionImpl@795f2f2d
+07:48:43 INFO  HikariPool-2 - Start completed.
+07:48:43 INFO  HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 9.5
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+07:48:43 INFO  HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+07:48:43 INFO  Initialized JPA EntityManagerFactory for persistence unit 'default'
+07:48:43 WARN  spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+07:48:43 INFO  LiveReload server is running on port 35729
+07:48:43 INFO  Tomcat started on port 8080 (http) with context path '/'
+07:48:43 INFO  Condition evaluation unchanged
+07:48:45 INFO  Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+07:48:45 INFO  Commencing graceful shutdown. Waiting for active requests to complete
+07:48:45 INFO  Graceful shutdown complete
+07:48:45 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
+07:48:45 INFO  HikariPool-2 - Shutdown initiated...
+07:48:45 INFO  HikariPool-2 - Shutdown completed.
+07:48:45 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:48:45 INFO  Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+07:48:45 INFO  Finished Spring Data repository scanning in 8 ms. Found 1 JPA repository interface.
+07:48:45 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:48:45 INFO  Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+07:48:45 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+07:48:45 INFO  Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+07:48:45 INFO  Tomcat initialized with port 8080 (http)
+07:48:45 INFO  Starting service [Tomcat]
+07:48:45 INFO  Starting Servlet engine: [Apache Tomcat/10.1.48]
+07:48:45 INFO  Initializing Spring embedded WebApplicationContext
+07:48:45 INFO  Root WebApplicationContext: initialization completed in 310 ms
+07:48:45 INFO  HHH000204: Processing PersistenceUnitInfo [name: default]
+07:48:45 INFO  HHH000026: Second-level cache disabled
+07:48:45 INFO  No LoadTimeWeaver setup: ignoring JPA class transformer
+07:48:45 INFO  HikariPool-3 - Starting...
+07:48:45 INFO  HikariPool-3 - Added connection com.mysql.cj.jdbc.ConnectionImpl@a06cacd
+07:48:45 INFO  HikariPool-3 - Start completed.
+07:48:45 INFO  HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-3)']
+	Database driver: undefined/unknown
+	Database version: 9.5
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+07:48:45 INFO  HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+07:48:45 INFO  Initialized JPA EntityManagerFactory for persistence unit 'default'
+07:48:45 WARN  spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+07:48:45 INFO  LiveReload server is running on port 35729
+07:48:45 INFO  Tomcat started on port 8080 (http) with context path '/'
+07:48:45 INFO  Condition evaluation unchanged
+07:49:31 INFO  Initializing Spring DispatcherServlet 'dispatcherServlet'
+07:49:31 INFO  Initializing Servlet 'dispatcherServlet'
+07:49:31 INFO  Completed initialization in 1 ms
+07:49:31 ERROR Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+io.jsonwebtoken.security.SignatureException: JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.
+	at io.jsonwebtoken.impl.DefaultJwtParser.parse(DefaultJwtParser.java:399) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parse(DefaultJwtParser.java:529) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parseClaimsJws(DefaultJwtParser.java:589) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at io.jsonwebtoken.impl.ImmutableJwtParser.parseClaimsJws(ImmutableJwtParser.java:173) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at backend.security.JwtUtil.extractAllClaims(JwtUtil.java:68) ~[classes/:na]
+	at backend.security.JwtUtil.extractClaim(JwtUtil.java:60) ~[classes/:na]
+	at backend.security.JwtUtil.extractSubject(JwtUtil.java:52) ~[classes/:na]
+	at backend.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:52) ~[classes/:na]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:235) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:229) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.doFilterInternal(OAuth2AuthorizationRequestRedirectFilter.java:198) ~[spring-security-oauth2-client-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319) ~[spring-security-config-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$4(HandlerMappingIntrospector.java:267) ~[spring-webmvc-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240) ~[spring-security-config-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1774) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:973) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:491) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+07:49:31 ERROR Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+io.jsonwebtoken.security.SignatureException: JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.
+	at io.jsonwebtoken.impl.DefaultJwtParser.parse(DefaultJwtParser.java:399) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parse(DefaultJwtParser.java:529) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parseClaimsJws(DefaultJwtParser.java:589) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at io.jsonwebtoken.impl.ImmutableJwtParser.parseClaimsJws(ImmutableJwtParser.java:173) ~[jjwt-impl-0.11.5.jar:0.11.5]
+	at backend.security.JwtUtil.extractAllClaims(JwtUtil.java:68) ~[classes/:na]
+	at backend.security.JwtUtil.extractClaim(JwtUtil.java:60) ~[classes/:na]
+	at backend.security.JwtUtil.extractSubject(JwtUtil.java:52) ~[classes/:na]
+	at backend.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:52) ~[classes/:na]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:235) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:229) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.doFilterInternal(OAuth2AuthorizationRequestRedirectFilter.java:198) ~[spring-security-oauth2-client-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319) ~[spring-security-config-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$4(HandlerMappingIntrospector.java:267) ~[spring-webmvc-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240) ~[spring-security-config-6.5.6.jar:6.5.6]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1774) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:973) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:491) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+07:49:41 INFO  Request URL: http://localhost:8080/login/oauth2/google
+07:49:41 INFO  Request URI: /login/oauth2/google
+07:49:41 INFO  === Google OAuth Success ===
+07:49:41 INFO  Email: noureldientaha@gmail.com
+07:49:41 INFO  Username: Nour Eldien
+07:49:41 INFO  Picture: https://lh3.googleusercontent.com/a/ACg8ocJ8iRj3cmLVWKPJGobJD6w0znTuNTS3mRzzTig8gOC2vSA5QQ=s96-c
+07:49:41 INFO  Request URI: /login/oauth2/google
+07:49:41 INFO  Existing user found with ID: 3
+07:49:41 INFO  Redirecting to: http://localhost:5173/login?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjMsInVzZXJuYW1lIjoibm91cjEiLCJzdWIiOiIzIiwiaWF0IjoxNzY0MTc5MzgxLCJleHAiOjE3NjQyNjU3ODF9.7CM_n51dk7rfrwOnntgiPGKAk2m4vbIfTlfq4sSItQ0
+07:50:18 ERROR No JWT token found in request headers
+07:50:18 ERROR Authorization Header: null
+07:50:49 ERROR No JWT token found in request headers
+07:50:49 ERROR Authorization Header: null
+07:51:51 INFO  Restarting due to 54 class path changes (0 additions, 0 deletions, 54 modifications)
+07:51:51 INFO  Commencing graceful shutdown. Waiting for active requests to complete
+07:51:51 INFO  Graceful shutdown complete
+07:51:51 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
+07:51:51 INFO  HikariPool-3 - Shutdown initiated...
+07:51:51 INFO  HikariPool-3 - Shutdown completed.
+07:51:52 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:51:52 INFO  Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+07:51:52 INFO  Finished Spring Data repository scanning in 7 ms. Found 1 JPA repository interface.
+07:51:52 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+07:51:52 INFO  Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+07:51:52 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+07:51:52 INFO  Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+07:51:52 INFO  Tomcat initialized with port 8080 (http)
+07:51:52 INFO  Starting service [Tomcat]
+07:51:52 INFO  Starting Servlet engine: [Apache Tomcat/10.1.48]
+07:51:52 INFO  Initializing Spring embedded WebApplicationContext
+07:51:52 INFO  Root WebApplicationContext: initialization completed in 258 ms
+07:51:52 INFO  HHH000204: Processing PersistenceUnitInfo [name: default]
+07:51:52 INFO  HHH000026: Second-level cache disabled
+07:51:52 INFO  No LoadTimeWeaver setup: ignoring JPA class transformer
+07:51:52 INFO  HikariPool-4 - Starting...
+07:51:52 INFO  HikariPool-4 - Added connection com.mysql.cj.jdbc.ConnectionImpl@73b6a6ee
+07:51:52 INFO  HikariPool-4 - Start completed.
+07:51:52 INFO  HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-4)']
+	Database driver: undefined/unknown
+	Database version: 9.5
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+07:51:52 INFO  HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+07:51:52 INFO  Initialized JPA EntityManagerFactory for persistence unit 'default'
+07:51:52 WARN  spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+07:51:52 INFO  LiveReload server is running on port 35729
+07:51:52 INFO  Tomcat started on port 8080 (http) with context path '/'
+07:51:52 INFO  Condition evaluation unchanged
+07:52:31 INFO  Commencing graceful shutdown. Waiting for active requests to complete
+07:52:31 INFO  Graceful shutdown complete
+07:52:31 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
+07:52:31 INFO  HikariPool-4 - Shutdown initiated...
+07:52:31 INFO  HikariPool-4 - Shutdown completed.

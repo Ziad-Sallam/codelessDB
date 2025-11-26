@@ -14,7 +14,6 @@ import LeftPanel from "../diagrams/LeftPanel.jsx";
 import "./UserProfile.css";
 import theme from '../../theme.js';
 import { uploadToCloudinary } from "../../uploadToCloudinary.jsx";
-import { deleteFromCloudinary } from "../../deleteFromCloudinary.jsx";
 
 import LogoutIcon from "@mui/icons-material/Logout";
 
@@ -282,10 +281,6 @@ export default function UserProfile() {
   const updateProfilePicture = async (url) => {
     try {
 
-      if (picture && picture.includes("cloudinary.com")) {
-        await deleteFromCloudinary(picture);
-      }
-
       const updateDto = {
         picture: url
       };
@@ -331,7 +326,7 @@ export default function UserProfile() {
       try {
         showSnackbar("Uploading image...", "info");
 
-        const url = await uploadToCloudinary(file);
+        const url = await uploadToCloudinary(file, email);
 
         if (!url) {
           showSnackbar("Failed to upload image", "error");

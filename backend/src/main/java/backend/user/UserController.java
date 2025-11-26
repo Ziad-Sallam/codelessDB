@@ -103,10 +103,15 @@ public class UserController {
 	}
 
 	@GetMapping("/signature/upload")
-	public Map<String, Object> getSignature() {
+	public Map<String, Object> getSignature(@RequestParam String publicId) {
 		long timestamp = System.currentTimeMillis() / 1000;
 
-		Map<String, Object> paramsToSign = ObjectUtils.asMap( "timestamp", timestamp, "upload_preset", uploadPreset);
+		Map<String, Object> paramsToSign = ObjectUtils.asMap(
+				"timestamp", timestamp,
+				"upload_preset", uploadPreset,
+				"public_id", publicId,
+				"overwrite", true,
+				"invalidate", true);
 
 		String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
 
@@ -118,18 +123,4 @@ public class UserController {
 				"uploadPreset", uploadPreset);
 	}
 
-	@GetMapping("/signature/delete")
-	public Map<String, Object> getDeleteSignature(@RequestParam String publicId) {
-		long timestamp = System.currentTimeMillis() / 1000;
-
-		Map<String, Object> paramsToSign = ObjectUtils.asMap( "public_id", publicId, "timestamp", timestamp);
-
-		String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
-
-		return Map.of(
-				"signature", signature,
-				"timestamp", timestamp,
-				"apiKey", cloudinary.config.apiKey,
-				"cloudName", cloudinary.config.cloudName);
-	}
 }
