@@ -3,7 +3,7 @@ package backend.userDiagramManagement.controller;
 import backend.security.AuthUser;
 import backend.userDiagramManagement.dto.*;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
-import backend.userDiagramManagement.dto.create.DiagramCreateResponseDto;
+// import backend.userDiagramManagement.dto.create.DiagramCreateResponseDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -49,11 +50,11 @@ public class UserDiagramController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<DiagramCreateResponseDto> createDiagram(
+    public ResponseEntity<DiagramInfoDto> createDiagram(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody DiagramCreateRequestDto request) {
 
-        DiagramCreateResponseDto diagram = userDiagramService.createDiagram(id(authUser), request);
+        DiagramInfoDto diagram = userDiagramService.createDiagram(id(authUser), request);
 
         return ResponseEntity.ok(diagram);
     }
@@ -102,18 +103,19 @@ public class UserDiagramController {
             @RequestParam int pageSize,
             @RequestBody DiagramSearchRequestDto request) {
 
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("lastModified").descending());
         Page<DiagramDto> result = userDiagramService.searchDiagrams(id(authUser), request, pageable);
 
         return ResponseEntity.ok(result);
     }
 
-    @PutMapping("/share")
+    @PutMapping("/share/{id}")
     public ResponseEntity<DiagramShareResponseDto> shareDiagram(
             @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable UUID id,
             @RequestBody DiagramShareRequestDto request) {
 
-        DiagramShareResponseDto response = userDiagramService.shareDiagram(id(authUser), request);
+        DiagramShareResponseDto response = userDiagramService.shareDiagram(id(authUser), id, request);
         return ResponseEntity.ok(response);
     }
 }

@@ -29,14 +29,13 @@ public class DiagramInfoDto {
     public static DiagramInfoDto toDto(Diagram diagram, Role role, List<Contributor> contributors) {
         return DiagramInfoDto
                 .builder()
+                .role(role)
                 .diagramId(diagram.getId())
                 .name(diagram.getName())
                 .thumbnail(diagram.getThumbnail())
                 .createdAt(diagram.getCreatedAt())
                 .lastModified(diagram.getLastModified())
-                .role(role)
                 .contributors(contributors)
                 .build();
     }
-
 }

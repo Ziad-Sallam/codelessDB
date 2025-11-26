@@ -18,8 +18,8 @@ public class LoggingAspect {
    private static final String LOG_FILES = """
       execution(* backend.user.UserService.*(..)) ||
       execution(* backend.user.UserController.*(..)) ||
-      execution(* backend.userDiagramManagement.UserDiagramController.*(..)) ||
-      execution(* backend.SQLGeneration.SchemaController.*(..))
+      execution(* backend.userDiagramManagement.controller.UserDiagramController.*(..)) ||
+      execution(* backend.SQLGeneration.controller.SchemaController.*(..))
    """;
 
    // Log method entry

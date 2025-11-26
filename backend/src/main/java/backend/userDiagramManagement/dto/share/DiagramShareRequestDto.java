@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 public class DiagramShareRequestDto {
-    private UUID diagramId;
     private String toUserName;
     private Role role;
+    private boolean delete;
 }

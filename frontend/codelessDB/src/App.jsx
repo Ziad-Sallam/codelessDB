@@ -3,6 +3,7 @@ import { useState, createContext, useEffect } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import Notification from './components/Notification.jsx';
 import { routes } from './routes.jsx';
+import { NotificationProvider } from './components/NotificationContext.jsx';
 
 export const RecoveryContext = createContext();
 
@@ -14,14 +15,15 @@ function App() {
    
    useEffect(() => {
       // setMsg("test Notification")
-      const token = "eyJhbGciOiJIUzM4NCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWhtZWRfcmFneTMiLCJzdWIiOiIxIiwiaWF0IjoxNzY0MDM0OTAyLCJleHAiOjE3NjQxMjEzMDJ9.3Gr4XfnK9Wy1qpiyawmECHh1AD2n4BZWjsex7c9h-Bz4Qf3r1qRkKvbCW8f0omtY";
+      const token = "eyJhbGciOiJIUzM4NCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWhtZWRfcmFneTMiLCJzdWIiOiIxIiwiaWF0IjoxNzY0MTIzMTkzLCJleHAiOjE3NjQyMDk1OTN9.zVF12w7GXDq7pBqTMM8MGURODb67qRTOrV4sE_-PbCJWI9KUomeCDY5a1ED7_onA";
       localStorage.setItem("authToken" , token)
    }, []);
 
    return (
       <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
-         <RouterProvider router={router} />
-         <Notification message={msg} severity="success" duration={5000} />
+         <NotificationProvider>
+            <RouterProvider router={router} />
+         </NotificationProvider>
       </RecoveryContext.Provider>
    );
 }

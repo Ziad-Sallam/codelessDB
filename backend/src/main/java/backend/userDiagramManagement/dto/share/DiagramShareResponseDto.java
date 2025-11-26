@@ -10,4 +10,5 @@ public class DiagramShareResponseDto {
     private String message;
     private String sharedWith;
     private Role role;
+    private String picture;
 }

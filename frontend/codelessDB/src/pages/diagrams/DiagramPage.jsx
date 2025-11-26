@@ -1,27 +1,31 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useEffect, useMemo, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
 	Box,
 	Button,
+	CircularProgress,
 	Grid,
+	Pagination,
 	Popover,
 	Stack,
 	TextField,
 	Typography,
-	Pagination,
-	CircularProgress,
 } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import LeftPanel from "../../components/LeftPanel.jsx";
 import TopBar from "../../components/TopBar.jsx";
 import DiagramCard from "./DiagramCard.jsx";
-import { useNavigate } from "react-router-dom";
 import { createDiagram, fetchDiagrams } from "./fetch.js";
+
+import { useNotification } from "../../components/NotificationContext";
+
 
 const ITEMS_PER_PAGE = 8;
 
 export default function DiagramPage() {
-	// State
+	const { showSuccess, showError } = useNotification();
+
 	const [diagrams, setDiagrams] = useState([]);
 	const [leftNav, setLeftNav] = useState("all");
 	const [search, setSearch] = useState("");
@@ -30,66 +34,44 @@ export default function DiagramPage() {
 	const [totalPages, setTotalPages] = useState(0);
 	const [totalElements, setTotalElements] = useState(0);
 
-	// Filter popover
 	const [filterAnchor, setFilterAnchor] = useState(null);
 	const [dateFrom, setDateFrom] = useState("");
 	const [dateTo, setDateTo] = useState("");
 
 	const navigate = useNavigate();
 
-	/** -------------------------------------
-	 * Fetch diagrams from backend
-	 * -------------------------------------- */
-	const loadDiagrams = async () => {
+	const loadDiagrams = async (pageNumber = page) => {
 		setLoading(true);
 		try {
-			const response = await fetchDiagrams();
-			// const response = await fetchDiagrams({
-			// 	page: page - 1, // Backend typically uses 0-based indexing
-			// 	size: ITEMS_PER_PAGE,
-			// 	search,
-			// 	dateFrom,
-			// 	dateTo,
-			// });
-			console.log(response)
-			setDiagrams(response.content || []);
-			setTotalPages(response.totalPages || 0);
-			setTotalElements(response.totalElements || 0);
-		
-		} catch (error) {
-			console.error("Error fetching diagrams:", error);
+			const resp = await fetchDiagrams(pageNumber - 1, ITEMS_PER_PAGE, { search, dateFrom, dateTo });
+			setDiagrams(resp.content || []);
+			setTotalPages(resp.totalPages || 0);
+			setTotalElements(resp.totalElements || 0);
+
+		} catch (err) {
 			setDiagrams([]);
-		
+			setTotalPages(0);
+			setTotalElements(0);
+			showError(err.message);
+
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	// Load diagrams on mount and when filters/page change
 	useEffect(() => {
-		loadDiagrams();
+		loadDiagrams(page);
 	}, [page, search, dateFrom, dateTo]);
-	
-	useEffect(() => {
-		loadDiagrams();
-	}, []);
 
-	// Reset to page 1 when filters change
 	useEffect(() => {
-		if (page !== 1) {
-			setPage(1);
-		}
+		setPage(1);
 	}, [search, dateFrom, dateTo]);
 
 	const handlePageChange = (event, value) => {
 		setPage(value);
-		// Scroll to top when page changes
-		window.scrollTo({ top: 0, behavior: 'smooth' });
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
 
-	/** -------------------------------------
-	 * Popover Handlers
-	 * -------------------------------------- */
 	const openFilter = (e) => setFilterAnchor(e.currentTarget);
 	const closeFilter = () => setFilterAnchor(null);
 	const clearFilter = () => {
@@ -98,22 +80,32 @@ export default function DiagramPage() {
 		closeFilter();
 	};
 
-	const applyFilter = () => closeFilter();
+	const applyFilter = () => {
+		closeFilter();
+	};
 
 	const handleOpenDiagram = (d) => {
-		navigate(`/diagrams/${d.diagramId}`);
+		if (d?.diagramId) navigate(`/diagrams/${d.diagramId}`);
 	};
+
+	function handleUpdateDiagram(newDiagram) {
+		setDiagrams((prev) =>
+			prev.map((item) => (item.diagramId === newDiagram.diagramId ? { ...item, ...newDiagram } : item))
+		);
+	}
+
+	function handleDeleteDiagram(deletedDiagram) {
+		setDiagrams((prev) => prev.filter((d) => d.diagramId !== deletedDiagram.diagramId));
+	}
 
 	const handleCreateDiagram = async () => {
 		try {
 			const newDiagram = await createDiagram();
-			console.log(newDiagram);
 			setDiagrams((ds) => [newDiagram, ...ds]);
-			// Reload diagrams to get updated list
-			// await loadDiagrams();
+			showSuccess("Diagram created");
+
 		} catch (error) {
-			console.error("Error creating diagram:", error);
-			alert("Failed to create diagram");
+			showError(error.message);
 		}
 	};
 
@@ -124,19 +116,15 @@ export default function DiagramPage() {
 				minHeight: "100vh",
 				width: "100%",
 				bgcolor: "background.light",
-				padding: 1,
-				paddingRight: 6,
-				paddingLeft: 4
+				px: 4,
+				py: 2,
 			}}
 		>
-			{/* Left Navigation Panel */}
 			<LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
 
-			{/* Main Content */}
 			<Box component="main" sx={{ flexGrow: 1 }}>
 				<TopBar search={search} setSearch={setSearch} onFilterOpen={openFilter} />
 
-				{/* Filter Popover */}
 				<Popover
 					open={Boolean(filterAnchor)}
 					anchorEl={filterAnchor}
@@ -144,7 +132,7 @@ export default function DiagramPage() {
 					anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
 					transformOrigin={{ vertical: "top", horizontal: "right" }}
 				>
-					<Box sx={{ p: 2, width: 300, height: 'auto' }}>
+					<Box sx={{ p: 2, width: 300 }}>
 						<Typography variant="subtitle1" sx={{ mb: 1 }}>
 							Filter diagrams
 						</Typography>
@@ -175,17 +163,8 @@ export default function DiagramPage() {
 					</Box>
 				</Popover>
 
-				{/* Page Content */}
 				<Box sx={{ p: 3 }}>
-					{/* Header */}
-					<Box
-						sx={{
-							display: "flex",
-							justifyContent: "space-between",
-							alignItems: "center",
-							mb: 3,
-						}}
-					>
+					<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
 						<Box>
 							<Typography variant="h5">Your diagrams</Typography>
 							<Typography variant="body2" color="text.secondary">
@@ -194,67 +173,47 @@ export default function DiagramPage() {
 							</Typography>
 						</Box>
 
-						<Button
-							variant="contained"
-							sx={{ transform: "translateX(6px)" }}
-							onClick={handleCreateDiagram}
-							disabled={loading}
-						>
+						<Button variant="contained" sx={{ transform: "translateX(6px)" }} onClick={handleCreateDiagram} disabled={loading}>
 							New diagram
 						</Button>
-
 					</Box>
 
-					{/* Loading State */}
-					{loading && (
-						<Box sx={{ display: 'flex', justifyContent: 'center', p: 6 }}>
+					{loading ? (
+						<Box sx={{ display: "flex", justifyContent: "center", p: 6 }}>
 							<CircularProgress />
 						</Box>
-					)}
+					) : (
+						<>
+							<Grid container spacing={3}>
+								{diagrams.map((diagram) => (
+									<Grid key={diagram.diagramId}>
+										<DiagramCard
+											d={diagram}
+											onOpen={handleOpenDiagram}
+											onUpdate={handleUpdateDiagram}
+											onDelete={handleDeleteDiagram}
+										/>
+									</Grid>
+								))}
 
-					{/* Grid of Diagrams */}
-					{!loading && (
-						<Grid container spacing={3}>
-							{diagrams.map((diagram) => (
-								<Grid item key={diagram.diagramId} xs={12} sm={6} md={4} lg={3}>
-									<DiagramCard d={diagram} onOpen={handleOpenDiagram} />
-								</Grid>
-							))}
+								{diagrams.length === 0 && (
+									<Grid item xs={12}>
+										<Box sx={{ p: 6, textAlign: "center", bgcolor: "white", borderRadius: 2, boxShadow: 1 }}>
+											<Typography variant="h6">No diagrams found</Typography>
+											<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+												Try clearing filters or creating a new diagram.
+											</Typography>
+										</Box>
+									</Grid>
+								)}
+							</Grid>
 
-							{diagrams.length === 0 && (
-								<Grid item xs={12}>
-									<Box
-										sx={{
-											p: 6,
-											textAlign: "center",
-											bgcolor: "white",
-											borderRadius: 2,
-											boxShadow: 1,
-										}}
-									>
-										<Typography variant="h6">No diagrams found</Typography>
-										<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-											Try clearing filters or creating a new diagram.
-										</Typography>
-									</Box>
-								</Grid>
+							{diagrams.length > 0 && totalPages > 1 && (
+								<Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+									<Pagination count={totalPages} page={page} onChange={handlePageChange} color="primary" size="large" />
+								</Box>
 							)}
-						</Grid>
-					)}
-
-					{/* Pagination */}
-					{!loading && diagrams.length > 0 && totalPages > 1 && (
-						<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-							<Pagination
-								count={totalPages}
-								page={page}
-								onChange={handlePageChange}
-								color="primary"
-								size="large"
-								showFirstButton
-								showLastButton
-							/>
-						</Box>
+						</>
 					)}
 				</Box>
 			</Box>

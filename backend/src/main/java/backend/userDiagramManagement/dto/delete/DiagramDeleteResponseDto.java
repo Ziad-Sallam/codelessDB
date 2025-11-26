@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.util.UUID;
 
+// to be deleted
 @Data
 @AllArgsConstructor
 public class DiagramDeleteResponseDto {

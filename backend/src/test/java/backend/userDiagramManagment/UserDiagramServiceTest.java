@@ -89,7 +89,7 @@ class UserDiagramServiceTest {
         when(diagramRepository.save(any(Diagram.class))).thenReturn(diagram);
 
         DiagramCreateRequestDto request = new DiagramCreateRequestDto();
-        request.setName("New");
+        // request.setName("New");
 
         UUID id = service.createDiagram(1, request).getDiagramId();
 
@@ -210,7 +210,6 @@ class UserDiagramServiceTest {
         target.setUsername("mike");
 
         DiagramShareRequestDto req = new DiagramShareRequestDto();
-        req.setDiagramId(diagram.getId());
         req.setToUserName("mike");
         req.setRole(Role.WRITER);
 
@@ -221,7 +220,7 @@ class UserDiagramServiceTest {
         when(userRepository.findByUsername("mike")).thenReturn(target);
         when(userDiagramRepository.existsByUser_IdAndDiagram_Id(2, diagram.getId())).thenReturn(false);
 
-        DiagramShareResponseDto res = service.shareDiagram(1, req);
+        DiagramShareResponseDto res = service.shareDiagram(1, null, req);
 
         assertEquals("Diagram shared successfully", res.getMessage());
     }
@@ -229,7 +228,6 @@ class UserDiagramServiceTest {
     @Test
     void shareDiagram_targetAlreadyHasAccess() {
         DiagramShareRequestDto req = new DiagramShareRequestDto();
-        req.setDiagramId(diagram.getId());
         req.setToUserName("mike");
         req.setRole(Role.WRITER);
 
@@ -245,6 +243,6 @@ class UserDiagramServiceTest {
         when(userDiagramRepository.existsByUser_IdAndDiagram_Id(2, diagram.getId())).thenReturn(true);
 
         assertThrows(DiagramException.InvalidDiagramDataException.class, () ->
-                service.shareDiagram(1, req));
+                service.shareDiagram(1, null, req));
     }
 }

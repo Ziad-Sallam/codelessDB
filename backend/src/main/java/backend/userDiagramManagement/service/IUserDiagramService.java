@@ -3,7 +3,6 @@ package backend.userDiagramManagement.service;
 import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
-import backend.userDiagramManagement.dto.create.DiagramCreateResponseDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
@@ -15,7 +14,7 @@ import java.util.Date;
 import java.util.UUID;
 
 public interface IUserDiagramService {
-    DiagramCreateResponseDto createDiagram(int userId, DiagramCreateRequestDto request);
+    DiagramInfoDto createDiagram(int userId, DiagramCreateRequestDto request);
 
     Date updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramID);
 
@@ -25,7 +24,7 @@ public interface IUserDiagramService {
 
     Page<DiagramDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable);
 
-    DiagramShareResponseDto shareDiagram(int userId, DiagramShareRequestDto request);
+    DiagramShareResponseDto shareDiagram(int userId, UUID diagramId, DiagramShareRequestDto request);
 
     Page<DiagramInfoDto> getDiagramsByUserId(int userId, Pageable pageable);
 }
