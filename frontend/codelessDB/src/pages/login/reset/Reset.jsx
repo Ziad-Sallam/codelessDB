@@ -63,7 +63,7 @@ export default function Reset() {
       if (resetSource === "profile") {
         // User came from profile page - go back to profile
         localStorage.setItem('passwordResetSuccess', 'true');
-        navigate("/userprofile");
+        navigate("/profile");
       } else {
         // User came from login/forgot password flow - go to recovered
         localStorage.removeItem('otp');

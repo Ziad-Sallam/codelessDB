@@ -14,7 +14,9 @@ import LeftPanel from "../diagrams/LeftPanel.jsx";
 import "./UserProfile.css";
 import theme from '../../theme.js';
 import { uploadToCloudinary } from "../../uploadToCloudinary.jsx";
-import { deleteFromCloudinary  } from "../../deleteFromCloudinary.jsx";
+import { deleteFromCloudinary } from "../../deleteFromCloudinary.jsx";
+
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8080",
@@ -279,7 +281,7 @@ export default function UserProfile() {
 
   const updateProfilePicture = async (url) => {
     try {
-      
+
       if (picture && picture.includes("cloudinary.com")) {
         await deleteFromCloudinary(picture);
       }
@@ -355,6 +357,11 @@ export default function UserProfile() {
     handleMenuClose();
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    navigate("/login");
+  };
+
   if (loading) {
     return (
       <ThemeProvider theme={theme}>
@@ -368,9 +375,40 @@ export default function UserProfile() {
   return (
     <ThemeProvider theme={theme}>
       <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
-
       <Box className="profile-layout">
         <Box component="main" className="profile-main">
+
+          {/* Top Bar with Logout Button */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              padding: '16px 24px',
+              backgroundColor: '#f6f8fb',
+            }}
+          >
+            <Button
+              variant="outlined"
+              startIcon={<LogoutIcon />}
+              onClick={handleLogout}
+              sx={{
+                textTransform: 'none',
+                borderColor: '#b71c1c', // deep red border
+                color: '#ffffff',        // white text
+                background: 'linear-gradient(45deg, #e53935 30%, #b71c1c 90%)', // red gradient
+                borderRadius: '10px',
+                marginRight: '500px', // adjust or remove for layout
+                '&:hover': {
+                  borderColor: '#ff7961',
+                  background: 'linear-gradient(45deg, #d32f2f 30%, #7f0000 90%)', // darker gradient on hover
+                  boxShadow: '0 4px 8px 3px rgba(127, 0, 0, .4)',
+                },
+              }}
+            >
+              Logout
+            </Button>
+          </Box>
 
           <Box className="profile-container">
             {/* Header Card with Gradient */}

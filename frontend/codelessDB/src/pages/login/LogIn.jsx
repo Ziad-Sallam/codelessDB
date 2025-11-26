@@ -58,7 +58,7 @@ const LogIn = () => {
          });
          const token = response.data;
          localStorage.setItem("authToken", token);
-         navigate("/userprofile");
+         navigate("/profile");
       } catch (err) {
          const serverMsg = err.response?.data?.message
             || err.response?.data

@@ -43,7 +43,7 @@ function App() {
       element: <Recovered />
     },
     {
-      path: '/userprofile',
+      path: '/profile',
       element: <Userprofile />
     },
     {

@@ -338,3 +338,41 @@
     print-color-adjust: exact;
   }
 }
+/* Logout Button */
+.logout-button {
+  height: fit-content;
+  align-self: end;
+  color: white; /* text color */
+  border: 1px solid red; /* red border */
+  background-color: red; /* solid red background, optional if you want */
+  text-transform: none;
+  font-weight: 500;
+  padding: 8px 24px; /* adjust padding as needed */
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.logout-button:hover {
+  border-color: darkred; /* darker red on hover */
+  background-color: darkred; /* darker red on hover */
+}
+
+/* Responsive adjustments for logout button */
+@media (max-width: 768px) {
+  .profile-header-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .logout-button {
+    width: 100%;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logout-button {
+    font-size: 0.875rem !important;
+    padding: 8px 16px !important;
+  }
+}
