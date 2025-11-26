@@ -122,7 +122,7 @@ const Node = ({ id, data }) => {
         DEFAULT: false,
         defaultValue: "",
         CHECK: false,
-        checkCondition: "",
+        checkCondition: ">",
         checkValue: "",
         autoIncrement: false,
         indexed: false,
@@ -445,10 +445,10 @@ const Node = ({ id, data }) => {
                             }
                           >
                             <option value="CASCADE">CASCADE</option>
-                            <option value="SET NULL">SET NULL</option>
+                            <option value="SET_NULL">SET NULL</option>
                             <option value="RESTRICT">RESTRICT</option>
-                            <option value="SET DEFAULT">SET DEFAULT</option>
-                            <option value="NO ACTION">NO ACTION</option>
+                            <option value="SET_DEFAULT">SET DEFAULT</option>
+                            <option value="NO_ACTION">NO ACTION</option>
                           </select>
                           OnUpdate:{" "}
                           <select
@@ -464,10 +464,10 @@ const Node = ({ id, data }) => {
                             }
                           >
                             <option value="CASCADE">CASCADE</option>
-                            <option value="SET NULL">SET NULL</option>
+                            <option value="SET_NULL">SET NULL</option>
                             <option value="RESTRICT">RESTRICT</option>
-                            <option value="SET DEFAULT">SET DEFAULT</option>
-                            <option value="NO ACTION">NO ACTION</option>
+                            <option value="SET_DEFAULT">SET DEFAULT</option>
+                            <option value="NO_ACTION">NO ACTION</option>
                           </select>
                       
                         <div

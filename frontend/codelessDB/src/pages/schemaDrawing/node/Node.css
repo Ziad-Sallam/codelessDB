@@ -32,7 +32,6 @@
 
 .table-node:active {
   cursor: grabbing;
-  border: 2px solid black;
 }
 
 .table-node input:focus {

@@ -23,7 +23,7 @@ function CodeEditor({ initialCode, onClose }) {
 
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
-
+        
         <CodeMirror
           value={code}
           extensions={[sql()]}

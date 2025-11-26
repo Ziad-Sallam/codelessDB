@@ -3,7 +3,7 @@
  * @param {Array} nodes - The nodes array from React Flow state.
  * @returns {Object} - The formatted JSON object containing { entities: [...] }
  */
-export const convertToJSON = (nodes) => {
+export const convertToJSON = (schemaName ,nodes) => {
   // Map over the nodes to create the entities array
   const entities = nodes.map((node) => {
     // 1. Process Attributes (Columns)
@@ -20,6 +20,10 @@ export const convertToJSON = (nodes) => {
       // B. Not Null
       if (col.constraints.NOT_NULL) {
         constraints.push({ type: "NOT_NULL" });
+      }
+
+      if(col.constraints.UNIQUE){
+        constraints.push({type:"UNIQUE"})
       }
 
       // C. Check Constraint
@@ -65,9 +69,11 @@ export const convertToJSON = (nodes) => {
           length: col.dataTypeLength ? parseInt(col.dataTypeLength, 10) : null,
           precision: col.dataTypePrecision ? parseInt(col.dataTypePrecision, 10) : null,
           scale: col.dataTypeScale ? parseInt(col.dataTypeScale, 10) : null,
+          values: col.dataTypeValues,
         },
         // Indexed is a sibling of constraints in your target schema
-        indexed: !!col.constraints.indexed,
+        indexed: col.constraints.indexed,
+        autoIncrement: col.constraints.autoIncrement,
         constraints: constraints,
       };
     });
@@ -81,7 +87,7 @@ export const convertToJSON = (nodes) => {
 
   // Return the final root object
   return {
-    schemaName:"TEST"  ,
+    schemaName:schemaName  ,
     entities
    };
 };
