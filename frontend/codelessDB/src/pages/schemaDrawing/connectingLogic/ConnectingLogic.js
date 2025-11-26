@@ -14,7 +14,7 @@ const findPrimaryKeyColumns = (node) => {
       dataTypeScale: pkCol.dataTypeScale,
       dataTypeValues: pkCol.dataTypeValues,
       constraints: { FOREIGN_KEY: true },
-      references: { tableName: refNode.data.name, columnName: pkCol.name }
+      references: { tableName: refNode.data.tableName, columnName: pkCol.name }
     };
   };
 

@@ -176,6 +176,13 @@
   z-index: 10;
   animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   overflow: hidden;
+  margin-top: 5px;
+}
+.simple-constraints{
+  display: flex;
+  padding: 4px 0;
+  gap: 19px;
+  border-bottom: 1px dashed #e2e8f0;
 }
 
 .column-constraints label input {
@@ -184,7 +191,6 @@
 
 .column-constraints label {
   min-width: 60px;
-  display: inline-flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
@@ -206,7 +212,7 @@
   cursor: pointer;
 }
 
-.forginKey-constraint, .check-constraint, .default-constraint {
+ .check-constraint, .default-constraint {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -214,6 +220,36 @@
   margin-top: 4px;
   padding-top: 4px;
   border-top: 1px dashed #e2e8f0;
+}
+
+.forginKey-constraint{
+  min-width: 60px;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: #fff;
+  padding: 4px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.forginKey-constraint label{
+  border: none;
+  padding: 0;
+}
+.forginKey-constraint select {
+  width: 80px;
+  border: none;
+  background: #f0f0f0;
+  font-size: 12px;
+  border-radius: 2px;
+  margin-right: 5px;
+}
+.fk-references{
+  margin-top: 4px;
 }
 
 
@@ -244,14 +280,7 @@
   margin-left: 10px;
 }
 
-.foreign-key-action-select {
-  width: 80px;
-  border: none;
-  background: #f0f0f0;
-  font-size: 12px;
-  border-radius: 2px;
-  margin-right: 4px;
-}
+
 
 .add-btn {
   width: 100%;

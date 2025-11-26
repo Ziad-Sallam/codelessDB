@@ -12,6 +12,8 @@ import "@xyflow/react/dist/style.css";
 import { nodeTypes, edgeTypes } from "./index";
 import "./Schema.css";
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
+import { validateSchema } from "./generate/CheckCorrectness";
+import { convertToJSON } from "./generate/JsonConverter";
 
 export default function Schema() {
   const [nodes, setNodes] = useState([]);
@@ -82,6 +84,18 @@ export default function Schema() {
         position: { x: Math.random() * 400, y: Math.random() * 400 },
       },
     ]);
+  };
+
+  const onGenerateSQL =() =>{
+    const validation = validateSchema(nodes);
+
+    if (!validation.isValid) {
+      alert(`Validation Failed:\n- ${validation.errors.join("\n- ")}`);
+      return;
+    }
+    console.log(nodes);
+    const finalJson = convertToJSON(nodes);
+    console.log(JSON.stringify(finalJson));
   };
 
   return (
@@ -161,7 +175,7 @@ export default function Schema() {
           + Add Entity
         </button>
       </div>
-      <button className="generate">Generate SQL</button>
+      <button className="generate" onClick={onGenerateSQL}>Generate SQL</button>
     </div>
   );
 }
