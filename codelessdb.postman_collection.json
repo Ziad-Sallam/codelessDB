@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "f3405e22-68c3-42bb-bc22-09af650e39e7",
+		"_postman_id": "b4c31274-e23c-4560-ac78-645fb9c6931f",
 		"name": "codelessdb",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "39168076",
-		"_collection_link": "https://backenders-6160.postman.co/workspace/CodelessDB-APIs~e5f72c98-2e75-411e-b39b-4884f61297d1/collection/39168076-f3405e22-68c3-42bb-bc22-09af650e39e7?action=share&source=collection_link&creator=39168076"
+		"_exporter_id": "39257982"
 	},
 	"item": [
 		{
@@ -39,9 +38,6 @@
 						}
 					],
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "POST",
 						"header": [
 							{
@@ -340,13 +336,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagrams/get?pageNumber=0&pageSize=10",
+							"raw": "{{base_url}}/diagram/get/?pageNumber=0&pageSize=10",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagrams",
-								"get"
+								"diagram",
+								"get",
+								""
 							],
 							"query": [
 								{
@@ -369,16 +366,21 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"diagramId\": \"id\",\n    \"toUserName\": \"hi\",\n    \"role\": \"WRITER\"\n}"
+							"raw": "{\n    \"toUserName\": \"hi\",\n    \"role\": \"WRITER\",\n    \"delete\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagrams/share",
+							"raw": "{{base_url}}/share/{digram_id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagrams",
-								"share"
+								"share",
+								"{digram_id}"
 							]
 						}
 					},
@@ -399,12 +401,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagrams/update/{id}",
+							"raw": "{{base_url}}/diagram/update/{id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagrams",
+								"diagram",
 								"update",
 								"{id}"
 							]
@@ -419,15 +421,20 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": ""
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagrams/delete/{id}",
+							"raw": "{{base_url}}/diagram/delete/{id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagrams",
+								"diagram",
 								"delete",
 								"{id}"
 							]
@@ -442,7 +449,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"abc\",\n    \"jsonContent\": \"{}\",\n    \"thumbnail\": \"\"\n}",
+							"raw": "{\n   \"thumbnail\": \"\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -450,12 +457,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagrams/create",
+							"raw": "{{base_url}}/diagram/create",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagrams",
+								"diagram",
 								"create"
 							]
 						}
@@ -472,15 +479,20 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"ahmed3@example.com\",\n    \"password\": \"Str0ngP@ssw0rd!\"\n}"
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagrams/search/{id}",
+							"raw": "{{base_url}}/diagram/search/{id}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagrams",
+								"diagram",
 								"search",
 								"{id}"
 							]
@@ -495,7 +507,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"\",\r\n    \"start\": \"\",\r\n    \"end\": \"\",\r\n    \"pageNumber\": 0,\r\n    \"pageSize\": 10\r\n}",
+							"raw": "{\r\n    \"name\": \"\",\r\n    \"start\": \"\",\r\n    \"end\": \"\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -503,14 +515,24 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/diagrams/search/{id}",
+							"raw": "{{base_url}}/diagram/search/{id}?pageNumber=0&pageSize=10\n",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"diagrams",
+								"diagram",
 								"search",
 								"{id}"
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10\n"
+								}
 							]
 						}
 					},
@@ -519,16 +541,6 @@
 			]
 		}
 	],
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "eyJhbGciOiJIUzM4NCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWhtZWRfcmFneTMiLCJzdWIiOiIxIiwiaWF0IjoxNzY0MDM0OTAyLCJleHAiOjE3NjQxMjEzMDJ9.3Gr4XfnK9Wy1qpiyawmECHh1AD2n4BZWjsex7c9h-Bz4Qf3r1qRkKvbCW8f0omtY",
-				"type": "string"
-			}
-		]
-	},
 	"event": [
 		{
 			"listen": "prerequest",
