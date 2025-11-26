@@ -70,11 +70,10 @@ docker_client = docker.from_env()
 # STOMP Frame Builders
 # -----------------------------
 
-def stomp_connect(url,username):
+def stomp_connect(username):
     return (
         "CONNECT\n"
         "accept-version:1.2\n"
-        f"host:{url}\n"     #localhost
         f"Authorization:{username}\n"
         "\n\x00"
     )
@@ -179,6 +178,82 @@ def ensure_mysql_connection():
         print("Lost MySQL connection. Reconnecting...")
         connect_to_mysql()
 
+import json
+import datetime
+import decimal
+import uuid
+import base64
+from collections.abc import Iterable
+
+def mysql_value_to_json(value):
+    """
+    Convert any MySQL value to JSON-serializable form.
+    Mimics MySQL display formatting where possible.
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, datetime.datetime):
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+    
+    if isinstance(value, datetime.date):
+        return value.strftime("%Y-%m-%d")
+    
+    if isinstance(value, datetime.time):
+        return value.strftime("%H:%M:%S")
+
+    if isinstance(value, decimal.Decimal):
+        return float(value)
+
+    if isinstance(value, uuid.UUID):
+        return str(value)
+
+    if isinstance(value, (bytes, bytearray)):
+        return base64.b64encode(value).decode("utf-8")
+
+    if isinstance(value, Iterable) and not isinstance(value, (str, bytes, dict)):
+        return [mysql_value_to_json(v) for v in value]
+
+    return str(value)
+
+
+def execute_sql(cursor, query, params=None):
+    """
+    Execute any SQL query and return a standardized response.
+    """
+    try:
+        cursor.execute(query, params or [])
+
+        # SELECT has cursor.description
+        if cursor.description is not None:
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            safe_rows = [
+                 [mysql_value_to_json(col) for i, col in enumerate(row)]
+                for row in rows
+            ]
+            return {
+                "success": True,
+                "type": "SELECT",
+                "columns": columns,
+                "rows": safe_rows,
+                "rowCount": len(rows),
+            }
+
+        return {
+            "success": True,
+            "type": "NON-SELECT",
+            "rowCount": cursor.rowcount,
+            "message": "Query executed successfully.",
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
 # ---------------- WebSocket ----------------
 def on_message(ws, message):
     global cursor, connection
@@ -196,39 +271,35 @@ def on_message(ws, message):
                 return
         print("Parsed message content:", content["content"])    
         try:
-            cursor.execute(content["content"]) # type: ignore
-            if cursor.with_rows: # type: ignore
-                rows = cursor.fetchall() # type: ignore
-                for row in rows:
-                    print(row)
+            result = execute_sql(cursor, content["content"]) # type: ignore
+            result["correlationId"] = content["correlationId"]
                 
-                payload = json.dumps({"result": str(rows), "correlationId": content["correlationId"]}) 
-                print("Payload to send:", payload)
-                ws.send(stomp_send("/app/response", payload))
-            else:
+            payload = json.dumps(result) 
+            print("Payload to send:", payload)
+            ws.send(stomp_send("/app/response", payload))
+            if result["type"] != "SELECT":
                 connection.commit() # type: ignore
+
         except (OperationalError, InterfaceError) as e:
             print("MySQL lost connection. Reconnecting...", e)
             connect_to_mysql()
             try:
-                
-                cursor.execute(content["content"]) # type: ignore
-                if cursor.with_rows: # type: ignore
-                    rows = cursor.fetchall() # type: ignore
+                result = execute_sql(cursor, content["content"]) # type: ignore
+                result["correlationId"] = content["correlationId"]
                     
-                    for row in rows:
-                        print(row)
-                    payload = json.dumps({"result": str(rows), "correlationId": content["correlationId"]}) 
-                    ws.send(stomp_send("/app/response", payload))
-                else:
+                payload = json.dumps(result) 
+                print("Payload to send:", payload)
+                ws.send(stomp_send("/app/response", payload))
+                if result["type"] != "SELECT":
                     connection.commit() # type: ignore
+                
             except Exception as e2:
                 print("Failed to execute SQL after reconnect:", e2)
                 payload = json.dumps({"result": "Failed to execute SQL after reconnect: " + str(e2), "correlationId": content["correlationId"]})
                 ws.send(stomp_send("/app/response", payload))
         except Exception as e:
             print("SQL Error:", e)
-            payload = json.dumps({"result": "SQL Error: " + str(e), "correlationId": content["correlationId"]})
+            payload = json.dumps({"success": False, "message": str(e), "correlationId": content["correlationId"]})
             ws.send(stomp_send("/app/response", payload))
 
 def on_error(ws, error):
@@ -243,9 +314,9 @@ def on_open(ws):
     global ws_global
     ws_global = ws
     print("### WebSocket opened ###")
-    ws.send(stomp_connect("localhost", id))
+    ws.send(stomp_connect(id))
     time.sleep(0.2)
-    ws.send(stomp_subscribe("/user/queue/reply", sid="reply-0"))
+    ws.send(stomp_subscribe("/user/queue/reply", sid=f"reply-{id}"))
 
 def start_websocket():
     backoff = 1

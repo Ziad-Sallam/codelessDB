@@ -14,7 +14,8 @@ public class AgentMessageDTO {
         this.content = content;
         this.correlationId = correlationId;
     }
-        public AgentMessageDTO(String sender, String content) {
+    
+    public AgentMessageDTO(String sender, String content) {
         this.sender = sender;
         this.content = content;
         String correlationId = UUID.randomUUID().toString();
