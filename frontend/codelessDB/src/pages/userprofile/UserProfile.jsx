@@ -316,6 +316,17 @@ export default function UserProfile() {
 
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
+
+    if (!file.type.startsWith("image/")) {
+      showSnackbar("Only image files are allowed.", "error");
+      return;
+    }
+
+    if (file.size > 1024 * 1024) {
+      showSnackbar("Image must be less than 1MB.", "error");
+      return;
+    }
+
     if (file) {
       try {
         showSnackbar("Uploading image...", "info");

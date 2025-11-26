@@ -1354,3 +1354,8 @@ io.jsonwebtoken.security.SignatureException: JWT signature does not match locall
 06:35:11 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
 06:35:11 INFO  HikariPool-1 - Shutdown initiated...
 06:35:11 INFO  HikariPool-1 - Shutdown completed.
+07:24:47 INFO  Commencing graceful shutdown. Waiting for active requests to complete
+07:24:47 INFO  Graceful shutdown complete
+07:24:47 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
+07:24:47 INFO  HikariPool-2 - Shutdown initiated...
+07:24:47 INFO  HikariPool-2 - Shutdown completed.
