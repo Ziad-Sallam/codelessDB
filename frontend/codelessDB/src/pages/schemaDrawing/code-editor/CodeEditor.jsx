@@ -28,7 +28,7 @@ function CodeEditor({ initialCode, onClose }) {
           value={code}
           extensions={[sql()]}
           onChange={(value) => setCode(value)}
-          theme='light'
+          theme='dark'
           height='100%'
         />
       </div>

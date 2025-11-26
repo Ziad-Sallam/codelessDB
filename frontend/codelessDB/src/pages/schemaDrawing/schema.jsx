@@ -14,11 +14,14 @@ import "./Schema.css";
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
 import { validateSchema } from "./generate/CheckCorrectness";
 import { convertToJSON } from "./generate/JsonConverter";
+import CodeEditor from "./code-editor/CodeEditor.jsx"
 
 export default function Schema() {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
+  const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
+  const [generatedSql, setGeneratedSql] = useState("");
 
   const onNodesChange = useCallback(
     (changes) => setNodes((ns) => applyNodeChanges(changes, ns)),
@@ -86,7 +89,24 @@ export default function Schema() {
     ]);
   };
 
-  const onGenerateSQL =() =>{
+
+  const temp = `-- Generated SQL Code
+    CREATE TABLE users (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(100) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE orders (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      user_id INT NOT NULL,
+      total_amount DECIMAL(10, 2) NOT NULL,
+      order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );`;
+
+  const onGenerateSQL = () => {
     const validation = validateSchema(nodes);
 
     if (!validation.isValid) {
@@ -96,6 +116,11 @@ export default function Schema() {
     console.log(nodes);
     const finalJson = convertToJSON(nodes);
     console.log(JSON.stringify(finalJson));
+
+    // const sql = generateSQLFromDiagram();
+    const sql = temp;
+    setGeneratedSql(sql);
+    setIsSqlPanelOpen(true);
   };
 
   return (
@@ -107,6 +132,14 @@ export default function Schema() {
         background: "#f8fafc",
       }}
     >
+
+      {isSqlPanelOpen && (
+        <CodeEditor
+          initialCode={generatedSql}
+          onClose={() => setIsSqlPanelOpen(false)}
+        />
+      )}
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
