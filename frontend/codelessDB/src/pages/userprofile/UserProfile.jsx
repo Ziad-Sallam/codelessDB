@@ -16,8 +16,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Menu,
-  MenuItem,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
@@ -70,6 +68,7 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export default function UserProfile() {
   const navigate = useNavigate();
   const [leftNav, setLeftNav] = useState("profile");
@@ -92,11 +91,9 @@ export default function UserProfile() {
     severity: "success" 
   });
 
-  const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
-  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
     fetchUserInfo();
@@ -144,6 +141,9 @@ export default function UserProfile() {
   };
 
   const handleEdit = (field) => {
+    if (editMode[field]) {
+      return;
+    }
     setEditMode({ ...editMode, [field]: true });
     setTempData({ 
       ...tempData, 
@@ -209,31 +209,8 @@ export default function UserProfile() {
     navigate("/reset");
   };
 
-  const handleCameraClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
-      uploadProfilePicture(file);
-    }
-    handleMenuClose();
-  };
-
-  const handleUrlUpload = () => {
+  const handleCameraClick = () => {
     setShowUrlDialog(true);
-    handleMenuClose();
   };
 
   const handleUrlSubmit = async () => {
@@ -284,49 +261,6 @@ export default function UserProfile() {
     }
   };
 
-  const uploadProfilePicture = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const token = localStorage.getItem("authToken");
-      
-      if (!token) {
-        showSnackbar("Session expired. Please login again.", "error");
-        navigate("/login");
-        return;
-      }
-
-      const response = await axios.put(
-        "http://localhost:8080/user/update",
-        formData,
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        const data = response.data;
-        setPicture(data.picture || imageUrl);
-        showSnackbar("Profile picture updated successfully", "success");
-      }
-      
-    } catch (error) {
-      console.error("Error uploading picture:", error);
-      
-      if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
-        showSnackbar("Network error. Please check your connection.", "error");
-      } else if (error.response?.status === 401 || error.response?.status === 403) {
-        showSnackbar("Session expired. Please login again.", "error");
-        navigate("/login");
-      } else {
-        showSnackbar(error.response?.data?.message || "Error uploading picture", "error");
-      }
-      setPreviewUrl(picture);
-    }
-  };
 
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
@@ -345,7 +279,7 @@ export default function UserProfile() {
     const currentValue = eval(field);
 
     return (
-      <Box className="profile-field">
+      <Box className="profile-field" onClick={() => !isEditing && editable && handleEdit(field)}>
         <Box className="profile-field-header">
           <Box className="profile-field-label">
             <Icon sx={{ fontSize: 18, color: "text.secondary", mr: 1 }} />
@@ -354,20 +288,21 @@ export default function UserProfile() {
             </Typography>
           </Box>
           {!isEditing && editable && (
-            <IconButton size="small" onClick={() => handleEdit(field)} className="edit-button">
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEdit(field); }} className="edit-button">
               <EditIcon fontSize="small" />
             </IconButton>
           )}
         </Box>
 
         {isEditing ? (
-          <Box className="profile-field-edit">
+          <Box className="profile-field-edit" onClick={(e) => e.stopPropagation()}>
             <TextField
               fullWidth
               size="small"
               type={type}
               value={tempData[field]}
               onChange={(e) => setTempData({ ...tempData, [field]: e.target.value })}
+              autoFocus
             />
             <Button
               variant="contained"
@@ -458,13 +393,6 @@ export default function UserProfile() {
                     >
                       {!previewUrl && getInitials()}
                     </Avatar>
-                    <input
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      id="upload-photo"
-                      type="file"
-                      onChange={handleFileSelect}
-                    />
                     <IconButton
                       onClick={handleCameraClick}
                       className="camera-button"
@@ -472,20 +400,6 @@ export default function UserProfile() {
                     >
                       <CameraAltIcon fontSize="small" />
                     </IconButton>
-                    <Menu
-                      anchorEl={anchorEl}
-                      open={Boolean(anchorEl)}
-                      onClose={handleMenuClose}
-                    >
-                      <MenuItem>
-                        <label htmlFor="upload-photo" style={{ cursor: 'pointer', width: '100%' }}>
-                          Upload from Computer
-                        </label>
-                      </MenuItem>
-                      <MenuItem onClick={handleUrlUpload}>
-                        Upload from URL
-                      </MenuItem>
-                    </Menu>
                   </Box>
 
                   <Box className="profile-header-info">
