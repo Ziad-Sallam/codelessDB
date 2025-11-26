@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cloudinary.Cloudinary;
@@ -101,21 +102,25 @@ public class UserController {
 		return ResponseEntity.ok("User deleted");
 	}
 
-	@GetMapping("/signature")
-	public Map<String, Object> getSignature() {
+	@GetMapping("/signature/upload")
+	public Map<String, Object> getSignature(@RequestParam String publicId) {
 		long timestamp = System.currentTimeMillis() / 1000;
 
 		Map<String, Object> paramsToSign = ObjectUtils.asMap(
 				"timestamp", timestamp,
-				"upload_preset", uploadPreset);
+				"upload_preset", uploadPreset,
+				"public_id", publicId,
+				"overwrite", true,
+				"invalidate", true
+			);
 
 		String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
 
 		return Map.of(
-				"signature", signature,
-				"timestamp", timestamp,
-				"apiKey", cloudinary.config.apiKey,
-				"cloudName", cloudinary.config.cloudName,
-				"uploadPreset", uploadPreset);
+			"signature", signature,
+			"timestamp", timestamp,
+			"apiKey", cloudinary.config.apiKey,
+			"cloudName", cloudinary.config.cloudName,
+			"uploadPreset", uploadPreset);
 	}
 }
