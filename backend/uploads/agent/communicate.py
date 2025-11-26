@@ -1,4 +1,8 @@
-### communicate.py
+#!/usr/bin/env python3
+"""
+MySQL WebSocket Client - Testable Version
+Minimal changes to make the code testable while preserving original structure.
+"""
 
 import json
 import os
@@ -10,67 +14,92 @@ import websocket
 import docker
 from cryptography.fernet import Fernet
 import sys
-
-argv = sys.argv
-
-if len(argv) < 3:
-        print("Usage: python client.py <websocket_url> <unique_id>")
-        sys.exit(1)
-    
-    
-SCRIPT_ID = argv[2]
-CONFIG_FILE = f"client_config_{SCRIPT_ID}.json"
-KEY_FILE = f"client_key_{SCRIPT_ID}.key"
-url = argv[1]
-
-# ---------------- Encryption helpers ----------------
-def load_key():
-    if os.path.exists(KEY_FILE):
-        return open(KEY_FILE, "rb").read()
-    else:
-        raise FileNotFoundError("Key file not found. Cannot load encryption key.")
-
-fernet = Fernet(load_key())
-
-def encrypt_password(password: str) -> str:
-    return fernet.encrypt(password.encode()).decode()
-
-def decrypt_password(token: str) -> str:
-    return fernet.decrypt(token.encode()).decode()
-
-# ---------------- Config file ----------------
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as f:
-            config = json.load(f)
-            # decrypt password
-            config["password"] = decrypt_password(config["password"])
-            return config
-    else:
-        raise FileNotFoundError("Config file not found. Cannot load configuration.")
-        
+import datetime
+import decimal
+import uuid
+import base64
+from collections.abc import Iterable
 
 # ---------------- Globals ----------------
-config = load_config()
-
-id = config["id"]
-host = config["host"]
-port = config["port"]
-user = config["user"]
-password = config["password"]
-database = config["database"]
-container_name = config["database"]
-
+argv = sys.argv
+SCRIPT_ID = None
+CONFIG_FILE = None
+KEY_FILE = None
+url = None
+fernet = None
+config = None
 connection = None
 cursor = None
 ws_global = None
-docker_client = docker.from_env()
+docker_client = None
+
+# ---------------- Initialization ----------------
+def init_globals(websocket_url=None, script_id=None):
+    """Initialize global variables. Can be called from tests or main."""
+    global argv, SCRIPT_ID, CONFIG_FILE, KEY_FILE, url
+    
+    if websocket_url and script_id:
+        url = websocket_url
+        SCRIPT_ID = script_id
+    else:
+        url = argv[1]
+        SCRIPT_ID = argv[2]
+    
+    CONFIG_FILE = f"client_config_{SCRIPT_ID}.json"
+    KEY_FILE = f"client_key_{SCRIPT_ID}.key"
+
+# ---------------- Encryption helpers ----------------
+def load_key(key_file=None):
+    """Load encryption key from file."""
+    key_file = key_file or KEY_FILE
+    if os.path.exists(key_file):
+        return open(key_file, "rb").read()
+    else:
+        raise FileNotFoundError("Key file not found. Cannot load encryption key.")
+
+def init_fernet(key_file=None):
+    """Initialize Fernet cipher."""
+    global fernet
+    fernet = Fernet(load_key(key_file))
+
+def encrypt_password(password: str) -> str:
+    """Encrypt password using Fernet."""
+    return fernet.encrypt(password.encode()).decode()
+
+def decrypt_password(token: str) -> str:
+    """Decrypt password using Fernet."""
+    return fernet.decrypt(token.encode()).decode()
+
+# ---------------- Config file ----------------
+def load_config(config_file=None):
+    """Load and decrypt configuration."""
+    config_file = config_file or CONFIG_FILE
+    if os.path.exists(config_file):
+        with open(config_file, "r") as f:
+            cfg = json.load(f)
+            # decrypt password
+            cfg["password"] = decrypt_password(cfg["password"])
+            return cfg
+    else:
+        raise FileNotFoundError("Config file not found. Cannot load configuration.")
+
+def init_config(config_file=None):
+    """Initialize global config."""
+    global config
+    config = load_config(config_file)
+    return config
+
+def init_docker():
+    """Initialize Docker client."""
+    global docker_client
+    docker_client = docker.from_env()
 
 # -----------------------------
 # STOMP Frame Builders
 # -----------------------------
 
 def stomp_connect(username):
+    """Create STOMP CONNECT frame."""
     return (
         "CONNECT\n"
         "accept-version:1.2\n"
@@ -79,14 +108,16 @@ def stomp_connect(username):
     )
 
 def stomp_subscribe(destination, sid="sub-0"):
+    """Create STOMP SUBSCRIBE frame."""
     return (
         f"SUBSCRIBE\n"
-        f"destination:{destination}\n"    #/user/queue/reply
+        f"destination:{destination}\n"
         f"id:{sid}\n"
         "\n\x00"
     )
 
 def stomp_send(destination, body, content_type="application/json"):
+    """Create STOMP SEND frame."""
     return (
         f"SEND\n"
         f"destination:{destination}\n"
@@ -95,14 +126,10 @@ def stomp_send(destination, body, content_type="application/json"):
         f"{body}\x00"
     )
 
-
 # ----------------- Message Parsing & Handling -----------------
 
 def parse_stomp_message(frame: str):
-    """
-    Parse a STOMP MESSAGE frame and return the body JSON.
-    """
-
+    """Parse a STOMP MESSAGE frame and return the body JSON."""
     # Remove trailing null byte if exists
     frame = frame.rstrip("\x00")
 
@@ -137,9 +164,10 @@ def parse_stomp_message(frame: str):
         "json": body_json
     }
 
-
 # ---------------- Docker & MySQL ----------------
-def ensure_container_running():
+def ensure_container_running(container_name=None):
+    """Ensure Docker container is running."""
+    container_name = container_name or config["database"]
     try:
         container = docker_client.containers.get(container_name)
         if container.status != "running":
@@ -151,8 +179,16 @@ def ensure_container_running():
         print(f"Container '{container_name}' not found. Aborting.")
         exit(1)
 
-def connect_to_mysql():
+def connect_to_mysql(host=None, port=None, user=None, password=None, database=None):
+    """Connect to MySQL with retry logic."""
     global connection, cursor
+    
+    host = host or config["host"]
+    port = port or config["port"]
+    user = user or config["user"]
+    password = password or config["password"]
+    database = database or config["database"]
+    
     backoff = 5
     while True:
         ensure_container_running()
@@ -168,28 +204,22 @@ def connect_to_mysql():
                 cursor = connection.cursor()
                 print("Connected to MySQL!")
                 break
+        
+        
         except Error as e:
             print(f"MySQL connection failed: {e}. Retrying in {backoff} sec...")
             time.sleep(backoff)
+    return connection, cursor
 
 def ensure_mysql_connection():
+    """Ensure MySQL connection is active."""
     global connection, cursor
     if connection is None or not connection.is_connected():
         print("Lost MySQL connection. Reconnecting...")
         connect_to_mysql()
 
-import json
-import datetime
-import decimal
-import uuid
-import base64
-from collections.abc import Iterable
-
 def mysql_value_to_json(value):
-    """
-    Convert any MySQL value to JSON-serializable form.
-    Mimics MySQL display formatting where possible.
-    """
+    """Convert any MySQL value to JSON-serializable form."""
     if value is None:
         return None
 
@@ -216,11 +246,8 @@ def mysql_value_to_json(value):
 
     return str(value)
 
-
 def execute_sql(cursor, query, params=None):
-    """
-    Execute any SQL query and return a standardized response.
-    """
+    """Execute any SQL query and return a standardized response."""
     try:
         cursor.execute(query, params or [])
 
@@ -253,16 +280,15 @@ def execute_sql(cursor, query, params=None):
             "message": str(e)
         }
 
-
 # ---------------- WebSocket ----------------
 def on_message(ws, message):
+    """Handle incoming WebSocket messages."""
     global cursor, connection
     print("------------------------------")
     print("SERVER:", message)
     print("------------------------------")
     ensure_mysql_connection()
 
-    
     if message.startswith("MESSAGE"):
         message_data = parse_stomp_message(message)
         if message_data and message_data["json"]:
@@ -271,27 +297,27 @@ def on_message(ws, message):
                 return
         print("Parsed message content:", content["content"])    
         try:
-            result = execute_sql(cursor, content["content"]) # type: ignore
+            result = execute_sql(cursor, content["content"])
             result["correlationId"] = content["correlationId"]
                 
             payload = json.dumps(result) 
             print("Payload to send:", payload)
             ws.send(stomp_send("/app/response", payload))
             if result["type"] != "SELECT":
-                connection.commit() # type: ignore
+                connection.commit()
 
         except (OperationalError, InterfaceError) as e:
             print("MySQL lost connection. Reconnecting...", e)
             connect_to_mysql()
             try:
-                result = execute_sql(cursor, content["content"]) # type: ignore
+                result = execute_sql(cursor, content["content"])
                 result["correlationId"] = content["correlationId"]
                     
                 payload = json.dumps(result) 
                 print("Payload to send:", payload)
                 ws.send(stomp_send("/app/response", payload))
                 if result["type"] != "SELECT":
-                    connection.commit() # type: ignore
+                    connection.commit()
                 
             except Exception as e2:
                 print("Failed to execute SQL after reconnect:", e2)
@@ -303,22 +329,26 @@ def on_message(ws, message):
             ws.send(stomp_send("/app/response", payload))
 
 def on_error(ws, error):
+    """Handle WebSocket errors."""
     print("WebSocket error:", error)
 
 def on_close(ws, close_status_code, close_msg):
+    """Handle WebSocket closure."""
     global ws_global
     ws_global = None
     print("### WebSocket closed ###", close_status_code, close_msg)
 
 def on_open(ws):
+    """Handle WebSocket opening."""
     global ws_global
     ws_global = ws
     print("### WebSocket opened ###")
-    ws.send(stomp_connect(id))
+    ws.send(stomp_connect(config["id"]))
     time.sleep(0.2)
-    ws.send(stomp_subscribe("/user/queue/reply", sid=f"reply-{id}"))
+    ws.send(stomp_subscribe("/user/queue/reply", sid=f"reply-{config['id']}"))
 
 def start_websocket():
+    """Start WebSocket connection with retry logic."""
     backoff = 1
     while True:
         try:
@@ -339,6 +369,7 @@ def start_websocket():
 
 # ---------------- Input sender ----------------
 def input_loop():
+    """Handle user input."""
     global ws_global
     while True:
         text = input()
@@ -350,12 +381,22 @@ def input_loop():
         else:
             print("WebSocket not connected. Waiting...")
 
-def main():
+def main(websocket_url=None, script_id=None):
+    """Main entry point."""
+    if len(argv) < 3 and not (websocket_url and script_id):
+        print("Usage: python client.py <websocket_url> <unique_id>")
+        sys.exit(1)
+    
+    init_globals(websocket_url, script_id)
+    init_fernet()
+    init_config()
+    init_docker()
+    
     threading.Thread(target=input_loop, daemon=True).start()
     connect_to_mysql()
+    
     start_websocket()
 
 # ---------------- Main ---------------- #
 if __name__ == '__main__':
     main()
-    
