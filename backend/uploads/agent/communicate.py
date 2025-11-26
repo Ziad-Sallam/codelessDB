@@ -350,8 +350,12 @@ def input_loop():
         else:
             print("WebSocket not connected. Waiting...")
 
-# ---------------- Main ---------------- #
-if __name__ == '__main__':
+def main():
     threading.Thread(target=input_loop, daemon=True).start()
     connect_to_mysql()
     start_websocket()
+
+# ---------------- Main ---------------- #
+if __name__ == '__main__':
+    main()
+    

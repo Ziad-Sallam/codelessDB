@@ -39,7 +39,8 @@ public class SecurityConfig {
 								"/oauth2/**",
 								"/agent-ws/**",
 								"/login/oauth2/**",
-								"/api/messages/send"
+								"/api/messages/send",
+								"/database/create-mysql-container"
 								)
 						.permitAll()
 						.anyRequest().authenticated())

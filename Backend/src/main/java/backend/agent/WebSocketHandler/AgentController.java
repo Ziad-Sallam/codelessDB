@@ -20,7 +20,7 @@ public class AgentController {
     private SimpMessagingTemplate simpMessagingTemplate;
 
     // Simple map to hold waiting requests
-private final ConcurrentHashMap<String, CompletableFuture<ClientResponseDTO>> pendingResponses = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<ClientResponseDTO>> pendingResponses = new ConcurrentHashMap<>();
 
     public ClientResponseDTO sendToUser(String username, AgentMessageDTO message) throws Exception {
         // Ensure correlationId exists

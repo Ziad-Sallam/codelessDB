@@ -21,6 +21,7 @@ class ContainerResponse(BaseModel):
     password: str
     ws_url: Optional[str] = None
     container_id: Optional[str] = None
+    ddl: Optional[str] = None
 
 
 # Sample data
@@ -32,8 +33,15 @@ data = {
         "password": "password1",
         "image": "mysql:8.0",
         "container_name": "mysql1",
-        "ws_url": "ws://localhost:8765",
+        "ws_url": "ws://localhost:8080/agent-ws",
         "container_id": "1",
+        "ddl": '''CREATE TABLE users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(150) NOT NULL UNIQUE,
+                age INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );'''
     },
 
     2: {
@@ -43,8 +51,15 @@ data = {
         "password": "password2",
         "image": "mysql:8.0",
         "container_name": "mysql2",
-        "ws_url": "ws://localhost:8765",
+        "ws_url": "ws://localhost:8080/agent-ws",
         "container_id": "2",
+        "ddl": '''CREATE TABLE users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(150) NOT NULL UNIQUE,
+                age INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );'''
     },
     3: {
         "name": "mysql3",
@@ -53,8 +68,9 @@ data = {
         "password": "password3",
         "image": "mysql:8.0",
         "container_name": "mysql3",
-        "ws_url": "ws://localhost:8765",
+        "ws_url": "ws://localhost:8080/agent-ws",
         "container_id": "3",
+        "ddl": '''CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL,email VARCHAR(150) NOT NULL UNIQUE,age INT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);'''
     },
 }
 
@@ -96,6 +112,7 @@ async def create_mysql_container(request: ContainerRequest):
             message=f"MySQL container '{container_name}' creation initiated",
             ws_url= container_data["ws_url"],
             container_id= container_data["container_id"],
+            ddl= container_data["ddl"]
         )
 
     except Exception as e:

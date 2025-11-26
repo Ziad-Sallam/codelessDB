@@ -3,13 +3,16 @@ package backend.agent.HTTPHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import backend.agent.WebSocketHandler.*;
+import backend.security.AuthUser;
+
 import java.util.concurrent.TimeoutException;
 
 
 @RestController
-@RequestMapping("/api/messages")
+@RequestMapping("/agent")
 public class MessageController {
 
     @Autowired

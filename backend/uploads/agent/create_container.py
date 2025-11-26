@@ -3,6 +3,7 @@
 import docker
 import time
 import json
+import mysql
 import requests
 import shutil
 import sys
@@ -12,6 +13,7 @@ import os
 import socket
 
 from cryptography.fernet import Fernet
+import mysql.connector
 
 argv = sys.argv
 
@@ -53,7 +55,7 @@ def ensure_docker_installed():
 
 
 
-def create_mysql_container(id: int):
+def create_mysql_container(id: int, url: str = "http://localhost:8080"):
     if not ensure_docker_installed():
         print("\nPlease install Docker and try again.")
         return -1
@@ -61,15 +63,26 @@ def create_mysql_container(id: int):
 
     # Request backend for names
     req = requests.post(
-        "http://localhost:8000/create-mysql-container",
-        data=json.dumps({"id": id})
+        f"{url}/database/create-mysql-container",
+        data=json.dumps(id),
+        headers={"Content-Type": "application/json"}
     )
+    print("Response status code:", req.status_code)
+    print("Response content:", req.content)
+    if req.status_code != 200:
+        print("Failed to get container details from backend.")
+        print("Response:", req.text)
+        print("Please Try again later.")
+        print("Exiting...")
+        return -1
+    print("--------------------------------")
     data = req.json()
+
     print("Received container data:-----------------")
     print(data)
-    container_name = data["database_name"]
+    container_name = data["databaseName"]
     volume_name = f"{container_name}_data"
-    database = data["database_name"]
+    database = data["databaseName"]
     password = data["password"]
     image = "mysql:8.0"
 
@@ -138,21 +151,33 @@ def create_mysql_container(id: int):
     container.reload()  # refresh info
     host_port = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostPort"]
     host_ip = "localhost"
+    
 
     print("MySQL is exposed on host:", host_ip)
     print("MySQL is exposed on port:", host_port)
-
+    try:
+        connection = mysql.connector.connect(
+            host=host_ip,
+            port=host_port,
+            user="root",
+            password=password,
+            database=database
+        )
+    except Exception as e:
+        print(f"Failed to connect to MySQL: {e}")
+        return -1
+    
 
     print(f"MySQL container '{container_name}' is ready.")
     print(f"Container ID: {container.short_id}")
 
     env = os.environ.copy()
-    env["WS_URL"] = data["ws_url"]
+    env["WS_URL"] = data["wsUrl"]
 
-    SCRIPT_ID = data["container_id"]
+    SCRIPT_ID = data["containerId"]
     CONFIG_FILE = f"client_config_{SCRIPT_ID}.json"
     KEY_FILE = f"client_key_{SCRIPT_ID}.key"
-    url =  data["ws_url"]
+    url =  data["wsUrl"]
 
     key = Fernet.generate_key()
     with open(KEY_FILE, "wb") as f:
@@ -161,7 +186,7 @@ def create_mysql_container(id: int):
     password_encrypted = Fernet(key).encrypt(password.encode()).decode()
 
     config = {
-            "id" : data["container_id"],
+            "id" : data["containerId"],
             "host": host_ip,
             "port": host_port,
             "user": "root",
@@ -170,19 +195,35 @@ def create_mysql_container(id: int):
     }
     with open(CONFIG_FILE, "w") as f:
         json.dump(config, f, indent=4)
+    
+    print("Executing DDL statements...")
+    print(data["ddl"])
+    connection.cursor().execute(data.get("ddl", ""))
+    connection.commit()
+    connection.close()
 
     
     subprocess.run(
-    [sys.executable, "communicate.py", data["ws_url"], data["container_id"]],
+    [sys.executable, "communicate.py", data["wsUrl"], str(data["containerId"])],
     env=env
     )
 
     return 0
 
-if __name__ == "__main__":
-    if len(argv) < 2:
-        print("Usage: python create_container.py <container_id>")
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python create_container.py <url> <container_id>")
         sys.exit(1)
-    
-    print("Creating MySQL container with ID:", argv[1])
-    create_mysql_container(int(argv[1]))
+
+    try:
+        int(sys.argv[2])
+    except ValueError:
+        print("Usage: python create_container.py <url> <container_id>")
+        sys.exit(1)
+
+    print("Creating MySQL container with ID:", sys.argv[2])
+    print("Using URL:", sys.argv[1])
+    create_mysql_container(int(sys.argv[2]), sys.argv[1])
+
+if __name__ == "__main__":
+    main()
