@@ -35,4 +35,6 @@ public interface UserDiagramRepository extends JpaRepository<UserDiagram, UserDi
     List<UserDiagram> findByDiagram_Id(UUID diagramId);
 
     boolean existsByDiagram_Id(UUID diagramId);
+
+    UserDiagram findFirstByDiagram_Id(UUID diagramId);
 }

@@ -22,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +79,7 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
+    @Transactional
     public Page<DiagramInfoDto> getDiagramsByUserId(int userId, Pageable pageable) {
         getUserOrThrow(userId);
         return userDiagramRepository
@@ -88,6 +91,7 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
+    @Transactional
     public DiagramInfoDto createDiagram(int userId, DiagramCreateRequestDto request) {
         User user = getUserOrThrow(userId);
         Diagram diagram = diagramRepository.save(request.toDiagram());
@@ -104,6 +108,7 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
+    @Transactional
     public Date updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
         getUserOrThrow(userId);
         Diagram diagram = getDiagramOrThrow(diagramId);
@@ -121,17 +126,34 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
+    @Transactional
     public void deleteDiagram(int userId, UUID diagramId) {
         getUserOrThrow(userId);
+
         UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
 
         userDiagramRepository.delete(userDiagram);
 
-        if (!userDiagramRepository.existsByDiagram_Id(diagramId))
-            diagramRepository.delete(getDiagramOrThrow(diagramId));
+        if (userDiagram.getRole() == Role.OWNER) {
+            UserDiagram anyOne = userDiagramRepository.findFirstByDiagram_Id(diagramId);
+
+            if (anyOne != null) {
+                anyOne.setRole(Role.OWNER);
+                userDiagramRepository.save(anyOne);
+            }
+        }
+
+        boolean hasUsers = userDiagramRepository.existsByDiagram_Id(diagramId);
+
+        if (!hasUsers) {
+            Diagram diagram = getDiagramOrThrow(diagramId);
+            diagramRepository.delete(diagram);
+        }
     }
 
+
     @Override
+    @Transactional
     public DiagramDto searchDiagramById(int userId, UUID diagramId) {
         getUserOrThrow(userId);
         Diagram diagram = getDiagramOrThrow(diagramId);
@@ -140,6 +162,7 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
+    @Transactional
     public Page<DiagramDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable) {
         getUserOrThrow(userId);
 
@@ -159,6 +182,7 @@ public class UserDiagramService implements IUserDiagramService {
     }
 
     @Override
+    @Transactional
     public DiagramShareResponseDto shareDiagram(int userId, UUID diagramId, DiagramShareRequestDto request) {
         getUserOrThrow(userId);
         Diagram diagram = getDiagramOrThrow(diagramId);
