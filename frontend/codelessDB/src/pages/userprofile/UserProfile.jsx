@@ -1,44 +1,18 @@
-// UserProfile.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  TextField,
-  Typography,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Menu, MenuItem,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import LeftPanel from "../diagrams/LeftPanel.jsx";
-import TopBar from "../diagrams/TopBar.jsx";
 import "./UserProfile.css";
-
-const APP_PRIMARY = "#0b3d91";
-
-const theme = createTheme({
-  palette: {
-    primary: { main: APP_PRIMARY },
-    background: { default: "#f6f8fb", paper: "#ffffff" },
-    text: { primary: "#0f172a" },
-  },
-  typography: { fontFamily: "Inter, Roboto, Arial, sans-serif" },
-});
+import theme from '../../theme.js';
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8080",
@@ -46,6 +20,7 @@ const apiClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
@@ -58,6 +33,7 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -76,28 +52,26 @@ export default function UserProfile() {
   const [email, setEmail] = useState("");
   const [picture, setPicture] = useState("");
   const [createdAt, setCreatedAt] = useState("");
-  const [editMode, setEditMode] = useState({
-    username: false,
-  });
-  const [tempData, setTempData] = useState({
-    username: "",
-  });
-
+  const [editMode, setEditMode] = useState({ username: false });
+  const [tempData, setTempData] = useState({ username: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [snackbar, setSnackbar] = useState({ 
-    open: false, 
-    message: "", 
-    severity: "success" 
-  });
-
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
+
 
   useEffect(() => {
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     fetchUserInfo();
-    
+
     const resetSuccess = localStorage.getItem('passwordResetSuccess');
     if (resetSuccess === 'true') {
       showSnackbar("Password reset successfully!", "success");
@@ -107,26 +81,17 @@ export default function UserProfile() {
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem("authToken");
-      
-      if (!token) {
-        showSnackbar("Please login to continue", "error");
-        navigate("/login");
-        return;
-      }
-      
       const response = await apiClient.get("/user/info");
-      
+
       const data = response.data;
       setUsername(data.username || "");
       setEmail(data.email || "");
       setPicture(data.picture || "");
       setCreatedAt(data.createdAt || "");
-      setPreviewUrl(data.picture || "");
-      
+
     } catch (error) {
       console.error("Error fetching user info:", error);
-      
+
       if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
         showSnackbar("Network error. Please check your connection.", "error");
       } else if (error.response?.status === 401 || error.response?.status === 403) {
@@ -145,41 +110,33 @@ export default function UserProfile() {
       return;
     }
     setEditMode({ ...editMode, [field]: true });
-    setTempData({ 
-      ...tempData, 
-      [field]: eval(field) 
+    setTempData({
+      ...tempData,
+      [field]: eval(field)
     });
   };
 
   const handleSave = async (field) => {
     setSaving(true);
-    
+
     try {
-      const token = localStorage.getItem("authToken");
-      
-      if (!token) {
-        showSnackbar("Session expired. Please login again.", "error");
-        navigate("/login");
-        setSaving(false);
-        return;
-      }
-      
+
       const updateDto = {
         [field]: tempData[field]
       };
-      
+
       const response = await apiClient.put("/user/update", updateDto);
 
       if (response.status === 200) {
         if (field === "username") setUsername(tempData[field]);
-        
+
         setEditMode({ ...editMode, [field]: false });
         showSnackbar(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`, "success");
       }
-      
+
     } catch (error) {
       console.error(`Error updating ${field}:`, error);
-      
+
       if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
         showSnackbar("Network error. Please check your connection.", "error");
       } else if (error.response?.status === 401 || error.response?.status === 403) {
@@ -200,17 +157,21 @@ export default function UserProfile() {
 
   const handleResetPassword = () => {
     const token = localStorage.getItem("authToken");
-    
+
     localStorage.setItem("token for_reset", token);
     localStorage.setItem("otpPurpose", "reset");
     localStorage.setItem("email", email);
     localStorage.setItem("resetSource", "profile");
-    
+
     navigate("/reset");
   };
 
-  const handleCameraClick = () => {
-    setShowUrlDialog(true);
+  const handleCameraClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   const handleUrlSubmit = async () => {
@@ -220,17 +181,7 @@ export default function UserProfile() {
     }
 
     try {
-      const token = localStorage.getItem("authToken");
-      console.log(token);
-      
-      if (!token) {
-        showSnackbar("Session expired. Please login again.", "error");
-        navigate("/login");
-        return;
-      }
-      
-      setPreviewUrl(imageUrl);
-      
+
       const updateDto = {
         picture: imageUrl
       };
@@ -245,10 +196,10 @@ export default function UserProfile() {
         setShowUrlDialog(false);
         setImageUrl("");
       }
-      
+
     } catch (error) {
       console.error("Error uploading picture:", error);
-      
+
       if (error.code === "ERR_NETWORK" || error.message.includes("Network Error")) {
         showSnackbar("Network error. Please check your connection.", "error");
       } else if (error.response?.status === 401 || error.response?.status === 403) {
@@ -257,10 +208,8 @@ export default function UserProfile() {
       } else {
         showSnackbar(error.response?.data?.message || "Error uploading picture", "error");
       }
-      setPreviewUrl(picture);
     }
   };
-
 
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
@@ -343,9 +292,9 @@ export default function UserProfile() {
               Password
             </Typography>
           </Box>
-          <Button 
-            size="small" 
-            onClick={handleResetPassword} 
+          <Button
+            size="small"
+            onClick={handleResetPassword}
             className="reset-password-button"
             variant="text"
             sx={{ textTransform: 'none', fontSize: '0.875rem' }}
@@ -363,6 +312,24 @@ export default function UserProfile() {
     );
   };
 
+  const handleFileSelect = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // const url = await uploadToCloudinary(file);
+
+      setImageUrl(url)
+
+      handleUrlSubmit()
+    }
+
+    handleMenuClose();
+  };
+
+  const handleUrlUpload = () => {
+    setShowUrlDialog(true);
+    handleMenuClose();
+  };
+
   if (loading) {
     return (
       <ThemeProvider theme={theme}>
@@ -375,11 +342,10 @@ export default function UserProfile() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box className="profile-layout">
-        <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
+      <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
 
+      <Box className="profile-layout">
         <Box component="main" className="profile-main">
-          <TopBar search={""} setSearch={() => {}} onFilterOpen={() => {}} />
 
           <Box className="profile-container">
             {/* Header Card with Gradient */}
@@ -388,11 +354,21 @@ export default function UserProfile() {
                 <Box className="profile-header-inner">
                   <Box className="profile-avatar-container">
                     <Avatar
-                      src={previewUrl}
+                      src={picture}
                       className="profile-avatar"
                     >
-                      {!previewUrl && getInitials()}
+                      {!picture && getInitials()}
                     </Avatar>
+                    {/* Hidden file input */}
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="upload-photo"
+                      type="file"
+                      onChange={handleFileSelect}
+                    />
+
+                    {/* Camera button */}
                     <IconButton
                       onClick={handleCameraClick}
                       className="camera-button"
@@ -400,6 +376,23 @@ export default function UserProfile() {
                     >
                       <CameraAltIcon fontSize="small" />
                     </IconButton>
+
+                    {/* Menu for choosing upload method */}
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={Boolean(anchorEl)}
+                      onClose={handleMenuClose}
+                    >
+                      <MenuItem>
+                        <label htmlFor="upload-photo" style={{ cursor: 'pointer', width: '100%' }}>
+                          Upload from Computer
+                        </label>
+                      </MenuItem>
+                      <MenuItem onClick={handleUrlUpload}>
+                        Upload from URL
+                      </MenuItem>
+                    </Menu>
+
                   </Box>
 
                   <Box className="profile-header-info">
@@ -438,8 +431,8 @@ export default function UserProfile() {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert 
-          onClose={handleCloseSnackbar} 
+        <Alert
+          onClose={handleCloseSnackbar}
           severity={snackbar.severity}
         >
           {snackbar.message}
