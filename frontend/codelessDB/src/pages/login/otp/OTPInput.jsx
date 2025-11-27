@@ -39,7 +39,7 @@ const OTPInput = () => {
             username: signupData.username,
             email: signupData.email,
             password: signupData.password,
-            picture: signupData.picture
+            picture: null
           });
 
           const token = response.data;

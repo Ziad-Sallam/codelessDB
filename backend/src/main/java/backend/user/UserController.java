@@ -111,8 +111,7 @@ public class UserController {
 				"upload_preset", uploadPreset,
 				"public_id", publicId,
 				"overwrite", true,
-				"invalidate", true
-			);
+				"invalidate", true);
 
 		String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
 
