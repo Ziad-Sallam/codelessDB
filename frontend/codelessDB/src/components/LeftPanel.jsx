@@ -11,8 +11,6 @@ import {
 	ListItemText,
 } from "@mui/material";
 
-import FolderIcon from "@mui/icons-material/Folder";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import StorageIcon from "@mui/icons-material/Storage";
 import SchemaIcon from '@mui/icons-material/Schema';
 

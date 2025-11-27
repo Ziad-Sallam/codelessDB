@@ -131,6 +131,7 @@ export default function Contributors({
 			);
 
 			return true;
+		
 		} catch (err) {
 			// rollback
 			setLocalContributors(previous);

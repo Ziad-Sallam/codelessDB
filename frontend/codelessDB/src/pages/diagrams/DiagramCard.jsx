@@ -144,9 +144,11 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 				image: response?.picture || "",
 				role: shareRole,
 			};
+
 			const updatedContributors = [...localContributors, newContributor];
 			setLocalContributors(updatedContributors);
 			const updatedDiagram = { ...d, contributors: updatedContributors };
+			
 			if (onUpdate) onUpdate(updatedDiagram);
 			setShareOpen(false);
 			showSuccess(`Shared with ${shareUsername}`);

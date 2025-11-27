@@ -55,7 +55,7 @@ export default function TopBar(props) {
 	useEffect(() => {
 		if (search !== null || (dateFrom !== null && dateTo !== null)) {
 			handleSearch(page);
-		
+
 		} else {
 			loadDiagrams(page);
 		}

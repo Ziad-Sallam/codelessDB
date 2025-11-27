@@ -8,12 +8,8 @@ import DiagramPage from './pages/diagrams/DiagramPage.jsx';
 export const routes = [
 	{
 		path: '/',
-		element: <DiagramPage />
+		element: <LogIn />
 	},
-	// {
-	// 	path: '/',
-	// 	element: <LogIn />
-	// },
 	{
 		path: '/login',
 		element: <LogIn />
