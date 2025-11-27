@@ -10,7 +10,7 @@ export async function fetchDiagram(diagramId) {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${token}`,
 		},
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
@@ -29,7 +29,7 @@ export async function generateSQLFromBackend(finalJson) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      withCredentials: true,
+      
     }
   );
 }
@@ -40,6 +40,6 @@ export const updateDiagram = (id, payload) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    withCredentials: true,
+    
   });
 };

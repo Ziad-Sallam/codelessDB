@@ -5,13 +5,14 @@ export async function fetchDiagrams(pageNumber = 0, pageSize = 12, { search, dat
 	params.append("pageNumber", pageNumber);
 	params.append("pageSize", pageSize);
 
+
 	const response = await fetch(`${API_URL}/diagrams/get?${params.toString()}`, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
@@ -28,7 +29,7 @@ export async function getUserInfo() {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
@@ -48,7 +49,7 @@ export async function createDiagram() {
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify({ thumbnail }),
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
@@ -67,7 +68,7 @@ export async function renameDiagram(diagramId, newName) {
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify(body),
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
@@ -92,7 +93,7 @@ export async function searchDiagrams(pageNumber = 0, pageSize = 12,
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify(body),
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
@@ -111,7 +112,7 @@ export async function shareDiagram(diagramId, toUserName, role, deleteUser = fal
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify(body),
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
@@ -128,7 +129,7 @@ export async function deleteDiagram(diagramId) {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
-		credentials: "include",
+		
 	});
 
 	if (!response.ok) {
