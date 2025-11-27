@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useState, createContext, useEffect } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import Schema from './pages/schemaDrawing/schema.jsx';
 import Notification from './components/Notification.jsx';
 import { routes } from './routes.jsx';
 import { NotificationProvider } from './components/NotificationContext.jsx';
