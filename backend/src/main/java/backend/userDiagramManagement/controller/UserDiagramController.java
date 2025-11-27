@@ -97,14 +97,14 @@ public class UserDiagramController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<Page<DiagramDto>> searchDiagrams(
+    public ResponseEntity<Page<DiagramInfoDto>> searchDiagrams(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam int pageNumber,
             @RequestParam int pageSize,
             @RequestBody DiagramSearchRequestDto request) {
 
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("lastModified").descending());
-        Page<DiagramDto> result = userDiagramService.searchDiagrams(id(authUser), request, pageable);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<DiagramInfoDto> result = userDiagramService.searchDiagrams(id(authUser), request, pageable);
 
         return ResponseEntity.ok(result);
     }

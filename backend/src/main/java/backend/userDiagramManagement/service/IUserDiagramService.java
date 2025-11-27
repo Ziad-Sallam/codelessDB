@@ -22,7 +22,7 @@ public interface IUserDiagramService {
 
     DiagramDto searchDiagramById(int userId, UUID id);
 
-    Page<DiagramDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable);
+    Page<DiagramInfoDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable);
 
     DiagramShareResponseDto shareDiagram(int userId, UUID diagramId, DiagramShareRequestDto request);
 

@@ -1,14 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+
 import {
-	Box,
-	Button,
-	CircularProgress,
-	Grid,
-	Pagination,
-	Popover,
-	Stack,
-	TextField,
-	Typography,
+	Box, Button, CircularProgress, Grid, Pagination, Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,68 +12,45 @@ import { createDiagram, fetchDiagrams } from "./fetch.js";
 
 import { useNotification } from "../../components/NotificationContext";
 
-
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 12;
 
 export default function DiagramPage() {
 	const { showSuccess, showError } = useNotification();
 
 	const [diagrams, setDiagrams] = useState([]);
 	const [leftNav, setLeftNav] = useState("all");
-	const [search, setSearch] = useState("");
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
 	const [totalPages, setTotalPages] = useState(0);
 	const [totalElements, setTotalElements] = useState(0);
 
-	const [filterAnchor, setFilterAnchor] = useState(null);
-	const [dateFrom, setDateFrom] = useState("");
-	const [dateTo, setDateTo] = useState("");
-
 	const navigate = useNavigate();
 
+	// loadDiagrams: pageNumber is 1-based here
 	const loadDiagrams = async (pageNumber = page) => {
 		setLoading(true);
 		try {
-			const resp = await fetchDiagrams(pageNumber - 1, ITEMS_PER_PAGE, { search, dateFrom, dateTo });
-			setDiagrams(resp.content || []);
-			setTotalPages(resp.totalPages || 0);
-			setTotalElements(resp.totalElements || 0);
+			// convert to 0-based for backend
+			const resp = await fetchDiagrams(pageNumber - 1, ITEMS_PER_PAGE);
+			setDiagrams(resp?.content || []);
+			setTotalPages(resp?.totalPages || 0);
+			setTotalElements(resp?.totalElements || 0);
 
 		} catch (err) {
 			setDiagrams([]);
 			setTotalPages(0);
 			setTotalElements(0);
-			showError(err.message);
+			showError && showError(err?.message || String(err));
 
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	useEffect(() => {
-		loadDiagrams(page);
-	}, [page, search, dateFrom, dateTo]);
-
-	useEffect(() => {
-		setPage(1);
-	}, [search, dateFrom, dateTo]);
 
 	const handlePageChange = (event, value) => {
 		setPage(value);
 		window.scrollTo({ top: 0, behavior: "smooth" });
-	};
-
-	const openFilter = (e) => setFilterAnchor(e.currentTarget);
-	const closeFilter = () => setFilterAnchor(null);
-	const clearFilter = () => {
-		setDateFrom("");
-		setDateTo("");
-		closeFilter();
-	};
-
-	const applyFilter = () => {
-		closeFilter();
 	};
 
 	const handleOpenDiagram = (d) => {
@@ -102,11 +71,18 @@ export default function DiagramPage() {
 		try {
 			const newDiagram = await createDiagram();
 			setDiagrams((ds) => [newDiagram, ...ds]);
-			showSuccess("Diagram created");
-
+			showSuccess && showSuccess("Diagram created");
 		} catch (error) {
-			showError(error.message);
+			showError && showError(error?.message || String(error));
 		}
+	};
+
+	const onSearchResults = (resp) => {
+		setDiagrams(resp?.content || []);
+		setTotalPages(resp?.totalPages || 0);
+		setTotalElements(resp?.totalElements || 0);
+
+		// setPage(1);
 	};
 
 	return (
@@ -117,51 +93,15 @@ export default function DiagramPage() {
 				width: "100%",
 				bgcolor: "background.light",
 				px: 4,
+				pr: 6,
 				py: 2,
 			}}
 		>
 			<LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
 
 			<Box component="main" sx={{ flexGrow: 1 }}>
-				<TopBar search={search} setSearch={setSearch} onFilterOpen={openFilter} />
+				<TopBar onSearchResults={onSearchResults} pageSize={ITEMS_PER_PAGE} page={page} loadDiagrams={loadDiagrams}/>
 
-				<Popover
-					open={Boolean(filterAnchor)}
-					anchorEl={filterAnchor}
-					onClose={closeFilter}
-					anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-					transformOrigin={{ vertical: "top", horizontal: "right" }}
-				>
-					<Box sx={{ p: 2, width: 300 }}>
-						<Typography variant="subtitle1" sx={{ mb: 1 }}>
-							Filter diagrams
-						</Typography>
-
-						<Stack spacing={1}>
-							<TextField
-								label="Created from"
-								type="date"
-								InputLabelProps={{ shrink: true }}
-								value={dateFrom}
-								onChange={(e) => setDateFrom(e.target.value)}
-							/>
-							<TextField
-								label="Created to"
-								type="date"
-								InputLabelProps={{ shrink: true }}
-								value={dateTo}
-								onChange={(e) => setDateTo(e.target.value)}
-							/>
-
-							<Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", pt: 1 }}>
-								<Button onClick={clearFilter}>Clear</Button>
-								<Button variant="contained" onClick={applyFilter}>
-									Apply
-								</Button>
-							</Box>
-						</Stack>
-					</Box>
-				</Popover>
 
 				<Box sx={{ p: 3 }}>
 					<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -186,7 +126,7 @@ export default function DiagramPage() {
 						<>
 							<Grid container spacing={3}>
 								{diagrams.map((diagram) => (
-									<Grid key={diagram.diagramId}>
+									<Grid item key={diagram.diagramId} xs={12} sm={6} md={4} lg={3}>
 										<DiagramCard
 											d={diagram}
 											onOpen={handleOpenDiagram}

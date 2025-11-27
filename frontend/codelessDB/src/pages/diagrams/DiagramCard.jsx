@@ -61,7 +61,7 @@ function getRoleConfig(role) {
 			color: "secondary",
 		},
 		READER: {
-			label: "READER",
+			label: "Reader",
 			icon: <VisibilityIcon sx={{ fontSize: 14 }} />,
 			color: "default",
 		},
@@ -149,9 +149,11 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			if (onUpdate) onUpdate(updatedDiagram);
 			setShareOpen(false);
 			showSuccess(`Shared with ${shareUsername}`);
+		
 		} catch (err) {
 			console.error("Share error:", err);
-			showError(err.message || "Failed to share diagram");
+			showError(err || "Failed to share diagram");
+		
 		} finally {
 			setShareLoading(false);
 		}
@@ -202,11 +204,11 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 	return (
 		<>
 			<Card className="diagram-card" onClick={handleCardClick} sx={{ position: "relative" }}>
-				{d?.thumb ? (
+				{d.thumbnail ? (
 					<CardMedia
 						component="img"
 						height="210"
-						image={d.thumb}
+						image={d.thumbnail}
 						alt={d.name}
 						className="thumbnail"
 					/>
@@ -256,20 +258,18 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 							</MenuItem>
 						)}
 
-						{isOwner && (
-							<MenuItem
-								onClick={(e) => {
-									e.stopPropagation();
-									closeMenu();
-									handleDeleteClick();
-								}}
-							>
-								<ListItemIcon>
-									<DeleteIcon fontSize="small" />
-								</ListItemIcon>
-								<ListItemText>Delete</ListItemText>
-							</MenuItem>
-						)}
+						<MenuItem
+							onClick={(e) => {
+								e.stopPropagation();
+								closeMenu();
+								handleDeleteClick();
+							}}
+						>
+							<ListItemIcon>
+								<DeleteIcon fontSize="small" />
+							</ListItemIcon>
+							<ListItemText>Delete</ListItemText>
+						</MenuItem>
 
 						{!isOwner && (
 							<MenuItem disabled>
@@ -290,43 +290,30 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 								{d?.name}
 							</Typography>
 
-							<Typography variant="caption" color="text.secondary" display="block">
-								Created: {d?.createdAt ? new Date(d.createdAt).toLocaleDateString() : "—"}
+							<Typography variant="subtitle2" color="text.secondary" display="block">
+								Created: {d.createdAt}
 							</Typography>
 
-							<Typography variant="caption" color="text.secondary" display="block">
+							<Typography variant="subtitle2" color="text.secondary" display="block">
 								Modified:{" "}
-								{d?.lastModified ? new Date(d.lastModified).toLocaleDateString() : "—"}
+								{d.lastModified}
 							</Typography>
 						</Box>
 					</Box>
 
-					{isOwner && (
-						<IconButton
-							aria-label="more"
-							onClick={openMenu}
-							className="always-visible-icon"
-							sx={{
-								position: "absolute",
-								top: 8,
-								right: 8,
-								zIndex: 6,
-								bgcolor: "rgba(255, 255, 255, 0.9)",
-								"&:hover": {
-									bgcolor: "rgba(255, 255, 255, 1)",
-								},
-							}}
-						>
-							<MoreVertIcon />
-						</IconButton>
-					)}
+					<IconButton
+						aria-label="more"
+						onClick={openMenu}
+						className="always-visible-icon"
+					>
+						<MoreVertIcon />
+					</IconButton>
 
 					<Box
 						sx={{
 							display: "flex",
 							justifyContent: "space-between",
 							alignItems: "center",
-							mt: 2,
 						}}
 					>
 						<Chip
@@ -354,7 +341,7 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 								<Box key={i} sx={{ zIndex: localContributors.length - i }}>
 									<Tooltip title={c.name}>
 										<Avatar
-											src={c.image || undefined}
+											src={c.picture || undefined}
 											alt={c.name}
 											sx={{
 												width: 32,
@@ -363,11 +350,11 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 												border: "2px solid white",
 												boxShadow: 1,
 												ml: i === 0 ? 0 : -1.2,
-												bgcolor: c.image ? undefined : "primary.main",
-												color: c.image ? undefined : "white",
+												bgcolor: c.picture ? undefined : "primary.main",
+												color: c.picture ? undefined : "white",
 											}}
 										>
-											{!c.image && getInitials(c.name)}
+											{!c.picture && getInitials(c.name)}
 										</Avatar>
 									</Tooltip>
 								</Box>
@@ -394,14 +381,10 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 					open={Boolean(contributorsAnchor)}
 					onClose={handleContributorsClose}
 					contributors={localContributors}
+					setOuterContributors={setLocalContributors}
 					currentUserRole={userRole}
 					currentUserId={d.currentUserId}
-					onRoleChange={(id, newRole) => {
-						console.log("Role change:", id, newRole);
-					}}
-					onDeleteContributor={(id) => {
-						console.log("Delete contributor:", id);
-					}}
+					diagramId={d.diagramId}
 					getInitials={getInitials}
 				/>
 			</Card>
@@ -459,7 +442,7 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 							onChange={(e) => setShareRole(e.target.value)}
 							label="Role"
 						>
-							<MenuItem value="READER">READER</MenuItem>
+							<MenuItem value="READER">Reader</MenuItem>
 							<MenuItem value="WRITER">Editor</MenuItem>
 						</Select>
 					</FormControl>

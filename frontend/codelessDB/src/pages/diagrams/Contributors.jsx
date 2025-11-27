@@ -1,3 +1,4 @@
+// Contributors.jsx
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -27,14 +28,17 @@ import {
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { useNotification } from "../../components/NotificationContext";
+import { shareDiagram } from "./fetch.js";
 
-function getInitials(name) {
+/** Helper - get initials from name */
+export function getInitials(name) {
 	if (!name) return "";
 	const parts = String(name).trim().split(/\s+/);
 	if (parts.length === 1) return (parts[0][0] || "").toUpperCase();
 	return ((parts[0][0] || "") + (parts[1][0] || "")).toUpperCase();
 }
 
+/** Small mapping to show an icon for the role */
 function getRoleIcon(role) {
 	const icons = {
 		OWNER: <AdminPanelSettingsIcon sx={{ fontSize: 16, mr: 0.5 }} color="primary" />,
@@ -48,105 +52,127 @@ function getRoleIcon(role) {
  * Contributors Dialog Component
  *
  * Props:
- * - open (bool): Whether dialog is open
- * - onClose (fn): Callback to close dialog
- * - contributors (array): Array of contributor objects [{ id, name, role, image }]
- * - currentUserRole (string): Current user's role for this diagram ("OWNER" | "WRITER" | "READER")
- * - currentUserId (string|number): ID of current user
- * - onRoleChange (fn): Callback when role changes (id, newRole) => Promise
- * - onDeleteContributor (fn): Callback when contributor removed (id) => Promise
+ * - open (bool)
+ * - onClose (fn)
+ * - contributors (array) : [{ name, picture|null, role }]
+ * - diagramId (string|number)
+ * - currentUserRole (string) : "OWNER" | "WRITER" | "READER"
+ * - currentUserName (string) : current user's username (unique)
+ * - onRoleChange (fn) : optional callback (username, newRole, serverUpdated) => Promise|void
+ * - onDeleteContributor (fn) : optional callback (username) => Promise|void
  */
 export default function Contributors({
 	open,
 	onClose,
 	contributors = [],
+	diagramId,
+	setOuterContributors,
 	currentUserRole = "READER",
-	currentUserId = null,
-	onRoleChange,
-	onDeleteContributor,
+	currentUserName = null,
 }) {
-	
 	const { showSuccess, showError, showWarning } = useNotification();
 
+	// local copy to allow optimistic updates
 	const [localContributors, setLocalContributors] = useState(contributors || []);
-	const [changingRoleId, setChangingRoleId] = useState(null);
-	const [deletingId, setDeletingId] = useState(null);
+	// holds the username being changed / deleted
+	const [changingRoleName, setChangingRoleName] = useState(null);
+	const [deletingName, setDeletingName] = useState(null);
 
 	useEffect(() => {
-		setLocalContributors(contributors || []);
+		setLocalContributors(Array.isArray(contributors) ? contributors : []);
 	}, [contributors]);
 
 	const isOwner = currentUserRole === "OWNER";
 
-	async function handleRoleChange(contributorId, newRole) {
-		const target = localContributors.find((c) => c.id === contributorId);
+	/**
+	 * Change role handler (uses username as unique identifier)
+	 * - optimistic update
+	 * - calls shareDiagram(diagramId, username, role) (backend)
+	 * - rolls back on error
+	 */
+	async function handleRoleChange(username, newRole) {
+		const target = localContributors.find((c) => String(c.name) === String(username));
 		if (!target) return;
 
-		// Prevent changing owner's role
 		if (target.role === "OWNER") {
-			console.warn("Cannot change the role of an owner.");
+			showWarning("Cannot change the role of an owner.");
+			return;
+		}
+		if (String(username) === String(currentUserName)) {
+			showWarning("Cannot change your own role.");
 			return;
 		}
 
-		// Prevent self role change
-		if (String(contributorId) === String(currentUserId)) {
-			console.warn("Cannot change your own role.");
-			return;
-		}
+		const previous = [...localContributors];
 
-		const previousContributors = [...localContributors];
-
-		// Optimistic update
+		// optimistic
 		setLocalContributors((prev) =>
-			prev.map((c) => (c.id === contributorId ? { ...c, role: newRole } : c))
+			prev.map((c) => (String(c.name) === String(username) ? { ...c, role: newRole } : c))
 		);
-		setChangingRoleId(contributorId);
+		setChangingRoleName(username);
 
 		try {
-			if (onRoleChange) {
-				await Promise.resolve(onRoleChange(contributorId, newRole));
+			// call backend — shareDiagram(diagramId, toUserName, role)
+			const resp = await shareDiagram(diagramId, username, newRole);
+
+			// build server-updated object if response contains updated contributor
+			let serverUpdated = null;
+			if (resp && typeof resp === "object") {
+				serverUpdated = {
+					...target,
+					role: newRole,
+					...(resp.contributor || {}),
+					...(resp.picture ? { picture: resp.picture } : {}),
+				};
 			}
+
+			setLocalContributors((prev) =>
+				prev.map((c) => (String(c.name) === String(username) ? (serverUpdated || { ...c, role: newRole }) : c))
+			);
+
+			return true;
 		} catch (err) {
-			// Rollback on error
-			setLocalContributors(previousContributors);
+			// rollback
+			setLocalContributors(previous);
 			console.error("Failed to change role:", err);
+			showError("Failed to change role. Try again.");
+			return false;
 		} finally {
-			setChangingRoleId(null);
+			setChangingRoleName(null);
 		}
 	}
 
-	async function handleDelete(contributorId) {
-		const target = localContributors.find((c) => c.id === contributorId);
+	/**
+	 * Delete contributor by username
+	 */
+	async function handleDelete(username) {
+		const target = localContributors.find((c) => String(c.name) === String(username));
 		if (!target) return;
 
-		// Prevent deleting owner
 		if (target.role === "OWNER") {
-			console.warn("Cannot remove an owner.");
+			showWarning("Cannot remove an owner.");
+			return;
+		}
+		
+		if (String(username) === String(currentUserName)) {
+			showWarning("Cannot remove yourself.");
 			return;
 		}
 
-		// Prevent self deletion
-		if (String(contributorId) === String(currentUserId)) {
-			console.warn("Cannot remove yourself.");
-			return;
-		}
+		if (!window.confirm(`Remove ${target.name} from contributors?`)) return;
 
-		const previousContributors = [...localContributors];
-
-		// Optimistic update
-		setLocalContributors((prev) => prev.filter((c) => c.id !== contributorId));
-		setDeletingId(contributorId);
-
+		setDeletingName(username);
 		try {
-			if (onDeleteContributor) {
-				await Promise.resolve(onDeleteContributor(contributorId));
-			}
+			const response = await shareDiagram(diagramId, username, null, true)
+			setLocalContributors((prev) => prev.filter((c) => String(c.name) !== String(username)));
+			setOuterContributors((prev) => prev.filter((c) => String(c.name) !== String(username)))
+			showSuccess(`Contributor ${username} is removed`);
+
 		} catch (err) {
-			// Rollback on error
-			setLocalContributors(previousContributors);
-			console.error("Failed to delete contributor:", err);
+			showError(err)
+
 		} finally {
-			setDeletingId(null);
+			setDeletingName(null);
 		}
 	}
 
@@ -167,16 +193,11 @@ export default function Contributors({
 				}}
 			>
 				<Box>
-					<Typography
-						id="contributors-dialog-title"
-						variant="h6"
-						sx={{ fontWeight: 700 }}
-					>
+					<Typography id="contributors-dialog-title" variant="h6" sx={{ fontWeight: 700 }}>
 						Contributors
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-						{localContributors.length} member
-						{localContributors.length !== 1 ? "s" : ""}
+						{localContributors.length} member{localContributors.length !== 1 ? "s" : ""}
 					</Typography>
 				</Box>
 
@@ -197,13 +218,13 @@ export default function Contributors({
 
 					{localContributors.map((contributor) => {
 						const isContributorOwner = contributor.role === "OWNER";
-						const isSelf = String(contributor.id) === String(currentUserId);
+						const isSelf = String(contributor.name) === String(currentUserName);
 						const canEdit = isOwner && !isContributorOwner && !isSelf;
 						const canDelete = isOwner && !isContributorOwner && !isSelf;
 
 						return (
 							<ListItem
-								key={contributor.id}
+								key={contributor.name}
 								sx={{
 									alignItems: "center",
 									px: 3,
@@ -212,26 +233,59 @@ export default function Contributors({
 										bgcolor: "action.hover",
 									},
 								}}
+								// render our own secondary action area (icon button) via secondaryAction prop
+								secondaryAction={
+									isOwner ? (
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Tooltip
+												title={
+													!canDelete
+														? isContributorOwner
+															? "Cannot remove owner"
+															: isSelf
+																? "Cannot remove yourself"
+																: ""
+														: "Remove contributor"
+												}
+											>
+												<span>
+													<IconButton
+														edge="end"
+														onClick={() => handleDelete(contributor.name)}
+														disabled={!canDelete || deletingName === contributor.name}
+														aria-label={`delete-${contributor.name}`}
+														sx={{ color: canDelete ? "error.main" : "action.disabled" }}
+													>
+														{deletingName === contributor.name ? <CircularProgress size={20} /> : <DeleteIcon />}
+													</IconButton>
+												</span>
+											</Tooltip>
+										</Box>
+									) : null
+								}
 							>
 								<ListItemAvatar>
 									<Avatar
-										src={contributor.image || undefined}
+										src={contributor.picture || undefined}
 										alt={contributor.name}
 										sx={{
-											bgcolor: contributor.image ? undefined : "primary.main",
-											color: contributor.image ? undefined : "white",
+											bgcolor: contributor.picture ? undefined : "primary.main",
+											color: contributor.picture ? undefined : "white",
 										}}
 									>
-										{!contributor.image && getInitials(contributor.name)}
+										{!contributor.picture && getInitials(contributor.name)}
 									</Avatar>
 								</ListItemAvatar>
 
+								{/*
+                  IMPORTANT: disableTypography to avoid ListItemText auto-wrapping primary/secondary inside <p>.
+                  We render our own Typography/Box nodes to avoid invalid nesting (Select renders div/fieldset).
+                */}
 								<ListItemText
+									disableTypography
 									primary={
 										<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-											<Typography sx={{ fontWeight: 700 }}>
-												{contributor.name}
-											</Typography>
+											<Typography sx={{ fontWeight: 700 }}>{contributor.name}</Typography>
 											{isSelf && (
 												<Typography
 													variant="caption"
@@ -251,29 +305,21 @@ export default function Contributors({
 									}
 									secondary={
 										canEdit ? (
-											<Box
-												sx={{
-													mt: 0.5,
-													display: "flex",
-													alignItems: "center",
-													gap: 1,
-												}}
-											>
+											<Box sx={{ mt: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
 												<Select
 													size="small"
 													value={contributor.role}
-													onChange={(e) =>
-														handleRoleChange(contributor.id, e.target.value)
-													}
+													onChange={(e) => handleRoleChange(contributor.name, e.target.value)}
 													sx={{
-														minWidth: 140,
+														minWidth: 160,
 														fontSize: 13,
 														"& .MuiSelect-select": {
 															display: "flex",
 															alignItems: "center",
 														},
 													}}
-													disabled={changingRoleId === contributor.id}
+													disabled={changingRoleName === contributor.name}
+													inputProps={{ "aria-label": `role-select-${contributor.name}` }}
 												>
 													<MenuItem value="WRITER">
 														<Box sx={{ display: "flex", alignItems: "center" }}>
@@ -284,66 +330,23 @@ export default function Contributors({
 													<MenuItem value="READER">
 														<Box sx={{ display: "flex", alignItems: "center" }}>
 															{getRoleIcon("READER")}
-															READER
+															Viewer
 														</Box>
 													</MenuItem>
 												</Select>
-												{changingRoleId === contributor.id && (
-													<CircularProgress size={18} />
-												)}
+
+												{changingRoleName === contributor.name && <CircularProgress size={18} />}
 											</Box>
 										) : (
-											<Box
-												sx={{
-													display: "flex",
-													alignItems: "center",
-													mt: 0.5,
-												}}
-											>
+											<Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
 												{getRoleIcon(contributor.role)}
-												<Typography sx={{ color: "text.secondary", fontSize: 13 }}>
-													{contributor.role === "OWNER"
-														? "Owner"
-														: contributor.role === "WRITER"
-															? "Editor"
-															: "READER"}
+												<Typography sx={{ color: "text.secondary", fontSize: 13, ml: 0.5 }}>
+													{contributor.role === "OWNER" ? "Owner" : contributor.role === "WRITER" ? "Editor" : "Viewer"}
 												</Typography>
 											</Box>
 										)
 									}
 								/>
-
-								{isOwner && (
-									<Tooltip
-										title={
-											!canDelete
-												? isContributorOwner
-													? "Cannot remove owner"
-													: isSelf
-														? "Cannot remove yourself"
-														: ""
-												: "Remove contributor"
-										}
-									>
-										<span>
-											<IconButton
-												edge="end"
-												onClick={() => handleDelete(contributor.id)}
-												disabled={!canDelete || deletingId === contributor.id}
-												aria-label={`delete-${contributor.id}`}
-												sx={{
-													color: canDelete ? "error.main" : "action.disabled",
-												}}
-											>
-												{deletingId === contributor.id ? (
-													<CircularProgress size={20} />
-												) : (
-													<DeleteIcon />
-												)}
-											</IconButton>
-										</span>
-									</Tooltip>
-								)}
 							</ListItem>
 						);
 					})}
@@ -364,14 +367,15 @@ Contributors.propTypes = {
 	onClose: PropTypes.func,
 	contributors: PropTypes.arrayOf(
 		PropTypes.shape({
-			id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+			// NOTE: contributors are identified by their unique username 'name'
 			name: PropTypes.string.isRequired,
+			picture: PropTypes.string,
 			role: PropTypes.oneOf(["OWNER", "WRITER", "READER"]).isRequired,
-			image: PropTypes.string,
 		})
 	),
+	diagramId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	currentUserRole: PropTypes.oneOf(["OWNER", "WRITER", "READER"]),
-	currentUserId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	currentUserName: PropTypes.string,
 	onRoleChange: PropTypes.func,
 	onDeleteContributor: PropTypes.func,
 };

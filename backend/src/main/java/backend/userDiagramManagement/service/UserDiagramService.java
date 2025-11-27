@@ -151,7 +151,6 @@ public class UserDiagramService implements IUserDiagramService {
         }
     }
 
-
     @Override
     @Transactional
     public DiagramDto searchDiagramById(int userId, UUID diagramId) {
@@ -163,7 +162,7 @@ public class UserDiagramService implements IUserDiagramService {
 
     @Override
     @Transactional
-    public Page<DiagramDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable) {
+    public Page<DiagramInfoDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable) {
         getUserOrThrow(userId);
 
         String nameFilter = request.getName() != null ? request.getName() : "";
@@ -178,7 +177,7 @@ public class UserDiagramService implements IUserDiagramService {
                         endDate,
                         pageable
                 )
-                .map(ud -> DiagramDto.toDto(ud.getDiagram(), ud.getRole()));
+                .map(ud -> DiagramInfoDto.toDto(ud.getDiagram(), ud.getRole(), getContributors(ud.getDiagram().getId())));
     }
 
     @Override
@@ -196,12 +195,14 @@ public class UserDiagramService implements IUserDiagramService {
         if (targetUser == null)
             throw new UserException.UserNotFoundException("Shared-to user not found: " + request.getToUserName());
 
-        Optional<UserDiagram> optionalLink = userDiagramRepository.findByUser_IdAndDiagram_Id(targetUser.getId(), diagram.getId());
+        Optional<UserDiagram> optionalLink = userDiagramRepository.findByUser_IdAndDiagram_Id(targetUser.getId(),
+                diagram.getId());
 
         if (request.isDelete()) {
             if (optionalLink.isEmpty())
-                throw new DiagramException.InvalidDiagramDataException("The user does not have any permission on this diagram.");
-            
+                throw new DiagramException.InvalidDiagramDataException(
+                        "The user does not have any permission on this diagram.");
+
             UserDiagram link = optionalLink.get();
 
             if (link.getRole() == Role.OWNER)
@@ -213,8 +214,7 @@ public class UserDiagramService implements IUserDiagramService {
                     "Diagram role deleted successfully",
                     targetUser.getUsername(),
                     null,
-                    null
-            );
+                    null);
         }
 
         if (optionalLink.isEmpty()) {
@@ -235,15 +235,15 @@ public class UserDiagramService implements IUserDiagramService {
                     "Diagram shared successfully",
                     targetUser.getUsername(),
                     request.getRole(),
-                    targetUser.getPicture()
-            );
+                    targetUser.getPicture());
         }
 
         UserDiagram link = optionalLink.get();
 
-        if (link.getRole() == request.getRole()) 
-            throw new DiagramException.InvalidDiagramDataException("Diagram is already shared with user " + targetUser.getUsername() + " with the same role.");
-    
+        if (link.getRole() == request.getRole())
+            throw new DiagramException.InvalidDiagramDataException(
+                    "Diagram is already shared with user " + targetUser.getUsername() + " with the same role.");
+
         link.setRole(request.getRole());
         userDiagramRepository.save(link);
 
@@ -251,7 +251,6 @@ public class UserDiagramService implements IUserDiagramService {
                 "Diagram role updated successfully",
                 targetUser.getUsername(),
                 request.getRole(),
-                targetUser.getPicture()
-        );
+                targetUser.getPicture());
     }
 }

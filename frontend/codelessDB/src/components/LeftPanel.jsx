@@ -49,9 +49,9 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 			<Divider sx={{ borderColor: "rgba(255,255,255,0.08)", my: 1 }} />
 
 			<List>
-				<ListItemButton
-					selected={leftNav === "recent"}
-					onClick={() => navigate('/recent')}
+				{/* <ListItemButton
+					selected={leftNav === "recents"}
+					onClick={() => navigate('/recents')}
 					sx={{ borderRadius: 1 }}
 				>
 					<ListItemIcon sx={{ color: "white" }}>
@@ -60,7 +60,7 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 
 					<ListItemText primary="Recents" />
 				</ListItemButton>
-				
+				 */}
 				<ListItemButton
 					selected={leftNav === "all"}
 					onClick={() => navigate('/diagrams')}
