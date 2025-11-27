@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { useParams } from "react-router-dom"; // Added to retrieve Diagram ID
+import React, { useState, useCallback, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   addEdge,
   MiniMap,
@@ -8,6 +8,8 @@ import {
   ReactFlow,
   applyNodeChanges,
   applyEdgeChanges,
+  useReactFlow,
+  
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { nodeTypes, edgeTypes } from "./index";
@@ -17,28 +19,68 @@ import { validateSchema } from "./generate/CheckCorrectness";
 import { convertToJSON } from "./generate/JsonConverter";
 import CodeEditor from "./code-editor/CodeEditor.jsx";
 import axios from "axios";
-import { generateSQLFromBackend, updateDiagram } from "./fetch.js";
+import {
+  generateSQLFromBackend,
+  updateDiagram,
+  fetchDiagram,
+} from "./fetch.js";
+import { useNotification } from "../../components/NotificationContext";
+import { uploadToCloudinary } from "../../components/uploadImage.js";
+
+// 1. IMPORT HTML-TO-IMAGE
+import { toPng } from 'html-to-image';
 
 export default function Schema() {
-  // Retrieve the diagram ID from the URL parameters
-  const { id } = useParams(); //
+  const { showSuccess, showError, showWarning } = useNotification();
+  const { id } = useParams();
 
-  const [initialState, setInitialState] = useState();
-  const [nodes, setNodes] = useState(initialState ? initialNodes : []);
-  const [edges, setEdges] = useState(initialState ? initialEdges : []);
+  const [nodes, setNodes] = useState([]);
+  const [edges, setEdges] = useState([]);
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
   const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
   const [generatedSql, setGeneratedSql] = useState("");
   const [schemaName, setSchemaName] = useState("");
-  // specific loading state for save action
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
-  const initialNodes = null;
-  const initialEdges = null;
-  if (initialState) {
-    initialNodes = initialState.nodes;
-    initialEdges = initialState.edges;
-  }
+  const loadDiagram = async () => {
+    try {
+      const response = await fetchDiagram(id);
+      const content = JSON.parse(response.content || "{}");
+      setNodes(content.nodes || []);
+      setEdges(content.edges || []);
+      setSchemaName(response.name);
+      setIsReadOnly(response.role == "READER" ? true : false);
+    } catch (err) {
+      showError && showError(err?.message || String(err));
+    }
+  };
+
+  useEffect(() => {
+    loadDiagram();
+  }, []);
+
+  const takeSnapshot = async () => {
+    
+    const viewport = document.querySelector('.react-flow__viewport');
+
+    await reactFlowInstance.fitView({ padding: 50 });
+
+    if (!viewport) return;
+
+    try {
+      const thumbnail = await toPng(viewport, {
+        backgroundColor: "#ffffff",
+        quality: 1
+      });
+
+
+      return thumbnail;
+    } catch (err) {
+      console.log("Error exporting:", err);
+    }
+  };
 
   const onNodesChange = useCallback(
     (changes) => setNodes((ns) => applyNodeChanges(changes, ns)),
@@ -107,24 +149,30 @@ export default function Schema() {
 
   const onSaveDiagram = async () => {
     if (!id) {
-      alert("Diagram ID is missing. Cannot save.");
+      showError("Diagram ID is missing. Cannot save.");
       return;
     }
 
     setIsSaving(true);
 
+    const thumbnailPNG = await takeSnapshot();
+
+    const thumbnailURL = await uploadToCloudinary(thumbnailPNG, id);
+
     const payload = {
       name: schemaName,
       jsonContent: JSON.stringify({ nodes, edges }),
+      thumbnail: thumbnailURL
     };
 
     try {
-      // Calls the separated fetch function
       await updateDiagram(id, payload);
-      alert("Diagram saved successfully!");
+      // Generate and upload snapshot after saving data
+      await takeSnapshot(); 
+      showSuccess("Diagram saved successfully!");
     } catch (err) {
       console.error("Error saving diagram:", err);
-      alert("Failed to save diagram.");
+      showError("Failed to save diagram.");
     } finally {
       setIsSaving(false);
     }
@@ -134,7 +182,7 @@ export default function Schema() {
     const validation = validateSchema(nodes);
 
     if (!validation.isValid) {
-      alert(`Validation Failed:\n- ${validation.errors.join("\n- ")}`);
+      showError(`Validation Failed:\n- ${validation.errors.join("\n- ")}`);
       return;
     }
 
@@ -163,18 +211,20 @@ export default function Schema() {
           placeholder="Database Name"
           value={schemaName}
           onChange={(e) => setSchemaName(e.target.value)}
+          disabled={isReadOnly}
         />
-        <button
-          className="save-btn"
-          onClick={onSaveDiagram}
-          disabled={isSaving}
-    
-          // style={{ marginLeft: "10px", padding: "8px 16px", cursor: "pointer" }}
-        >
-          {isSaving ? "Saving..." : "Save Diagram"}
-        </button>
+        {!isReadOnly && (
+          <button
+            className="save-btn"
+            onClick={onSaveDiagram}
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Diagram"}
+          </button>
+        )}
       </div>
       <ReactFlow
+        onInit={(instance) => setReactFlowInstance(instance)}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -184,6 +234,10 @@ export default function Schema() {
         edgeTypes={edgeTypes}
         fitView
         connectionMode="loose"
+        nodesDraggable={!isReadOnly}
+        nodesConnectable={!isReadOnly}
+        elementsSelectable={!isReadOnly}
+        zoomOnDoubleClick={!isReadOnly}
         defaultEdgeOptions={{
           style: { strokeWidth: 2, stroke: "#94a3b8" },
         }}
@@ -193,18 +247,19 @@ export default function Schema() {
           nodeColor="#cbd5e1"
           maskColor="rgba(241, 245, 249, 0.6)"
         />
-        <Controls
-          style={{
-            borderRadius: 8,
-            overflow: "hidden",
-            border: "none",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-          }}
-        />
+        {!isReadOnly && (
+          <Controls
+            style={{
+              borderRadius: 8,
+              overflow: "hidden",
+              border: "none",
+              boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+            }}
+          />
+        )}
         <Background color="#cbd5e1" gap={20} size={1} />
       </ReactFlow>
 
-      {/* NEW TOOLBAR STRUCTURE */}
       {!isSqlPanelOpen && (
         <div className="schema-toolbar">
           <RelationButton
@@ -251,7 +306,6 @@ export default function Schema() {
   );
 }
 
-// Updated Button Component to use new classes
 function RelationButton({ active, color, onClick, label }) {
   return (
     <button

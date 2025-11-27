@@ -1,5 +1,15 @@
 package backend.userDiagramManagement.service;
 
+import java.sql.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.UserDiagram;
@@ -7,27 +17,17 @@ import backend.entities.joins.UserDiagramId;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
+import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
-import backend.userDiagramManagement.dto.DiagramInfoDto.Contributor;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
+import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
-import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
-import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.sql.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -114,14 +114,19 @@ public class UserDiagramService implements IUserDiagramService {
         Diagram diagram = getDiagramOrThrow(diagramId);
         UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
 
-        if (userDiagram.getRole() == Role.READER)
+        if (userDiagram.getRole() == Role.READER) {
             throw new DiagramException.PermissionDeniedException("Only the owner can update this diagram");
+        }
 
-        if (request.getName() != null)
+        if (request.getName() != null) {
             diagram.setName(request.getName());
-        if (request.getJsonContent() != null)
+        }
+        if (request.getJsonContent() != null) {
             diagram.setContent(request.getJsonContent());
-
+        }
+        if (request.getThumbnail() != null) {
+            diagram.setThumbnail(request.getThumbnail());
+        }
         return diagramRepository.save(diagram).getLastModified();
     }
 
@@ -175,9 +180,9 @@ public class UserDiagramService implements IUserDiagramService {
                         nameFilter,
                         startDate,
                         endDate,
-                        pageable
-                )
-                .map(ud -> DiagramInfoDto.toDto(ud.getDiagram(), ud.getRole(), getContributors(ud.getDiagram().getId())));
+                        pageable)
+                .map(ud -> DiagramInfoDto.toDto(ud.getDiagram(), ud.getRole(),
+                        getContributors(ud.getDiagram().getId())));
     }
 
     @Override
@@ -188,25 +193,29 @@ public class UserDiagramService implements IUserDiagramService {
         UserDiagram ownerLink = getUserDiagramOrThrow(userId, diagram.getId());
         checkOwner(ownerLink, "share this diagram");
 
-        if (request.getRole() == Role.OWNER)
+        if (request.getRole() == Role.OWNER) {
             throw new DiagramException.InvalidDiagramDataException("There must be exactly one owner per diagram.");
+        }
 
         User targetUser = userRepository.findByUsername(request.getToUserName());
-        if (targetUser == null)
+        if (targetUser == null) {
             throw new UserException.UserNotFoundException("Shared-to user not found: " + request.getToUserName());
+        }
 
         Optional<UserDiagram> optionalLink = userDiagramRepository.findByUser_IdAndDiagram_Id(targetUser.getId(),
                 diagram.getId());
 
         if (request.isDelete()) {
-            if (optionalLink.isEmpty())
+            if (optionalLink.isEmpty()) {
                 throw new DiagramException.InvalidDiagramDataException(
                         "The user does not have any permission on this diagram.");
+            }
 
             UserDiagram link = optionalLink.get();
 
-            if (link.getRole() == Role.OWNER)
+            if (link.getRole() == Role.OWNER) {
                 throw new DiagramException.InvalidDiagramDataException("The owner cannot be removed from the diagram.");
+            }
 
             userDiagramRepository.delete(link);
 
@@ -240,9 +249,10 @@ public class UserDiagramService implements IUserDiagramService {
 
         UserDiagram link = optionalLink.get();
 
-        if (link.getRole() == request.getRole())
+        if (link.getRole() == request.getRole()) {
             throw new DiagramException.InvalidDiagramDataException(
                     "Diagram is already shared with user " + targetUser.getUsername() + " with the same role.");
+        }
 
         link.setRole(request.getRole());
         userDiagramRepository.save(link);

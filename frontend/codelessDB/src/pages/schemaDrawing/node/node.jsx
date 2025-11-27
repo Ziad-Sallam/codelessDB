@@ -1,10 +1,14 @@
 import React, { memo } from "react";
-import { Handle, Position, useReactFlow,useStore } from "@xyflow/react";
+import { Handle, Position, useReactFlow, useStore } from "@xyflow/react";
 import "./Node.css";
 import dataTypes from "./DataTypes";
 import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
+import { useNotification } from "../../../components/NotificationContext";
+
 const Node = ({ id, data }) => {
+  const { showSuccess, showError, showWarning } = useNotification();
+
   const { setNodes } = useReactFlow();
   const nodes = useStore((state) => state.nodes);
   const [constraintsWindow, setConstraintsWindow] = React.useState({});
@@ -73,8 +77,9 @@ const Node = ({ id, data }) => {
               "TINYINT",
               "MEDIUMINT",
             ];
+
             if (!intTypes.includes(col.dataType)) {
-              alert("Auto Increment can only be applied to integer types");
+              showWarning("Auto Increment can only be applied to integer types");
               return col;
             }
           }
@@ -334,83 +339,88 @@ const Node = ({ id, data }) => {
               {constraintsWindow[col.id] && (
                 <div className="column-constraints">
                   <div className="simple-constraints">
-                  <label title="Primary Key">
-                    PK
-                    <input
-                      type="checkbox"
-                      className="nodrag"
-                      checked={col.constraints.PRIMARY_KEY || false}
-                      onChange={(e) =>
-                        onColumnChange(
-                          col.id,
-                          "PRIMARY_KEY",
-                          e.target.checked,
-                          true
-                        )
-                      }
-                    />
-                  </label>
-                  <label title="Not Null">
-                    NN
-                    <input
-                      type="checkbox"
-                      className="nodrag"
-                      checked={col.constraints.NOT_NULL || false}
-                      onChange={(e) =>
-                        onColumnChange(
-                          col.id,
-                          "NOT_NULL",
-                          e.target.checked,
-                          true
-                        )
-                      }
-                    />
-                  </label>
-                  <label title="Unique">
-                    UQ
-                    <input
-                      type="checkbox"
-                      className="nodrag"
-                      checked={col.constraints.UNIQUE || false}
-                      disabled={col.constraints.PRIMARY_KEY}
-                      onChange={(e) =>
-                        onColumnChange(col.id, "UNIQUE", e.target.checked, true)
-                      }
-                    />
-                  </label>
-                  <label title="Auto Increment">
-                    AI
-                    <input
-                      type="checkbox"
-                      className="nodrag"
-                      checked={col.constraints.autoIncrement || false}
-                      disabled={!isIntegerType(col.dataType)}
-                      onChange={(e) =>
-                        onColumnChange(
-                          col.id,
-                          "autoIncrement",
-                          e.target.checked,
-                          true
-                        )
-                      }
-                    />
-                  </label>
-                  <label title="Indexed">
-                    IX
-                    <input
-                      type="checkbox"
-                      className="nodrag"
-                      checked={col.constraints.indexed || false}
-                      onChange={(e) =>
-                        onColumnChange(
-                          col.id,
-                          "indexed",
-                          e.target.checked,
-                          true
-                        )
-                      }
-                    />
-                  </label>
+                    <label title="Primary Key">
+                      PK
+                      <input
+                        type="checkbox"
+                        className="nodrag"
+                        checked={col.constraints.PRIMARY_KEY || false}
+                        onChange={(e) =>
+                          onColumnChange(
+                            col.id,
+                            "PRIMARY_KEY",
+                            e.target.checked,
+                            true
+                          )
+                        }
+                      />
+                    </label>
+                    <label title="Not Null">
+                      NN
+                      <input
+                        type="checkbox"
+                        className="nodrag"
+                        checked={col.constraints.NOT_NULL || false}
+                        onChange={(e) =>
+                          onColumnChange(
+                            col.id,
+                            "NOT_NULL",
+                            e.target.checked,
+                            true
+                          )
+                        }
+                      />
+                    </label>
+                    <label title="Unique">
+                      UQ
+                      <input
+                        type="checkbox"
+                        className="nodrag"
+                        checked={col.constraints.UNIQUE || false}
+                        disabled={col.constraints.PRIMARY_KEY}
+                        onChange={(e) =>
+                          onColumnChange(
+                            col.id,
+                            "UNIQUE",
+                            e.target.checked,
+                            true
+                          )
+                        }
+                      />
+                    </label>
+                    <label title="Auto Increment">
+                      AI
+                      <input
+                        type="checkbox"
+                        className="nodrag"
+                        checked={col.constraints.autoIncrement || false}
+                        disabled={!isIntegerType(col.dataType)}
+                        onChange={(e) =>
+                          onColumnChange(
+                            col.id,
+                            "autoIncrement",
+                            e.target.checked,
+                            true
+                          )
+                        }
+                      />
+                    </label>
+                    <label title="Indexed">
+                      IX
+                      <input
+                        type="checkbox"
+                        className="nodrag"
+                        checked={col.constraints.indexed || false}
+                        onChange={(e) =>
+                          onColumnChange(
+                            col.id,
+                            "indexed",
+                            e.target.checked,
+                            true
+                          )
+                        }
+                      />
+                    </label>
                   </div>
                   <div className="forginKey-constraint">
                     <label title="Foreign Key">
@@ -428,51 +438,48 @@ const Node = ({ id, data }) => {
                           )
                         }
                       />
-                      </label>
-                      {col.constraints.FOREIGN_KEY && (
-                        <>
-                          OnDelete:{" "}
-                          <select
-                            className="nodrag foreign-key-action-select"
-                            value={col.constraints.ForeignKeyOnDelete || ""}
-                            onChange={(e) =>
-                              onColumnChange(
-                                col.id,
-                                "ForeignKeyOnDelete",
-                                e.target.value,
-                                true
-                              )
-                            }
-                          >
-                            <option value="CASCADE">CASCADE</option>
-                            <option value="SET_NULL">SET NULL</option>
-                            <option value="RESTRICT">RESTRICT</option>
-                            <option value="SET_DEFAULT">SET DEFAULT</option>
-                            <option value="NO_ACTION">NO ACTION</option>
-                          </select>
-                          OnUpdate:{" "}
-                          <select
-                            className="nodrag foreign-key-action-select"
-                            value={col.constraints.ForeignKeyOnUpdate || ""}
-                            onChange={(e) =>
-                              onColumnChange(
-                                col.id,
-                                "ForeignKeyOnUpdate",
-                                e.target.value,
-                                true
-                              )
-                            }
-                          >
-                            <option value="CASCADE">CASCADE</option>
-                            <option value="SET_NULL">SET NULL</option>
-                            <option value="RESTRICT">RESTRICT</option>
-                            <option value="SET_DEFAULT">SET DEFAULT</option>
-                            <option value="NO_ACTION">NO ACTION</option>
-                          </select>
-                      
-                        <div
-                          className="fk-references"
+                    </label>
+                    {col.constraints.FOREIGN_KEY && (
+                      <>
+                        OnDelete:{" "}
+                        <select
+                          className="nodrag foreign-key-action-select"
+                          value={col.constraints.ForeignKeyOnDelete || ""}
+                          onChange={(e) =>
+                            onColumnChange(
+                              col.id,
+                              "ForeignKeyOnDelete",
+                              e.target.value,
+                              true
+                            )
+                          }
                         >
+                          <option value="CASCADE">CASCADE</option>
+                          <option value="SET_NULL">SET NULL</option>
+                          <option value="RESTRICT">RESTRICT</option>
+                          <option value="SET_DEFAULT">SET DEFAULT</option>
+                          <option value="NO_ACTION">NO ACTION</option>
+                        </select>
+                        OnUpdate:{" "}
+                        <select
+                          className="nodrag foreign-key-action-select"
+                          value={col.constraints.ForeignKeyOnUpdate || ""}
+                          onChange={(e) =>
+                            onColumnChange(
+                              col.id,
+                              "ForeignKeyOnUpdate",
+                              e.target.value,
+                              true
+                            )
+                          }
+                        >
+                          <option value="CASCADE">CASCADE</option>
+                          <option value="SET_NULL">SET NULL</option>
+                          <option value="RESTRICT">RESTRICT</option>
+                          <option value="SET_DEFAULT">SET DEFAULT</option>
+                          <option value="NO_ACTION">NO ACTION</option>
+                        </select>
+                        <div className="fk-references">
                           Refr. Table:
                           {/* Select Target Table */}
                           <select
@@ -497,7 +504,6 @@ const Node = ({ id, data }) => {
                                 </option>
                               ))}
                           </select>
-
                           {/* Select Target Column (based on selected table) */}
                           Refr. Attr:
                           <select
@@ -528,9 +534,8 @@ const Node = ({ id, data }) => {
                               ))}
                           </select>
                         </div>
-                        </>
-                      )}
-                    
+                      </>
+                    )}
                   </div>
                   <div className="check-constraint">
                     <label title="Check">
