@@ -1,0 +1,181 @@
+/* Schema.css */
+.header{
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100vw;
+  height: 60px;
+  background-color: #1e293b;
+  z-index: 10;
+}
+
+.header input{
+  margin: 10px;
+  height: 40px;
+  width: 300px;
+   background: #ffffffa2;
+  border: none;
+  border-radius: 4px;
+  color: black;
+  font-weight: 700;
+  text-align: left;
+  font-family: inherit;
+  font-size: 20px;
+  padding-left: 10px;
+  transition: background 0.2s;
+}
+
+.header input:focus{
+  outline: none;
+  background: rgba(255, 255, 255, 0.944);
+}
+
+.save-btn{
+  position: absolute;
+  right: 10px;
+  top:10px;
+  width: 200px;
+  padding: 8px 16px;
+  background: #e6e6e6; /* Slate 900 */
+  color: rgb(15, 15, 15);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2);
+}
+.save-btn:hover {
+  background: #a3a3a3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(15, 23, 42, 0.25);
+}
+
+.drawing-container{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Floating Toolbar at the bottom */
+.schema-toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+
+  /* Glassmorphism */
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+
+  z-index: 9999;
+  animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* Relation Buttons */
+.relation-btn {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+  transition: all 0.2s ease;
+}
+
+.relation-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.relation-btn.active {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.relation-color-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Add Node Button */
+.add-node-btn {
+  padding: 8px 16px;
+  background: #0f172a; /* Slate 900 */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2);
+}
+
+.add-node-btn:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(15, 23, 42, 0.25);
+}
+
+.add-node-btn:active {
+  transform: translateY(0);
+}
+
+.generate {
+  position: fixed;
+  top: 70px;
+  right: 10px;
+  width: 200px;
+  padding: 8px 16px;
+  background: #0f172a; /* Slate 900 */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2);
+}
+
+.generate:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(15, 23, 42, 0.25);
+}

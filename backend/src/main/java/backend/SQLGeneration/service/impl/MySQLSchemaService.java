@@ -23,7 +23,7 @@ public class MySQLSchemaService implements SchemaService {
         if (schemaDTO.getEntities() == null || schemaDTO.getEntities().isEmpty())
             throw new SchemaValidationException("Schema has no entities");
 
-        schemaValidator.validateSchema(schemaDTO); // <-- new validation
+        schemaValidator.validateSchema(schemaDTO);
 
         StringBuilder ddl = new StringBuilder();
         String schemaName = schemaDTO.getSchemaName();

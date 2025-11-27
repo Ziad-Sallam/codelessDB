@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -27,6 +28,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "diagrams")
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,30 +37,31 @@ public class Diagram {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
+  @Builder.Default
   @Column(nullable = false, length = 200)
-  private String name;
-
+  private String name = "Untitled Diagram";
+  
   @Column(columnDefinition = "JSON")
   private String content; // to be continued
-
-  @Lob
-  @Column(columnDefinition = "BLOB")
-  private byte[] thumbnail;
-
+  
+  private String thumbnail;
+  
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
   private Date createdAt;
-
+  
   @Column(nullable = false)
   @UpdateTimestamp
   private Date lastModified;
-
+  
+  @Builder.Default
   @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CannedQueriesDiagrams> queries = new ArrayList<>();
-
+  
   @OneToOne(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private PublicDiagram publicDiagram;
-
+  
+  @Builder.Default
   @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<UserDiagram> userDiagrams = new HashSet<>();
 

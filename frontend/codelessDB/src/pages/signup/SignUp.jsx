@@ -17,9 +17,7 @@ const SignUp = () => {
   const [confirmPass, setConfirmPass] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [userImage, setUserImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [imageError, setImageError] = useState("");
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -27,7 +25,7 @@ const SignUp = () => {
 
     const existingToken = localStorage.getItem('authToken');
     if (existingToken) {
-      navigate('/', { replace: true });
+      navigate('/diagrams', { replace: true });
       return;
     }
 
@@ -36,7 +34,7 @@ const SignUp = () => {
 
     if (token) {
       localStorage.setItem('authToken', token);
-      navigate('/');
+      navigate('/diagrams');
     } else if (oauthError) {
       setError('Google signup failed. Please try again.');
     }
@@ -44,30 +42,6 @@ const SignUp = () => {
     window.history.replaceState({}, document.title, "/SignUp");
   }, [searchParams, navigate]);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setImageError("Only image files are allowed.");
-      return;
-    }
-
-    if (file.size > 1024 * 1024) {
-      setImageError("Image must be less than 1MB.");
-      return;
-    }
-
-    setImageError("");
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setUserImage(reader.result);
-      setPreview(URL.createObjectURL(file));
-    };
-
-    reader.readAsDataURL(file);
-  };
 
   function getPasswordChecks(pass) {
     return {
@@ -120,12 +94,11 @@ const SignUp = () => {
           localStorage.setItem("signupData", JSON.stringify({
             username,
             email: mail,
-            password,
-            picture: userImage
+            password
           }));
 
           navigate("/otp");
-          
+
         } catch (err) {
           const serverMsg = err.response?.data?.message
             || err.response?.data
@@ -136,13 +109,13 @@ const SignUp = () => {
         }
       }
     } catch (err) {
-            const serverMsg = err.response?.data?.message
-            || err.response?.data
-            || err.message
-            || "Server unavailable. Please try again later.";
+      const serverMsg = err.response?.data?.message
+        || err.response?.data
+        || err.message
+        || "Server unavailable. Please try again later.";
 
-            setError(String(serverMsg));
-        }
+      setError(String(serverMsg));
+    }
   };
 
   return (
@@ -157,32 +130,6 @@ const SignUp = () => {
           <div className="wrapper">
             <form onSubmit={handleSubmit}>
               <h1>Sign Up</h1>
-
-              <div className="image-upload-container">
-                {userImage != null && <button type="button" className="remove-image-button" onClick={() => {
-                  setUserImage(null);
-                  setPreview(null);
-                }}>x</button>}
-                <label htmlFor="userImage" className="image-label">
-                  {preview ? (
-                    <img src={preview} alt="Preview" className="profile-preview" />
-                  ) : (
-                    <div className="upload-placeholder">
-                      + Add Profile Picture
-                    </div>
-                  )}
-                </label>
-
-                <input
-                  type="file"
-                  id="userImage"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: "none" }}
-                />
-              </div>
-
-              {imageError && <p className="error">{imageError}</p>}
 
               <div className="input-box">
                 <FaUser className="icon" />

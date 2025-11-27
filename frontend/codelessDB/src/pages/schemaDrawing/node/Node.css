@@ -1,0 +1,346 @@
+:root {
+  --node-bg: #ffffff;
+  --node-border: #e2e8f0;
+  --node-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --node-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --header-bg: #1e293b; /* Slate 800 */
+  --header-text: #f8fafc;
+  --accent-color: #1e293b;
+  --text-primary: #334155;
+  --text-secondary: #64748b;
+  --input-bg: #f1f5f9;
+}
+
+.table-node {
+  min-width: 400px;
+  background: var(--node-bg);
+  border: 1px solid var(--node-border);
+  border-radius: 8px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-shadow: var(--node-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden; /* Clips the corners */
+  animation: fadeIn 0.1s ease-out forwards;
+  cursor: grab;
+}
+
+.table-node:hover {
+  box-shadow: var(--node-shadow-hover);
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+.table-node:active {
+  cursor: grabbing;
+}
+
+.table-node input:focus {
+  outline: none;
+}
+
+.table-header {
+  background: var(--header-bg);
+  padding: 5px 12px;
+  text-align: center;
+  border-bottom: 2px solid #334155;
+}
+
+.table-name-input {
+  min-width: 70%;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--header-text);
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 4px;
+  transition: background 0.2s;
+}
+
+.table-name-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.table-body {
+  background: #fff;
+}
+
+.table-column {
+  position: relative;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.table-column:last-child {
+  border-bottom: none;
+}
+
+.table-column:hover {
+  background: #f8fafc !important; /* Slight hover tint */
+}
+
+.column-inputs {
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Common Input Styles */
+.table-body input, select {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace; /* Monospace for data */
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  transition: all 0.2s;
+  padding: 2px 4px;
+}
+
+ .table-body input:focus, select:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--accent-color);
+  
+}
+
+/* Inputs inside columns */
+.column-name-input {
+  width: 85px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.column-type-select {
+  width: 85px;
+  background: var(--input-bg);
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.data-type-params {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 75px;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.data-type-enums {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 160px;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.constraints-btn {
+  position: absolute;
+  right: 20px;
+  top: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #000000;
+  transition: transform 0.3s ease;
+}
+
+.constraints-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-primary);
+}
+
+.column-constraints {
+  width: 100%;
+  position: relative;
+  background-color: none;
+  border-top: 1px solid #e2e8f0;
+  align-items: center;
+  font-size: 15px;
+  color: var(--text-secondary);
+  z-index: 10;
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+  margin-top: 5px;
+}
+.simple-constraints{
+  display: flex;
+  padding: 4px 0;
+  gap: 19px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.column-constraints label input {
+  margin-left: 4px;
+}
+
+.column-constraints label {
+  min-width: 60px;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: #fff;
+  padding: 4px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.column-constraints label:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.column-constraints input[type="checkbox"] {
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+ .check-constraint, .default-constraint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.forginKey-constraint{
+  min-width: 60px;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: #fff;
+  padding: 4px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.forginKey-constraint label{
+  border: none;
+  padding: 0;
+}
+.forginKey-constraint select {
+  width: 80px;
+  border: none;
+  background: #f0f0f0;
+  font-size: 12px;
+  border-radius: 2px;
+  margin-right: 5px;
+}
+.fk-references{
+  margin-top: 4px;
+}
+
+
+.check-condition-select {
+  width: 40px;
+  border: none;
+  background: #f0f0f0;
+  font-size: 15px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.check-condition-input {
+  width: 80px;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.default-value-input {
+  width: 100px;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+
+
+.add-btn {
+  width: 100%;
+  border: none;
+  background: #f8fafc;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-color);
+  border-top: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+
+.add-btn:hover {
+  background: #f1f5f9;
+}
+
+.delete-btn {
+  background: transparent;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 15px;
+  opacity: 0; /* Hidden until hover */
+  transition: opacity 0.2s;
+}
+.table-column:hover .delete-btn {
+  opacity: 1;
+}
+
+/* --- STRETCHED HANDLES (Invisible but interactable) --- */
+
+.react-flow__handle {
+  background: transparent; 
+  border: none;
+  z-index: 10; 
+}
+
+.handle-top, .handle-bottom {
+  width: 100%; height: 15px; left: 0; border-radius: 0; transform: none;
+}
+.handle-top { top: -8px; }
+.handle-bottom { bottom: -8px; }
+
+.handle-left, .handle-right {
+  height: 100%; width: 15px; top: 0; border-radius: 0; transform: none;
+}
+.handle-left { left: -8px; }
+.handle-right { right: -8px; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); max-height: 0; }
+  to { opacity: 1; transform: translateY(0); max-height: 500px; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

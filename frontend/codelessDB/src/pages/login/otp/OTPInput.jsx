@@ -39,7 +39,7 @@ const OTPInput = () => {
             username: signupData.username,
             email: signupData.email,
             password: signupData.password,
-            picture: signupData.picture
+            picture: null
           });
 
           const token = response.data;
@@ -51,7 +51,7 @@ const OTPInput = () => {
           localStorage.removeItem("email");
 
           alert("Account Created Successfully!");
-          navigate("/login");
+          navigate("/diagrams");
 
         } catch (err) {
           const serverMsg = err.response?.data?.message
