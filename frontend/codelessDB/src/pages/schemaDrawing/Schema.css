@@ -30,6 +30,28 @@
   background: rgba(255, 255, 255, 0.944);
 }
 
+.save-btn{
+  position: absolute;
+  right: 10px;
+  top:10px;
+  width: 200px;
+  padding: 8px 16px;
+  background: #e6e6e6; /* Slate 900 */
+  color: rgb(15, 15, 15);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2);
+}
+.save-btn:hover {
+  background: #a3a3a3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(15, 23, 42, 0.25);
+}
+
 .drawing-container{
   position: fixed;
   top: 0;

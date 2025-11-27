@@ -15,3 +15,7 @@ export async function generateSQLFromBackend(finalJson) {
     }
   );
 }
+
+export const updateDiagram = (id, payload) => {
+  return axios.put(`http://localhost:8080/diagrams/update/${id}`, payload);
+};

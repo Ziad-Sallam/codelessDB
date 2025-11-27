@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useParams } from "react-router-dom"; // Added to retrieve Diagram ID
 import {
   addEdge,
   MiniMap,
@@ -16,15 +17,28 @@ import { validateSchema } from "./generate/CheckCorrectness";
 import { convertToJSON } from "./generate/JsonConverter";
 import CodeEditor from "./code-editor/CodeEditor.jsx";
 import axios from "axios";
-import { generateSQLFromBackend } from "./fetch.js";
+import { generateSQLFromBackend, updateDiagram } from "./fetch.js";
 
 export default function Schema() {
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+  // Retrieve the diagram ID from the URL parameters
+  const { id } = useParams(); //
+
+  const [initialState, setInitialState] = useState();
+  const [nodes, setNodes] = useState(initialState ? initialNodes : []);
+  const [edges, setEdges] = useState(initialState ? initialEdges : []);
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
   const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
   const [generatedSql, setGeneratedSql] = useState("");
   const [schemaName, setSchemaName] = useState("");
+  // specific loading state for save action
+  const [isSaving, setIsSaving] = useState(false);
+
+  const initialNodes = null;
+  const initialEdges = null;
+  if (initialState) {
+    initialNodes = initialState.nodes;
+    initialEdges = initialState.edges;
+  }
 
   const onNodesChange = useCallback(
     (changes) => setNodes((ns) => applyNodeChanges(changes, ns)),
@@ -61,7 +75,6 @@ export default function Schema() {
         target: params.target,
         id: `e_${params.source}_${params.target}_${Date.now()}`,
         type: typeKey,
-        // markerEnd: { type: MarkerType.ArrowClosed, width: 20, height: 20 },
         data: { type: selectedRelationType },
       };
       setEdges((eds) => addEdge(newEdge, eds));
@@ -92,21 +105,30 @@ export default function Schema() {
     ]);
   };
 
-  const temp = `-- Generated SQL Code
-    CREATE TABLE users (
-      id INT PRIMARY KEY AUTO_INCREMENT,
-      name VARCHAR(100) NOT NULL,
-      email VARCHAR(255) UNIQUE NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+  const onSaveDiagram = async () => {
+    if (!id) {
+      alert("Diagram ID is missing. Cannot save.");
+      return;
+    }
 
-    CREATE TABLE orders (
-      id INT PRIMARY KEY AUTO_INCREMENT,
-      user_id INT NOT NULL,
-      total_amount DECIMAL(10, 2) NOT NULL,
-      order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
-    );`;
+    setIsSaving(true);
+
+    const payload = {
+      name: schemaName,
+      jsonContent: JSON.stringify({ nodes, edges }),
+    };
+
+    try {
+      // Calls the separated fetch function
+      await updateDiagram(id, payload);
+      alert("Diagram saved successfully!");
+    } catch (err) {
+      console.error("Error saving diagram:", err);
+      alert("Failed to save diagram.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const onGenerateSQL = async () => {
     const validation = validateSchema(nodes);
@@ -116,7 +138,7 @@ export default function Schema() {
       return;
     }
 
-    const finalJson = convertToJSON(schemaName,nodes);
+    const finalJson = convertToJSON(schemaName, nodes);
 
     try {
       const response = await generateSQLFromBackend(finalJson);
@@ -142,6 +164,15 @@ export default function Schema() {
           value={schemaName}
           onChange={(e) => setSchemaName(e.target.value)}
         />
+        <button
+          className="save-btn"
+          onClick={onSaveDiagram}
+          disabled={isSaving}
+    
+          // style={{ marginLeft: "10px", padding: "8px 16px", cursor: "pointer" }}
+        >
+          {isSaving ? "Saving..." : "Save Diagram"}
+        </button>
       </div>
       <ReactFlow
         nodes={nodes}

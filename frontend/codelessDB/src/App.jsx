@@ -21,7 +21,7 @@ function App() {
       element: <Home />
     },
     {
-      path: '/diagram',
+      path: '/diagram/:id',
       element: <Schema />
     },
     {
