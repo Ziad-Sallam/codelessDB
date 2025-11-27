@@ -10,7 +10,7 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import LeftPanel from "../diagrams/LeftPanel.jsx";
+import LeftPanel from "../../components/LeftPanel.jsx";
 import "./UserProfile.css";
 import theme from '../../theme.js';
 import { uploadToCloudinary } from "../../uploadToCloudinary.jsx";
@@ -390,7 +390,7 @@ export default function UserProfile() {
               display: 'flex',
               justifyContent: 'flex-end',
               alignItems: 'center',
-              padding: '16px 24px',
+              padding: '8px 24px',
               backgroundColor: '#f6f8fb',
             }}
           >
@@ -404,7 +404,7 @@ export default function UserProfile() {
                 color: '#ffffff',        // white text
                 background: 'linear-gradient(45deg, #e53935 30%, #b71c1c 90%)', // red gradient
                 borderRadius: '10px',
-                marginRight: '500px', // adjust or remove for layout
+                marginRight: '50px', // adjust or remove for layout
                 '&:hover': {
                   borderColor: '#ff7961',
                   background: 'linear-gradient(45deg, #d32f2f 30%, #7f0000 90%)', // darker gradient on hover

@@ -25,7 +25,7 @@ const SignUp = () => {
 
     const existingToken = localStorage.getItem('authToken');
     if (existingToken) {
-      navigate('/', { replace: true });
+      navigate('/diagrams', { replace: true });
       return;
     }
 
@@ -34,7 +34,7 @@ const SignUp = () => {
 
     if (token) {
       localStorage.setItem('authToken', token);
-      navigate('/');
+      navigate('/diagrams');
     } else if (oauthError) {
       setError('Google signup failed. Please try again.');
     }

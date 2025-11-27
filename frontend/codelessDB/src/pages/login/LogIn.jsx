@@ -24,7 +24,7 @@ const LogIn = () => {
 
       const existingToken = localStorage.getItem('authToken');
       if (existingToken) {
-         navigate('/', { replace: true });
+         navigate('/diagrams', { replace: true });
          return;
       }
 
@@ -33,7 +33,7 @@ const LogIn = () => {
 
       if (token) {
          localStorage.setItem('authToken', token);
-         navigate('/');
+         navigate('/diagrams');
       } else if (oauthError) {
          setError('Google login failed. Please try again.');
       }
@@ -58,7 +58,7 @@ const LogIn = () => {
          });
          const token = response.data;
          localStorage.setItem("authToken", token);
-         navigate("/profile");
+         navigate("/diagrams");
       } catch (err) {
          const serverMsg = err.response?.data?.message
             || err.response?.data

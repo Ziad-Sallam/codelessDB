@@ -5,6 +5,7 @@ import Reset from './pages/login/reset/Reset.jsx';
 import Recovered from './pages/login/Recovered/Recovered.jsx';
 import DiagramPage from './pages/diagrams/DiagramPage.jsx';
 import Schema from './pages/schemaDrawing/schema.jsx';
+import UserProfile from './pages/userprofile/UserProfile.jsx';
 
 export const routes = [
 	{
@@ -39,4 +40,8 @@ export const routes = [
 		path: '/diagrams/:id',
 		element:<Schema/>
 	},
+	{
+		path:'/profile',
+		element: <UserProfile/>
+	}
 ]

@@ -51,7 +51,7 @@ const OTPInput = () => {
           localStorage.removeItem("email");
 
           alert("Account Created Successfully!");
-          navigate("/login");
+          navigate("/diagrams");
 
         } catch (err) {
           const serverMsg = err.response?.data?.message
