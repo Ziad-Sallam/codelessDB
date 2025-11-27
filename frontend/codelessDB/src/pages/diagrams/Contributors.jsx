@@ -134,9 +134,9 @@ export default function Contributors({
 		} catch (err) {
 			// rollback
 			setLocalContributors(previous);
-			console.error("Failed to change role:", err);
 			showError("Failed to change role. Try again.");
 			return false;
+			
 		} finally {
 			setChangingRoleName(null);
 		}

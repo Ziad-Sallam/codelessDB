@@ -119,9 +119,10 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			setRenameOpen(false);
 			if (onUpdate) onUpdate(updated);
 			showSuccess("Diagram renamed successfully");
+		
 		} catch (err) {
-			console.error("Rename error:", err);
 			showError(err.message || "Failed to rename diagram");
+		
 		} finally {
 			setRenameLoading(false);
 		}
@@ -151,7 +152,6 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			showSuccess(`Shared with ${shareUsername}`);
 		
 		} catch (err) {
-			console.error("Share error:", err);
 			showError(err || "Failed to share diagram");
 		
 		} finally {
@@ -170,9 +170,10 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			setDeleteOpen(false);
 			if (onDelete) onDelete(d);
 			showSuccess("Diagram deleted successfully");
+		
 		} catch (err) {
-			console.error("Delete error:", err);
 			showError(err.message || "Failed to delete diagram");
+		
 		} finally {
 			setDeleteLoading(false);
 		}
