@@ -69,4 +69,16 @@ public class User {
     @ManyToMany
     @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
     private List<Server> servers = new ArrayList<>();
+
+
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserDatabase> ownedDatabases = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_database_access",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "database_id")
+    )
+    private List<UserDatabase> accessibleDatabases = new ArrayList<>();
 }
