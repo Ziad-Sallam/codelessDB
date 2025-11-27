@@ -116,11 +116,10 @@ public class UserController {
 		String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
 
 		return Map.of(
-				"signature", signature,
-				"timestamp", timestamp,
-				"apiKey", cloudinary.config.apiKey,
-				"cloudName", cloudinary.config.cloudName,
-				"uploadPreset", uploadPreset);
+			"signature", signature,
+			"timestamp", timestamp,
+			"apiKey", cloudinary.config.apiKey,
+			"cloudName", cloudinary.config.cloudName,
+			"uploadPreset", uploadPreset);
 	}
-
 }

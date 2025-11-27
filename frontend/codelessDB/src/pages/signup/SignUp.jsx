@@ -98,7 +98,7 @@ const SignUp = () => {
           }));
 
           navigate("/otp");
-          
+
         } catch (err) {
           const serverMsg = err.response?.data?.message
             || err.response?.data
@@ -109,13 +109,13 @@ const SignUp = () => {
         }
       }
     } catch (err) {
-            const serverMsg = err.response?.data?.message
-            || err.response?.data
-            || err.message
-            || "Server unavailable. Please try again later.";
+      const serverMsg = err.response?.data?.message
+        || err.response?.data
+        || err.message
+        || "Server unavailable. Please try again later.";
 
-            setError(String(serverMsg));
-        }
+      setError(String(serverMsg));
+    }
   };
 
   return (

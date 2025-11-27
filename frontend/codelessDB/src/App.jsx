@@ -1,65 +1,26 @@
-import { useState, createContext } from 'react';
-import './App.css';
-import LogIn from './pages/login/LogIn.jsx';
-import SignUp from './pages/signup/SignUp.jsx';
-import OTPInput from './pages/login/otp/OTPInput.jsx';
-import Reset from './pages/login/reset/Reset.jsx';
-import Recovered from './pages/login/recovered/Recovered.jsx';
-import Userprofile from './pages/userprofile/UserProfile.jsx';
-import Diagram from './pages/diagrams/Diagram.jsx';
-
-import Home from './pages/Home.jsx';
+/* eslint-disable react-refresh/only-export-components */
+import { useState, createContext, useEffect } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import Schema from './pages/schemaDrawing/schema.jsx';
+import Notification from './components/Notification.jsx';
+import { routes } from './routes.jsx';
+import { NotificationProvider } from './components/NotificationContext.jsx';
 
 export const RecoveryContext = createContext();
 
 function App() {
-  const [email, setEmail] = useState("");
-  const [otp, setOTP] = useState("");
+   const [email, setEmail] = useState("");
+   const [otp, setOTP] = useState("");
+   const router = createBrowserRouter(routes);
+   const [msg, setMsg] = useState("");
 
-  const router = createBrowserRouter([
-    {
-      path: '/',
-      element: <Home />
-    },
-    {
-      path: '/login',
-      element: <LogIn />
-    },
-    {
-      path: '/signup',
-      element: <SignUp />
-    },
-    {
-      path: '/otp',
-      element: <OTPInput />
-    },
-    {
-      path: '/reset',
-      element: <Reset />
-    },
-    {
-      path: '/recovered',
-      element: <Recovered />
-    },
-    {
-      path: '/profile',
-      element: <Userprofile />
-    },
-    {
-      path: '/diagrams',
-      element: <Diagram />
-    }
-
-  ]);
-  
-  return (
-    <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
-      <div className="App">
-        <RouterProvider router={router} />
-      </div>
-    </RecoveryContext.Provider>
-  );
+   return (
+      <RecoveryContext.Provider value={{ email, setEmail, otp, setOTP }}>
+         <NotificationProvider>
+            <RouterProvider router={router} />
+         </NotificationProvider>
+      </RecoveryContext.Provider>
+   );
 }
 
 export default App;
