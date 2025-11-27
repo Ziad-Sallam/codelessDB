@@ -260,7 +260,7 @@ export default function Schema() {
         <Background color="#cbd5e1" gap={20} size={1} />
       </ReactFlow>
 
-      {!isSqlPanelOpen && (
+      {!isSqlPanelOpen && !isReadOnly && (
         <div className="schema-toolbar">
           <RelationButton
             active={selectedRelationType === "1:1"}
