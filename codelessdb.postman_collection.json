@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "55667b2d-b62a-4a3b-870e-f77dd75b4322",
+		"_postman_id": "b4c31274-e23c-4560-ac78-645fb9c6931f",
 		"name": "codelessdb",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "39168076",
-		"_collection_link": "https://backenders-6160.postman.co/workspace/CodelessDB-APIs~e5f72c98-2e75-411e-b39b-4884f61297d1/collection/39168076-55667b2d-b62a-4a3b-870e-f77dd75b4322?action=share&source=collection_link&creator=39168076"
+		"_exporter_id": "39257982"
 	},
 	"item": [
 		{
@@ -281,6 +280,16 @@
 					"response": []
 				}
 			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjMsInVzZXJuYW1lIjoiYWhtZWRfcmFneTMiLCJzdWIiOiIzIiwiaWF0IjoxNzYzMzI0MTQwLCJleHAiOjE3NjM0MTA1NDB9.uZYjTtg5H0keYvKUZ6ErcWC9GAg13LHZ0Qmy4BR681E",
+						"type": "string"
+					}
+				]
+			},
 			"event": [
 				{
 					"listen": "prerequest",
@@ -305,11 +314,233 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "diagram",
+			"item": [
+				{
+					"name": "get",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/diagram/get/?pageNumber=0&pageSize=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagram",
+								"get",
+								""
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "share",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"toUserName\": \"hi\",\n    \"role\": \"WRITER\",\n    \"delete\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/share/{digram_id}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"share",
+								"{digram_id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"hi\",\n    \"jsonContent\": \"{}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/diagram/update/{id}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagram",
+								"update",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/diagram/delete/{id}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagram",
+								"delete",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"thumbnail\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/diagram/create",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagram",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "searchById",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/diagram/search/{id}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagram",
+								"search",
+								"{id}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "search",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"\",\r\n    \"start\": \"\",\r\n    \"end\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/diagram/search/{id}?pageNumber=0&pageSize=10\n",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagram",
+								"search",
+								"{id}"
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10\n"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
-	"auth": {
-		"type": "bearer"
-	},
 	"event": [
 		{
 			"listen": "prerequest",

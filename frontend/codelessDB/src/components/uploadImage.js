@@ -1,0 +1,39 @@
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || "";
+const IMAGE_CLOUD = import.meta.env.VITE_IMAGE_CLOUD_URL;
+
+const getSignature = async (publicId) => {
+	const response = await axios.get(
+		`${API_URL}/user/signature/upload?publicId=${publicId}`
+	);
+	return response.data;
+};
+
+export const uploadToCloudinary = async (file, publicId) => {
+	try {
+		const { signature, timestamp, apiKey, cloudName, uploadPreset } =
+			await getSignature(publicId);
+
+		const formData = new FormData();
+
+		formData.append("file", file);
+		formData.append("public_id", publicId);
+		formData.append("timestamp", timestamp);
+		formData.append("signature", signature);
+		formData.append("api_key", apiKey);
+		formData.append("upload_preset", uploadPreset);
+		formData.append("overwrite", "true");
+		formData.append("invalidate", "true");
+
+		const uploadUrl = `${IMAGE_CLOUD}/${cloudName}/image/upload`;
+
+		const res = await axios.post(uploadUrl, formData, {
+			headers: { "Content-Type": "multipart/form-data" },
+		});
+
+		return res.data.secure_url;
+	} catch (error) {
+		console.log(error.response?.data || error);
+	}
+};
