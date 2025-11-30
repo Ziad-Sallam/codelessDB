@@ -129,7 +129,7 @@ export default function TopBar(props) {
 					}}
 				>
 					<InputBase
-						value={search}
+						value={search || ""}
 						onChange={(e) => setSearch(e.target.value)}
 						onKeyPress={handleKeyPress}
 						placeholder="Search diagrams..."

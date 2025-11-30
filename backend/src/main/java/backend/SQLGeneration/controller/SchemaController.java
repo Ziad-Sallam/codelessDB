@@ -3,7 +3,6 @@ package backend.SQLGeneration.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,13 +17,13 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class SchemaController {
 
     private final SchemaService schemaService;
 
     @PostMapping("/generate")
-    public ResponseEntity<String> generateDDL(@AuthenticationPrincipal AuthUser authUser,@RequestBody SchemaDTO schemaDTO) {
+    public ResponseEntity<String> generateDDL(@AuthenticationPrincipal AuthUser authUser,
+            @RequestBody SchemaDTO schemaDTO) {
         try {
             String ddl = schemaService.generateDDL(schemaDTO);
             return ResponseEntity.ok(ddl);

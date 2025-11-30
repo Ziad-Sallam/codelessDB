@@ -1,6 +1,5 @@
 package backend.user.exceptions;
 
-import org.aspectj.lang.annotation.Aspect;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +10,13 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import backend.config.ErrorResponse;
+import backend.user.exceptions.UserException.EmailAlreadyExistsException;
+import backend.user.exceptions.UserException.InvalidEmailException;
+import backend.user.exceptions.UserException.InvalidTokenException;
+import backend.user.exceptions.UserException.OtpSendFailedException;
+import backend.user.exceptions.UserException.UserNotFoundException;
+import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import io.jsonwebtoken.ExpiredJwtException;
-
-import static backend.user.exceptions.UserException.*;
 
 @ControllerAdvice
 public class UserExceptionHandler {
@@ -100,7 +103,7 @@ public class UserExceptionHandler {
 
    @ExceptionHandler(Exception.class)
    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
-      ex.printStackTrace();
+      // ex.printStackTrace();
       return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
    }
 }
