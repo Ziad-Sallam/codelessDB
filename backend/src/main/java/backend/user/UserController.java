@@ -77,7 +77,7 @@ public class UserController {
 		return ResponseEntity.ok(jwtUtil.generateToken(user.getId(), user.getUsername()));
 	}
 
-	@GetMapping("/ay7aga")
+	@GetMapping("/auth")
 	public ResponseEntity<?> login(@AuthenticationPrincipal AuthUser authUser) {
 		UserDto userDto = userService.getUserInfo(authUser.userId());
 		return ResponseEntity.ok(userDto);
