@@ -1,59 +1,35 @@
 import { useState, useEffect } from "react";
 import {
-  Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Menu, MenuItem,
+  Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar,
+  CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
+  Menu, MenuItem
 } from "@mui/material";
+import { ThemeProvider } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { ThemeProvider } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
 import LeftPanel from "../../components/LeftPanel.jsx";
-import "./UserProfile.css";
-import theme from '../../theme.js';
+import theme from "../../theme.js";
+import { useAuth } from "../../components/AuthProvider.jsx";
 import { uploadToCloudinary } from "../../uploadToCloudinary.js";
+import { updateUserField, resetPassword } from "./userFetch.js";
 
-const apiClient = axios.create({
-  baseURL: "http://localhost:8080",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      localStorage.removeItem("authToken");
-      window.location.href = "/login";
-    }
-    return Promise.reject(error);
-  }
-);
+import "./UserProfile.css";
 
 export default function UserProfile() {
   const navigate = useNavigate();
+  const { user, setUser } = useAuth();
+
   const [leftNav, setLeftNav] = useState("profile");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [picture, setPicture] = useState("");
-  const [createdAt, setCreatedAt] = useState("");
-  const [editMode, setEditMode] = useState({ username: false });
-  const [tempData, setTempData] = useState({ username: "" });
+  const [profileData, setProfileData] = useState({ username: "", email: "", picture: "", createdAt: "" });
+  const [editMode, setEditMode] = useState({});
+  const [tempData, setTempData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -62,55 +38,45 @@ export default function UserProfile() {
   const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
-    fetchUserInfo();
+    if (!user) return;
 
-    const resetSuccess = localStorage.getItem('passwordResetSuccess');
-    if (resetSuccess === 'true') {
+    setProfileData({
+      username: user.username,
+      email: user.email,
+      picture: user.picture,
+      createdAt: user.createdAt,
+    });
+    setLoading(false);
+
+    const resetSuccess = localStorage.getItem("passwordResetSuccess");
+    if (resetSuccess === "true") {
       showSnackbar("Password reset successfully!", "success");
-      localStorage.removeItem('passwordResetSuccess');
+      localStorage.removeItem("passwordResetSuccess");
     }
-  }, []);
+  }, [user]);
 
-  const fetchUserInfo = async () => {
-    try {
-      const response = await apiClient.get("/user/info");
-
-      const data = response.data;
-      setUsername(data.username || "");
-      setEmail(data.email || "");
-      setPicture(data.picture || "");
-      setCreatedAt(data.createdAt || "");
-
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-
-      if (error.code === "ERR_NETWORK") {
-        showSnackbar("Network error. Please check your connection.", "error");
-      } else {
-        showSnackbar(error.response?.data?.message || "Error loading profile", "error");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const showSnackbar = (message, severity) => setSnackbar({ open: true, message, severity });
+  const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
   const handleEdit = (field) => {
-    if (editMode[field]) return;
     setEditMode({ ...editMode, [field]: true });
-    setTempData({ ...tempData, [field]: eval(field) });
+    setTempData({ ...tempData, [field]: profileData[field] });
   };
 
-  const handleSave = async (field) => {
+  const handleSave = async (field, value = null) => {
     setSaving(true);
     try {
-      const updateDto = { [field]: tempData[field] };
-      const response = await apiClient.put("/user/update", updateDto);
+      const newValue = value ?? tempData[field];
+      await updateUserField(field, newValue);
 
-      if (response.status === 200) {
-        if (field === "username") setUsername(tempData[field]);
-        setEditMode({ ...editMode, [field]: false });
-        showSnackbar(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`, "success");
-      }
+      setProfileData((prev) => ({ ...prev, [field]: newValue }));
+      setUser((prev) => ({
+        ...prev,
+        [field]: newValue
+      }));
+
+      setEditMode((prev) => ({ ...prev, [field]: false }));
+      showSnackbar(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`, "success");
     } catch (error) {
       console.error(`Error updating ${field}:`, error);
       showSnackbar(error.response?.data?.message || `Error updating ${field}`, "error");
@@ -124,35 +90,66 @@ export default function UserProfile() {
     setTempData({ ...tempData, [field]: "" });
   };
 
-  const handleResetPassword = () => {
-    const token = localStorage.getItem("authToken");
-    localStorage.setItem("token for_reset", token);
-    localStorage.setItem("otpPurpose", "reset");
-    localStorage.setItem("email", email);
-    localStorage.setItem("resetSource", "profile");
-    navigate("/reset");
+  const handleResetPassword = async () => {
+    try {
+      const token = await resetPassword(profileData.email);
+      localStorage.setItem("token_for_reset", token);
+      localStorage.setItem("email", profileData.email);
+      localStorage.setItem("resetSource", "profile");
+      
+      navigate("/password-reset?flow=reset");
+
+      // navigate("/register?flow=reset");
+    } catch (error) {
+      console.error("Error initiating password reset:", error);
+      showSnackbar(error.response?.data?.message || "Error initiating password reset", "error");
+    }
   };
 
   const handleCameraClick = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
-  const showSnackbar = (message, severity) => setSnackbar({ open: true, message, severity });
-  const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
+  const handleFileSelect = async (event) => {
+    const file = event.target.files[0];
+    if (!file || !file.type.startsWith("image/") || file.size > 1024 * 1024) {
+      return showSnackbar(!file ? "No file selected" : file.size > 1024 * 1024 ? "Image must be <1MB" : "Only image files allowed", "error");
+    }
+    try {
+      showSnackbar("Uploading image...", "info");
+      const url = await uploadToCloudinary(file, profileData.email);
+      if (url) await handleSave("picture", url);
+    } catch {
+      showSnackbar("Error uploading picture", "error");
+    }
+    handleMenuClose();
+  };
 
-  const getInitials = () => username ? username.substring(0, 2).toUpperCase() : "U";
+  const handleUrlSubmit = async () => {
+    if (!imageUrl.trim()) return showSnackbar("Please enter a valid URL", "error");
+    await handleSave("picture", imageUrl);
+    setShowUrlDialog(false);
+    setImageUrl("");
+  };
+
+  const handleUrlUpload = () => { setShowUrlDialog(true); handleMenuClose(); };
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    setUser(null);
+    navigate("/login");
+  };
+
+  const getInitials = () => profileData.username ? profileData.username.substring(0, 2).toUpperCase() : "U";
 
   const ProfileField = ({ label, field, icon: Icon, type = "text", editable = true }) => {
     const isEditing = editMode[field];
-    const currentValue = eval(field);
+    const currentValue = profileData[field];
 
     return (
       <Box className="profile-field" onClick={() => !isEditing && editable && handleEdit(field)}>
         <Box className="profile-field-header">
           <Box className="profile-field-label">
             <Icon sx={{ fontSize: 18, color: "text.secondary", mr: 1 }} />
-            <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
-              {label}
-            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>{label}</Typography>
           </Box>
           {!isEditing && editable && (
             <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEdit(field); }} className="edit-button">
@@ -160,16 +157,11 @@ export default function UserProfile() {
             </IconButton>
           )}
         </Box>
-
         {isEditing ? (
           <Box className="profile-field-edit" onClick={(e) => e.stopPropagation()}>
             <TextField
-              fullWidth
-              size="small"
-              type={type}
-              value={tempData[field]}
-              onChange={(e) => setTempData({ ...tempData, [field]: e.target.value })}
-              autoFocus
+              fullWidth size="small" type={type} value={tempData[field]}
+              onChange={(e) => setTempData({ ...tempData, [field]: e.target.value })} autoFocus
             />
             <Button variant="contained" size="small" onClick={() => handleSave(field)} disabled={saving} className="save-button">Save</Button>
             <Button variant="outlined" size="small" onClick={() => handleCancel(field)} className="cancel-button">Close</Button>
@@ -196,53 +188,7 @@ export default function UserProfile() {
     </Box>
   );
 
-  const updateProfilePicture = async (url) => {
-    try {
-      const response = await apiClient.put("/user/update", { picture: url });
-      if (response.status === 200) {
-        setPicture(url);
-        showSnackbar("Profile picture updated successfully", "success");
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Error uploading picture:", error);
-      showSnackbar(error.response?.data?.message || "Error uploading picture", "error");
-      return false;
-    }
-  };
-
-  const handleFileSelect = async (event) => {
-    const file = event.target.files[0];
-    if (!file || !file.type.startsWith("image/") || file.size > 1024 * 1024) {
-      showSnackbar(!file ? "No file selected" : file.size > 1024 * 1024 ? "Image must be <1MB" : "Only image files allowed", "error");
-      return;
-    }
-    try {
-      showSnackbar("Uploading image...", "info");
-      const url = await uploadToCloudinary(file, email);
-      if (url) await updateProfilePicture(url);
-    } catch {
-      showSnackbar("Error uploading picture", "error");
-    }
-    handleMenuClose();
-  };
-
-  const handleUrlSubmit = async () => {
-    if (!imageUrl.trim()) return showSnackbar("Please enter a valid URL", "error");
-    const success = await updateProfilePicture(imageUrl);
-    if (success) { setShowUrlDialog(false); setImageUrl(""); }
-  };
-  const handleUrlUpload = () => { setShowUrlDialog(true); handleMenuClose(); };
-  const handleLogout = () => { localStorage.removeItem("authToken"); navigate("/login"); };
-
-  if (loading) {
-    return (
-      <ThemeProvider theme={theme}>
-        <Box className="loading-container"><CircularProgress /></Box>
-      </ThemeProvider>
-    );
-  }
+  if (loading) return <ThemeProvider theme={theme}><Box className="loading-container"><CircularProgress /></Box></ThemeProvider>;
 
   return (
     <ThemeProvider theme={theme}>
@@ -258,7 +204,7 @@ export default function UserProfile() {
               <CardContent className="profile-header-content">
                 <Box className="profile-header-inner">
                   <Box className="profile-avatar-container">
-                    <Avatar src={picture} className="profile-avatar">{!picture && getInitials()}</Avatar>
+                    <Avatar src={profileData.picture} className="profile-avatar">{!profileData.picture && getInitials()}</Avatar>
                     <input accept="image/*" style={{ display: "none" }} id="upload-photo" type="file" onChange={handleFileSelect} />
                     <IconButton onClick={handleCameraClick} className="camera-button" size="small"><CameraAltIcon fontSize="small" /></IconButton>
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
@@ -267,8 +213,8 @@ export default function UserProfile() {
                     </Menu>
                   </Box>
                   <Box className="profile-header-info">
-                    <Typography variant="h4" className="profile-username">{username}</Typography>
-                    {createdAt && <Typography variant="body2" className="profile-member-since">Member since {new Date(createdAt).toLocaleDateString()}</Typography>}
+                    <Typography variant="h4" className="profile-username">{profileData.username}</Typography>
+                    {profileData.createdAt && <Typography variant="body2" className="profile-member-since">Member since {new Date(profileData.createdAt).toLocaleDateString()}</Typography>}
                   </Box>
                 </Box>
               </CardContent>

@@ -1,5 +1,4 @@
-// src/components/auth/LogIn.jsx (or wherever you keep it)
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import "./LogIn.css";
 
 import { FaUser } from "react-icons/fa";
@@ -8,73 +7,81 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { RecoveryContext } from "../../App";
-
-import {
-  login,
-  requestPasswordReset,
-  sendOtp,
-  parseApiError,
-} from "./fetch.js";
+import { login, redirectToGoogleAuth, parseApiError, validateToken } from "./fetch.js";
+import { useAuth } from "../../components/AuthProvider.jsx";
 
 const LogIn = () => {
   const navigate = useNavigate();
-  const { setEmail } = useContext(RecoveryContext);
-
-  const [mail, setMail] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const { user, setUser } = useAuth();
 
-  // Run once: check token, set title, clean url
   useEffect(() => {
     document.title = "Log in | CodeLess";
-    // Clean URL (only once)
-    window.history.replaceState({}, "LogIn | CodeLess", "/login");
+  }, []);
 
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      // If any token exists (even invalid), redirect to diagrams.
-      navigate("/diagrams", { replace: true });
-    }
-    // navigate is stable from react-router; include it to satisfy hooks rules.
-  }, [navigate]);
-
-  // Watch OAuth error param separately
   useEffect(() => {
-    const oauthError = searchParams.get("error");
-    if (oauthError) {
-      setError("Google login failed. Please try again.");
-    }
-  }, [searchParams]);
+    const handleOAuthCallback = async () => {
+      const token = searchParams.get("token");
+      const oauthError = searchParams.get("error");
+
+      if (token) {
+        try {
+          // Save token
+          localStorage.setItem("authToken", token);
+
+          // Validate token and update auth context
+          const userData = await validateToken();
+          setUser(userData);
+
+          // Now navigate
+          navigate("/diagrams", { replace: true });
+        } catch (err) {
+          setError("Authentication failed. Please try again.");
+          localStorage.removeItem("authToken");
+        }
+        return;
+      }
+
+      if (oauthError) {
+        setError("Google login failed. Please try again.");
+        window.history.replaceState({}, document.title, "/login");
+      }
+    };
+
+    handleOAuthCallback();
+  }, [searchParams, navigate, setUser]);
 
   const handleGoogleLogin = () => {
-    // redirect user to backend oauth endpoint
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    redirectToGoogleAuth(false);
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setError("");
-    if (!mail || !password) {
+
+    if (!email || !password) {
       setError("Email and password are required");
       return;
     }
 
     setLoading(true);
     try {
-      const data = await login(mail, password);
-
-      // backend might return token string or { token: '...' }
+      const data = await login(email, password);
       const token = data?.token ?? data;
+      console.log(data);
 
       if (!token) {
-        // defensive: if backend didn't return token but status is OK, still handle gracefully
         throw new Error("Login did not return an auth token.");
       }
 
       localStorage.setItem("authToken", token);
+      const userData = await validateToken();
+      setUser(userData);
       navigate("/diagrams", { replace: true });
     } catch (err) {
       setError(parseApiError(err));
@@ -83,32 +90,9 @@ const LogIn = () => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    setError("");
-    if (!mail) {
-      setError("Please enter your email");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const resetToken = await requestPasswordReset(mail);
-      // store whatever the backend returns
-      localStorage.setItem("token_for_reset", resetToken);
-
-      const otp = await sendOtp(mail);
-      localStorage.setItem("otp", otp);
-      localStorage.setItem("email", mail);
-      localStorage.setItem("otpPurpose", "reset");
-      setEmail(mail);
-
-      navigate("/otp");
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
+  const handleForgotPassword = () => {
+    // Navigate to register page with forgot password flow
+    navigate("/register?flow=forgot");
   };
 
   return (
@@ -121,7 +105,7 @@ const LogIn = () => {
 
         <div className="main">
           <div className="wrapper">
-            <form onSubmit={(e) => e.preventDefault()}>
+            <form onSubmit={handleLogin}>
               <h1>Log In</h1>
 
               <div className="input-box">
@@ -129,9 +113,9 @@ const LogIn = () => {
                 <input
                   type="text"
                   placeholder="Email"
-                  value={mail}
+                  value={email}
                   onChange={(e) => {
-                    setMail(e.target.value);
+                    setEmail(e.target.value);
                     setError("");
                   }}
                   required
@@ -164,15 +148,11 @@ const LogIn = () => {
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="submit"
-                onClick={handleLogin}
-                disabled={loading}
-              >
+              <button type="submit" className="submit" disabled={loading}>
                 {loading ? "Please wait..." : "Log In"}
               </button>
-              {error && <p style={{ color: "red" }}>{error}</p>}
+
+              {error && <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>{error}</p>}
 
               <div className="divider">
                 <span>OR</span>
@@ -190,7 +170,7 @@ const LogIn = () => {
 
               <div className="register">
                 <p>
-                  Don't Have Account? <Link to="/signup">Sign Up</Link>
+                  Don't Have Account? <Link to="/register">Sign Up</Link>
                 </p>
               </div>
             </form>

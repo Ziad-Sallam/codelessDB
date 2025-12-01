@@ -1,6 +1,4 @@
 import axios from "axios";
-const token = localStorage.getItem("authToken");
-
 const API_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 export async function fetchDiagram(diagramId) {
@@ -8,7 +6,7 @@ export async function fetchDiagram(diagramId) {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
-			Authorization: `Bearer ${token}`,
+			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		
 	});
@@ -27,7 +25,7 @@ export async function generateSQLFromBackend(finalJson) {
     {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
       },
       
     }
@@ -38,7 +36,7 @@ export const updateDiagram = (id, payload) => {
   return axios.put(`${API_URL}/diagrams/update/${id}`, payload, {
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
     },
     
   });
