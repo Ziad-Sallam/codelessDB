@@ -6,8 +6,7 @@ import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import { TbLockPassword } from "react-icons/tb";
 import { IoIosMail } from "react-icons/io";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -17,31 +16,19 @@ const SignUp = () => {
   const [confirmPass, setConfirmPass] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [preview, setPreview] = useState(null);
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
     document.title = "Sign Up | CodeLess";
 
-    const existingToken = localStorage.getItem('authToken');
-    if (existingToken) {
-      navigate('/diagrams', { replace: true });
-      return;
+    const oauthError = searchParams.get("error");
+    if (oauthError) {
+      setError("Google signup failed. Please try again.");
     }
 
-    const token = searchParams.get('token');
-    const oauthError = searchParams.get('error');
-
-    if (token) {
-      localStorage.setItem('authToken', token);
-      navigate('/diagrams');
-    } else if (oauthError) {
-      setError('Google signup failed. Please try again.');
-    }
-
-    window.history.replaceState({}, document.title, "/SignUp");
-  }, [searchParams, navigate]);
-
+    // Clean URL
+    window.history.replaceState({}, document.title, "/signup");
+  }, []); // <-- RUNS ONCE ONLY
 
   function getPasswordChecks(pass) {
     return {
@@ -52,6 +39,7 @@ const SignUp = () => {
       symbol: /[^A-Za-z0-9]/.test(pass),
     };
   }
+
   const checks = getPasswordChecks(password);
 
   function checkStrength(pass) {
@@ -70,49 +58,47 @@ const SignUp = () => {
       setError("Password is weak.");
       return;
     }
+
     if (password !== confirmPass) {
       setError("Passwords do not match.");
       return;
     }
+
     setError("");
 
     try {
-      const response1 = await axios.post("http://localhost:8080/user/signup/validate", {
+      // Step 1: Validate user doesn't already exist
+      await axios.post("http://localhost:8080/user/signup/validate", {
         email: mail,
-        username: username
+        username: username,
       });
 
-      if (response1.status === 200) {
-        try {
-          const response = await axios.post(`http://localhost:8080/user/signup/send-otp/${mail}`);
+      // Step 2: Send OTP
+      const response = await axios.post(
+        `http://localhost:8080/user/signup/send-otp/${mail}`
+      );
 
-          const otp = response.data;
+      const otp = response.data;
 
-          localStorage.setItem("otp", otp);
-          localStorage.setItem("email", mail);
-          localStorage.setItem("otpPurpose", "signup");
-          localStorage.setItem("signupData", JSON.stringify({
-            username,
-            email: mail,
-            password
-          }));
+      localStorage.setItem("otp", otp);
+      localStorage.setItem("email", mail);
+      localStorage.setItem("otpPurpose", "signup");
+      localStorage.setItem(
+        "signupData",
+        JSON.stringify({
+          username,
+          email: mail,
+          password,
+        })
+      );
 
-          navigate("/otp");
-
-        } catch (err) {
-          const serverMsg = err.response?.data?.message
-            || err.response?.data
-            || err.message
-            || "Server unavailable. Please try again later.";
-
-          setError(String(serverMsg));
-        }
-      }
+      navigate("/otp");
     } catch (err) {
-      const serverMsg = err.response?.data?.message
-        || err.response?.data
-        || err.message
-        || "Server unavailable. Please try again later.";
+      const serverMsg =
+        err.response?.data?.message ||
+        err.response?.data ||
+        err.message ||
+        "Server unavailable. Please try again later.";
 
       setError(String(serverMsg));
     }
@@ -184,7 +170,7 @@ const SignUp = () => {
                   {checks.number ? "✓" : "✗"} One number (0-9)
                 </li>
                 <li className={checks.symbol ? "valid" : "invalid"}>
-                  {checks.symbol ? "✓" : "✗"} One special character (!@#$%^&*)
+                  {checks.symbol ? "✓" : "✗"} One special character
                 </li>
               </ul>
 
@@ -205,7 +191,9 @@ const SignUp = () => {
                 </span>
               </div>
 
-              <button type="submit" className="submit">Sign Up</button>
+              <button type="submit" className="submit">
+                Sign Up
+              </button>
 
               {error && <p className="error-message">{error}</p>}
 

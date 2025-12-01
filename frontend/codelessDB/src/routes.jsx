@@ -7,41 +7,58 @@ import DiagramPage from './pages/diagrams/DiagramPage.jsx';
 import Schema from './pages/schemaDrawing/schema.jsx';
 import UserProfile from './pages/userprofile/UserProfile.jsx';
 
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+
 export const routes = [
-	{
-		path: '/',
-		element: <LogIn />
-	},
-	{
-		path: '/login',
-		element: <LogIn />
-	},
-	{
-		path: '/signup',
-		element: <SignUp />
-	},
-	{
-		path: '/otp',
-		element: <OTPInput />
-	},
-	{
-		path: '/reset',
-		element: <Reset />
-	},
-	{
-		path: '/recovered',
-		element: <Recovered />
-	},
-	{
-		path: '/diagrams',
-		element: <DiagramPage />
-	},
-	{
-		path: '/diagrams/:id',
-		element:<Schema/>
-	},
-	{
-		path:'/profile',
-		element: <UserProfile/>
-	}
-]
+  // Public routes
+  {
+    path: '/',
+    element: <LogIn />
+  },
+  {
+    path: '/login',
+    element: <LogIn />
+  },
+  {
+    path: '/signup',
+    element: <SignUp />
+  },
+  {
+    path: '/otp',
+    element: <OTPInput />
+  },
+  {
+    path: '/reset',
+    element: <Reset />
+  },
+  {
+    path: '/recovered',
+    element: <Recovered />
+  },
+
+  // Protected routes
+  {
+    path: '/diagrams',
+    element: (
+      <ProtectedRoute>
+        <DiagramPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/diagrams/:id',
+    element: (
+      <ProtectedRoute>
+        <Schema />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/profile',
+    element: (
+      <ProtectedRoute>
+        <UserProfile />
+      </ProtectedRoute>
+    )
+  }
+];
