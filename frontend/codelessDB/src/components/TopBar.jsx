@@ -13,6 +13,7 @@ import { getInitials } from "../pages/diagrams/Contributors";
 import { useNotification } from "./NotificationContext";
 
 import { getUserInfo, searchDiagrams } from "../pages/diagrams/fetch";
+import { useAuth } from "./AuthProvider.jsx";
 
 const INITIAL_DATE = "2025-01-01";
 
@@ -38,19 +39,14 @@ export default function TopBar(props) {
 	const [dateFrom, setDateFrom] = useState(null);
 	const [dateTo, setDateTo] = useState(null);
 
-	useEffect(() => {
-		const fetchUser = async () => {
-			try {
-				const user = await getUserInfo();
-				setUserName(user.username);
-				setUserImage(user.picture);
-			} catch (error) {
-				showError(error);
-			}
-		};
+	const { user } = useAuth();
 
-		fetchUser();
-	}, []);
+	useEffect(() => {
+		if (user) {
+			setUserName(user.username);
+			setUserImage(user.picture);
+		}
+	}, [user]);
 
 	useEffect(() => {
 		if (search !== null || (dateFrom !== null && dateTo !== null)) {
