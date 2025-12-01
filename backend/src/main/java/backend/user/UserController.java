@@ -3,9 +3,9 @@ package backend.user;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import org.springframework.beans.factory.annotation.Value;
 
 import backend.entities.User;
 import backend.security.AuthUser;
@@ -26,7 +25,6 @@ import backend.security.JwtUtil;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UserController {
 
 	@Autowired
@@ -79,7 +77,7 @@ public class UserController {
 		return ResponseEntity.ok(jwtUtil.generateToken(user.getId(), user.getUsername()));
 	}
 
-	@GetMapping("/login")
+	@GetMapping("/auth")
 	public ResponseEntity<?> login(@AuthenticationPrincipal AuthUser authUser) {
 		UserDto userDto = userService.getUserInfo(authUser.userId());
 		return ResponseEntity.ok(userDto);
@@ -116,10 +114,10 @@ public class UserController {
 		String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
 
 		return Map.of(
-			"signature", signature,
-			"timestamp", timestamp,
-			"apiKey", cloudinary.config.apiKey,
-			"cloudName", cloudinary.config.cloudName,
-			"uploadPreset", uploadPreset);
+				"signature", signature,
+				"timestamp", timestamp,
+				"apiKey", cloudinary.config.apiKey,
+				"cloudName", cloudinary.config.cloudName,
+				"uploadPreset", uploadPreset);
 	}
 }

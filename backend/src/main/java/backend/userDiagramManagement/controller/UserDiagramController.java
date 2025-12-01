@@ -1,34 +1,40 @@
 package backend.userDiagramManagement.controller;
 
+import java.util.Date;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import backend.security.AuthUser;
-import backend.userDiagramManagement.dto.*;
+import backend.userDiagramManagement.dto.DiagramDto;
+import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
+import backend.userDiagramManagement.dto.delete.DiagramDeleteResponseDto;
 // import backend.userDiagramManagement.dto.create.DiagramCreateResponseDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateResponseDto;
-import backend.userDiagramManagement.dto.delete.DiagramDeleteResponseDto;
 import backend.userDiagramManagement.service.IUserDiagramService;
-
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/diagrams")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UserDiagramController {
 
     private final IUserDiagramService userDiagramService;
@@ -40,7 +46,7 @@ public class UserDiagramController {
     @GetMapping("/get")
     public ResponseEntity<Page<DiagramInfoDto>> getDiagramsByUserId(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestParam(defaultValue = "0") int pageNumber, 
+            @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
@@ -70,8 +76,7 @@ public class UserDiagramController {
         return ResponseEntity.ok(new DiagramUpdateResponseDto(
                 "Diagram updated successfully",
                 id,
-                updateDate
-        ));
+                updateDate));
     }
 
     @DeleteMapping("/delete/{id}")
@@ -83,8 +88,7 @@ public class UserDiagramController {
 
         return ResponseEntity.ok(new DiagramDeleteResponseDto(
                 "Diagram deleted successfully",
-                id
-        ));
+                id));
     }
 
     @GetMapping("/search/{id}")

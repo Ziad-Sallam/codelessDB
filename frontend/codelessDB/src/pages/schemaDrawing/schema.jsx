@@ -167,12 +167,10 @@ export default function Schema() {
 
     try {
       await updateDiagram(id, payload);
-      // Generate and upload snapshot after saving data
       await takeSnapshot(); 
       showSuccess("Diagram saved successfully!");
     } catch (err) {
-      console.error("Error saving diagram:", err);
-      showError("Failed to save diagram.");
+      showError(err.message);
     } finally {
       setIsSaving(false);
     }
@@ -189,13 +187,14 @@ export default function Schema() {
     const finalJson = convertToJSON(schemaName, nodes);
 
     try {
-      const response = await generateSQLFromBackend(finalJson);
-      setGeneratedSql(response.data);
+      const data = await generateSQLFromBackend(finalJson);
+      setGeneratedSql(data);
+      setIsSqlPanelOpen(true);
     } catch (err) {
-      console.log("ERROR:", err);
+      showError(err.message);
+      setIsSqlPanelOpen(false);
     }
 
-    setIsSqlPanelOpen(true);
   };
 
   return (

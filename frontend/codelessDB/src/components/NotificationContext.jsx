@@ -16,7 +16,8 @@ export function NotificationProvider({ children }) {
 		open: false,
 		message: '',
 		severity: 'success',
-		duration: 3000
+		duration: 3000,
+		timestamp: null
 	});
 
 	function showNotification(message, severity = 'success', duration = 3000) {
@@ -24,7 +25,8 @@ export function NotificationProvider({ children }) {
 			open: true,
 			message,
 			severity,
-			duration
+			duration,
+			timestamp: Date.now()
 		});
 	}
 
@@ -66,6 +68,7 @@ export function NotificationProvider({ children }) {
 				duration={notification.duration}
 				open={notification.open}
 				onClose={hideNotification}
+				timestamp={notification.timestamp}
 			/>
 		</NotificationContext.Provider>
 	);

@@ -1,47 +1,62 @@
-import LogIn from './pages/login/LogIn.jsx';
-import SignUp from './pages/signup/SignUp.jsx';
-import OTPInput from './pages/login/otp/OTPInput.jsx';
-import Reset from './pages/login/reset/Reset.jsx';
-import Recovered from './pages/login/Recovered/Recovered.jsx';
+import Register from './pages/auth/Register';
+import LogIn from './pages/auth/LogIn';
 import DiagramPage from './pages/diagrams/DiagramPage.jsx';
 import Schema from './pages/schemaDrawing/schema.jsx';
 import UserProfile from './pages/userprofile/UserProfile.jsx';
 
+import {ProtectedRoute, PublicRoute} from "./components/Routing.jsx";
+
 export const routes = [
-	{
-		path: '/',
-		element: <LogIn />
-	},
-	{
-		path: '/login',
-		element: <LogIn />
-	},
-	{
-		path: '/signup',
-		element: <SignUp />
-	},
-	{
-		path: '/otp',
-		element: <OTPInput />
-	},
-	{
-		path: '/reset',
-		element: <Reset />
-	},
-	{
-		path: '/recovered',
-		element: <Recovered />
-	},
-	{
-		path: '/diagrams',
-		element: <DiagramPage />
-	},
-	{
-		path: '/diagrams/:id',
-		element:<Schema/>
-	},
-	{
-		path:'/profile',
-		element: <UserProfile/>
-	}
-]
+  {
+    path: "/password-reset",
+    element: <Register />, 
+  },
+  {
+    path: "/login",
+    element: (
+      <PublicRoute>
+        <LogIn />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/register",
+    element: (
+      <PublicRoute>
+        <Register />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <DiagramPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/diagrams",
+    element: (
+      <ProtectedRoute>
+        <DiagramPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/diagrams/:id",
+    element: (
+      <ProtectedRoute>
+        <Schema />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRoute>
+        <UserProfile />
+      </ProtectedRoute>
+    ),
+  },
+];

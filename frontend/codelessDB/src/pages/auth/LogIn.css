@@ -6,7 +6,6 @@
     height: 100%;
     background: linear-gradient(70deg, #ff00ff, #00ffff, #ff9900, #ff00ff);
     background-size: 400%;
-
     animation: glow 30s linear infinite;
 }
 
@@ -28,7 +27,6 @@
     font-size: 70px;
     color: #fff;
     text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-
 }
 
 .bg .slogon {
@@ -56,9 +54,8 @@
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     background-size: cover;
     background-position: center;
-     animation: slideFromLeft 0.6s ease forwards;
+    animation: slideFromLeft 0.6s ease forwards;
 }
-
 
 .login .wrapper {
     min-width: 300px;
@@ -72,7 +69,6 @@
     border-radius: 5px;
     padding: 30px 40px;
 }
-
 
 .login .wrapper h1 {
     font-size: 36px;
@@ -106,8 +102,7 @@
     right: -1px;
     bottom: -1px;
     border-radius: 5px;
-    box-shadow:
-        0 0 10px 1px #ff9900;
+    box-shadow: 0 0 10px 1px #ff9900;
     z-index: -1;
     transition: all 0.3s ease;
 }
@@ -119,14 +114,15 @@
     transform: translateY(-50%);
     font-size: 20px;
 }
+
 .toggle-password {
-  position: absolute;
-  top: 50%;
-  right: 50px;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 20px;
-  color: #000000;
+    position: absolute;
+    top: 50%;
+    right: 50px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 20px;
+    color: #000000;
 }
 
 .forgot-password {
@@ -134,11 +130,13 @@
     text-align: left;
     font-size: 14.5px;
 }
-.forgot-password p  {
+
+.forgot-password p {
     color: #000000;
     text-decoration: none;
     font-weight: 500;
 }
+
 .forgot-password p:hover {
     text-decoration: underline;
 }
@@ -178,13 +176,18 @@
     font-weight: 700;
 }
 
-.login .wrapper .submit:hover {
+.login .wrapper .submit:hover:not(:disabled) {
     background: linear-gradient(70deg, #ff00ff, #00ffff, #ff9900, #ff00ff);
     background-size: 400%;
     color: #000;
     animation: glow 6s linear infinite;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
+}
+
+.login .wrapper .submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .wrapper .register {
@@ -203,15 +206,74 @@
     text-decoration: underline;
 }
 
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #666;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider span {
+    padding: 0 10px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Google Button */
+.google-button {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: white;
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.google-button:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    border-color: #d0d0d0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.google-button:active {
+    transform: scale(0.98);
+}
+
+.google-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.google-icon {
+    font-size: 20px;
+}
+
+/* Animations */
 @keyframes glow {
     0% {
         background-position: 0% 50%;
     }
-
     50% {
         background-position: 100% 50%;
     }
-
     100% {
         background-position: 0% 50%;
     }
@@ -221,75 +283,29 @@
     0% {
         background-position-x: 0;
     }
-
     100% {
         background-position-x: 1000px;
     }
 }
 
 @keyframes slideFromLeft {
-  from {
-    opacity: 1;
-    
-    transform: translateX(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+    from {
+        opacity: 1;
+        transform: translateX(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
-/* Add these styles to both SignUp.css and LogIn.css */
-
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 20px 0;
-  color: #666;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #ddd;
-}
-
-.divider span {
-  padding: 0 10px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.google-button {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: white;
-  color: #333;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.3s ease;
-  margin-bottom: 15px;
-}
-
-.google-button:hover {
-  background-color: #f8f9fa;
-  border-color: #d0d0d0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.google-button:active {
-  transform: scale(0.98);
-}
-
-.google-icon {
-  font-size: 20px;
+@keyframes slideFromRight {
+    from {
+        opacity: 1;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }

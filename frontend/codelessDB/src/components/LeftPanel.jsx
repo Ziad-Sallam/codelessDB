@@ -36,7 +36,7 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 		>
 			<Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
 				<Box>
-					<Typography variant="h6" style={{fontWeight:"700",fontSize:"28px"}}>CodeLessDB</Typography>
+					<Typography variant="h6" style={{fontWeight:"600",fontSize:"28px", fontFamily: 'Poppins', color: "#cadfffff"}}>CodelessDB</Typography>
 					<Typography variant="caption" sx={{ opacity: 1, fontSize:"13px" }}>
 						Shared workspace
 					</Typography>

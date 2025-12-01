@@ -155,6 +155,7 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
 
     print("MySQL is exposed on host:", host_ip)
     print("MySQL is exposed on port:", host_port)
+    time.sleep(15)
     try:
         connection = mysql.connector.connect(
             host=host_ip,

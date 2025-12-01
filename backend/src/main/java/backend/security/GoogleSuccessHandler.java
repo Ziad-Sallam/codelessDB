@@ -37,9 +37,6 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
       HttpServletResponse response,
       Authentication authentication) throws IOException {
 
-    log.info("Request URL: {}", request.getRequestURL());
-    log.info("Request URI: {}", request.getRequestURI());
-
     try {
       OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
@@ -47,24 +44,14 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
       String username = oAuth2User.getAttribute("name");
       String picture = oAuth2User.getAttribute("picture");
 
-      log.info("=== Google OAuth Success ===");
-      log.info("Email: {}", email);
-      log.info("Username: {}", username);
-      log.info("Picture: {}", picture);
-      log.info("Request URI: {}", request.getRequestURI());
-
-      // Check if user exists
       User user = userService.findUserByEmail(email);
 
       if (user == null) {
-        // Create a new user
-        log.info("Creating new user for email: {}", email);
 
         UserDto userDto = new UserDto();
         userDto.setEmail(email);
         userDto.setRawPassword(UUID.randomUUID().toString());
 
-        // Ensure unique username
         String uniqueUsername = username;
         int attempt = new Random().nextInt(1, 100);
         while (userService.findUserByUsername(uniqueUsername) != null) {
@@ -74,15 +61,10 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
         userDto.setUsername(uniqueUsername);
         userDto.setPicture(picture);
 
-        // Create user and get the userId
         int userId = userService.createUser(userDto);
-        log.info("New user created with ID: {}", userId);
 
-        // Fetch the created user from database
         user = userService.findUserByEmail(email);
 
-      } else {
-        log.info("Existing user found with ID: {}", user.getId());
       }
 
       // Generate JWT token
@@ -91,11 +73,9 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
       // Redirect to frontend with token
       String redirectUrl = frontUrl + "/login?token=" + jwt;
 
-      log.info("Redirecting to: {}", redirectUrl);
       response.sendRedirect(redirectUrl);
 
     } catch (Exception e) {
-      log.error("Error in Google OAuth authentication", e);
       response.sendRedirect(frontUrl + "/login?error=oauth_failed");
     }
   }

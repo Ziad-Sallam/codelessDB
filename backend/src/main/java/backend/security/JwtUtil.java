@@ -6,21 +6,22 @@ import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
-import javax.crypto.SecretKey;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class JwtUtil {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final String secret = "TEST SECRET SKJDBW;KBF/;NFE/WEJFNBE/WNF/EWJNFVKEJNFKJEWBFHEWB;";
+    private final Key key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    // private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     @Value("${jwt.expiration-ms}")
     private long jwtExpirationMs;
