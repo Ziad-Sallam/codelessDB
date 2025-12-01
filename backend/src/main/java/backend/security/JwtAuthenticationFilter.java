@@ -72,36 +72,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             token = authHeader.substring(7);
-            log.error("## Extract token");
 
             userId = jwtUtil.extractSubject(token);
-            log.error("## Extract UserId");
 
             username = jwtUtil.extractUsername(token);
-            log.error("## Extract Username");
 
         } catch (ExpiredJwtException ex) {
-            log.error("JWT expired: {}", ex.getMessage());
             writeUnauthorized(response, "Token expired");
             return;
 
         } catch (SignatureException ex) {
-            log.error("Invalid token signature: {}", ex.getMessage());
             writeUnauthorized(response, "Invalid token signature");
             return;
 
         } catch (MalformedJwtException ex) {
-            log.error("Malformed token: {}", ex.getMessage());
             writeUnauthorized(response, "Malformed JWT token");
             return;
 
         } catch (IllegalArgumentException ex) {
-            log.error("Invalid token: {}", ex.getMessage());
             writeUnauthorized(response, "Invalid or empty JWT token");
             return;
 
         } catch (Exception ex) {
-            log.error("Unknown JWT error: {}", ex.getMessage());
             writeUnauthorized(response, "Invalid token");
             return;
         }
@@ -110,7 +102,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
             if (jwtUtil.isTokenValid(authHeader.substring(7), userId)) {
-                log.error("## Token is valid");
 
                 AuthUser authUser = new AuthUser(userId, username);
 

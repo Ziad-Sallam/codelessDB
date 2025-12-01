@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Snackbar, Alert } from "@mui/material";
 
-export default function Notification({ message, severity = "info", duration = 3000 }) {
+export default function Notification({ message, severity = "info", duration = 3000, timestamp }) {
 	const [open, setOpen] = useState(false);
 
 	useEffect(() => {
@@ -10,7 +10,7 @@ export default function Notification({ message, severity = "info", duration = 30
 			const timer = setTimeout(() => setOpen(false), duration);
 			return () => clearTimeout(timer);
 		}
-	}, [message, duration]);
+	}, [message, duration, timestamp]);
 
 	const handleClose = (event, reason) => {
 		if (reason === "clickaway") return;

@@ -19,7 +19,6 @@ export function AuthProvider({ children }) {
 
       try {
         const data = await validateToken();
-        console.log(data);
 
         if (data) setUser(data);
         else localStorage.removeItem("authToken");

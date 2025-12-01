@@ -66,7 +66,6 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        log.error("## In extract all claims");
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()

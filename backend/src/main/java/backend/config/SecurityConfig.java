@@ -35,11 +35,12 @@ public class SecurityConfig implements WebMvcConfigurer {
 								"/user/signup/**",
 								"/user/signature/**",
 								"/oauth2/**",
+								"/login/oauth2/**"
 
-								"/login/oauth2/**")
-						// "/agent-ws/**",
-						// "/api/messages/send",
-						// "/database/create-mysql-container")
+								// ,"/agent-ws/**",
+								// "/api/messages/send",
+								// "/database/create-mysql-container"
+							)
 						.permitAll().anyRequest().authenticated())
 
 				.oauth2Login(oauth -> oauth.redirectionEndpoint(redirect -> redirect.baseUri("/login/oauth2/google"))
