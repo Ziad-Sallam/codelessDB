@@ -1,0 +1,32 @@
+name: Check Java Tests
+
+on:
+  push:
+    branches:
+      - main
+      - milestone1
+  
+  pull_request:
+    branches:
+      - main
+      - milestone1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests
+        run: |
+          cd backend
+          mvn -B test
