@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import backend.entities.publicDiagramEntities.PublicDiagram;
 import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,7 +19,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -53,11 +53,7 @@ public class Diagram {
   @Column(nullable = false)
   @UpdateTimestamp
   private Date lastModified;
-  
-  @Builder.Default
-  @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<CannedQueriesDiagrams> queries = new ArrayList<>();
-  
+
   @OneToOne(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private PublicDiagram publicDiagram;
   

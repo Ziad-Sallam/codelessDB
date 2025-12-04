@@ -1,7 +1,8 @@
-package backend.entities;
+package backend.entities.publicDiagramEntities;
 
 import java.sql.Date;
 
+import backend.entities.Diagram;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
@@ -16,6 +17,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "canned_queries_diagrams")
@@ -36,6 +38,10 @@ public class CannedQueriesDiagrams {
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
   private Date createdAt;
+
+  @Column(nullable = false)
+  @UpdateTimestamp
+  private Date updatedAt;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "diagram_id", nullable = false)

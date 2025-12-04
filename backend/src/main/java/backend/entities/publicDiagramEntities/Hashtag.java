@@ -1,4 +1,4 @@
-package backend.entities;
+package backend.entities.publicDiagramEntities;
 
 import java.util.HashSet;
 import java.util.Set;
