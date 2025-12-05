@@ -29,7 +29,7 @@ export const convertToJSON = (schemaName ,nodes) => {
       // C. Check Constraint
       if (col.constraints.CHECK) {
         // Combine condition and value into a single expression string
-        const expression = `${col.constraints.checkCondition || ""} ${col.constraints.checkValue || ""}`.trim();
+        const expression = `${col.constraints.checkCondition || ">"} ${col.constraints.checkValue || ""}`.trim();
         constraints.push({
           type: "CHECK",
           expression: expression || null,

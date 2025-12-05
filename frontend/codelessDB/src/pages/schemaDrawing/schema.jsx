@@ -197,6 +197,10 @@ export default function Schema() {
 
   };
 
+  const printNodes = () => { 
+    console.log("Current Nodes:", nodes);
+  };
+
   return (
     <div className="drawing-container">
       {isSqlPanelOpen && (
@@ -240,6 +244,11 @@ export default function Schema() {
         defaultEdgeOptions={{
           style: { strokeWidth: 2, stroke: "#94a3b8" },
         }}
+        //new props
+        proOptions={{ hideAttribution: true }}
+        nodeDragThreshold={2}
+        onlyRenderVisibleElements={true}
+
       >
         <MiniMap
           style={{ borderRadius: 8, border: "1px solid #e2e8f0" }}
@@ -300,6 +309,9 @@ export default function Schema() {
       )}
       <button className="generate" onClick={onGenerateSQL}>
         Generate SQL
+      </button>
+      <button className="generate" onClick={printNodes} style={{top:"120px"}}>
+        Print Nodes to Console
       </button>
     </div>
   );
