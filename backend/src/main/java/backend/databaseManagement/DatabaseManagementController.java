@@ -18,11 +18,19 @@ public class DatabaseManagementController {
     @Autowired
     private DatabaseManagementService databaseManagementService;
 
-    @PostMapping("/create")
+    @PostMapping("/create-database")
     public ResponseEntity<?> createDatabase(@RequestBody CreateDatabaseDTO createDatabaseDTO,
-            @AuthenticationPrincipal AuthUser authUser) throws BadRequestException {
+        @AuthenticationPrincipal AuthUser authUser) throws BadRequestException {
 
-        int databaseId = databaseManagementService.createDatabase(createDatabaseDTO, authUser.userId());
+        CreateDatabaseDTO databaseId = databaseManagementService.createDatabase(createDatabaseDTO, authUser.userId());
+        return ResponseEntity.ok(databaseId);
+    }
+
+    @PostMapping("/create-server")
+    public ResponseEntity<?> createServer(@RequestBody CreateServerDTO createServerDTO,
+        @AuthenticationPrincipal AuthUser authUser) throws BadRequestException {
+
+        CreateServerDTO databaseId = databaseManagementService.createServer(createServerDTO, authUser.userId());
         return ResponseEntity.ok(databaseId);
     }
 
