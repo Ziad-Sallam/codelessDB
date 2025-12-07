@@ -22,7 +22,7 @@ public class AgentController {
     // Simple map to hold waiting requests
     private final ConcurrentHashMap<String, CompletableFuture<ClientResponseDTO>> pendingResponses = new ConcurrentHashMap<>();
 
-    public ClientResponseDTO sendToUser(String username, AgentMessageDTO message) throws Exception {
+    public ClientResponseDTO sendToUser(int username, AgentMessageDTO message) throws Exception {
         // Ensure correlationId exists
         if (message.getCorrelationId() == null) {
             message.setCorrelationId(UUID.randomUUID().toString());
@@ -34,7 +34,7 @@ public class AgentController {
         pendingResponses.put(correlationId, future);
 
         // Send WebSocket message
-        simpMessagingTemplate.convertAndSendToUser(username, "/queue/reply", message);
+        simpMessagingTemplate.convertAndSendToUser(Integer.toString(username), "/queue/reply", message);
 
         try {
             // Wait for response (30 seconds timeout)

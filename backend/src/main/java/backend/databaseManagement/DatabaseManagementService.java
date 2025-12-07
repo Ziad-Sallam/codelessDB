@@ -63,6 +63,7 @@ public class DatabaseManagementService {
             
             server = serverRepository.findById(dto.getServerId())
                     .orElseThrow(() -> new RuntimeException("Server not found"));
+            dto.setServerName(server.getName());
             
             boolean hasAccess = owner.getServers().stream()
                                 .anyMatch(s -> s.getId() == server.getId());
@@ -89,6 +90,7 @@ public class DatabaseManagementService {
         db.setOwner(owner);
         db.setDdl(dto.getDdl());
         db.setServer(server);
+        owner.getAccessibleDatabases().add(db);
 
         userDatabaseRepository.save(db);
         dto.setDatabaseId(db.getId());
