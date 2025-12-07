@@ -2,6 +2,12 @@ package backend.agent.WebSocketHandler;
 
 import java.util.UUID;
 
+import lombok.Setter;
+import lombok.Getter;
+
+
+@Setter
+@Getter
 public class AgentMessageDTO {
     private String sender;
     private String content;
@@ -24,13 +30,4 @@ public class AgentMessageDTO {
         
     }
 
-
-    public String getSender() { return sender; }
-    public void setSender(String sender) { this.sender = sender; }
-
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-
-    public String getCorrelationId() { return correlationId; }
-    public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
 }

@@ -14,17 +14,22 @@ import backend.entities.*;;
 
 @Service
 public class MessageService {
-    @Autowired
-    private OnlineUserTracker tracker;
-
-    @Autowired
-    private AgentController agentController;
+    private final OnlineUserTracker tracker;
+    private final AgentController agentController;
     private final UserDatabaseRepository userDatabaseRepository;
     private final UserRepository userRepository;
-    public MessageService(UserRepository userRepository, UserDatabaseRepository userDatabaseRepository){
+
+    @Autowired
+    public MessageService(
+            UserRepository userRepository,
+            UserDatabaseRepository userDatabaseRepository,
+            OnlineUserTracker tracker,
+            AgentController agentController
+    ) {
         this.userRepository = userRepository;
         this.userDatabaseRepository = userDatabaseRepository;
-
+        this.tracker = tracker;
+        this.agentController = agentController;
     }
 
     public ClientResponseDTO runQuery(int databaseId, AgentMessageDTO message, int userId){
