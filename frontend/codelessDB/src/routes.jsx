@@ -3,6 +3,7 @@ import LogIn from './pages/auth/LogIn';
 import DiagramPage from './pages/diagrams/DiagramPage.jsx';
 import Schema from './pages/schemaDrawing/schema.jsx';
 import UserProfile from './pages/userprofile/UserProfile.jsx';
+import CannedQueries from './pages/cannedquery/CannedQueries.jsx';
 
 import {ProtectedRoute, PublicRoute} from "./components/Routing.jsx";
 
@@ -59,4 +60,13 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
+   {
+    path: "/canned-queries",
+    element: (
+      <ProtectedRoute>
+        <CannedQueries />
+      </ProtectedRoute>
+    ),
+  },
+
 ];

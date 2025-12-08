@@ -1,0 +1,245 @@
+/* CannedQueries.css */
+
+.canned-queries-container {
+  padding: 24px;
+  background-color: #f6f8fb;
+  min-height: 100vh;
+}
+
+/* Page Header */
+.canned-queries-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.canned-queries-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.canned-queries-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.canned-queries-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.database-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #90caf9;
+}
+
+.canned-queries-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.new-query-button {
+  background-color: #1976d2;
+  color: white;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.new-query-button:hover {
+  background-color: #1565c0;
+}
+
+/* Query Cards */
+.queries-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.query-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px 24px;
+  transition: box-shadow 0.2s;
+}
+
+.query-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.query-card-header {
+  margin-bottom: 12px;
+}
+
+.query-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.query-card-description {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.query-code-block {
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.query-code-block pre {
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  color: #333;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.query-code-block code {
+  font-family: inherit;
+}
+
+.query-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.query-updated-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.test-query-button {
+  background: none;
+  border: none;
+  color: #1976d2;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.test-query-button:hover {
+  background-color: #e3f2fd;
+}
+
+/* Action Buttons (Edit, Delete, Copy) */
+.query-actions {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.query-card:hover .query-actions {
+  opacity: 1;
+}
+
+.query-action-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.query-action-button:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.query-action-button.delete:hover {
+  color: #d32f2f;
+}
+
+/* Empty State */
+.queries-empty-state {
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.queries-empty-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  background-color: #f5f5f5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.queries-empty-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.queries-empty-description {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .canned-queries-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .new-query-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
