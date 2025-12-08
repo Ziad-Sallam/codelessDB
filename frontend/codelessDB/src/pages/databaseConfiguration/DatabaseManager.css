@@ -4,7 +4,9 @@
 .db-manager-container {
   min-height: 100vh;
   background-color: #f6f8fb;
-  padding: 1rem;
+  padding: 2rem;
+  margin: 0;
+  width: 100%;
 }
 
 @media (min-width: 1280px) {
@@ -14,7 +16,7 @@
 }
 
 .db-manager-wrapper {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 0px 16px;
 }
@@ -337,6 +339,9 @@
   overflow-x: auto;
   white-space: pre;
   color: #0f172a;
+}
+.databaseManager{
+  display: flex;
 }
 
 @media (min-width: 1280px) {

@@ -6,7 +6,7 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import backend.entities.*;
 import backend.user.UserRepository;
-
+import java.util.List;
 
 @Service
 public class DatabaseManagementService {
@@ -117,5 +117,19 @@ public class DatabaseManagementService {
         dto.setContainerName("mysql" + id);
         return dto;
     }
+
+    public List<CreateServerDTO> getUserServers(int userId){
+        User usr = userRepository.findById(userId);
+        List<Server> servers =  usr.getServers();
+        List<CreateServerDTO> ans= new ArrayList<>();
+        for(Server s : servers){
+            CreateServerDTO temp = new CreateServerDTO();
+            temp.setServerId(s.getId());
+            temp.setServerName(s.getName());
+            ans.add(temp);
+        }
+
+        return ans;
+    }    
 
 }

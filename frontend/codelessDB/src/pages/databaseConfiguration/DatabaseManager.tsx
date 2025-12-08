@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './DatabaseManager.css';
+import LeftPanel from '../../components/LeftPanel';
+import axios from "axios";
+
 
 interface ServerType {
-  id: number;
-  name: string;
+  serverId: number;
+  serverName: string;
 }
 
 interface DatabaseConfig {
-  id: string;
+
   databaseName: string;
   databasePassword: string;
   serverId: number | null;
@@ -17,71 +20,98 @@ interface DatabaseConfig {
 interface ServerFormData {
   serverName: string;
 }
-
-const API_BASE_URL = '/api';
+const API_BASE_URL = "http://localhost:8080";
 
 const serverApi = {
   async getUserServers(): Promise<ServerType[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/servers`, {
-        method: 'GET',
+    const response = await axios.get(
+      `${API_BASE_URL}/database/get-user-servers`,
+      {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch servers: ${response.statusText}`);
       }
-
-      const data = await response.json();
-      return data;
+    );
+    console.log(response.data);
+    return response.data;
     } catch (error) {
       console.error('Error fetching user servers:', error);
       return [
-        { id: 101, name: 'Production Server' },
-        { id: 102, name: 'Staging Server' },
-        { id: 103, name: 'Development Server' },
+        { serverId: 101, serverName: 'Production Server' },
+        { serverId: 102, serverName: 'Staging Server' },
+        { serverId: 103, serverName: 'Development Server' },
       ];
     }
   },
 
   async createServer(serverData: ServerFormData): Promise<ServerType> {
     try {
-      const response = await fetch(`${API_BASE_URL}/servers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(serverData),
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/database/create-server`,
+        serverData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error(`Failed to create server: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
+      return response.data; // should be { serverId, serverName }
     } catch (error) {
-      console.error('Error creating server:', error);
-      const mockServer: ServerType = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        name: serverData.serverName,
+      console.error("Error creating server:", error);
+
+      // ✅ fallback mock (kept consistent)
+      return {
+        serverId: Math.floor(Math.random() * 1000) + 100,
+        serverName: serverData.serverName,
       };
-      return mockServer;
     }
   },
+
+  async submitDatabaseConfiguration(
+  submissionData: DatabaseConfig
+): Promise<any> {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/database/create-database`,
+      submissionData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error submitting database configuration:", error);
+
+    const message =
+      error.response?.data?.message ||
+      error.response?.data ||
+      "Failed to submit database configuration";
+
+    throw new Error(message);
+  }
+}
+
+
 };
 
 const DatabaseManager: React.FC = () => {
   const [availableServers, setAvailableServers] = useState<ServerType[]>([]);
   const [isLoadingServers, setIsLoadingServers] = useState(true);
+  const [leftNav, setLeftNav] = useState("all");
   const [database, setDatabase] = useState<DatabaseConfig>({
-    id: '1',
-    databaseName: 'production_db',
-    databasePassword: 'prod_pass_2024',
+  
+    databaseName: '',
+    databasePassword: '',
     serverId: null,
-    ddl: 'CREATE TABLE users (\n  id INT PRIMARY KEY AUTO_INCREMENT,\n  name VARCHAR(100) NOT NULL,\n  email VARCHAR(255) UNIQUE NOT NULL,\n  age INT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);'
+    ddl: 'CREATE TABLE users \n(id INT AUTO_INCREMENT PRIMARY KEY,\nname VARCHAR(100) NOT NULL,\nemail VARCHAR(150) NOT NULL UNIQUE,\nage INT,\ncreated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);'
   });
 
   const [isDdlExpanded, setIsDdlExpanded] = useState(false);
@@ -146,11 +176,11 @@ const DatabaseManager: React.FC = () => {
       const newServer = await serverApi.createServer(serverForm);
       
       setAvailableServers(prev => [...prev, newServer]);
-      setDatabase(prev => ({ ...prev, serverId: newServer.id }));
-      setSelectedServerOption(newServer.id.toString());
+      setDatabase(prev => ({ ...prev, serverId: newServer.serverId }));
+      setSelectedServerOption(newServer.serverId.toString());
       setServerForm({ serverName: '' });
       
-      alert(`Server "${newServer.name}" created successfully with ID: ${newServer.id}`);
+      alert(`Server "${newServer.serverName}" created successfully with ID: ${newServer.serverId}`);
     } catch (error) {
       console.error('Failed to create server:', error);
       alert('Failed to create server. Please try again.');
@@ -159,41 +189,53 @@ const DatabaseManager: React.FC = () => {
     }
   };
 
-  const handleSubmitForm = () => {
-    // Validate required fields
-    if (!database.databaseName) {
-      alert('Please enter a database name');
-      return;
-    }
-    if (!database.databasePassword) {
-      alert('Please enter a database password');
-      return;
-    }
-    if (selectedServerOption === 'new') {
-      alert('Please save the new server first before submitting the form');
-      return;
-    }
+const handleSubmitForm = async () => {
+  if (!database.databaseName) {
+    alert('Please enter a database name');
+    return;
+  }
+  if (!database.databasePassword) {
+    alert('Please enter a database password');
+    return;
+  }
+  if (selectedServerOption === 'new') {
+    alert('Please save the new server first before submitting the form');
+    return;
+  }
+  if (selectedServerOption === 'none') {
+    alert('Please Select a Server to deploy your Database');
+    return;
+  }
 
-    // Prepare submission data
-    const submissionData = {
-      databaseName: database.databaseName,
-      databasePassword: database.databasePassword,
-      serverId: database.serverId,
-      ddl: database.ddl,
-      serverName: database.serverId 
-        ? availableServers.find(s => s.id === database.serverId)?.name 
-        : 'No Server Assigned'
-    };
-
-    console.log('Form Submission Data:', submissionData);
-    alert(`Database Configuration Submitted Successfully!\n\nDatabase: ${submissionData.databaseName}\nServer: ${submissionData.serverName}\nServer ID: ${submissionData.serverId || 'None'}`);
+  const submissionData = {
+    databaseName: database.databaseName,
+    databasePassword: database.databasePassword,
+    serverId: database.serverId!,
+    ddl: database.ddl,
   };
 
+  try {
+    const result = await serverApi.submitDatabaseConfiguration(submissionData);
+
+    console.log("Submission success:", result);
+    alert("Database deployed successfully ✅");
+  } catch (error: any) {
+    alert(error.message);
+  }
+};
+
+
   return (
+    <div className="databaseManager">
+      <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
     <div className="db-manager-container">
+      
       <div className="db-manager-wrapper">
+        
         <div className="db-manager-header">
+          
           <div className="header-title-section">
+            
             <svg className="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
               <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
@@ -299,8 +341,8 @@ const DatabaseManager: React.FC = () => {
               >
                 <option value="none">No Server</option>
                 {availableServers.map((server) => (
-                  <option key={server.id} value={server.id.toString()}>
-                    {server.name}
+                  <option key={server.serverId} value={server.serverId.toString()}>
+                    {server.serverName}
                   </option>
                 ))}
                 <option value="new">+ Create New Server</option>
@@ -387,6 +429,7 @@ const DatabaseManager: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
