@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './DatabaseManager.css';
 import LeftPanel from '../../components/LeftPanel';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { vs } from "react-syntax-highlighter/dist/esm/styles/prism";
 import axios from "axios";
 
 
@@ -111,7 +114,7 @@ const DatabaseManager: React.FC = () => {
     databaseName: '',
     databasePassword: '',
     serverId: null,
-    ddl: 'CREATE TABLE users \n(id INT AUTO_INCREMENT PRIMARY KEY,\nname VARCHAR(100) NOT NULL,\nemail VARCHAR(150) NOT NULL UNIQUE,\nage INT,\ncreated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);'
+    ddl: ''
   });
 
   const [isDdlExpanded, setIsDdlExpanded] = useState(false);
@@ -132,6 +135,14 @@ const DatabaseManager: React.FC = () => {
         console.error('Failed to load servers:', error);
       } finally {
         setIsLoadingServers(false);
+      }
+      const storedText = sessionStorage.getItem("sql");
+      console.log(storedText);
+          if (storedText) {
+      setDatabase(prev => ({
+        ...prev,
+        ddl: storedText.trimEnd() + '\n'
+      }));
       }
     };
 
@@ -219,9 +230,15 @@ const handleSubmitForm = async () => {
 
     console.log("Submission success:", result);
     alert("Database deployed successfully ✅");
+    setDatabase(prev => ({
+        ...prev,
+        databaseName :'',
+        databasePassword: '' 
+      }))
   } catch (error: any) {
     alert(error.message);
   }
+  
 };
 
 
@@ -367,9 +384,22 @@ const handleSubmitForm = async () => {
                 </svg>
               </button>
               {isDdlExpanded && (
-                <pre className="ddl-content">
+                <SyntaxHighlighter
+                  language="sql"
+                  style={oneDark}
+                  // style={vs}
+                  showLineNumbers
+                  wrapLongLines
+                  customStyle={{
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    padding: "16px",
+                    maxHeight: "400px",
+                    overflowY: "auto",
+                  }}
+                >
                   {database.ddl}
-                </pre>
+                </SyntaxHighlighter>
               )}
             </div>
 

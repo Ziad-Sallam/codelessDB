@@ -83,3 +83,20 @@
     transform: translateX(0);
   }
 }
+
+
+.editor-footer {
+  position: absolute;
+  bottom: 25px;
+  right: 10%;
+  z-index: 10;
+}
+
+.editor-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
