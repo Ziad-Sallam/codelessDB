@@ -19,6 +19,7 @@ import decimal
 import uuid
 import base64
 from collections.abc import Iterable
+from docker.errors import DockerException
 
 # ---------------- Globals ----------------
 argv = sys.argv
@@ -92,7 +93,14 @@ def init_config(config_file=None):
 def init_docker():
     """Initialize Docker client."""
     global docker_client
-    docker_client = docker.from_env()
+    try:
+        docker_client = docker.from_env()
+        docker_client.ping()  # force connection test
+    except DockerException as e:
+        print("❌ Failed to connect to Docker daemon.")
+        print("Make sure Docker Desktop is installed and running.")
+        print(f"Error: {e}")
+        sys.exit(1)
 
 # -----------------------------
 # STOMP Frame Builders

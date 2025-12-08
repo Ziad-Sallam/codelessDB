@@ -11,6 +11,7 @@ import platform
 import subprocess
 import os
 import socket
+from docker.errors import DockerException
 
 from cryptography.fernet import Fernet
 import mysql.connector
@@ -59,22 +60,36 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
     if not ensure_docker_installed():
         print("\nPlease install Docker and try again.")
         return -1
-    client = docker.from_env()
+    client = 0
+    try:
+        client = docker.from_env()
+        client.ping()  
+    except DockerException as e:
+        print("Failed to connect to Docker daemon.")
+        print("Make sure Docker Desktop is installed and running.")
+        print(f"Error: {e}")
+        sys.exit(1)
 
     # Request backend for names
-    req = requests.post(
-        f"{url}/database/create-mysql-container",
-        data=json.dumps(id),
-        headers={"Content-Type": "application/json"}
-    )
-    print("Response status code:", req.status_code)
-    print("Response content:", req.content)
-    if req.status_code != 200:
-        print("Failed to get container details from backend.")
-        print("Response:", req.text)
-        print("Please Try again later.")
-        print("Exiting...")
-        return -1
+    req = 0
+    try:
+
+        req = requests.post(
+            f"{url}/database/create-mysql-container",
+            data=json.dumps(id),
+            headers={"Content-Type": "application/json"}
+        )
+        print("Response status code:", req.status_code)
+        print("Response content:", req.content)
+        if req.status_code != 200:
+            print("Failed to get container details from backend.")
+            print("Response:", req.text)
+            print("Please Try again later.")
+            print("Exiting...")
+            return -1
+    except Exception:
+        print("500 Server Error :( \n Try again Later")
+        exit(-1)
     print("--------------------------------")
     data = req.json()
 
@@ -155,7 +170,7 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
 
     print("MySQL is exposed on host:", host_ip)
     print("MySQL is exposed on port:", host_port)
-    time.sleep(15)
+    time.sleep(20)
     try:
         connection = mysql.connector.connect(
             host=host_ip,
@@ -198,16 +213,20 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
         json.dump(config, f, indent=4)
     
     print("Executing DDL statements...")
-    print(data["ddl"])
-    connection.cursor().execute(data.get("ddl", ""))
+    print(data.get("ddl", ""))
+
+    ddl_statements = data.get("ddl", "").split(";")
+    cursor = connection.cursor()
+    for stmt in ddl_statements:
+        stmt = stmt.strip()
+        if stmt:
+            cursor.execute(stmt)
     connection.commit()
+    cursor.close()
     connection.close()
 
-    
-    subprocess.run(
-    [sys.executable, "communicate.py", data["wsUrl"], str(data["containerId"])],
-    env=env
-    )
+    print("Databse Created Correctly !")
+    print(f'run:    .\communicate.exe \"{data["wsUrl"]}\" {data["containerId"]}')
 
     return 0
 
@@ -219,7 +238,7 @@ def main():
     try:
         int(sys.argv[2])
     except ValueError:
-        print("Usage: python create_container.py <url> <container_id>")
+        print("Usage: python create_container.py <url> {}")
         sys.exit(1)
 
     print("Creating MySQL container with ID:", sys.argv[2])

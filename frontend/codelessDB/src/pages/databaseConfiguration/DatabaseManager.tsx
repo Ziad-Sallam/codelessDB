@@ -3,7 +3,6 @@ import './DatabaseManager.css';
 import LeftPanel from '../../components/LeftPanel';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { vs } from "react-syntax-highlighter/dist/esm/styles/prism";
 import axios from "axios";
 
 
@@ -137,17 +136,43 @@ const DatabaseManager: React.FC = () => {
         setIsLoadingServers(false);
       }
       const storedText = sessionStorage.getItem("sql");
+  
       console.log(storedText);
-          if (storedText) {
-      setDatabase(prev => ({
-        ...prev,
-        ddl: storedText.trimEnd() + '\n'
-      }));
+      if (storedText) {
+        setDatabase(prev => ({
+          ...prev,
+          ddl: storedText.trimEnd() + '\n',
+          databaseName: getDatabaseName(storedText)
+        }));
       }
+
     };
 
     fetchServers();
   }, []);
+
+  function updateDatabaseNameInDDL(ddl: string, newName: string): string {
+    if (!newName) return ddl;
+
+    const HEADER_REGEX =
+      /^\s*CREATE\s+DATABASE[\s\S]*?;\s*USE\s+[\s\S]*?;\s*/i;
+
+    const rest = ddl.replace(HEADER_REGEX, '');
+
+    return (
+      `CREATE DATABASE IF NOT EXISTS ${newName};\n` +
+      `USE ${newName};\n\n` +
+      rest.trimStart()
+    );
+  }
+
+  function getDatabaseName(sqlString: String){
+    const regex =
+      /CREATE\s+DATABASE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?([a-zA-Z0-9_]+)[`"]?/i;
+
+    const match = sqlString.match(regex);
+    return match ? match[1] : "";
+  }
 
   const handleServerSelection = (value: string) => {
     setSelectedServerOption(value);
@@ -205,6 +230,9 @@ const handleSubmitForm = async () => {
     alert('Please enter a database name');
     return;
   }
+  if (database.databaseName.includes(" ")){
+    alert("database Name can not contain white spaces")
+  }
   if (!database.databasePassword) {
     alert('Please enter a database password');
     return;
@@ -217,12 +245,13 @@ const handleSubmitForm = async () => {
     alert('Please Select a Server to deploy your Database');
     return;
   }
+  
 
   const submissionData = {
     databaseName: database.databaseName,
     databasePassword: database.databasePassword,
     serverId: database.serverId!,
-    ddl: database.ddl,
+    ddl: database.ddl.replace(/[\n\r\t]/g, ""),
   };
 
   try {
@@ -307,7 +336,17 @@ const handleSubmitForm = async () => {
                   className="form-input"
                   placeholder="Enter database name"
                   value={database.databaseName}
-                  onChange={(e) => handleDatabaseFieldChange('databaseName', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\s+/g, '_');
+
+                    setDatabase(prev => ({
+                      ...prev,
+                      databaseName: value,
+                      ddl: updateDatabaseNameInDDL(prev.ddl, value),
+                    }));
+                  }}
+
+
                 />
               </div>
 
