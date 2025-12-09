@@ -12,7 +12,6 @@ import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
-import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
 import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
@@ -57,7 +56,7 @@ class UserDiagramServiceTest {
         diagram = Diagram.builder()
                 .id(UUID.randomUUID())
                 .name("Test Diagram")
-                .content("{json}")
+                .content(new byte[0])
                 .thumbnail("thumb.png")
                 .lastModified(new Date(System.currentTimeMillis()))
                 .createdAt(new Date(System.currentTimeMillis()))
@@ -118,40 +117,6 @@ class UserDiagramServiceTest {
                 () -> service.createDiagram(1, new DiagramCreateRequestDto()));
     }
 
-    // ------------------------------------------------------------
-    // UPDATE DIAGRAM
-    // ------------------------------------------------------------
-    @Test
-    void updateDiagram_success() {
-        DiagramUpdateRequestDto request = new DiagramUpdateRequestDto();
-        request.setName("Updated");
-        request.setJsonContent("{updated}");
-
-        when(userRepository.findById(1)).thenReturn(user);
-        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
-        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
-                .thenReturn(Optional.of(ownerLink));
-        when(diagramRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Date updated = service.updateDiagram(1, request, diagram.getId());
-
-        assertNotNull(updated);
-        assertEquals("Updated", diagram.getName());
-        assertEquals("{updated}", diagram.getContent());
-    }
-
-    @Test
-    void updateDiagram_forbiddenForReader() {
-        ownerLink.setRole(Role.READER);
-
-        when(userRepository.findById(1)).thenReturn(user);
-        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
-        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
-                .thenReturn(Optional.of(ownerLink));
-
-        assertThrows(DiagramException.PermissionDeniedException.class,
-                () -> service.updateDiagram(1, new DiagramUpdateRequestDto(), diagram.getId()));
-    }
 
     // ------------------------------------------------------------
     // DELETE DIAGRAM
@@ -184,24 +149,6 @@ class UserDiagramServiceTest {
 
         verify(userDiagramRepository).delete(ownerLink);
         verify(diagramRepository, never()).delete(any());
-    }
-
-    // ------------------------------------------------------------
-    // SEARCH BY ID
-    // ------------------------------------------------------------
-    @Test
-    void searchById_success() {
-        when(userRepository.findById(1)).thenReturn(user);
-        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
-        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
-                .thenReturn(Optional.of(ownerLink));
-
-        DiagramDto dto = service.searchDiagramById(1, diagram.getId());
-
-        assertEquals(diagram.getId(), dto.getId());
-        assertEquals("Test Diagram", dto.getName());
-        assertEquals("{json}", dto.getContent());
-        assertEquals(Role.OWNER, dto.getRole());
     }
 
     // ------------------------------------------------------------

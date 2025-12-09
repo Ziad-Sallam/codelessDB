@@ -27,8 +27,6 @@ import backend.userDiagramManagement.dto.delete.DiagramDeleteResponseDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
-import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
-import backend.userDiagramManagement.dto.update.DiagramUpdateResponseDto;
 import backend.userDiagramManagement.service.IUserDiagramService;
 import lombok.RequiredArgsConstructor;
 
@@ -65,20 +63,6 @@ public class UserDiagramController {
         return ResponseEntity.ok(diagram);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<DiagramUpdateResponseDto> updateDiagram(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable UUID id,
-            @RequestBody DiagramUpdateRequestDto request) {
-
-        Date updateDate = userDiagramService.updateDiagram(id(authUser), request, id);
-
-        return ResponseEntity.ok(new DiagramUpdateResponseDto(
-                "Diagram updated successfully",
-                id,
-                updateDate));
-    }
-
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<DiagramDeleteResponseDto> deleteDiagram(
             @AuthenticationPrincipal AuthUser authUser,
@@ -89,15 +73,6 @@ public class UserDiagramController {
         return ResponseEntity.ok(new DiagramDeleteResponseDto(
                 "Diagram deleted successfully",
                 id));
-    }
-
-    @GetMapping("/search/{id}")
-    public ResponseEntity<DiagramDto> searchDiagramById(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable UUID id) {
-
-        DiagramDto result = userDiagramService.searchDiagramById(id(authUser), id);
-        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/search")

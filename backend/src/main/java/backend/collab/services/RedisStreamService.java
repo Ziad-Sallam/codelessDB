@@ -1,4 +1,4 @@
-package backend.collab.redis;
+package backend.collab.services;
 
 import java.util.ArrayList;
 import java.util.HashMap;

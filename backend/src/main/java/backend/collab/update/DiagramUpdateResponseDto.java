@@ -1,4 +1,4 @@
-package backend.userDiagramManagement.dto.update;
+package backend.collab.update;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

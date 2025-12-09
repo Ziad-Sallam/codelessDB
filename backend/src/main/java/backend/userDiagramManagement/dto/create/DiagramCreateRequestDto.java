@@ -10,8 +10,8 @@ public class DiagramCreateRequestDto {
 
     public Diagram toDiagram() {
         return Diagram.builder()
-                .name("Untitled Diagram")
-                .thumbnail(this.thumbnail)
-                .build();
+                      .name("Untitled Diagram")
+                      .thumbnail(this.thumbnail)
+                      .build();
     }
 }

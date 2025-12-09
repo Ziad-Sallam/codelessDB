@@ -41,9 +41,10 @@ public class Diagram {
   @Column(nullable = false, length = 200)
   private String name = "Untitled Diagram";
   
-  @Column(columnDefinition = "JSON")
-  private String content; // to be continued
-  
+  @Lob
+  @Column(columnDefinition = "BLOB")
+  private byte[] content;
+
   private String thumbnail;
   
   @Column(nullable = false, updatable = false)
