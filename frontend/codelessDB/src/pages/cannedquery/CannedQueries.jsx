@@ -1,22 +1,56 @@
-import { useState, useMemo } from "react";
-import { Box, Button, Snackbar, Alert } from "@mui/material";
+import { useState, useMemo, useEffect } from "react";
+import { Box, Button, Snackbar, Alert, CircularProgress } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { sampleQueries } from "./sampleData";
 import LeftPanel from "../../components/LeftPanel";
 import TopBars from "../../components/Topbarforcannedquery";
-
 import QueryCard from "../../components/QueryCard";
 import QueryDialog from "../../components/QueryDialog";
+import { cannedQueriesApi } from "./cannedQueriesApi";
 import "./CannedQueries.css";
 
 export default function CannedQueriesPage() {
-  const [queries, setQueries] = useState(sampleQueries);
+  const [queries, setQueries] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentDatabase] = useState("ProductionDB");
+  const [currentDatabaseId] = useState(1); ///////////////////
+  const [currentDatabaseName] = useState("ProductionDB"); //////////////////////
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingQuery, setEditingQuery] = useState(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
+  useEffect(() => {
+    fetchQueries();
+  }, [currentDatabaseId]);
+
+  const fetchQueries = async () => {
+    try {
+      setLoading(true);
+      const data = await cannedQueriesApi.getAllQueries(currentDatabaseId);
+      const transformedQueries = data.map((q) => ({
+        id: q.id,
+        title: q.name,
+        description: q.description || "",
+        body: q.query,
+        database: q.databaseName,
+        createdAt: new Date(q.createdAt),
+        updatedAt: new Date(q.updatedAt),
+      }));
+      setQueries(transformedQueries);
+    } catch (error) {
+      console.error("Error fetching queries:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to load queries: " + (error.response?.data || error.message),
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   const filteredQueries = useMemo(() => {
     return queries.filter((query) => {
       const s = searchTerm.toLowerCase();
@@ -28,91 +62,136 @@ export default function CannedQueriesPage() {
       );
     });
   }, [queries, searchTerm]);
-
   const handleCreate = () => {
     setEditingQuery(null);
     setDialogOpen(true);
   };
-
   const handleEdit = (query) => {
     setEditingQuery(query);
     setDialogOpen(true);
   };
-
-  const handleDelete = (id) => {
-    setQueries(queries.filter((q) => q.id !== id));
-    setSnackbar({
-      open: true,
-      message: "Query deleted successfully",
-      severity: "success",
-    });
-  };
-
-  const handleSave = (formData) => {
-    if (editingQuery) {
-      // Update existing query
-      setQueries(
-        queries.map((q) =>
-          q.id === editingQuery.id
-            ? {
-                ...q,
-                title: formData.title,
-                description: formData.description,
-                body: formData.body,
-                updatedAt: new Date(),
-              }
-            : q
-        )
-      );
+  const handleDelete = async (id) => {
+    try {
+      await cannedQueriesApi.deleteQuery(id, currentDatabaseId);
+      setQueries(queries.filter((q) => q.id !== id));
       setSnackbar({
         open: true,
-        message: "Query updated successfully",
+        message: "Query deleted successfully",
         severity: "success",
       });
-    } else {
-      // Create new query
-      const newQuery = {
-        id: crypto.randomUUID(),
-        title: formData.title,
-        description: formData.description,
-        body: formData.body,
-        tags: [],
-        database: currentDatabase,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setQueries([newQuery, ...queries]);
+    } catch (error) {
+      console.error("Error deleting query:", error);
       setSnackbar({
         open: true,
-        message: "Query created successfully",
-        severity: "success",
+        message: "Failed to delete query: " + (error.response?.data || error.message),
+        severity: "error",
       });
     }
   };
-
+  const handleSave = async (formData) => {
+    try {
+      if (editingQuery) {
+        const updateData = {
+          name: formData.title,
+          description: formData.description,
+          query: formData.body,
+          databaseId: currentDatabaseId,
+        };
+        const updatedQuery = await cannedQueriesApi.updateQuery(
+          editingQuery.id,
+          updateData
+        );
+        setQueries(
+          queries.map((q) =>
+            q.id === editingQuery.id
+              ? {
+                  id: updatedQuery.id,
+                  title: updatedQuery.name,
+                  description: updatedQuery.description,
+                  body: updatedQuery.query,
+                  database: updatedQuery.databaseName,
+                  createdAt: new Date(updatedQuery.createdAt),
+                  updatedAt: new Date(updatedQuery.updatedAt),
+                }
+              : q
+          )
+        );
+        setSnackbar({
+          open: true,
+          message: "Query updated successfully",
+          severity: "success",
+        });
+      } else {
+        const createData = {
+          name: formData.title,
+          description: formData.description,
+          query: formData.body,
+          databaseId: currentDatabaseId,
+        };
+        const newQuery = await cannedQueriesApi.createQuery(createData);
+        const transformedQuery = {
+          id: newQuery.id,
+          title: newQuery.name,
+          description: newQuery.description,
+          body: newQuery.query,
+          database: newQuery.databaseName,
+          createdAt: new Date(newQuery.createdAt),
+          updatedAt: new Date(newQuery.updatedAt),
+        };
+        setQueries([transformedQuery, ...queries]);
+        setSnackbar({
+          open: true,
+          message: "Query created successfully",
+          severity: "success",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving query:", error);
+      const errorMessage = error.response?.data || error.message;
+      setSnackbar({
+        open: true,
+        message: "Failed to save query: " + errorMessage,
+        severity: "error",
+      });
+    }
+  };
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
-
+  if (loading) {
+    return (
+      <Box className="canned-queries-container" sx={{ display: "flex" }}>
+        <LeftPanel />
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100vh",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
   return (
     <Box className="canned-queries-container" sx={{ display: "flex" }}>
       <LeftPanel />
       <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
         <TopBars loadDiagrams={() => {}} />
-
         <Box sx={{ p: 3 }}>
-          {/* Header */}
           <Box className="canned-queries-header">
             <Box>
               <Box className="canned-queries-title-row">
                 <h1 className="canned-queries-title">Canned Queries</h1>
-                <span className="database-badge">{currentDatabase}</span>
+                <span className="database-badge">{currentDatabaseName}</span>
               </Box>
               <p className="canned-queries-subtitle">
                 Manage predefined query patterns for your schema
               </p>
             </Box>
-
             <div className="header-actions">
               <Button
                 variant="contained"
@@ -125,8 +204,6 @@ export default function CannedQueriesPage() {
               </Button>
             </div>
           </Box>
-
-          {/* Query Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {filteredQueries.map((q) => (
               <QueryCard
@@ -137,8 +214,6 @@ export default function CannedQueriesPage() {
               />
             ))}
           </div>
-
-          {/* Empty State */}
           {filteredQueries.length === 0 && (
             <Box
               sx={{
@@ -148,21 +223,21 @@ export default function CannedQueriesPage() {
               }}
             >
               <h3>No queries found</h3>
-              <p>Try adjusting your search or create a new query.</p>
+              <p>
+                {queries.length === 0
+                  ? "Create your first canned query to get started."
+                  : "Try adjusting your search or create a new query."}
+              </p>
             </Box>
           )}
         </Box>
       </Box>
-
-      {/* Query Dialog */}
       <QueryDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         query={editingQuery}
         onSave={handleSave}
       />
-
-      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

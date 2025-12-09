@@ -141,8 +141,6 @@
   transform: none !important;
   cursor: not-allowed !important;
 }
-
-/* Scrollbar styling for query body */
 .query-body-input .MuiInputBase-root {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;

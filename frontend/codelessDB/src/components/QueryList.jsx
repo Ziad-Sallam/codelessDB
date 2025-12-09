@@ -1,4 +1,3 @@
-// QueryList.jsx
 import { Database } from "lucide-react";
 import QueryCard from "./QueryCard";
 
@@ -18,7 +17,6 @@ export default function QueryList({ queries, onEdit, onDelete }) {
       </div>
     );
   }
-
   return (
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
       {queries.map((query) => (

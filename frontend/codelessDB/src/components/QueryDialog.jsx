@@ -1,4 +1,3 @@
-// QueryDialog.jsx
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -68,7 +67,6 @@ export default function QueryDialog({ open, onClose, query, onSave }) {
       <form onSubmit={handleSubmit}>
         <DialogContent dividers className="query-dialog-content">
           <Box className="query-dialog-form">
-            {/* Query Name */}
             <Box className="query-form-field">
               <label htmlFor="query-name" className="query-form-label">
                 Query Name
@@ -86,8 +84,6 @@ export default function QueryDialog({ open, onClose, query, onSave }) {
                 className="query-form-input"
               />
             </Box>
-
-            {/* Description */}
             <Box className="query-form-field">
               <label htmlFor="query-description" className="query-form-label">
                 Description
@@ -107,8 +103,6 @@ export default function QueryDialog({ open, onClose, query, onSave }) {
                 className="query-form-input"
               />
             </Box>
-
-            {/* Query Body */}
             <Box className="query-form-field">
               <label htmlFor="query-body" className="query-form-label">
                 Query Body
@@ -130,7 +124,6 @@ export default function QueryDialog({ open, onClose, query, onSave }) {
             </Box>
           </Box>
         </DialogContent>
-
         <DialogActions className="query-dialog-actions">
           <Button
             onClick={handleCancel}
