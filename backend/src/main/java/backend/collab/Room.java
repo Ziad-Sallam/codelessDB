@@ -2,12 +2,15 @@ package backend.collab;
 
 import java.util.UUID;
 
+import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
 import lombok.Data;
 import lombok.Getter;
 
 interface IRoom {
 	void close();
+	
 	void addCollaborator(Collaborator collaborator);
+	
 	void removeCollaborator(String username);
 }
 
@@ -37,6 +40,8 @@ public class Room implements IRoom {
 
 	@Override
 	public void addCollaborator(Collaborator collaborator) {
+		if (numOfCollaborators == MAX_COLLABORATORS)
+			throw new CollaboratorsCapacityException("Maximum number of Collaborators is 15");
 		collaborators[numOfCollaborators++] = collaborator;
 	}
 

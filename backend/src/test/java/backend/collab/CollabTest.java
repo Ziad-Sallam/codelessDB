@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import backend.collab.services.SnapshotService;
-import backend.collab.update.DiagramUpdateRequestDto;
+import backend.collab.updateDto.DiagramUpdateRequestDto;
 import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.UserDiagram;
@@ -26,7 +26,6 @@ import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
-import backend.userDiagramManagement.service.UserDiagramService;
 
 public class CollabTest {
 

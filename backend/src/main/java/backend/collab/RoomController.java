@@ -13,13 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import backend.collab.services.SnapshotService;
-import backend.collab.update.DiagramUpdateRequestDto;
-import backend.collab.update.DiagramUpdateResponseDto;
+import backend.collab.updateDto.DiagramUpdateRequestDto;
+import backend.collab.updateDto.DiagramUpdateResponseDto;
 import backend.security.AuthUser;
 import backend.userDiagramManagement.dto.DiagramDto;
-import backend.userDiagramManagement.service.IUserDiagramService;
 import lombok.RequiredArgsConstructor;
-import reactor.core.scheduler.Schedulers.Snapshot;
 
 @RestController
 @RequestMapping("/room")

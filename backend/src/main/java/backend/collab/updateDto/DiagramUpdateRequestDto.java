@@ -1,4 +1,4 @@
-package backend.collab.update;
+package backend.collab.updateDto;
 
 import lombok.Data;
 

@@ -6,17 +6,13 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import backend.collab.update.DiagramUpdateRequestDto;
+import backend.collab.updateDto.DiagramUpdateRequestDto;
 import backend.entities.Diagram;
-import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.user.Role;
-import backend.user.UserRepository;
-import backend.user.exceptions.UserException;
 import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.repository.DiagramRepository;
-import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SnapshotService {
 	private final DiagramRepository diagramRepository;
-	private final UserRepository userRepository;
 	private final UserDiagramService userDiagramService;
 
 	@Transactional
