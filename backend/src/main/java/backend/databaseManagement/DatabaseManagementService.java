@@ -2,7 +2,9 @@ package backend.databaseManagement;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
-import backend.entities.*;
+
+import backend.entities.User;
+import backend.entities.UserDatabase;
 import backend.user.UserRepository;
 
 

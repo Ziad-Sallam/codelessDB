@@ -3,7 +3,6 @@ import { Box, Button, Snackbar, Alert } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { sampleQueries } from "./sampleData";
 import LeftPanel from "../../components/LeftPanel";
-import TopBar from "../../components/TopBar";
 import TopBars from "../../components/Topbarforcannedquery";
 
 import QueryCard from "../../components/QueryCard";

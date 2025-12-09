@@ -80,6 +80,7 @@ const LogIn = () => {
       }
 
       localStorage.setItem("authToken", token);
+      console.log("Token stored:", token);
       const userData = await validateToken();
       setUser(userData);
       navigate("/diagrams", { replace: true });
