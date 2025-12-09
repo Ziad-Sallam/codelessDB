@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import backend.userDiagramManagement.dto.ContributorDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class UserDiagramService implements IUserDiagramService {
     private final UserRepository userRepository;
     private final UserDiagramRepository userDiagramRepository;
 
-    private User getUserOrThrow(int userId) {
+    public User getUserOrThrow(int userId) {
         User user = userRepository.findById(userId);
         if (user == null) {
             throw new UserException.UserNotFoundException("User not found");
@@ -45,29 +46,29 @@ public class UserDiagramService implements IUserDiagramService {
         return user;
     }
 
-    private Diagram getDiagramOrThrow(UUID diagramId) {
+    public Diagram getDiagramOrThrow(UUID diagramId) {
         return diagramRepository.findById(diagramId)
                 .orElseThrow(() -> new DiagramException.DiagramNotFoundException(
                         "Diagram with id " + diagramId + " not found"));
     }
 
-    private UserDiagram getUserDiagramOrThrow(int userId, UUID diagramId) {
+    public UserDiagram getUserDiagramOrThrow(int userId, UUID diagramId) {
         return userDiagramRepository.findByUser_IdAndDiagram_Id(userId, diagramId)
                 .orElseThrow(() -> new DiagramException.PermissionDeniedException(
                         "User does not have permission for diagram " + diagramId));
     }
 
-    private List<DiagramInfoDto.Contributor> getContributors(UUID diagramId) {
+    public List<ContributorDto> getContributors(UUID diagramId) {
         return userDiagramRepository.findByDiagram_Id(diagramId)
                 .stream()
-                .map(ud -> new DiagramInfoDto.Contributor(
+                .map(ud -> new ContributorDto(
                         ud.getUser().getUsername(),
                         ud.getUser().getPicture(),
                         ud.getRole()))
                 .toList();
     }
 
-    private void checkOwner(UserDiagram userDiagram, String action) {
+    public void checkOwner(UserDiagram userDiagram, String action) {
         if (userDiagram.getRole() != Role.OWNER) {
             throw new DiagramException.PermissionDeniedException(
                     "Only the owner can " + action + ", user's role is " + userDiagram.getRole());

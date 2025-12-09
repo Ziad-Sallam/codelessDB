@@ -22,11 +22,9 @@ public class DiagramInfoDto {
     private Date createdAt;
     private Date lastModified;
     private Role role;
-    private List<Contributor> contributors;
+    private List<ContributorDto> contributorDtos;
 
-    public record Contributor(String name, String picture, Role role) {}
-
-    public static DiagramInfoDto toDto(Diagram diagram, Role role, List<Contributor> contributors) {
+    public static DiagramInfoDto toDto(Diagram diagram, Role role, List<ContributorDto> contributorDtos) {
         return DiagramInfoDto
                 .builder()
                 .role(role)
@@ -35,7 +33,7 @@ public class DiagramInfoDto {
                 .thumbnail(diagram.getThumbnail())
                 .createdAt(diagram.getCreatedAt())
                 .lastModified(diagram.getLastModified())
-                .contributors(contributors)
+                .contributorDtos(contributorDtos)
                 .build();
     }
 }

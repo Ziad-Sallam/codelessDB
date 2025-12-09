@@ -7,21 +7,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import backend.entities.publicDiagramEntities.CannedQueriesDiagrams;
 import backend.entities.publicDiagramEntities.PublicDiagram;
+import jakarta.persistence.*;
 import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import backend.entities.joins.UserDiagram;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,7 +35,11 @@ public class Diagram {
   private String name = "Untitled Diagram";
   
   @Column(columnDefinition = "JSON")
-  private String content; // to be continued
+  private String content;
+
+  @Lob
+  @Column(nullable = false)
+  private String ddl;
   
   private String thumbnail;
   
@@ -60,5 +57,4 @@ public class Diagram {
   @Builder.Default
   @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<UserDiagram> userDiagrams = new HashSet<>();
-
 }

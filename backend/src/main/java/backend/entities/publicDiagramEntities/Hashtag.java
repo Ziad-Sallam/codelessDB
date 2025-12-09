@@ -3,30 +3,28 @@ package backend.entities.publicDiagramEntities;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "hashtags")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@ToString(exclude = "publicDiagrams")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Hashtag {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    private int id;
 
-  @Column(nullable = false, unique = true, length = 50)
-  private String name;
+    @Column(nullable = false, unique = true, length = 50)
+    private String name;
 
-  @ManyToMany(mappedBy = "hashtags")
-  private Set<PublicDiagram> publicDiagrams = new HashSet<>();
+    @Builder.Default
+    @ManyToMany(mappedBy = "hashtags")
+    private Set<PublicDiagram> publicDiagrams = new HashSet<>();
 }

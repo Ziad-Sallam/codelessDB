@@ -1,29 +1,13 @@
 package backend.entities;
 
 import java.sql.Date;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.hibernate.annotations.CreationTimestamp;
 
 import backend.entities.joins.UserDiagram;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,51 +18,78 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(nullable = false, unique = true, length = 50)
+    @NotBlank(message = "Username is mandatory")
+    @Size(min = 3, max = 50)
     private String username;
 
     @Column(nullable = false, unique = true, length = 100)
     @NotBlank(message = "Email is mandatory")
-    @Email(message = "Email should be valid")
-    @Size(max = 100, message = "Email must be at most 100 characters")
+    @Email
     private String email;
 
-    /**
-     * Password field to store the user's password.
-     * `Should be hashed by Bycrypt before storing for security.`
-     */
     @Column(nullable = false, length = 60)
-    @NotBlank(message = "Password is mandatory")
     private String password;
 
-    @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(length = 255)
     private String picture;
+
+    @Column(length = 500)
+    private String bio;
+
+    @Column(length = 255)
+    private String profileWebsiteUrl;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Date createdAt;
 
+    /* ------------------------------ FOLLOWERS & FOLLOWING ------------------------------ */
+
+    /** Users who follow THIS user */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_followers",
+            joinColumns = @JoinColumn(name = "user_id"),              // this user
+            inverseJoinColumns = @JoinColumn(name = "follower_id")    // users who follow
+    )
+    private Set<User> followers = new HashSet<>();
+
+    /** Users THIS user follows */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_following",
+            joinColumns = @JoinColumn(name = "follower_id"),          // this user
+            inverseJoinColumns = @JoinColumn(name = "user_id")        // users being followed
+    )
+    private Set<User> following = new HashSet<>();
+
+    /* ------------------------------ DIAGRAM RELATIONSHIP ------------------------------ */
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserDiagram> userDiagrams = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
-    private List<Server> servers = new ArrayList<>();
-
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_servers",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "server_id")
+    )
+    private Set<Server> servers = new HashSet<>();
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDatabase> ownedDatabases = new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "user_database_access",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "database_id")
+            name = "user_database_access",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "database_id")
     )
-    private List<UserDatabase> accessibleDatabases = new ArrayList<>();
+    private Set<UserDatabase> accessibleDatabases = new HashSet<>();
 }

@@ -1,5 +1,6 @@
 package backend.userDiagramManagement.repository;
 
+import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.entities.joins.UserDiagramId;
 import org.springframework.data.domain.Page;

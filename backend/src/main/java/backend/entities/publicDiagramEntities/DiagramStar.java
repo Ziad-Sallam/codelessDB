@@ -1,26 +1,33 @@
 package backend.entities.publicDiagramEntities;
 
-import backend.entities.joins.UserDiagramId;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
 
-import java.sql.Date;
+import backend.entities.joins.PublicDiagramUserId;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "diagram_stars",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"diagram_id", "user_id"}))
-@Data
+        uniqueConstraints = @UniqueConstraint(columnNames = {"public_diagram_id", "user_id"}))
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class DiagramStar {
 
     @EmbeddedId
-    private UserDiagramId id;
+    private PublicDiagramUserId id;
 
-    @Column(nullable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("publicDiagramId")
+    @JoinColumn(name = "public_diagram_id", nullable = false)
+    private PublicDiagram publicDiagram;
+
+    @Column(name = "starred_at", nullable = false, updatable = false)
     @CreationTimestamp
-    private Date starredAt;
+    private LocalDateTime starredAt;
 }

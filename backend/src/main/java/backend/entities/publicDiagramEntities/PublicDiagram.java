@@ -1,33 +1,34 @@
 package backend.entities.publicDiagramEntities;
 
-import java.sql.Date;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import backend.entities.Diagram;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "public_diagrams")
-@Builder
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@ToString(exclude = {"diagram", "hashtags", "cannedQueries", "stars", "views", "forks"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class PublicDiagram {
 
     @Id
-    @GeneratedValue
     @Column(name = "diagram_id")
+    @EqualsAndHashCode.Include
     private UUID id;
 
-    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
     @JoinColumn(name = "diagram_id")
     private Diagram diagram;
@@ -36,30 +37,17 @@ public class PublicDiagram {
     @Size(min = 5, max = 500)
     private String shortDescription;
 
-    @Column(nullable = true, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     @Size(max = 2000)
     private String detailedDescription;
 
-    @Column(nullable = false)
     private int stars = 0;
-
-    @Column(nullable = false)
     private int forks = 0;
-
-    @Column(nullable = false)
     private int views = 0;
 
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false)
     @CreationTimestamp
-    private Date publishedAt;
-
-    @Column
-    @UpdateTimestamp
-    private Date lastModified;
-
-    @Lob
-    @Column(nullable = false)
-    private String ddl;
+    private LocalDateTime publishedAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -69,7 +57,17 @@ public class PublicDiagram {
     )
     private Set<Hashtag> hashtags = new HashSet<>();
 
-    @Builder.Default
-    @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CannedQueriesDiagrams> queries = new ArrayList<>();
+    /* Canned queries attached to the public diagram */
+    @OneToMany(mappedBy = "publicDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CannedQueriesDiagrams> cannedQueries = new HashSet<>();
+
+    /* Stars, views, forks - reverse side (optional, lazy loaded) */
+    @OneToMany(mappedBy = "publicDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<DiagramStar> starsEntities = new HashSet<>();
+
+    @OneToMany(mappedBy = "publicDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<DiagramView> viewEntities = new HashSet<>();
+
+    @OneToMany(mappedBy = "originalDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<DiagramFork> forkEntities = new HashSet<>();
 }

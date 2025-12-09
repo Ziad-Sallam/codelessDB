@@ -1,30 +1,33 @@
 package backend.entities.publicDiagramEntities;
 
-import backend.entities.joins.UserDiagramId;
+import java.time.LocalDateTime;
+
+import backend.entities.joins.PublicDiagramUserId;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.sql.Date;
-
 @Entity
-@Table(name = "diagram_forks")
-@Data
+@Table(name = "diagram_forks",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"public_diagram_id", "user_id"}))
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class DiagramFork {
 
     @EmbeddedId
-    private UserDiagramId id; // user who forked + original diagram
+    private PublicDiagramUserId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("diagramId")
-    @JoinColumn(name = "diagram_id")
+    @MapsId("publicDiagramId")
+    @JoinColumn(name = "public_diagram_id", nullable = false)
     private PublicDiagram originalDiagram;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
-    private Date forkedAt;
+    private LocalDateTime forkedAt;
 }
