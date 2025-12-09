@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -355,5 +356,52 @@ class DatabaseManagementServiceTest {
         assertEquals("Server name Not Found !", ex.getMessage());
     }
 
+
+        @Test
+    void testGetUserServers_success() {
+        User user = new User();
+        user.setId(1);
+        user.setServers(new ArrayList<>());
+
+        Server s1 = new Server();
+        s1.setId(10);
+        s1.setName("ServerOne");
+
+        Server s2 = new Server();
+        s2.setId(20);
+        s2.setName("ServerTwo");
+
+        user.getServers().add(s1);
+        user.getServers().add(s2);
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        List<CreateServerDTO> result = service.getUserServers(1);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+
+        assertEquals(10, result.get(0).getServerId());
+        assertEquals("ServerOne", result.get(0).getServerName());
+
+        assertEquals(20, result.get(1).getServerId());
+        assertEquals("ServerTwo", result.get(1).getServerName());
+    }
+
+    @Test
+    void testGetUserServers_noServers_returnsEmptyList() {
+        User user = new User();
+        user.setId(1);
+        user.setServers(new ArrayList<>());
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        List<CreateServerDTO> result = service.getUserServers(1);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    
 
 }
