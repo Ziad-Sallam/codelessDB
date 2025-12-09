@@ -75,14 +75,19 @@ def decrypt_password(token: str) -> str:
 def load_config(config_file=None):
     """Load and decrypt configuration."""
     config_file = config_file or CONFIG_FILE
-    if os.path.exists(config_file):
-        with open(config_file, "r") as f:
-            cfg = json.load(f)
-            # decrypt password
-            cfg["password"] = decrypt_password(cfg["password"])
-            return cfg
-    else:
-        raise FileNotFoundError("Config file not found. Cannot load configuration.")
+    try:
+        if os.path.exists(config_file):
+            with open(config_file, "r") as f:
+                cfg = json.load(f)
+                # decrypt password
+                cfg["password"] = decrypt_password(cfg["password"])
+                return cfg
+        else:
+            raise FileNotFoundError("Config file not found. Cannot load configuration.")
+    except:
+        print("Error Loading the configuration file !")
+        print("Please reconfigure your database...")
+        sys.exit(-1)
 
 def init_config(config_file=None):
     """Initialize global config."""
@@ -97,7 +102,7 @@ def init_docker():
         docker_client = docker.from_env()
         docker_client.ping()  # force connection test
     except DockerException as e:
-        print("❌ Failed to connect to Docker daemon.")
+        print("Failed to connect to Docker daemon.")
         print("Make sure Docker Desktop is installed and running.")
         print(f"Error: {e}")
         sys.exit(1)

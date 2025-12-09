@@ -1,5 +1,5 @@
 ## create_container.py
-
+from pathlib import Path
 import docker
 import time
 import json
@@ -17,7 +17,7 @@ from cryptography.fernet import Fernet
 import mysql.connector
 
 argv = sys.argv
-
+host_ip="localhost"
 def select_random_port():
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -110,6 +110,13 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
     try:
         container = client.containers.get(container_name)
         print(f"Container '{container_name}' already exists.")
+        p = Path(f"client_config_{data['containerId']}.json")
+        p2 = Path(f"client_key_{data['containerId']}.key")
+
+        if not p.exists() or not p2.exists:
+            host_port = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostPort"]
+            write_db_data(data, "localhost", host_port)
+
 
         if container.status != "running":
             print("Starting container...")
@@ -117,7 +124,7 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
             time.sleep(10)
             print("Container started.")
         else:
-            print("Container already running.")
+            print("Container already running.")            
 
         return 0
 
@@ -163,7 +170,7 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
     print("Waiting for MySQL to initialize (15s)...")
     time.sleep(15)
 
-    container.reload()  # refresh info
+    container.reload()  
     host_port = container.attrs['NetworkSettings']['Ports']["3306/tcp"][0]["HostPort"]
     host_ip = "localhost"
     
@@ -190,27 +197,7 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
     env = os.environ.copy()
     env["WS_URL"] = data["wsUrl"]
 
-    SCRIPT_ID = data["containerId"]
-    CONFIG_FILE = f"client_config_{SCRIPT_ID}.json"
-    KEY_FILE = f"client_key_{SCRIPT_ID}.key"
-    url =  data["wsUrl"]
-
-    key = Fernet.generate_key()
-    with open(KEY_FILE, "wb") as f:
-        f.write(key)
-    
-    password_encrypted = Fernet(key).encrypt(password.encode()).decode()
-
-    config = {
-            "id" : data["containerId"],
-            "host": host_ip,
-            "port": host_port,
-            "user": "root",
-            "password": password_encrypted,
-            "database": database
-    }
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(config, f, indent=4)
+    write_db_data(data, host_ip, host_port)
     
     print("Executing DDL statements...")
     print(data.get("ddl", ""))
@@ -229,6 +216,30 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
     print(f'run:    .\communicate.exe \"{data["wsUrl"]}\" {data["containerId"]}')
 
     return 0
+
+def write_db_data(data, host_ip, host_port):
+    SCRIPT_ID = data["containerId"]
+    CONFIG_FILE = f"client_config_{SCRIPT_ID}.json"
+    KEY_FILE = f"client_key_{SCRIPT_ID}.key"
+
+
+    key = Fernet.generate_key()
+    with open(KEY_FILE, "wb") as f:
+        f.write(key)
+    
+    password_encrypted = Fernet(key).encrypt(data["password"].encode()).decode()
+
+    config = {
+            "id" : data["containerId"],
+            "host": host_ip,
+            "port": host_port,
+            "user": "root",
+            "password": password_encrypted,
+            "database": data["databaseName"]
+    }
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(config, f, indent=4)
+
 
 def main():
     if len(sys.argv) < 3:
