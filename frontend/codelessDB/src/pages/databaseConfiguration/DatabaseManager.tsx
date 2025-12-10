@@ -4,6 +4,7 @@ import LeftPanel from '../../components/LeftPanel';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import axios from "axios";
+import { useNotification } from '../../components/NotificationContext';
 
 
 interface ServerType {
@@ -112,6 +113,7 @@ const DatabaseManager: React.FC = () => {
   const [availableServers, setAvailableServers] = useState<ServerType[]>([]);
   const [isLoadingServers, setIsLoadingServers] = useState(true);
   const [leftNav, setLeftNav] = useState("all");
+  const { showSuccess, showError } = useNotification();
   const [database, setDatabase] = useState<DatabaseConfig>({
   
     databaseName: '',
@@ -206,7 +208,7 @@ const DatabaseManager: React.FC = () => {
 
   const handleSaveServer = async () => {
     if (!serverForm.serverName) {
-      alert('Please fill in the server name');
+      showError('Please fill in the server name');
       return;
     }
 
@@ -219,10 +221,10 @@ const DatabaseManager: React.FC = () => {
       setSelectedServerOption(newServer.serverId.toString());
       setServerForm({ serverName: '' });
       
-      alert(`Server "${newServer.serverName}" created successfully with ID: ${newServer.serverId}`);
+      showSuccess(`Server "${newServer.serverName}" created successfully with ID: ${newServer.serverId}`);
     } catch (error: any) {
       // Display the backend error message
-      alert(error.message);
+      showError(error.message);
     } finally {
       setIsCreatingServer(false);
     }
@@ -231,22 +233,22 @@ const DatabaseManager: React.FC = () => {
 
 const handleSubmitForm = async () => {
   if (!database.databaseName) {
-    alert('Please enter a database name');
+    showError('Please enter a database name');
     return;
   }
   if (database.databaseName.includes(" ")){
-    alert("database Name can not contain white spaces")
+    showError("database Name can not contain white spaces")
   }
   if (!database.databasePassword) {
-    alert('Please enter a database password');
+    showError('Please enter a database password');
     return;
   }
   if (selectedServerOption === 'new') {
-    alert('Please save the new server first before submitting the form');
+    showError('Please save the new server first before submitting the form');
     return;
   }
   if (selectedServerOption === 'none') {
-    alert('Please Select a Server to deploy your Database');
+    showError('Please Select a Server to deploy your Database');
     return;
   }
   
@@ -262,14 +264,14 @@ const handleSubmitForm = async () => {
     const result = await serverApi.submitDatabaseConfiguration(submissionData);
 
     console.log("Submission success:", result);
-    alert("Database deployed successfully ✅");
+    showSuccess("Database deployed successfully ✅");
     setDatabase(prev => ({
         ...prev,
         databaseName :'',
         databasePassword: '' 
       }))
   } catch (error: any) {
-    alert(error.message);
+    showError(error.message);
   }
   
 };
