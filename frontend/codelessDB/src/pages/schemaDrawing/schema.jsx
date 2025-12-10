@@ -9,6 +9,8 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   useReactFlow,
+  ReactFlowProvider,
+  useViewport
   
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -25,6 +27,7 @@ import {
 } from "./fetch.js";
 import { useNotification } from "../../components/NotificationContext";
 import { uploadToCloudinary } from "../../components/uploadImage.js";
+import Cursor from "./Cursor";
 
 // 1. IMPORT HTML-TO-IMAGE
 import { toPng } from 'html-to-image';
@@ -38,9 +41,10 @@ const SchemaContent = () => {
   const { showSuccess, showError, showWarning } = useNotification();
   
   // 3. USE THE CONTEXT
-  const { 
-      nodes, edges, onNodesChange, onEdgesChange, 
-      addNodeYjs, addEdgeYjs, updateNodeData 
+ const { 
+    nodes, edges, cursors, updateCursor,
+    onNodesChange, onEdgesChange, 
+    addNodeYjs, addEdgeYjs 
   } = useCollaboration();
 
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
@@ -50,6 +54,20 @@ const SchemaContent = () => {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+
+  const { screenToFlowPosition } = useReactFlow();
+
+  const onMouseMove = useCallback((e) => {
+    // Convert pixel coordinates (e.clientX) to World coordinates (Flow X)
+    // This handles Zoom and Pan automatically.
+    const position = screenToFlowPosition({
+      x: e.clientX,
+      y: e.clientY,
+    });
+    
+    // Broadcast the World Position
+    updateCursor(position.x, position.y);
+  }, [screenToFlowPosition, updateCursor]);
 
   const loadDiagram = async () => {
     try {
@@ -200,7 +218,7 @@ const SchemaContent = () => {
   };
 
   return (
-    <div className="drawing-container">
+    <div className="drawing-container" onMouseMove={onMouseMove}>
       {isSqlPanelOpen && (
         <CodeEditor
           initialCode={generatedSql}
@@ -264,6 +282,17 @@ const SchemaContent = () => {
           />
         )}
         <Background color="#cbd5e1" gap={20} size={1} />
+        <CursorLayer>
+        {cursors.map((cursor) => (
+          <Cursor
+            key={cursor.id}
+            x={cursor.x}
+            y={cursor.y}
+            color={cursor.color}
+            name={cursor.name}
+          />
+        ))}
+        </CursorLayer>
       </ReactFlow>
 
       {!isSqlPanelOpen && !isReadOnly && (
@@ -282,8 +311,33 @@ const SchemaContent = () => {
 export default function Schema() {
     const { roomId } = useParams();
     return (
+      <ReactFlowProvider>
         <CollaborationProvider roomId={roomId}>
             <SchemaContent />
         </CollaborationProvider>
+        </ReactFlowProvider>
     );
 }
+
+const CursorLayer = ({ children }) => {
+  const { x, y, zoom } = useViewport();
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        pointerEvents: 'none',
+        zIndex: 1000,
+        // 🛑 THE MAGIC: Apply the same transform as the flow canvas
+        transform: `translate(${x}px, ${y}px) scale(${zoom})`,
+        transformOrigin: '0 0', 
+        width: '100%',
+        height: '100%',
+      }}
+    >
+      {children}
+    </div>
+  );
+};

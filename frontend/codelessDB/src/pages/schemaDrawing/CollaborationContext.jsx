@@ -1,16 +1,25 @@
 // CollaborationContext.js
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback ,useRef} from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { applyNodeChanges, applyEdgeChanges } from "@xyflow/react";
+import throttle from "lodash/throttle";
 
 const CollaborationContext = createContext(null);
+
+const getRandomColor = () => '#' + Math.floor(Math.random()*16777215).toString(16);
+const getRandomName = () => `User ${Math.floor(Math.random() * 100)}`;
 
 export const CollaborationProvider = ({ roomId, children }) => {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
+  const [cursors, setCursors] = useState([]);
+
   const [ydoc, setYdoc] = useState(null);
   const [provider, setProvider] = useState(null);
+  const [currentUser] = useState({ name: getRandomName(), color: getRandomColor() });
+
+  const pendingUpdates = useRef(new Map());
 
   useEffect(() => {
     const doc = new Y.Doc();
@@ -27,6 +36,36 @@ export const CollaborationProvider = ({ roomId, children }) => {
     setYdoc(doc);
     setProvider(wsProvider);
 
+    // --- AWARENESS SETUP (Cursors) ---
+    const awareness = wsProvider.awareness;
+
+    // 1. Set MY local details (so others see me)
+    awareness.setLocalStateField('user', currentUser);
+
+    // 2. Listen for OTHERS changing
+    const handleAwarenessChange = () => {
+      const states = awareness.getStates(); // Map<ClientId, State>
+      const cursorList = [];
+
+      states.forEach((state, clientId) => {
+        // Ignore my own cursor
+        if (clientId === awareness.clientID) return;
+
+        if (state.cursor && state.user) {
+          cursorList.push({
+            id: clientId,
+            x: state.cursor.x,
+            y: state.cursor.y,
+            name: state.user.name,
+            color: state.user.color,
+          });
+        }
+      });
+      setCursors(cursorList);
+    };
+
+    awareness.on('change', handleAwarenessChange);
+
     // Observer: Sync Yjs -> React
     const observer = () => {
       setNodes(Array.from(nodesMap.values()));
@@ -37,10 +76,43 @@ export const CollaborationProvider = ({ roomId, children }) => {
     edgesMap.observeDeep(observer);
 
     return () => {
+      awareness.off('change', handleAwarenessChange);
       wsProvider.destroy();
       doc.destroy();
     };
-  }, [roomId]);
+  }, [roomId,currentUser]);
+
+  const updateCursor = useCallback(
+    throttle((x, y) => {
+      if (provider && provider.awareness) {
+        provider.awareness.setLocalStateField('cursor', { x, y });
+      }
+    }, 50),
+    [provider]
+  );
+
+  const flushUpdatesToYjs = useCallback(
+    throttle(() => {
+      if (!ydoc || pendingUpdates.current.size === 0) return;
+
+      const nodesMap = ydoc.getMap("nodes");
+
+      // Transact ensures all updates go out as ONE message
+      ydoc.transact(() => {
+        pendingUpdates.current.forEach((position, id) => {
+          const node = nodesMap.get(id);
+          if (node) {
+            // Only update if position actually changed
+            nodesMap.set(id, { ...node, position });
+          }
+        });
+      });
+
+      // Clear the buffer after sending
+      pendingUpdates.current.clear();
+    }, 50), // <-- 50ms Throttle Time (Adjust as needed)
+    [ydoc]
+  );
 
   // --- ACTIONS ---
 
@@ -71,24 +143,25 @@ export const CollaborationProvider = ({ roomId, children }) => {
     if (!ydoc) return;
     const nodesMap = ydoc.getMap("nodes");
 
-    // Optimistic UI update
     setNodes((ns) => applyNodeChanges(changes, ns));
 
     changes.forEach((change) => {
+      //  Network Update (THROTTLED)
       if (change.type === "position" && change.position) {
-        const node = nodesMap.get(change.id);
-        if (node) {
-          nodesMap.set(change.id, { ...node, position: change.position });
-        }
-      
-      } else if (change.type === "remove") {
+        // Add to buffer
+        pendingUpdates.current.set(change.id, change.position);
+        // Trigger the throttled flush
+        flushUpdatesToYjs();
+      } 
+      else if (change.type === "remove") {
         nodesMap.delete(change.id);
-      
-      } else if (change.type === "select") {
-        // Optional: Handle selection
+        pendingUpdates.current.delete(change.id); // Remove from buffer if deleted
+      } 
+      else if (change.type === "add") {
+        nodesMap.set(change.item.id, change.item);
       }
     });
-  }, [ydoc]);
+  }, [ydoc, flushUpdatesToYjs]);
 
   const onEdgesChange = useCallback((changes) => {
     if (!ydoc) return;
@@ -118,6 +191,8 @@ export const CollaborationProvider = ({ roomId, children }) => {
       value={{
         nodes,
         edges,
+        cursors,
+        updateCursor,
         onNodesChange,
         onEdgesChange,
         updateNodeData, // <--- This is what Node.jsx needs
