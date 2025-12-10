@@ -93,4 +93,33 @@ public interface PublicDiagramRepository extends JpaRepository<PublicDiagram, UU
             @Param("tags") List<String> tags,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT pd
+        FROM PublicDiagram pd
+        JOIN pd.diagram d
+        JOIN d.userDiagrams ud
+        JOIN ud.user u
+        WHERE u.username = :username
+          AND ud.role = backend.user.Role.OWNER
+          AND d.publicDiagram IS NOT NULL
+    """)
+    Page<PublicDiagram> findPublicDiagramsByOwner(
+            @Param("username") String username,
+            Pageable pageable
+    );
+
+
+    @Query("""
+        SELECT pd
+        FROM PublicDiagram pd
+        JOIN pd.starsEntities se
+        JOIN User u ON u.id = se.id.userId
+        WHERE u.username = :username
+        ORDER BY se.starredAt DESC
+    """)
+    Page<PublicDiagram> findStaredPublicDiagramsByUser(
+            @Param("username") String username,
+            Pageable pageable
+    );
 }

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class PublicUserInfoDto {
 
     private int id;
+    private String name;
     private String username;
     private String bio;
     private String picture;
@@ -23,6 +24,7 @@ public class PublicUserInfoDto {
 
     public static PublicUserInfoDto toDto(User user, Long publicCount, Long totalStars, Long score) {
         return PublicUserInfoDto.builder()
+                .name(user.getPublicProfile())
                 .id(user.getId())
                 .username(user.getUsername())
                 .bio(user.getBio())

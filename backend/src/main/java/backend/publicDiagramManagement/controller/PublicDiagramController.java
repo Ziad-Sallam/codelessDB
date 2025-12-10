@@ -107,8 +107,7 @@ public class PublicDiagramController {
             @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<PublicDiagramInfoDto> staredDiagrams = publicDiagramService.getStaredPublicDiagrams(authUser.userId(),
-                pageable);
+        Page<PublicDiagramInfoDto> staredDiagrams = publicDiagramService.getStaredPublicDiagrams(authUser.userId(), pageable);
         return ResponseEntity.ok(staredDiagrams);
     }
 
@@ -145,4 +144,5 @@ public class PublicDiagramController {
         List<String> hashtags = hashtagService.getAll();
         return ResponseEntity.ok(hashtags);
     }
+
 }
