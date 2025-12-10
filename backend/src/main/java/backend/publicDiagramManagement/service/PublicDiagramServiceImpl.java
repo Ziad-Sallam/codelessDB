@@ -263,10 +263,6 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
 
     @Override
     @Transactional
-//    @Cacheable(
-//            value = "searchDiagramCache",
-//            key = "#dto.searchPrompt + '-' + #dto.hashtags + '-' + #pageable.pageNumber + '-' + #pageable.pageSize"
-//    )
     public Page<PublicDiagramInfoDto> searchPublicDiagrams(SearchRequestDto dto, Pageable pageable) {
 
         Page<PublicDiagram> page =
