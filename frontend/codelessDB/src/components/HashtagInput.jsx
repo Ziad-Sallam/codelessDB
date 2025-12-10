@@ -25,7 +25,7 @@ import { useNotification } from "./NotificationContext";
 const HASHTAGS_PER_PAGE = 10;
 
 
-export default function HashtagInput({ hashtags, selectedHashtags, onSelect, allowCreation = false }) {
+export default function HashtagInput({ hashtags = [], selectedHashtags, onSelect, allowCreation = false }) {
   const { showError } = useNotification();
 
   const [hashtagSearch, setHashtagSearch] = useState("");

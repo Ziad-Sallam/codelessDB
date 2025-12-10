@@ -31,17 +31,17 @@ export default function DiscoverDiagramCard({ d, onClick }) {
   const stars = d.stars || 0;
   const forks = d.forks || 0;
   const views = d.views || 0;
-  const hashtags = d.hashtags || [];
+  const hashtags = d.hashTags || [];
 
   const navigate = useNavigate();
 
   // Use contributors list if available, otherwise just show owner
-  const contributors = d.collaborators || (d.owner ? [d.owner] : []);
+  const contributors = d.contributors || (d.owner ? [d.owner] : []);
 
   const handleContributorClick = (e, user) => {
     e.stopPropagation();
     if (user?.username) {
-      navigate(`/designer/${user.username.replace("@", "")}`);
+      navigate(`/designer/${user.username.replace("@", "").replace("%20", "")}`);
     }
   };
 
@@ -117,7 +117,7 @@ export default function DiscoverDiagramCard({ d, onClick }) {
             {d.name}
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block">
-            Updated: {d.lastUpdated || "Recently"}
+            Updated: {d.lastModified || "Recently"}
           </Typography>
         </Box>
 
@@ -130,7 +130,7 @@ export default function DiscoverDiagramCard({ d, onClick }) {
           height: 40, // Fixed height for 2 lines
           lineHeight: 1.43
         }}>
-          {d.description || "No description available."}
+          {d.shortDescription || "No description available."}
         </Typography>
 
         {/* Hashtags */}
@@ -166,7 +166,7 @@ export default function DiscoverDiagramCard({ d, onClick }) {
               <Box key={i} sx={{ zIndex: contributors.length - i }}>
                 <Tooltip title={c.name}>
                   <Avatar
-                    src={c.avatar || c.picture}
+                    src={c.picture}
                     alt={c.name}
                     sx={{
                       width: 32,
@@ -175,13 +175,13 @@ export default function DiscoverDiagramCard({ d, onClick }) {
                       border: "2px solid white",
                       boxShadow: 1,
                       ml: i === 0 ? 0 : -1.2,
-                      bgcolor: (c.avatar || c.picture) ? undefined : "primary.main",
-                      color: (c.avatar || c.picture) ? undefined : "white",
+                      bgcolor: (c.picture) ? undefined : "primary.main",
+                      color: (c.picture) ? undefined : "white",
                       cursor: 'pointer'
                     }}
                     onClick={(e) => handleContributorClick(e, c)}
                   >
-                    {!(c.avatar || c.picture) && getInitials(c.name)}
+                    {!(c.picture) && getInitials(c.name)}
                   </Avatar>
                 </Tooltip>
               </Box>

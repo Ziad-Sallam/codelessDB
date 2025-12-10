@@ -25,6 +25,7 @@ import LeftPanel from "../../components/LeftPanel";
 import SimpleTopBar from "../../components/SimpleTopBar";
 import { useNotification } from "../../components/NotificationContext";
 import { fetchToBePublished, publishSchema } from "./fetch";
+import { fetchHashtags } from "../discover/fetch.js";
 
 import DiagramSelector from "./create/DiagramSelector";
 import HashtagInput from "../../components/HashtagInput.jsx"
@@ -63,6 +64,7 @@ export default function CreateSchema() {
   const [queries, setQueries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hashtags, setHashtags] = useState([]);
   const [selectedHashtags, setSelectedHashtags] = useState([]);
   const [diagramsCards, setDiagramsCards] = useState([]);
 
@@ -78,7 +80,19 @@ export default function CreateSchema() {
     }
   }
 
+  const loadHashtags = async () => {
+    try {
+      const resp = await fetchHashtags();
+      console.log(resp);
+      setHashtags(resp);
+    } catch (err) {
+      setHashtags([]);
+      showError && showError(err?.message || String(err));
+    }
+  };
+
   useEffect(() => {
+    loadHashtags();
     loadToBePublished();
   }, []);
 
@@ -227,6 +241,7 @@ export default function CreateSchema() {
                         label="Short Description"
                         required
                         fullWidth
+                        inputProps={{ minLength: 5, maxLength: 300 }}
                         value={shortDescription}
                         onChange={(e) => setShortDescription(e.target.value)}
                         placeholder="A brief one-line description of your schema"
@@ -250,6 +265,7 @@ export default function CreateSchema() {
                   />
                   <CardContent>
                     <HashtagInput
+                      hashtags={hashtags}
                       selectedHashtags={selectedHashtags}
                       onSelect={setSelectedHashtags}
                       allowCreation={true}

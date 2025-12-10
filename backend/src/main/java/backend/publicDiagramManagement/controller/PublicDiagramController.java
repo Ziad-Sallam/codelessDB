@@ -111,7 +111,7 @@ public class PublicDiagramController {
         return ResponseEntity.ok(staredDiagrams);
     }
 
-    @GetMapping("/searchUsers")
+    @PostMapping("/searchDiagrams")
     public ResponseEntity<?> searchPublicDiagram(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int pageNumber,
@@ -124,7 +124,7 @@ public class PublicDiagramController {
         return ResponseEntity.ok(publicDiagramsInfos);
     }
 
-    @GetMapping("/searchDiagrams")
+    @PostMapping("/searchUsers")
     public ResponseEntity<?> searchPublicUsers(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int pageNumber,

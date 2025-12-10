@@ -58,9 +58,9 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
             <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
               {title}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            {/* <Typography variant="body2" color="text.secondary">
               Connect with database designers
-            </Typography>
+            </Typography> */}
           </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -88,7 +88,7 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
       >
         {users.map((user, index) => (
           <Card
-            key={user.username}
+            key={user.id}
             sx={{
               minWidth: 280,
               maxWidth: 280,
@@ -113,7 +113,7 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
             <Box
               sx={{
                 height: 60,
-                background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.02) 100%)',
+                // background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.02) 100%)',
                 borderRadius: '4px 4px 0 0',
                 position: 'absolute',
                 top: -32,
@@ -125,7 +125,7 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
 
             <Box sx={{ position: 'relative', px: 2, pt: 0, zIndex: 1 }}>
               <Avatar
-                src={user.avatar}
+                src={user.picture}
                 alt={user.name}
                 sx={{
                   width: 64,
@@ -136,7 +136,7 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   mb: 1.5
                 }}
               >
-                {user.name.charAt(0)}
+                {/* {user.name.charAt(0)} */}
               </Avatar>
 
               <CardContent sx={{ p: 0, pb: 2 }}>
@@ -164,11 +164,12 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   {user.bio}
                 </Typography>
 
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                <Stack direction="row" spacing={10} sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <StarIcon sx={{ fontSize: 16, color: '#ffb400' }} />
                     <Typography variant="body2" fontWeight={500}>
-                      {user.totalStars ? user.totalStars.toLocaleString() : (user.followers ? user.followers.toLocaleString() : 0)}
+                      {user.totalStars}
+                      {/* {user.totalStars ? user.totalStars.toLocaleString() : (user.followers ? user.followers.toLocaleString() : 0)} */}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       stars
@@ -177,7 +178,7 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <DatabaseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                     <Typography variant="body2" fontWeight={500}>
-                      {user.publicSchemas}
+                      {user.publicCount}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       schemas
@@ -185,11 +186,6 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   </Box>
                 </Stack>
 
-                {/* Follow Button - Disabled/Hidden as per requirements? 
-                    User said: "i don't want the follow feature... (so those are the only thing you will remove from @[frontend/codelessDB/src/project/src/pages/UserProfile.jsx])"
-                    But for Discover page, they said "i want to use the component showing featured designers".
-                    The UserCarousel has a follow button. I should probably remove it to be consistent with the "no follow feature" rule.
-                */}
                 {/* <Button
                   variant={user.isFollowing ? "contained" : "outlined"}
                   color={user.isFollowing ? "secondary" : "primary"}
