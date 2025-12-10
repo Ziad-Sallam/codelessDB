@@ -57,8 +57,6 @@ public class User {
         @Column(nullable = false, updatable = false)
         private LocalDateTime createdAt;
 
-        /* ---------------- FOLLOWERS ---------------- */
-
         @JsonIgnore
         @ManyToMany(fetch = FetchType.LAZY)
         @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
@@ -69,20 +67,17 @@ public class User {
         @JoinTable(name = "user_following", joinColumns = @JoinColumn(name = "follower_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
         private Set<User> following = new HashSet<>();
 
-        /* ---------------- DIAGRAMS ---------------- */
 
         @JsonIgnore
         @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
         private Set<UserDiagram> userDiagrams = new HashSet<>();
 
-        /* ---------------- SERVERS ---------------- */
 
         @JsonIgnore
         @ManyToMany(fetch = FetchType.LAZY)
         @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
         private Set<Server> servers = new HashSet<>();
 
-        /* ---------------- DATABASES ---------------- */
 
         @JsonIgnore
         @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
