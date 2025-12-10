@@ -6,6 +6,9 @@ import UserProfile from './pages/userprofile/UserProfile.jsx';
 import CannedQueries from './pages/cannedquery/CannedQueries.jsx';
 
 import {ProtectedRoute, PublicRoute} from "./components/Routing.jsx";
+import DatabaseManager from './pages/databaseConfiguration/DatabaseManager.js';
+import TopBar from './components/TopBar.jsx';
+import LeftPanel from './components/LeftPanel';
 
 export const routes = [
   {
@@ -69,4 +72,12 @@ export const routes = [
     ),
   },
 
+  {
+    path: "/database-configuration",
+    element: (
+      <ProtectedRoute>
+        <DatabaseManager />
+      </ProtectedRoute>
+    ),
+  },
 ];
