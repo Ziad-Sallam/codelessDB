@@ -18731,3 +18731,424 @@ Caused by: java.lang.Error: Unresolved compilation problem:
 08:08:18 INFO  Initializing Spring DispatcherServlet 'dispatcherServlet'
 08:08:18 INFO  Initializing Servlet 'dispatcherServlet'
 08:08:18 INFO  Completed initialization in 2 ms
+08:21:55 INFO  Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+08:21:55 INFO  For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+08:21:56 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+08:21:56 INFO  Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+08:21:56 INFO  Finished Spring Data repository scanning in 98 ms. Found 6 JPA repository interfaces.
+08:21:56 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+08:21:56 INFO  Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+08:21:56 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.cannedquery.CannedQueryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+08:21:56 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.databaseManagement.ServerRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+08:21:56 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.databaseManagement.UserDatabaseRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+08:21:56 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.userDiagramManagement.repository.DiagramRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+08:21:56 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.userDiagramManagement.repository.UserDiagramRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+08:21:56 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+08:21:56 INFO  Finished Spring Data repository scanning in 11 ms. Found 0 Redis repository interfaces.
+08:21:57 INFO  Tomcat initialized with port 8080 (http)
+08:21:57 INFO  Starting service [Tomcat]
+08:21:57 INFO  Starting Servlet engine: [Apache Tomcat/10.1.48]
+08:21:57 INFO  Initializing Spring embedded WebApplicationContext
+08:21:57 INFO  Root WebApplicationContext: initialization completed in 1313 ms
+08:21:57 INFO  HHH000204: Processing PersistenceUnitInfo [name: default]
+08:21:57 INFO  HHH000412: Hibernate ORM core version 6.6.33.Final
+08:21:57 INFO  HHH000026: Second-level cache disabled
+08:21:57 INFO  No LoadTimeWeaver setup: ignoring JPA class transformer
+08:21:57 INFO  HikariPool-1 - Starting...
+08:21:57 INFO  HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1dcfd54b
+08:21:57 INFO  HikariPool-1 - Start completed.
+08:21:57 INFO  HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.40
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+08:21:58 INFO  HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+08:21:58 INFO  Initialized JPA EntityManagerFactory for persistence unit 'default'
+08:21:58 WARN  spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+08:21:59 INFO  LiveReload server is running on port 35729
+08:21:59 INFO  Starting...
+08:21:59 INFO  BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@124b394c]]
+08:21:59 INFO  Started.
+08:21:59 INFO  Tomcat started on port 8080 (http) with context path '/'
+08:22:19 INFO  Initializing Spring DispatcherServlet 'dispatcherServlet'
+08:22:19 INFO  Initializing Servlet 'dispatcherServlet'
+08:22:19 INFO  Completed initialization in 1 ms
+08:22:54 INFO  
+ -> Entering: User backend.user.UserService.findUserByEmail(String) 
+ args = [legendboudy@gmail.com]
+
+08:22:54 INFO  
+ -> Exiting: User backend.user.UserService.findUserByEmail(String) 
+ return = null
+
+08:22:54 INFO  
+ -> Entering: User backend.user.UserService.findUserByUsername(String) 
+ args = [Abdelrhman Khaled]
+
+08:22:54 INFO  
+ -> Exiting: User backend.user.UserService.findUserByUsername(String) 
+ return = null
+
+08:22:54 INFO  
+ -> Entering: int backend.user.UserService.createUser(UserDto) 
+ args = [UserDto(username=Abdelrhman Khaled, email=legendboudy@gmail.com, rawPassword=52a1d245-5404-48cf-baf0-a3c024faa867, picture=https://lh3.googleusercontent.com/a/ACg8ocKCEIx5wsJeqT30CzuqYxq7LVxrSMQSTBNJ2xph-Ypm7nYcQNIg4A=s96-c, createdAt=null)]
+
+08:22:54 INFO  
+ -> Exiting: int backend.user.UserService.createUser(UserDto) 
+ return = 2
+
+08:22:54 INFO  
+ -> Entering: User backend.user.UserService.findUserByEmail(String) 
+ args = [legendboudy@gmail.com]
+
+08:22:54 INFO  
+ -> Exiting: User backend.user.UserService.findUserByEmail(String) 
+ return = [FAILED toString()]
+
+08:22:55 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:22:55 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:22:55 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:22:55 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:22:55 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:22:55 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:22:55 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:22:55 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:22:55 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:22:55 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:22:55 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:22:55 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:22:55 WARN  Serializing PageImpl instances as-is is not supported, meaning that there is no guarantee about the stability of the resulting JSON structure!
+	For a stable JSON structure, please use Spring Data's PagedModel (globally via @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO))
+	or Spring HATEOAS and Spring Data's PagedResourcesAssembler as documented in https://docs.spring.io/spring-data/commons/reference/repositories/core-extensions.html#core.web.pageables.
+
+08:22:55 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:22:55 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:22:55 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:22:55 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:22:59 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:22:59 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:22:59 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:22:59 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:22:59 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:22:59 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:22:59 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:22:59 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:22:59 INFO  WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+08:29:01 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:29:01 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:29:01 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:29:01 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:29:01 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:29:01 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:29:01 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:29:01 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:32:53 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:32:53 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:32:53 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:32:53 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:32:53 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:32:53 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:32:53 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:32:53 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:32:54 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:32:54 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:32:54 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:32:54 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:32:54 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:32:54 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:32:54 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:32:54 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:40:57 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:40:57 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:40:57 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:40:57 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:40:57 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+08:40:57 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+08:40:57 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+08:40:57 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+08:43:12 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:43:12 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:43:12 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:43:12 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:43:12 INFO  
+ -> Entering: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ args = [AuthUser[userId=1, username=khaledabdo], 0, 12]
+
+08:43:12 INFO  
+ -> Entering: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ args = [1, Page request [number: 0, size 12, sort: UNSORTED]]
+
+08:43:12 INFO  
+ -> Exiting: Page backend.userDiagramManagement.service.UserDiagramService.getDiagramsByUserId(int,Pageable) 
+ return = Page 1 of 0 containing UNKNOWN instances
+
+08:43:12 INFO  
+ -> Exiting: ResponseEntity backend.userDiagramManagement.controller.UserDiagramController.getDiagramsByUserId(AuthUser,int,int) 
+ return = <200 OK OK,Page 1 of 0 containing UNKNOWN instances,[]>
+
+08:52:59 INFO  WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 2, active threads = 1, queued tasks = 0, completed tasks = 1]
+09:04:58 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+09:04:58 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+09:04:58 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+09:04:58 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+09:04:58 INFO  
+ -> Entering: ResponseEntity backend.user.UserController.login(AuthUser) 
+ args = [AuthUser[userId=1, username=khaledabdo]]
+
+09:04:58 INFO  
+ -> Entering: UserDto backend.user.UserService.getUserInfo(int) 
+ args = [1]
+
+09:04:58 INFO  
+ -> Exiting: UserDto backend.user.UserService.getUserInfo(int) 
+ return = UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10)
+
+09:04:58 INFO  
+ -> Exiting: ResponseEntity backend.user.UserController.login(AuthUser) 
+ return = <200 OK OK,UserDto(username=khaledabdo, email=khaledabdelrahman668@gmail.com, rawPassword=null, picture=null, createdAt=2025-12-10),[]>
+
+09:22:48 INFO  Restarting due to 2 class path changes (0 additions, 0 deletions, 2 modifications)
+09:22:48 INFO  Commencing graceful shutdown. Waiting for active requests to complete
+09:22:48 INFO  Graceful shutdown complete
+09:22:48 INFO  Stopping...
+09:22:48 INFO  BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@124b394c]]
+09:22:48 INFO  Stopped.
+09:22:48 INFO  Closing JPA EntityManagerFactory for persistence unit 'default'
+09:22:48 INFO  HikariPool-1 - Shutdown initiated...
+09:22:48 INFO  HikariPool-1 - Shutdown completed.
+09:22:48 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+09:22:48 INFO  Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+09:22:48 INFO  Finished Spring Data repository scanning in 38 ms. Found 6 JPA repository interfaces.
+09:22:48 INFO  Multiple Spring Data modules found, entering strict repository configuration mode
+09:22:48 INFO  Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+09:22:48 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.cannedquery.CannedQueryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+09:22:48 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.databaseManagement.ServerRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+09:22:48 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.databaseManagement.UserDatabaseRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+09:22:48 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.userDiagramManagement.repository.DiagramRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+09:22:48 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.userDiagramManagement.repository.UserDiagramRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+09:22:48 INFO  Spring Data Redis - Could not safely identify store assignment for repository candidate interface backend.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+09:22:48 INFO  Finished Spring Data repository scanning in 11 ms. Found 0 Redis repository interfaces.
+09:22:48 INFO  Tomcat initialized with port 8080 (http)
+09:22:48 INFO  Starting service [Tomcat]
+09:22:48 INFO  Starting Servlet engine: [Apache Tomcat/10.1.48]
+09:22:48 INFO  Initializing Spring embedded WebApplicationContext
+09:22:48 INFO  Root WebApplicationContext: initialization completed in 472 ms
+09:22:48 INFO  HHH000204: Processing PersistenceUnitInfo [name: default]
+09:22:48 INFO  HHH000026: Second-level cache disabled
+09:22:48 INFO  No LoadTimeWeaver setup: ignoring JPA class transformer
+09:22:48 INFO  HikariPool-2 - Starting...
+09:22:48 INFO  HikariPool-2 - Added connection com.mysql.cj.jdbc.ConnectionImpl@29b1db75
+09:22:48 INFO  HikariPool-2 - Start completed.
+09:22:48 INFO  HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 8.0.40
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+09:22:49 INFO  HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+09:22:49 INFO  Initialized JPA EntityManagerFactory for persistence unit 'default'
+09:22:49 WARN  spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+09:22:49 INFO  LiveReload server is running on port 35729
+09:22:49 INFO  Starting...
+09:22:49 INFO  BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@345fb393]]
+09:22:49 INFO  Started.
+09:22:49 INFO  Tomcat started on port 8080 (http) with context path '/'
+09:22:49 INFO  Condition evaluation unchanged
+09:23:49 INFO  WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]

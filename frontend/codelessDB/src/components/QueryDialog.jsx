@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -26,24 +26,17 @@ import { parse } from "sql-parser-cst";
 import "../pages/cannedquery/QueryDialog.css";
 import { databaseApi } from "../pages/cannedquery/cannedQueriesApi";
 
-// SQL Linter function for real-time syntax validation
 const sqlLinter = linter((view) => {
   const diagnostics = [];
   const content = view.state.doc.toString();
-
   if (!content.trim()) {
     return diagnostics;
   }
-
   try {
-    // Try to parse the SQL query
     parse(content, { dialect: 'mysql' });
   } catch (error) {
-    // If parsing fails, add diagnostic for the error
     let from = 0;
     let to = content.length;
-
-    // Try to extract position from error if available
     if (error.location) {
       const lines = content.split('\n');
       let pos = 0;
@@ -51,9 +44,8 @@ const sqlLinter = linter((view) => {
         pos += lines[i].length + 1;
       }
       from = pos + error.location.start.column - 1;
-      to = Math.min(from + 10, content.length); // Underline ~10 chars
+      to = Math.min(from + 10, content.length);
     }
-
     diagnostics.push({
       from: from,
       to: to,
@@ -65,7 +57,7 @@ const sqlLinter = linter((view) => {
   return diagnostics;
 });
 
-export default function QueryDialog({ open, onClose, query, onSave, databaseId }) {
+export default function QueryDialog({ open, onClose, query, onSave, onSaveError, databaseId }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -76,6 +68,7 @@ export default function QueryDialog({ open, onClose, query, onSave, databaseId }
   const [loadingDDL, setLoadingDDL] = useState(false);
   const [syntaxCheck, setSyntaxCheck] = useState(null);
   const [checkingSyntax, setCheckingSyntax] = useState(false);
+  const codemirrorRef = useRef(null);
 
   useEffect(() => {
     if (query) {
@@ -143,9 +136,11 @@ export default function QueryDialog({ open, onClose, query, onSave, databaseId }
 
       const errorMessage = error.message || "Syntax error detected";
       const errors = [];
+      let errorLine = null;
 
       if (error.location) {
-        errors.push(`Error at line ${error.location.start.line}, column ${error.location.start.column}`);
+        errorLine = error.location.start.line;
+        errors.push(`Error at line ${errorLine}, column ${error.location.start.column}`);
       }
 
       setSyntaxCheck({
@@ -153,6 +148,29 @@ export default function QueryDialog({ open, onClose, query, onSave, databaseId }
         message: `✗ ${errorMessage}`,
         errors: errors,
       });
+
+      if (errorLine && codemirrorRef.current) {
+        const view = codemirrorRef.current.view;
+        if (view) {
+          const line = view.state.doc.line(errorLine);
+          view.dispatch({
+            selection: { anchor: line.from, head: line.to },
+            effects: [
+              view.state.field(view.state.facet).length > 0
+                ? null
+                : null
+            ].filter(Boolean),
+          });
+          view.dispatch({
+            effects: view.state.reconfigure({}),
+          });
+          view.focus();
+          const coords = view.coordsAtPos(line.from);
+          if (coords) {
+            view.scrollDOM.scrollTop = coords.top - 100;
+          }
+        }
+      }
     } finally {
       setCheckingSyntax(false);
     }
@@ -161,8 +179,29 @@ export default function QueryDialog({ open, onClose, query, onSave, databaseId }
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.title.trim() && formData.body.trim()) {
-      onSave(formData);
-      onClose();
+      try {
+        parse(formData.body, { dialect: 'mysql' });
+        onSave(formData);
+        onClose();
+      } catch (error) {
+        console.error("Cannot save query with syntax errors:", error);
+
+        const errorMessage = error.message || "Syntax error detected";
+        const errors = [];
+
+        if (error.location) {
+          errors.push(`Error at line ${error.location.start.line}, column ${error.location.start.column}`);
+        }
+
+        setSyntaxCheck({
+          valid: false,
+          message: `✗ ${errorMessage}`,
+          errors: errors,
+        });
+        if (onSaveError) {
+          onSaveError("Cannot save query with syntax errors. Please fix the errors and try again.");
+        }
+      }
     }
   };
 
@@ -228,8 +267,6 @@ export default function QueryDialog({ open, onClose, query, onSave, databaseId }
                 className="query-form-input"
               />
             </Box>
-
-            {/* DDL Viewer Section */}
             <Box className="ddl-section">
               <Button
                 startIcon={showDDL ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -299,6 +336,7 @@ export default function QueryDialog({ open, onClose, query, onSave, databaseId }
 
               <Box className="codemirror-container" sx={{ border: '1px solid #d0d0d0', borderRadius: 1, overflow: 'hidden' }}>
                 <CodeMirror
+                  ref={codemirrorRef}
                   value={formData.body}
                   height="300px"
                   extensions={[sql(), sqlLinter]}
