@@ -1,6 +1,7 @@
 package backend.entities;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -39,13 +40,17 @@ public class User {
     @Column(nullable = false, length = 60)
     private String password;
 
+
     private String picture;
+
+    @Column(length = 300)
     private String bio;
+
     private String profileWebsiteUrl;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     /* ---------------- FOLLOWERS ---------------- */
 

@@ -1,14 +1,10 @@
 package backend.entities;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import backend.entities.publicDiagramEntities.CannedQueriesDiagrams;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import jakarta.persistence.*;
 import lombok.Builder;

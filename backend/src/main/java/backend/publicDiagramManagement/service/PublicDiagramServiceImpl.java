@@ -1,6 +1,7 @@
 package backend.publicDiagramManagement.service;
 
 import backend.entities.Diagram;
+import backend.entities.User;
 import backend.entities.joins.PublicDiagramUserId;
 import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.*;
@@ -16,6 +17,7 @@ import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.publicDiagramManagement.repository.StarRepository;
 import backend.publicDiagramManagement.repository.ViewsRepository;
 import backend.user.Role;
+import backend.user.UserRepository;
 import backend.user.UserService;
 import backend.userDiagramManagement.dto.ContributorDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
@@ -24,6 +26,7 @@ import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -45,12 +48,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     private final ForkRepository forkRepository;
     private final StarRepository starRepository;
     private final UserService userService;
-
-    public PublicDiagram getPublicDiagramOrThrow(UUID diagramId) {
-        return publicDiagramRepository.findById(diagramId)
-                .orElseThrow(() -> new PublicDiagramException.DiagramNotFoundException(
-                        "Public diagram not found " + diagramId));
-    }
+    private final UserRepository userRepository;
 
     public PublicDiagram getPublicDiagramOrThrow(Diagram diagram) {
         PublicDiagram pd = diagram.getPublicDiagram();
@@ -264,12 +262,46 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     }
 
     @Override
-    public Page<PublicDiagramInfoDto> searchPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable) {
-        return null;
+    @Transactional
+//    @Cacheable(
+//            value = "searchDiagramCache",
+//            key = "#dto.searchPrompt + '-' + #dto.hashtags + '-' + #pageable.pageNumber + '-' + #pageable.pageSize"
+//    )
+    public Page<PublicDiagramInfoDto> searchPublicDiagrams(SearchRequestDto dto, Pageable pageable) {
+
+        Page<PublicDiagram> page =
+                publicDiagramRepository.searchPublicDiagrams(dto.getSearchPrompt(), dto.getHashtags(), pageable);
+
+        return page.map(pd -> {
+            List<ContributorDto> contributors = userDiagramService.getContributors(pd.getId());
+            return PublicDiagramInfoDto.toDto(pd, contributors);
+        });
     }
 
     @Override
-    public Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable) {
-        return null;
+    @Transactional
+    public Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto dto,
+                                                               Pageable pageable) {
+
+        String search = dto.getSearchPrompt();
+        if (search != null && search.isBlank()) {
+            search = null;
+        }
+
+        Page<Object[]> raw = userRepository.searchUsersWithPublicStats(
+                search,
+                dto.getHashtags(),
+                pageable
+        );
+
+        return raw.map(row -> {
+            User user = (User) row[0];
+
+            Long publicCount = row[1] == null ? 0L : ((Number) row[1]).longValue();
+            Long totalStars  = row[2] == null ? 0L : ((Number) row[2]).longValue();
+            Long score       = row[3] == null ? 0L : ((Number) row[3]).longValue();
+
+            return PublicUserInfoDto.toDto(user, publicCount, totalStars, score);
+        });
     }
 }

@@ -109,7 +109,7 @@ public class PublicDiagramController {
         return ResponseEntity.ok(staredDiagrams);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/searchUsers")
     public ResponseEntity<?> searchPublicDiagram(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int pageNumber,
@@ -117,9 +117,20 @@ public class PublicDiagramController {
             @RequestBody SearchRequestDto searchRequestDto) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<PublicUserInfoDto> publicUserInfos = publicDiagramService.searchUsersByPublicDiagrams(searchRequestDto, pageable);
         Page<PublicDiagramInfoDto> publicDiagramsInfos = publicDiagramService.searchPublicDiagrams(searchRequestDto, pageable);
-        return ResponseEntity.ok(new SearchResponseDto(publicUserInfos, publicDiagramsInfos));
+        return ResponseEntity.ok(publicDiagramsInfos);
+    }
+
+    @GetMapping("/searchDiagrams")
+    public ResponseEntity<?> searchPublicUsers(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestBody SearchRequestDto searchRequestDto) {
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<PublicUserInfoDto> publicUserInfos = publicDiagramService.searchUsersByPublicDiagrams(searchRequestDto, pageable);
+        return ResponseEntity.ok(publicUserInfos);
     }
 
     @GetMapping("/hashtags")
