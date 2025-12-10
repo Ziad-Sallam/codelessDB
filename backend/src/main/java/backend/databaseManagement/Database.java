@@ -10,5 +10,6 @@ public class Database{
     private Integer databaseId;
     private String databaseName;
     private String serverName;
+    private String databaseddl;
 
 }

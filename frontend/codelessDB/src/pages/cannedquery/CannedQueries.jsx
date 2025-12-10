@@ -278,6 +278,7 @@ export default function CannedQueriesPage() {
         onClose={() => setDialogOpen(false)}
         query={editingQuery}
         onSave={handleSave}
+        databaseId={currentDatabaseId}
       />
       <Snackbar
         open={snackbar.open}

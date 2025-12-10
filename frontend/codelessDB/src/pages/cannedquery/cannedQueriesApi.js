@@ -38,15 +38,25 @@ export const cannedQueriesApi = {
   },
 };
 export const databaseApi = {
-    getUserDatabases: async () => {
-      const response = await axios.get('http://localhost:8080/database/get-user-databases', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      return response.data;
-    },
+  getUserDatabases: async () => {
+    const response = await axios.get('http://localhost:8080/database/get-user-databases', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+    return response.data;
+  },
+  getDatabaseDDL: async (databaseId) => {
+    const response = await axios.get('http://localhost:8080/database/get-user-databases', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+    const database = response.data.databases.find(db => db.databaseId === databaseId);
+    return database ? database.databaseddl : null;
+  },
   createDatabase: async (databaseData) => {
     const response = await api.post('/database/create', databaseData);
     return response.data;

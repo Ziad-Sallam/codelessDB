@@ -21,7 +21,6 @@ export default function QueryCard({ query, onEdit, onDelete }) {
   return (
     <>
       <Box className="query-card" sx={{ position: "relative" }}>
-        {/* Action Buttons */}
         <Box className="query-actions">
           <IconButton
             size="small"
@@ -49,20 +48,16 @@ export default function QueryCard({ query, onEdit, onDelete }) {
           </IconButton>
         </Box>
 
-        {/* Card Header */}
         <Box className="query-card-header">
           <h3 className="query-card-title">{query.title}</h3>
           <p className="query-card-description">{query.description}</p>
         </Box>
 
-        {/* Code Block */}
         <Box className="query-code-block">
           <pre>
             <code>{query.body}</code>
           </pre>
         </Box>
-
-        {/* Card Footer */}
         <Box className="query-card-footer">
           <span className="query-updated-date">
             Updated{" "}
@@ -78,8 +73,6 @@ export default function QueryCard({ query, onEdit, onDelete }) {
           </button>
         </Box>
       </Box>
-
-      {/* Copy Notification */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}

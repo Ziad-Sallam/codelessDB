@@ -149,7 +149,7 @@ public class DatabaseManagementService {
             temp.setDatabaseId(db.getId());
             temp.setServerName(db.getServer().getName());
             temp.setDatabaseName(db.getName());
-
+            temp.setDatabaseddl(db.getDdl());
             ans.getDatabases().add(temp);
         }
         return ans;
@@ -169,5 +169,6 @@ public class DatabaseManagementService {
 
         return ans;
     }    
+    
 
 }
