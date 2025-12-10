@@ -25,27 +25,32 @@ public class DatabaseManagementService {
 
     }
 
-    public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId) throws RuntimeException{
+    public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId) throws RuntimeException {
         if (createServerDTO == null) throw new RuntimeException("DTO cannot be null");
-        
 
         User owner = userRepository.findById(ownerId);
         if (owner == null) throw new RuntimeException("Owner not found");
-        
-        if (createServerDTO.getServerName() == null) throw new RuntimeException("Server name Not Found !");
+
+        String serverName = createServerDTO.getServerName();
+        if (serverName == null) throw new RuntimeException("Server name not found!");
+
+        boolean exists = owner.getServers().stream()
+                .anyMatch(s -> s.getName().equals(serverName));
+        if (exists) throw new RuntimeException("Server name already exists for this user!");
+
         Server newServer = new Server();
-        newServer.setName(createServerDTO.getServerName());
+        newServer.setName(serverName);
         newServer.setOwner(owner);
 
         serverRepository.save(newServer);
         owner.getServers().add(newServer);
-
         userRepository.save(owner);
+
         createServerDTO.setServerId(newServer.getId());
 
         return createServerDTO;
-
     }
+
 
     public CreateDatabaseDTO createDatabase(CreateDatabaseDTO dto, int ownerId) {
 
@@ -82,6 +87,13 @@ public class DatabaseManagementService {
                     .orElseThrow(() -> new RuntimeException("Created server not found"));
 
             dto.setServerId(server.getId());
+        }
+
+        boolean exists = owner.getAccessibleDatabases().stream()
+        .anyMatch(db -> db.getServer().getId() == server.getId()
+                    && db.getName().equals(dto.getDatabaseName()));
+        if (exists) {
+            throw new RuntimeException("Database name already exists on this server for this user");
         }
 
         UserDatabase db = new UserDatabase();

@@ -61,17 +61,21 @@ const serverApi = {
         }
       );
 
-      return response.data; // should be { serverId, serverName }
-    } catch (error) {
+      return response.data; // { serverId, serverName }
+
+    } catch (error: any) {
       console.error("Error creating server:", error);
 
-      // ✅ fallback mock (kept consistent)
-      return {
-        serverId: Math.floor(Math.random() * 1000) + 100,
-        serverName: serverData.serverName,
-      };
+      // Throw the error so frontend knows the creation failed
+      // Backend should return a descriptive error message
+      if (error.response && error.response.data && error.response.data.error) {
+        throw new Error(error.response.data.error);
+      } else {
+        throw new Error("Failed to create server. Please try again.");
+      }
     }
-  },
+  }
+,
 
   async submitDatabaseConfiguration(
   submissionData: DatabaseConfig
@@ -93,7 +97,7 @@ const serverApi = {
     console.error("Error submitting database configuration:", error);
 
     const message =
-      error.response?.data?.message ||
+      error.response?.data?.error ||
       error.response?.data ||
       "Failed to submit database configuration";
 
@@ -216,13 +220,14 @@ const DatabaseManager: React.FC = () => {
       setServerForm({ serverName: '' });
       
       alert(`Server "${newServer.serverName}" created successfully with ID: ${newServer.serverId}`);
-    } catch (error) {
-      console.error('Failed to create server:', error);
-      alert('Failed to create server. Please try again.');
+    } catch (error: any) {
+      // Display the backend error message
+      alert(error.message);
     } finally {
       setIsCreatingServer(false);
     }
   };
+
 
 const handleSubmitForm = async () => {
   if (!database.databaseName) {

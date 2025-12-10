@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import java.util.Map;
 
 import backend.security.AuthUser;
 
@@ -22,19 +23,39 @@ public class DatabaseManagementController {
 
     @PostMapping("/create-database")
     public ResponseEntity<?> createDatabase(@RequestBody CreateDatabaseDTO createDatabaseDTO,
-        @AuthenticationPrincipal AuthUser authUser) throws BadRequestException {
+            @AuthenticationPrincipal AuthUser authUser) {
 
-        CreateDatabaseDTO databaseId = databaseManagementService.createDatabase(createDatabaseDTO, authUser.userId());
-        return ResponseEntity.ok(databaseId);
+        try {
+            // Attempt to create the database
+            CreateDatabaseDTO createdDatabase = databaseManagementService.createDatabase(createDatabaseDTO, authUser.userId());
+            return ResponseEntity.ok(createdDatabase);
+
+        } catch (RuntimeException e) {
+            // Return 400 Bad Request with the error message
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
+
 
     @PostMapping("/create-server")
     public ResponseEntity<?> createServer(@RequestBody CreateServerDTO createServerDTO,
-        @AuthenticationPrincipal AuthUser authUser) throws BadRequestException {
+        @AuthenticationPrincipal AuthUser authUser) {
 
-        CreateServerDTO databaseId = databaseManagementService.createServer(createServerDTO, authUser.userId());
-        return ResponseEntity.ok(databaseId);
-    }
+        try {
+            
+            CreateServerDTO createdServer = databaseManagementService.createServer(createServerDTO, authUser.userId());
+            return ResponseEntity.ok(createdServer);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of(
+                            "error", e.getMessage()
+                    ));
+        }
+}
+
 
     @PostMapping("/create-mysql-container")
     public ResponseEntity<?> createMysqlContainer(@RequestBody int id) {
@@ -42,7 +63,7 @@ public class DatabaseManagementController {
             InitiateDatabaseDTO initiateDatabaseDTO = databaseManagementService.initiateDatabase(id);
             return ResponseEntity.ok(initiateDatabaseDTO);
         } catch (RuntimeException | BadRequestException e) {
-            return ResponseEntity.internalServerError().build(); // <-- ALWAYS RETURNS 500
+            return ResponseEntity.internalServerError().build();
         }
 
     }
