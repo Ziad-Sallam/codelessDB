@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import './QueryRunner.css';
 import { useParams } from "react-router-dom";
 import LeftPanel from '../../components/LeftPanel';
+import QueryDialog from '../../components/QueryDialog';
+import { cannedQueriesApi } from '../cannedquery/cannedQueriesApi';
+import { Snackbar, Alert } from '@mui/material';
 
 import axios from 'axios';
 
-// Type Definitions
 interface QueryRequest {
   databaseId: number;
   content: string;
@@ -27,7 +29,7 @@ const API_BASE_URL: string = import.meta.env.VITE_BACKEND_URL;
 const executeQuery = async (request: QueryRequest): Promise<QueryResponse> => {
   try {
     const response = await axios.post<QueryResponse>(
-      `${API_BASE_URL}/agent/send`, // Replace with actual endpoint
+      `${API_BASE_URL}/agent/send`,
       request,
       {
         headers: {
@@ -73,33 +75,54 @@ const QueryRunner: React.FC = () => {
   const { id } = useParams();
   const [leftNav, setLeftNav] = useState("all");
 
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [cannedQueries, setCannedQueries] = useState<any[]>([]);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [selectedQueryId, setSelectedQueryId] = useState<number | null>(null);
 
-useEffect(() => {
-  if (!id) return;
-
-  setDatabaseId(id);
-  console.log("this is the id:", id);
-
-  axios
-    .get(API_BASE_URL+"/agent/is-database-online", {
-      params: { databaseId: id },
-      headers: {
-         Authorization: `Bearer ${localStorage.getItem("authToken")}` // if needed
-       }
-    })
-    .then((res) => {
-      console.log("Database online:", res.data);
-      setIsOnline(res.data);
-    })
-    .catch((err) => {
-      console.error(
-        "Error checking database status:",
-        err.response?.data || err.message
-      );
-    });
-}, [id]);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
 
+  useEffect(() => {
+    if (!id) return;
+
+    setDatabaseId(id);
+    console.log("this is the id:", id);
+
+    cannedQueriesApi.getAllQueries(parseInt(id))
+      .then((queries) => {
+        setCannedQueries(queries);
+      })
+      .catch((err) => {
+        console.error("Error fetching canned queries:", err);
+      });
+
+    axios
+      .get(API_BASE_URL + "/agent/is-database-online", {
+        params: { databaseId: id },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`
+        }
+      })
+      .then((res) => {
+        console.log("Database online:", res.data);
+        setIsOnline(res.data);
+      })
+      .catch((err) => {
+        console.error(
+          "Error checking database status:",
+          err.response?.data || err.message
+        );
+      });
+  }, [id]);
 
   const handleExecuteQuery = async () => {
 
@@ -143,6 +166,30 @@ useEffect(() => {
     }
   };
 
+  const handleSelectQuery = (query: any) => {
+    setQueryContent(query.query || '');
+    setSelectedQueryId(query.id);
+  };
+
+  const handleSaveQuery = async (queryData: any) => {
+    try {
+      await cannedQueriesApi.createQuery(queryData);
+      const queries = await cannedQueriesApi.getAllQueries(parseInt(databaseId));
+      setCannedQueries(queries);
+    } catch (err) {
+      console.error("Error saving/refreshing canned queries:", err);
+    }
+  };
+  const handleSaveError = (errorMessage: string) => {
+    setSnackbar({
+      open: true,
+      message: errorMessage,
+      severity: 'warning'
+    });
+  };
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
   const handleClearResults = () => {
     setQueryResult(null);
     setHasExecuted(false);
@@ -161,7 +208,6 @@ useEffect(() => {
       <div className="query-runner-container db-manager-container">
 
         <div className="query-runner-wrapper">
-          {/* Header */}
           <div className="query-runner-header">
             <div className="header-title-section">
               <svg className="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -195,7 +241,6 @@ useEffect(() => {
               <button
                 className="primary-btn reconnect-btn execute-btn"
                 onClick={() => {
-                  // re-check status without reloading page
                   axios
                     .get(API_BASE_URL + "/agent/is-database-online", {
                       params: { databaseId },
@@ -204,17 +249,14 @@ useEffect(() => {
                       }
                     })
                     .then(res => setIsOnline(res.data))
-                    .catch(() => {});
+                    .catch(() => { });
                 }}
               >
                 Re-check Connection
               </button>
             </div>
-            )
+          )
           }
-
-
-          {/* Query Input Card */}
           <div className={`query-card ${!isOnline ? "disabled-card" : ""}`}>
             <div className="card-header">
               <div className="card-header-content">
@@ -231,6 +273,18 @@ useEffect(() => {
                   </h2>
                   <p className="card-description">Enter your database ID and SQL query</p>
                 </div>
+                <button
+                  className="add-query-btn"
+                  onClick={() => setDialogOpen(true)}
+                  disabled={!isOnline}
+                  title="Add new canned query"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add
+                </button>
               </div>
             </div>
 
@@ -278,8 +332,6 @@ useEffect(() => {
               </div>
             </div>
           </div>
-
-          {/* Results Card */}
           {hasExecuted && queryResult && (
             <div className="results-card">
               <div className="card-header">
@@ -372,9 +424,82 @@ useEffect(() => {
             </div>
           )}
         </div>
+        {!sidebarOpen && (
+          <button
+            className="sidebar-toggle-fab"
+            onClick={() => setSidebarOpen(true)}
+            title="Show canned queries"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+        )}
+        <div className={`canned-queries-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+          <div className="sidebar-header">
+            <h3>Canned Queries</h3>
+            <button
+              className="sidebar-toggle-btn"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {sidebarOpen ? (
+                  <path d="M9 18l6-6-6-6" />
+                ) : (
+                  <path d="M15 18l-6-6 6-6" />
+                )}
+              </svg>
+            </button>
+          </div>
+          {sidebarOpen && (
+            <div className="queries-list">
+              {cannedQueries.length === 0 ? (
+                <div className="empty-queries">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <p>No canned queries yet</p>
+                  <small>Click "Add" to create your first query</small>
+                </div>
+              ) : (
+                cannedQueries.map((query) => (
+                  <div
+                    key={query.id}
+                    className={`canned-query-card ${selectedQueryId === query.id ? 'selected' : ''}`}
+                    onClick={() => handleSelectQuery(query)}
+                  >
+                    <h4>{query.name}</h4>
+                    <p className="query-description">{query.description}</p>
+                    <pre className="query-preview">{query.query?.substring(0, 80) || 'No query body'}...</pre>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
+      <QueryDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        query={null}
+        onSave={handleSaveQuery}
+        onSaveError={handleSaveError}
+        databaseId={parseInt(databaseId)}
+      />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
-
 export default QueryRunner;

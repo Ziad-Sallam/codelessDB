@@ -181,7 +181,14 @@ export default function QueryDialog({ open, onClose, query, onSave, onSaveError,
     if (formData.title.trim() && formData.body.trim()) {
       try {
         parse(formData.body, { dialect: 'mysql' });
-        onSave(formData);
+        // Map frontend fields to backend DTO fields
+        const queryDataForBackend = {
+          name: formData.title,           // Backend expects "name" not "title"
+          description: formData.description,
+          query: formData.body,            // Backend expects "query" not "body"
+          databaseId: parseInt(databaseId)
+        };
+        onSave(query ? { ...queryDataForBackend, id: query.id } : queryDataForBackend);
         onClose();
       } catch (error) {
         console.error("Cannot save query with syntax errors:", error);
