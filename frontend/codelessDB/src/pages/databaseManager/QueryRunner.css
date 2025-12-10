@@ -588,3 +588,65 @@
     print-color-adjust: exact;
   }
 }
+
+.disabled-card {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+
+/* Reconnect Guide */
+
+.reconnect-card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 24px;
+  border-left: 6px solid #ef4444;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.reconnect-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin-bottom: 8px;
+}
+
+.reconnect-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.reconnect-steps {
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+
+.reconnect-steps li {
+  margin-bottom: 10px;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+
+.reconnect-steps code {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  display: inline-block;
+}
+
+.reconnect-btn {
+  align-self: flex-start;
+}
+
+/* Disabled state reinforcement */
+.disabled-card {
+  opacity: 0.6;
+  filter: grayscale(0.2);
+}

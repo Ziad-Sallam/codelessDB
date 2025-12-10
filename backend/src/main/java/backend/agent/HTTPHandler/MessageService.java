@@ -51,5 +51,13 @@ public class MessageService {
         }  
         return clientResponse;
     }
+
+    public Boolean databaseIsOnline(int userId, int databaseId){
+        User user = userRepository.findById(userId);
+        UserDatabase database = userDatabaseRepository.findById(databaseId).orElse(null);
+
+        if(!user.getAccessibleDatabases().contains(database))throw new RuntimeException("Unauthrized Access");
+        return tracker.isOnline(Integer.toString(databaseId));      
+    }
   
 }

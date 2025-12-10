@@ -69,15 +69,37 @@ const QueryRunner: React.FC = () => {
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [queryResult, setQueryResult] = useState<QueryResponse | null>(null);
   const [hasExecuted, setHasExecuted] = useState<boolean>(false);
+  const [isOnline, setIsOnline] = useState<boolean>(false);
   const { id } = useParams();
   const [leftNav, setLeftNav] = useState("all");
 
-  useEffect(() => {
-    if (id) {
-      setDatabaseId(id);
-      console.log("this is the id: " + id)
-    }
-  }, [id]);
+
+useEffect(() => {
+  if (!id) return;
+
+  setDatabaseId(id);
+  console.log("this is the id:", id);
+
+  axios
+    .get(API_BASE_URL+"/agent/is-database-online", {
+      params: { databaseId: id },
+      headers: {
+         Authorization: `Bearer ${localStorage.getItem("authToken")}` // if needed
+       }
+    })
+    .then((res) => {
+      console.log("Database online:", res.data);
+      setIsOnline(res.data);
+    })
+    .catch((err) => {
+      console.error(
+        "Error checking database status:",
+        err.response?.data || err.message
+      );
+    });
+}, [id]);
+
+
 
   const handleExecuteQuery = async () => {
 
@@ -125,6 +147,12 @@ const QueryRunner: React.FC = () => {
     setQueryResult(null);
     setHasExecuted(false);
   };
+  const RECONNECT_COMMANDS = [
+    "START DATABASE",
+    "AUTHENTICATE",
+    "CONNECT"
+  ];
+
 
   return (
     <div className="databaseManager">
@@ -148,8 +176,44 @@ const QueryRunner: React.FC = () => {
             </p>
           </div>
 
+          {!isOnline && (
+  <div className="reconnect-card">
+    <h3 className="reconnect-title">Database is Offline</h3>
+    <p className="reconnect-subtitle">
+      Run the following commands in order to reconnect:
+    </p>
+
+    <ol className="reconnect-steps">
+      {RECONNECT_COMMANDS.map((cmd, index) => (
+        <li key={index}>
+          <code>{cmd}</code>
+        </li>
+      ))}
+    </ol>
+
+    <button
+      className="primary-btn reconnect-btn execute-btn"
+      onClick={() => {
+        // re-check status without reloading page
+        axios
+          .get(API_BASE_URL + "/agent/is-database-online", {
+            params: { databaseId },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`
+            }
+          })
+          .then(res => setIsOnline(res.data))
+          .catch(() => {});
+      }}
+    >
+      Re-check Connection
+    </button>
+  </div>
+)}
+
+
           {/* Query Input Card */}
-          <div className="query-card">
+          <div className={`query-card ${!isOnline ? "disabled-card" : ""}`}>
             <div className="card-header">
               <div className="card-header-content">
                 <div className="card-title-section">
@@ -181,7 +245,7 @@ const QueryRunner: React.FC = () => {
                   rows={8}
                   value={queryContent}
                   onChange={(e) => setQueryContent(e.target.value)}
-                  disabled={isExecuting}
+                  disabled={isExecuting || !isOnline}
                 />
               </div>
 
@@ -189,7 +253,7 @@ const QueryRunner: React.FC = () => {
                 <button
                   className="execute-btn primary-btn"
                   onClick={handleExecuteQuery}
-                  disabled={isExecuting}
+                  disabled={isExecuting || !isOnline}
                 >
                   <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polygon points="5 3 19 12 5 21 5 3"></polygon>

@@ -28,4 +28,15 @@ public class MessageController {
         
     }
 
+    @GetMapping("/is-database-online")
+    public ResponseEntity<?> isDatabaseOnline( @RequestParam int databaseId, @AuthenticationPrincipal AuthUser user) {
+        try {
+            boolean x = messageService.databaseIsOnline(user.userId(), databaseId);
+            return ResponseEntity.ok(x);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
 }
