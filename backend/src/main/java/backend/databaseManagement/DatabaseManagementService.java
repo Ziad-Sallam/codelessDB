@@ -6,32 +6,34 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import backend.entities.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.entities.Server;
 import backend.entities.UserDatabase;
 import backend.user.UserRepository;
 
 import java.util.List;
 
-import javax.xml.crypto.Data;
-
-import java.util.ArrayList;
-
-import java.util.List;
 
 @Service
 public class DatabaseManagementService {
     private final UserDatabaseRepository userDatabaseRepository;
     private final UserRepository userRepository;
-    private final ServerRepository serverRepository;   
+    private final ServerRepository serverRepository;
+    private final OnlineUserTracker tracker;  
 
+    @Autowired
     public DatabaseManagementService(
         UserDatabaseRepository userDatabaseRepository, 
         UserRepository userRepository,
-        ServerRepository serverRepository
+        ServerRepository serverRepository,
+        OnlineUserTracker tracker
+        
     ) {
         this.userDatabaseRepository = userDatabaseRepository;
         this.userRepository = userRepository;
         this.serverRepository = serverRepository;
+        this.tracker = tracker;
 
     }
 
@@ -150,6 +152,7 @@ public class DatabaseManagementService {
             temp.setServerName(db.getServer().getName());
             temp.setDatabaseName(db.getName());
             temp.setDatabaseddl(db.getDdl());
+            temp.setConnected(tracker.isOnline(Integer.toString(db.getId())));
             ans.getDatabases().add(temp);
         }
         return ans;
