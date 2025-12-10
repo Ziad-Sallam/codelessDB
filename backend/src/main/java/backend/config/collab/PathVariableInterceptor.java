@@ -26,6 +26,7 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 
 		// 1. Get the URI path from the HTTP request (the handshake request)
 		String path = request.getURI().getPath();
+		log.info("Getting the URI path from the HTTP request (the handshake request)");
 
 		// 2. Match the URI path against the template to extract variables
 		if (URI_TEMPLATE.matches(path)) {
@@ -50,6 +51,7 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 			ServerHttpResponse response,
 			WebSocketHandler wsHandler,
 			Exception exception) {
+				
 		log.info("Handshake Established");
 		// Optional: Perform cleanup or logging after the handshake
 	}

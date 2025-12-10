@@ -31,62 +31,80 @@ import java.util.Set;
 @Slf4j
 public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 
-	// Store all active sessions for broadcasting
-	private final Set<WebSocketSession> sessions = Collections.synchronizedSet(new HashSet<>());
-
 	@Autowired
 	private RoomManager roomManager;
 
+	private String getDiagramId(WebSocketSession session) {
+		return (String) session.getAttributes().get("diagramId");
+	}
+
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-		sessions.add(session);
-		String diagramId = (String) session.getAttributes().get("diagramId");
-		log.info("New binary connection established with diagram: {}", session.getId());
+		String diagramId = getDiagramId(session);
+
+		if (diagramId != null) {
+			roomManager.joinRoom(diagramId, session);
+			log.info("New binary connection established for Diagram ID: {}", diagramId);
+		
+		} else {
+			log.warn("Session {} established without a valid diagramId.", session.getId());
+			// Consider closing the session or handling sessions without an ID
+		}
 	}
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-		sessions.remove(session);
-		log.info("Binary connection closed: " + session.getId());
+		String diagramId = getDiagramId(session);
+
+		if (diagramId != null) {
+			roomManager.leaveRoom(diagramId, session);
+			log.info("Binary connection closed for Diagram ID: {}", diagramId);
+		}
 	}
 
 	@Override
 	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
-		// 1. Process the incoming raw binary message
 		ByteBuffer payload = message.getPayload();
-		String diagramId = (String) session.getAttributes().get("diagramId");
-		log.info("Received binary message from {} with {} bytes.", diagramId, payload.remaining());
+		String diagramId = getDiagramId(session);
 
-		// For a collaboration app, you might parse the payload to extract
-		// information like "what change was made" and "by whom".
+		if (diagramId != null) {
+			log.info("Received binary message for Diagram ID {} with {} bytes.", diagramId, payload.remaining());
 
-		// 2. Broadcast the received message to all other connected clients
-		broadcastBinaryMessage(payload.array(), session.getId());
+			// Broadcast the received message ONLY to clients in the same diagram/room
+			broadcastBinaryMessage(diagramId, payload.array(), session.getId());
+		
+		} else {
+			log.warn("Ignoring binary message from session {} as diagramId is missing.", session.getId());
+		}
 	}
 
 	/**
-	 * Broadcasts a raw binary message to all connected clients except the sender.
+	 * Broadcasts a raw binary message ONLY to clients in the specified room,
+	 * excluding the sender.
+	 * * @param diagramId The room/diagram ID to broadcast within.
 	 * 
 	 * @param data     The byte array to send.
 	 * @param senderId The session ID of the sender to exclude from the broadcast.
 	 */
-	public void broadcastBinaryMessage(byte[] data, String senderId) {
+	public void broadcastBinaryMessage(String diagramId, byte[] data, String senderId) {
 		BinaryMessage message = new BinaryMessage(data);
 
-		sessions.parallelStream().forEach(session -> {
+		Set<WebSocketSession> roomSessions = roomManager.getSessionsInRoom(diagramId);
+
+		if (roomSessions == null || roomSessions.isEmpty()) {
+			log.warn("No sessions found for diagramId: {}", diagramId);
+			return;
+		}
+
+		// Stream and send to the targeted room sessions
+		roomSessions.parallelStream().forEach(session -> {
 			if (session.isOpen() && !session.getId().equals(senderId)) {
 				try {
-					// Note: session.sendMessage is generally thread-safe,
-					// but calling it concurrently on the same session
-					// should be avoided. Using sessions.parallelStream()
-					// with the synchronizedSet helps with safe iteration,
-					// but you might consider making the actual sendMessage
-					// call within a synchronized block if you hit concurrency issues
-					// with the underlying WebSocket implementation.
-					// roomManager
 					session.sendMessage(message);
+				
 				} catch (IOException e) {
-					log.error("Error sending message to session {} :\n {}", session.getId(), e.getMessage());
+					log.error("Error sending message to session {} in diagram {}:\n {}",
+								 session.getId(), diagramId, e.getMessage());
 				}
 			}
 		});

@@ -24,11 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoomController {
 
-	private final SnapshotService userDiagramService;
-
-	private int id(AuthUser authUser) {
-		return authUser.userId();
-	}
+	private final SnapshotService snapshotService;
 
 	// @GetMapping("/search/{id}")
 	@GetMapping("/{id}")
@@ -36,17 +32,17 @@ public class RoomController {
 			@AuthenticationPrincipal AuthUser authUser,
 			@PathVariable UUID id) {
 
-		DiagramDto result = userDiagramService.searchDiagramById(id(authUser), id);
+		DiagramDto result = snapshotService.searchDiagramById(authUser.userId(), id);
 		return ResponseEntity.ok(result);
 	}
 
 	@PutMapping("/update/{id}")
-	public ResponseEntity<DiagramUpdateResponseDto> updateDiagram(
+	public ResponseEntity<DiagramUpdateResponseDto> saveState(
 			@AuthenticationPrincipal AuthUser authUser,
 			@PathVariable UUID id,
 			@RequestBody DiagramUpdateRequestDto request) {
 
-		Date updateDate = userDiagramService.updateDiagram(id(authUser), request, id);
+		Date updateDate = snapshotService.updateDiagram(authUser.userId(), request, id);
 
 		return ResponseEntity.ok(new DiagramUpdateResponseDto(
 				"Diagram updated successfully",
