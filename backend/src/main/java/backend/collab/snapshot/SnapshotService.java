@@ -44,11 +44,14 @@ public class SnapshotService {
 		userDiagramService.getUserOrThrow(userId);
 		userDiagramService.getUserDiagramOrThrow(userId, diagramId);
 		
+		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
+		diagram.setContent(state);
+		diagramRepository.save(diagram);
+
 		String id = diagramId.toString();
 		redisService.removeDiagramHistory(id);
 		// redisService.deleteUntil(id, 0);
 		updatesRepository.deleteAllByDiagramId(id);
-
 	}
 
 }
