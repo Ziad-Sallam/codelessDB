@@ -5,6 +5,8 @@ import backend.databaseManagement.CreateDatabaseDTO;
 import backend.databaseManagement.CreateServerDTO;
 import backend.databaseManagement.DatabaseManagementService;
 import backend.databaseManagement.InitiateDatabaseDTO;
+import backend.databaseManagement.Database;
+import backend.databaseManagement.SendDatabasesDTO;
 import backend.databaseManagement.ServerRepository;
 import backend.databaseManagement.UserDatabaseRepository;
 import backend.entities.*;
@@ -353,7 +355,7 @@ class DatabaseManagementServiceTest {
             service.createServer(dto, 1);
         });
 
-        assertEquals("Server name Not Found !", ex.getMessage());
+        assertEquals("Server name not found!", ex.getMessage());
     }
 
 
@@ -402,6 +404,93 @@ class DatabaseManagementServiceTest {
         assertTrue(result.isEmpty());
     }
 
-    
+    @Test
+    void getUserDatabases_validUser_returnsDatabases() {
+        // Arrange
+        int userId = 1;
+
+        User user = new User();
+
+        Server server = new Server();
+        server.setName("Server-1");
+
+        UserDatabase db1 = new UserDatabase();
+        db1.setId(10);
+        db1.setName("DB1");
+        db1.setServer(server);
+
+        UserDatabase db2 = new UserDatabase();
+        db2.setId(20);
+        db2.setName("DB2");
+        db2.setServer(server);
+
+        List<UserDatabase> databases = List.of(db1, db2);
+        user.setAccessibleDatabases(databases);
+
+        when(userRepository.findById(userId)).thenReturn(user);
+
+        // Act
+        SendDatabasesDTO result = service.getUserDatabases(userId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.getDatabases().size());
+
+        Database first = result.getDatabases().get(0);
+        assertEquals(10, first.getDatabaseId());
+        assertEquals("DB1", first.getDatabaseName());
+        assertEquals("Server-1", first.getServerName());
+
+        Database second = result.getDatabases().get(1);
+        assertEquals(20, second.getDatabaseId());
+        assertEquals("DB2", second.getDatabaseName());
+        assertEquals("Server-1", second.getServerName());
+
+        verify(userRepository).findById(userId);
+    }    
+
+
+    @Test
+    void createDatabase_databaseNameAlreadyExists_throwsException() {
+        // Arrange
+        int ownerId = 1;
+
+        CreateDatabaseDTO dto = new CreateDatabaseDTO();
+        dto.setDatabaseName("test_db");
+        dto.setDatabasePassword("1234");
+        dto.setServerId(10);
+
+        // User
+        User owner = new User();
+
+        // Server
+        Server server = new Server();
+        server.setId(10);
+
+        // Existing database with same name & server
+        UserDatabase existingDb = new UserDatabase();
+        existingDb.setName("test_db");
+        existingDb.setServer(server);
+
+        owner.setServers(List.of(server));
+        owner.setAccessibleDatabases(List.of(existingDb));
+
+        when(userRepository.findById(ownerId)).thenReturn(owner);
+        when(serverRepository.findById(10)).thenReturn(Optional.of(server));
+
+        // Act + Assert
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> service.createDatabase(dto, ownerId)
+        );
+
+        assertEquals(
+                "Database name already exists on this server for this user",
+                ex.getMessage()
+        );
+
+        // Verify no save happened
+        verify(userDatabaseRepository, never()).save(any());
+    }
 
 }
