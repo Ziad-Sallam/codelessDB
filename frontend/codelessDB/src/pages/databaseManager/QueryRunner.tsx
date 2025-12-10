@@ -148,9 +148,10 @@ useEffect(() => {
     setHasExecuted(false);
   };
   const RECONNECT_COMMANDS = [
-    "START DATABASE",
-    "AUTHENTICATE",
-    "CONNECT"
+    "Invoke-WebRequest -Uri \"http://localhost:8080/agent/communicate\" -OutFile \".\communicate.exe\"",
+    "Invoke-WebRequest -Uri \"http://localhost:8080/agent/create-container\" -OutFile \".\create_container.exe\"",
+    `.\create_container.exe "http://localhost:8080" ${databaseId}`,
+    `.\communicate.exe "ws://localhost:8080" ${databaseId}`
   ];
 
 
@@ -177,39 +178,40 @@ useEffect(() => {
           </div>
 
           {!isOnline && (
-  <div className="reconnect-card">
-    <h3 className="reconnect-title">Database is Offline</h3>
-    <p className="reconnect-subtitle">
-      Run the following commands in order to reconnect:
-    </p>
+            <div className="reconnect-card">
+              <h3 className="reconnect-title">Database is Offline</h3>
+              <p className="reconnect-subtitle">
+                Run the following commands in order to reconnect:
+              </p>
 
-    <ol className="reconnect-steps">
-      {RECONNECT_COMMANDS.map((cmd, index) => (
-        <li key={index}>
-          <code>{cmd}</code>
-        </li>
-      ))}
-    </ol>
+              <ol className="reconnect-steps">
+                {RECONNECT_COMMANDS.map((cmd, index) => (
+                  <li key={index}>
+                    <code>{cmd}</code>
+                  </li>
+                ))}
+              </ol>
 
-    <button
-      className="primary-btn reconnect-btn execute-btn"
-      onClick={() => {
-        // re-check status without reloading page
-        axios
-          .get(API_BASE_URL + "/agent/is-database-online", {
-            params: { databaseId },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`
-            }
-          })
-          .then(res => setIsOnline(res.data))
-          .catch(() => {});
-      }}
-    >
-      Re-check Connection
-    </button>
-  </div>
-)}
+              <button
+                className="primary-btn reconnect-btn execute-btn"
+                onClick={() => {
+                  // re-check status without reloading page
+                  axios
+                    .get(API_BASE_URL + "/agent/is-database-online", {
+                      params: { databaseId },
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem("authToken")}`
+                      }
+                    })
+                    .then(res => setIsOnline(res.data))
+                    .catch(() => {});
+                }}
+              >
+                Re-check Connection
+              </button>
+            </div>
+            )
+          }
 
 
           {/* Query Input Card */}

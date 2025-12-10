@@ -1,6 +1,7 @@
 package backend.agent.HTTPHandler;
 
 import java.nio.file.Paths;
+import java.util.Enumeration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
@@ -10,13 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import backend.agent.WebSocketHandler.*;
 import backend.security.AuthUser;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.nio.file.Path;
-
-
 
 
 @RestController
@@ -70,6 +70,24 @@ public class MessageController {
                         "attachment; filename=\"" + resource.getFilename() + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
+    }
+
+    @GetMapping("/local-ip")
+    public String getLocalIp() throws Exception {
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface ni = interfaces.nextElement();
+            if (ni.isLoopback() || !ni.isUp()) continue;
+
+            Enumeration<InetAddress> addresses = ni.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress addr = addresses.nextElement();
+                if (!addr.isLoopbackAddress() && addr.isSiteLocalAddress()) {
+                    return "Local Network IP: " + addr.getHostAddress();
+                }
+            }
+        }
+        return "Local IP not found";
     }
 
 }
