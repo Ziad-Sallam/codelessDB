@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './DatabaseManager.css';
+import './DatabaseConfiguration.css';
 import LeftPanel from '../../components/LeftPanel';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -23,9 +23,7 @@ interface DatabaseConfig {
 interface ServerFormData {
   serverName: string;
 }
-
-
-const API_BASE_URL: string = import.meta.env.VITE_BACKEND_URL;
+const API_BASE_URL = "http://localhost:8080";
 
 const serverApi = {
   async getUserServers(): Promise<ServerType[]> {

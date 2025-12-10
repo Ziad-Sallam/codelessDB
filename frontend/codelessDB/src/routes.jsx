@@ -5,9 +5,10 @@ import Schema from './pages/schemaDrawing/schema.jsx';
 import UserProfile from './pages/userprofile/UserProfile.jsx';
 
 import {ProtectedRoute, PublicRoute} from "./components/Routing.jsx";
-import DatabaseManager from './pages/databaseConfiguration/DatabaseManager.js';
 import TopBar from './components/TopBar.jsx';
 import LeftPanel from './components/LeftPanel';
+import DatabaseConfiguration from './pages/databaseConfiguration/DatabaseManager.js';
+import QueryRunner from './pages/databaseManager/QueryRunner.js';
 
 export const routes = [
   {
@@ -66,7 +67,15 @@ export const routes = [
     path: "/database-configuration",
     element: (
       <ProtectedRoute>
-        <DatabaseManager />
+        <DatabaseConfiguration />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/database-manager/:id",
+    element: (
+      <ProtectedRoute>
+        <QueryRunner />
       </ProtectedRoute>
     ),
   },
