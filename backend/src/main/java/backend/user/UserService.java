@@ -128,6 +128,9 @@ public class UserService {
 
 		} else if (userDto.getPublicProfile() != null) {
 			user.setPublicProfile(userDto.getPublicProfile());
+
+		} else if (userDto.getProfileWebsiteUrl() != null) {
+			user.setProfileWebsiteUrl(userDto.getProfileWebsiteUrl());
 		}
 
 		userRepository.save(user);

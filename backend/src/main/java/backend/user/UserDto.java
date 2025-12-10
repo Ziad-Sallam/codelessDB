@@ -24,6 +24,7 @@ public class UserDto {
 	private LocalDateTime createdAt;
 	private String bio;
 	private String publicProfile;
+	private String profileWebsiteUrl;
 
 	public UserDto(User user) {
 		this.username = user.getUsername();
@@ -33,5 +34,6 @@ public class UserDto {
 		this.createdAt = user.getCreatedAt();
 		this.bio = user.getBio();
 		this.publicProfile = user.getPublicProfile();
+		this.profileWebsiteUrl = user.getProfileWebsiteUrl();
 	}
 }

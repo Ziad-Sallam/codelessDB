@@ -13,6 +13,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
+import LanguageIcon from "@mui/icons-material/Language";
 
 import LeftPanel from "../../components/LeftPanel.jsx";
 import theme from "../../theme.js";
@@ -47,6 +48,7 @@ export default function UserProfile() {
       createdAt: user.createdAt,
       bio: user.bio || "",
       publicProfile: user.publicProfile || "",
+      profileWebsiteUrl: user.profileWebsiteUrl || "",
     });
     setLoading(false);
 
@@ -230,6 +232,8 @@ export default function UserProfile() {
                 <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline={true} rows={4} />
 
                 <ProfileField label="Public Profile" field="publicProfile" icon={PersonIcon} editable={true} multiline={true} rows={2} />
+
+                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" />
 
                 <PasswordField />
               </CardContent>
