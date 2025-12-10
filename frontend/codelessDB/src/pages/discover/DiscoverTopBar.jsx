@@ -1,43 +1,23 @@
 import { useState, useEffect } from "react";
 import {
-  AppBar, Toolbar, IconButton, Avatar,
+  AppBar, Toolbar, Avatar,
   Typography, Paper, InputBase, Box, Link,
-  Popover, Stack, TextField, Button,
 } from "@mui/material";
 
-import { useNotification } from "../../components/NotificationContext";
-import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import { useNavigate } from "react-router-dom";
 import { getInitials } from "../diagrams/Contributors.jsx";
 import { useAuth } from "../../components/AuthProvider.jsx";
 
-import { searchDiagrams } from "./fetch.js"
-
-const INITIAL_DATE = "2025-01-01";
-
-const FINAL_DATE = (() => {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-})();
 
 export default function DiscoverTopBar(props) {
-  const { showError } = useNotification();
-
-  const { onSearchResults, pageSize = 10, page, loadPublicDiagrams } = props;
+  const { onSearch } = props;
   const navigate = useNavigate();
 
   const [username, setUserName] = useState("");
   const [userImage, setUserImage] = useState("");
-  const [filterAnchor, setFilterAnchor] = useState(null);
 
-  const [search, setSearch] = useState(null);
-  const [dateFrom, setDateFrom] = useState(null);
-  const [dateTo, setDateTo] = useState(null);
+  const [search, setSearch] = useState("");
 
   const { user } = useAuth();
 
@@ -48,43 +28,8 @@ export default function DiscoverTopBar(props) {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (search !== null || (dateFrom !== null && dateTo !== null)) {
-      handleSearch(page);
-    } else {
-      loadPublicDiagrams(page);
-    }
-  }, [page]);
-
-  const handleSearch = async (idx) => {
-    try {
-      if (search === "") {
-        const resp = await searchDiagrams(idx, pageSize, null, dateFrom, dateTo);
-        onSearchResults && onSearchResults(resp);
-      } else {
-        const resp = await searchDiagrams(idx, pageSize, search, dateFrom, dateTo);
-        onSearchResults && onSearchResults(resp);
-      }
-
-    } catch (error) {
-      showError(error);
-    }
-  };
-
-  const openFilter = (e) => setFilterAnchor(e.currentTarget);
-  const closeFilter = () => setFilterAnchor(null);
-
-  const applyFilter = async () => {
-    closeFilter();
-    await handleSearch(0);
-  };
-
-  const clearFilter = async () => {
-    setDateFrom(null);
-    setDateTo(null);
-    closeFilter();
-
-    await handleSearch(0);
+  const handleSearch = () => {
+    onSearch && onSearch(search);
   };
 
   const handleKeyPress = (e) => {
@@ -140,14 +85,10 @@ export default function DiscoverTopBar(props) {
             }}
             onClick={() => handleSearch(0)}
           />
-
-            <IconButton onClick={openFilter}>
-              <FilterListIcon />
-            </IconButton>
         </Paper>
 
         {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: 2 }}> */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1}}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Link href="/profile" style={{ textDecoration: "none" }}>
             <Typography
               variant="body2"
@@ -183,50 +124,6 @@ export default function DiscoverTopBar(props) {
           </Avatar>
         </Box>
       </Toolbar>
-
-      <Popover
-				open={Boolean(filterAnchor)}
-				anchorEl={filterAnchor}
-				onClose={closeFilter}
-				anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-				transformOrigin={{ vertical: "top", horizontal: "right" }}
-			>
-				<Box sx={{ p: 2, width: 300, gap: 10 }}>
-					{/* Header with title + X button */}
-					<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-						<Typography variant="subtitle1">Filter diagrams</Typography>
-						<IconButton size="small" onClick={closeFilter}>
-							<CloseIcon fontSize="small" />
-						</IconButton>
-					</Box>
-
-					<Stack spacing={2}>
-						<TextField
-							label="Created from"
-							type="date"
-							InputLabelProps={{ shrink: true }}
-							value={dateFrom || INITIAL_DATE}
-							onChange={(e) => setDateFrom(e.target.value)}
-							inputProps={{ pattern: "\\d{4}-\\d{2}-\\d{2}" }}
-						/>
-						<TextField
-							label="Created to"
-							type="date"
-							InputLabelProps={{ shrink: true }}
-							value={dateTo || FINAL_DATE}
-							onChange={(e) => setDateTo(e.target.value)}
-							inputProps={{ pattern: "\\d{4}-\\d{2}-\\d{2}" }}
-						/>
-
-						<Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", pt: 1 }}>
-							<Button onClick={clearFilter}>Clear</Button>
-							<Button variant="contained" onClick={applyFilter}>
-								Apply
-							</Button>
-						</Box>
-					</Stack>
-				</Box>
-			</Popover>
 
     </AppBar>
   );

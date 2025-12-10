@@ -14,7 +14,8 @@ import {
 import {
   TrendingUp as TrendingUpIcon,
   Storage as DatabaseIcon,
-  FilterList as FilterIcon
+  FilterList as FilterIcon,
+  South
 } from "@mui/icons-material";
 
 import LeftPanel from "../../components/LeftPanel";
@@ -23,44 +24,8 @@ import UserCarousel from "../../components/UserCarousel";
 import DiscoverDiagramCard from "./DiscoverDiagramCard";
 import HashtagInput from "../../components/HashtagInput";
 
-import { fetchPublicDiagrams, fetchHashtags } from "./fetch.js";
+import { fetchPublicDiagrams, fetchHashtags, fetchPublicUsers } from "./fetch.js";
 import { useNotification } from "../../components/NotificationContext";
-
-
-// Mock Data
-const mockSchemas = [
-  {
-    id: "1",
-    name: "College Management System",
-    description: "Complete database schema for managing college operations including students, courses, and faculty",
-    owner: { name: "Ahmed Hassan", username: "@ahmed_dev", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed" },
-    thumbnail: "", // Placeholder will be used
-    stars: 245,
-    forks: 89,
-    views: 1205,
-    hashtags: ["college", "education", "management"],
-    collaborators: [{ name: "Ahmed Hassan", username: "@ahmed_dev", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed" },
-    { name: "Sarah Ahmed", username: "@sarah_db", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" },
-    { name: "Mohammed Ali", username: "@mo_ali", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mohammed" },
-    { name: "Fatima Khan", username: "@fatima_k", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima" },
-    { name: "Mohammed Ali", username: "@mo_ali", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mohammed" },
-    { name: "Fatima Khan", username: "@fatima_k", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima" },
-    ],
-    createdAt: "2023-01-15",
-    lastModified: "2023-02-20"
-  }
-];
-
-const mockUsers = [
-  {
-    name: "Ahmed Hassan",
-    username: "@ahmed_dev",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed",
-    bio: "Database architect & software engineer with 10+ years of experience",
-    totalStars: 4500,
-    publicSchemas: 12,
-  }
-];
 
 const ITEMS_PER_PAGE = 12;
 const HASHTAGS_PER_PAGE = 10;
@@ -71,41 +36,47 @@ export default function Discover() {
 
   const [leftNav, setLeftNav] = useState("all");
   const [showFilters, setShowFilters] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [publicDiagrams, setPublicDiagrams] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [hashtags, setHashtags] = useState([]);
-  
+  const [featuredUsers, setFeaturedUsers] = useState([]);
+
   const [selectedHashtags, setSelectedHashtags] = useState([]);
 
   const loadHashtags = async () => {
-    setLoading(true);
     try {
       const resp = await fetchHashtags();
+      console.log(resp);
       setHashtags(resp);
     } catch (err) {
       setHashtags([]);
       showError && showError(err?.message || String(err));
-    } finally {
-      setLoading(false);
     }
   };
 
-  const loadPublicDiagrams = async (pageNumber = page) => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      // const resp = await fetchPublicDiagrams(pageNumber - 1, ITEMS_PER_PAGE);
-      setPublicDiagrams(resp?.content || []);
-      setTotalPages(resp?.totalPages || 0);
-      setTotalElements(resp?.totalElements || 0);
-    } catch (err) {
-      setPublicDiagrams([]);
-      setTotalPages(0);
-      setTotalElements(0);
-      showError && showError(err?.message || String(err));
+      const [diagramsResp, usersResp] = await Promise.all([
+        fetchPublicDiagrams(page - 1, ITEMS_PER_PAGE, searchQuery, selectedHashtags),
+        fetchPublicUsers(page - 1, ITEMS_PER_PAGE, searchQuery, selectedHashtags)
+      ]);
 
+      setPublicDiagrams(diagramsResp.content || []);
+      setTotalPages(diagramsResp?.totalPages || 0);
+      setTotalElements(diagramsResp?.totalElements || 0);
+
+      console.log(diagramsResp);
+      setFeaturedUsers(usersResp.content || []);
+    } catch (err) {
+      console.error(err);
+      setPublicDiagrams([]);
+      setFeaturedUsers([]);
+      // showError && showError(err?.message || String(err));
     } finally {
       setLoading(false);
     }
@@ -113,24 +84,24 @@ export default function Discover() {
 
   useEffect(() => {
     loadHashtags();
-    loadPublicDiagrams();
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [page, searchQuery, selectedHashtags]);
 
   const handlePageChange = (event, value) => {
     setPage(value);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleOpenPublicDiagram = (s) => {
-    if (s?.id) navigate(`/schema/preview/${s.id}`);
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setPage(1);
   };
 
-  const onSearchResults = (resp) => {
-    setDiagrams(resp?.content || []);
-    setTotalPages(resp?.totalPages || 0);
-    setTotalElements(resp?.totalElements || 0);
-
-    // setPage(1);
+  const handleOpenPublicDiagram = (s) => {
+    navigate(`/schema/preview/${s.diagramId}`);
   };
 
   return (
@@ -149,20 +120,14 @@ export default function Discover() {
 
         {/* New TopBar with integrated Search logic */}
         <DiscoverTopBar
-          onSearchResults={onSearchResults} pageSize={ITEMS_PER_PAGE} page={page} loadPublicDiagrams={loadPublicDiagrams}
+          onSearch={handleSearch}
+          pageSize={ITEMS_PER_PAGE}
         />
 
         <Box sx={{ flexGrow: 1, overflowY: "auto", pb: 4 }}>
 
-          <Box sx={{ px: 3, py: 4 }}>
-            <Box sx={{ mb: 2 }}>
-              <UserCarousel users={mockUsers} />
-            </Box>
-
-            <Divider sx={{ mb: 2 }} />
-
-            {/* Filters */}
-            <Box >
+          {/* Filters */}
+            <Box sx={{  px: 3,pt: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <TrendingUpIcon color="primary" fontSize="small" />
@@ -192,6 +157,42 @@ export default function Discover() {
 
             <Divider sx={{ mb: 2 }} />
 
+          <Box sx={{ px: 3}}>
+            <Box sx={{ mb: 2 }}>
+              <UserCarousel users={featuredUsers} />
+            </Box>
+
+            {/* Filters */}
+            {/* <Box >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TrendingUpIcon color="primary" fontSize="small" />
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Filter by Tags
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  onClick={() => setShowFilters(!showFilters)}
+                  startIcon={!showFilters && <FilterIcon />}
+                >
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </Button>
+              </Box>
+
+              {showFilters && (
+                <CardContent>
+                  <HashtagInput
+                    hashtags={hashtags}
+                    selectedHashtags={selectedHashtags}
+                    onSelect={setSelectedHashtags}
+                  />
+                </CardContent>
+              )}
+            </Box> */}
+
+            <Divider sx={{ mb: 2 }} />
+
             {/* Schemas Grid */}
             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <DatabaseIcon color="primary" />
@@ -211,7 +212,7 @@ export default function Discover() {
               <>
                 <Grid container spacing={3}>
                   {publicDiagrams.map((diagram) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={diagram.id}>
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={diagram.diagramId}>
                       <DiscoverDiagramCard
                         d={diagram}
                         onClick={handleOpenPublicDiagram}

@@ -1,8 +1,5 @@
 package backend.publicDiagramManagement.service;
 
-import backend.entities.joins.UserDiagramId;
-import backend.entities.publicDiagramEntities.DiagramView;
-import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.publicDiagramManagement.repository.ViewsRepository;
 import jakarta.transaction.Transactional;
@@ -11,13 +8,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-
 @Service
 @RequiredArgsConstructor
 public class ViewsService {
 
-    ViewsRepository viewsRepository;
-    PublicDiagramRepository publicDiagramRepository;
+    private final ViewsRepository viewsRepository;
+    private final PublicDiagramRepository publicDiagramRepository;
 
     @Transactional
     public boolean addView(int userId, UUID diagramId) {

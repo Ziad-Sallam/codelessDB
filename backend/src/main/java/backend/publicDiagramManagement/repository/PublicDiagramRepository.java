@@ -17,77 +17,55 @@ public interface PublicDiagramRepository extends JpaRepository<PublicDiagram, UU
 
     @Modifying
     @Query("""
-        UPDATE PublicDiagram p
-        SET p.views = p.views + 1
-        WHERE p.id = :id
-    """)
+                UPDATE PublicDiagram p
+                SET p.views = p.views + 1
+                WHERE p.id = :id
+            """)
     void incrementViews(@Param("id") UUID id);
 
     @Modifying
     @Query("""
-        UPDATE PublicDiagram p
-        SET p.forks = p.forks + 1
-        WHERE p.id = :id
-    """)
+                UPDATE PublicDiagram p
+                SET p.forks = p.forks + 1
+                WHERE p.id = :id
+            """)
     void incrementForks(@Param("id") UUID id);
 
     @Modifying
     @Query("""
-        UPDATE PublicDiagram p
-        SET p.stars = p.stars + 1
-        WHERE p.id = :id
-    """)
+                UPDATE PublicDiagram p
+                SET p.stars = p.stars + 1
+                WHERE p.id = :id
+            """)
     void incrementStar(@Param("id") UUID id);
 
     @Modifying
     @Query("""
-        UPDATE PublicDiagram p
-        SET p.stars = p.stars - 1
-        WHERE p.id = :id AND p.stars > 0
-    """)
+                UPDATE PublicDiagram p
+                SET p.stars = p.stars - 1
+                WHERE p.id = :id AND p.stars > 0
+            """)
     void decrementStar(@Param("id") UUID id);
 
-    @Query(
-            value = """
-        SELECT pd.*
-        FROM public_diagrams pd
-        LEFT JOIN public_diagram_hashtags pht ON pd.diagram_id = pht.diagram_id
-        LEFT JOIN hashtags h ON pht.hashtag_id = h.id
-        WHERE (
-            :name IS NULL
-            OR :name = ''
-            OR LOWER((SELECT d.name FROM diagrams d WHERE d.id = pd.diagram_id)) LIKE CONCAT('%', LOWER(:name), '%')
-            OR LOWER(pd.short_description) LIKE CONCAT('%', LOWER(:name), '%')
-            OR LOWER(pd.detailed_description) LIKE CONCAT('%', LOWER(:name), '%')
-        )
-        AND (
-            :tags IS NULL
-            OR :tags = ''
-            OR h.name IN (:tags)
-        )
-        GROUP BY pd.diagram_id
-        ORDER BY (pd.views + pd.forks * 2 + pd.stars * 3) DESC
-      """,
-            countQuery = """
-        SELECT COUNT(DISTINCT pd.diagram_id)
-        FROM public_diagrams pd
-        LEFT JOIN public_diagram_hashtags pht ON pd.diagram_id = pht.diagram_id
-        LEFT JOIN hashtags h ON pht.hashtag_id = h.id
-        WHERE (
-            :name IS NULL
-            OR :name = ''
-            OR LOWER((SELECT d.name FROM diagrams d WHERE d.id = pd.diagram_id)) LIKE CONCAT('%', LOWER(:name), '%')
-            OR LOWER(pd.short_description) LIKE CONCAT('%', LOWER(:name), '%')
-            OR LOWER(pd.detailed_description) LIKE CONCAT('%', LOWER(:name), '%')
-        )
-        AND (
-            :tags IS NULL
-            OR :tags = ''
-            OR h.name IN (:tags)
-        )
-      """,
-            nativeQuery = true
-    )
+    @Query(value = """
+              SELECT pd
+              FROM PublicDiagram pd
+              LEFT JOIN pd.hashtags h
+              LEFT JOIN pd.diagram d
+              WHERE (
+                  :name IS NULL
+                  OR :name = ''
+                  OR LOWER(d.name) LIKE LOWER(CONCAT('%', :name, '%'))
+                  OR LOWER(pd.shortDescription) LIKE LOWER(CONCAT('%', :name, '%'))
+                  OR LOWER(pd.detailedDescription) LIKE LOWER(CONCAT('%', :name, '%'))
+              )
+              AND (
+                  (:tags) IS NULL
+                  OR h.name IN (:tags)
+              )
+              GROUP BY pd.id
+              ORDER BY (pd.views + pd.forks * 2 + pd.stars * 3) DESC
+            """)
     Page<PublicDiagram> searchPublicDiagrams(
             @Param("name") String name,
             @Param("tags") List<String> tags,

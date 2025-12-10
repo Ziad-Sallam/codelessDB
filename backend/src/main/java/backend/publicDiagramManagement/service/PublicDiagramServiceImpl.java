@@ -63,30 +63,30 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     @Override
     @Transactional
     public void publishDiagram(int userId, PublishDiagramRequestDto dto) {
-        
+
         UserDiagram userDiagram =
         userDiagramService.getUserDiagramOrThrow(userId, dto.getDiagramId());
-        
+
         userDiagramService.checkOwner(userDiagram, "publish");
-        
+
         Diagram diagram = userDiagram.getDiagram();
-        
+
         PublicDiagram publicDiagram =
         publicDiagramRepository.findById(diagram.getId())
-        .orElseGet(() -> {
-            PublicDiagram pd = new PublicDiagram();
-            pd.setDiagram(diagram);
-            // pd.setId(diagram.getId());
-            pd.setStars(0);
-            pd.setForks(0);
-            pd.setViews(0);
-            return pd;
-        });
-        
+                .orElseGet(() -> {
+                    PublicDiagram pd = new PublicDiagram();
+                    pd.setDiagram(diagram);
+                    // pd.setId(diagram.getId());
+                    pd.setStars(0);
+                    pd.setForks(0);
+                    pd.setViews(0);
+                    return pd;
+                });
+
         // Public metadata only
         publicDiagram.setShortDescription(dto.getShortDescription());
         publicDiagram.setDetailedDescription(dto.getDetailedDescription());
-        
+
         // Hashtags
         Set<Hashtag> hashtags =
         hashtagService.resolveHashtags(new HashSet<>(dto.getHashTags()));
@@ -94,23 +94,23 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         // Canned Queries
         Set<CannedQueriesDiagrams> cannedQueries =
         dto.getCannedQueries().stream()
-        .map(q -> {
-            CannedQueriesDiagrams e = new CannedQueriesDiagrams();
-            e.setName(q.getName());
-            e.setDescription(q.getDescription());
-            e.setQuery(q.getQuery());
-            e.setPublicDiagram(publicDiagram);
-            return e;
-                        })
-                        .collect(Collectors.toSet());
+                .map(q -> {
+                    CannedQueriesDiagrams e = new CannedQueriesDiagrams();
+                    e.setName(q.getName());
+                    e.setDescription(q.getDescription());
+                    e.setQuery(q.getQuery());
+                    e.setPublicDiagram(publicDiagram);
+                    return e;
+                })
+                .collect(Collectors.toSet());
 
-                        if (publicDiagram.getCannedQueries() == null) {
-                            publicDiagram.setCannedQueries(new HashSet<>());
-                        }
-                        
+        if (publicDiagram.getCannedQueries() == null) {
+            publicDiagram.setCannedQueries(new HashSet<>());
+        }
+
         publicDiagram.getCannedQueries().clear();
         publicDiagram.getCannedQueries().addAll(cannedQueries);
-        
+
         publicDiagramRepository.save(publicDiagram);
     }
 
@@ -265,8 +265,12 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     @Transactional
     public Page<PublicDiagramInfoDto> searchPublicDiagrams(SearchRequestDto dto, Pageable pageable) {
 
-        Page<PublicDiagram> page =
-                publicDiagramRepository.searchPublicDiagrams(dto.getSearchPrompt(), dto.getHashtags(), pageable);
+        List<String> tags = dto.getHashtags();
+        if (tags != null && tags.isEmpty()) {
+            tags = null;
+        }
+
+        Page<PublicDiagram> page = publicDiagramRepository.searchPublicDiagrams(dto.getSearchPrompt(), tags, pageable);
 
         return page.map(pd -> {
             List<ContributorDto> contributors = userDiagramService.getContributors(pd.getId());
@@ -277,25 +281,29 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     @Override
     @Transactional
     public Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto dto,
-                                                               Pageable pageable) {
+            Pageable pageable) {
 
         String search = dto.getSearchPrompt();
         if (search != null && search.isBlank()) {
             search = null;
         }
 
+        List<String> tags = dto.getHashtags();
+        if (tags != null && tags.isEmpty()) {
+            tags = null;
+        }
+
         Page<Object[]> raw = userRepository.searchUsersWithPublicStats(
                 search,
-                dto.getHashtags(),
-                pageable
-        );
+                tags,
+                pageable);
 
         return raw.map(row -> {
             User user = (User) row[0];
 
             Long publicCount = row[1] == null ? 0L : ((Number) row[1]).longValue();
-            Long totalStars  = row[2] == null ? 0L : ((Number) row[2]).longValue();
-            Long score       = row[3] == null ? 0L : ((Number) row[3]).longValue();
+            Long totalStars = row[2] == null ? 0L : ((Number) row[2]).longValue();
+            Long score = row[3] == null ? 0L : ((Number) row[3]).longValue();
 
             return PublicUserInfoDto.toDto(user, publicCount, totalStars, score);
         });

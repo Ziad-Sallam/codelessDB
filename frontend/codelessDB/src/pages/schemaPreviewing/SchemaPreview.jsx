@@ -91,14 +91,12 @@ export default function SchemaPreview() {
     }
     const fetchData = async () => {
       if (!id) return;
-      console.log("Fetching data for id:", id);
 
       setLoading(true);
       try {
         const data = await getPublicDiagram(id);
-        console.log("Fetched data:", data);
         setSchemaData(data);
-        // setIsStarred(data.starredByCurrentUser || false);
+        setIsStarred(data.isStarred || false);
       } catch (err) {
         showError(err.message);
       } finally {
@@ -129,13 +127,13 @@ export default function SchemaPreview() {
   const handleStar = async () => {
     try {
       if (isStarred) {
-        const resp = await unstarPublicDiagram(schemaData.diagramId || id);
+        const resp = await unstarPublicDiagram(schemaData.diagramId);
         setIsStarred(false);
-        showSuccess(resp.message);
+        showSuccess(resp);
       } else {
-        const resp = await starPublicDiagram(schemaData.diagramId || id);
+        const resp = await starPublicDiagram(schemaData.diagramId);
         setIsStarred(true);
-        showSuccess(resp.message);
+        showSuccess(resp);
       }
     } catch (err) {
       showError(err.message);
@@ -144,8 +142,8 @@ export default function SchemaPreview() {
 
   const handleClone = async () => {
     try {
-      const resp = await forkPublicDiagram(schemaData.diagramId || id);
-      showSuccess(resp.message);
+      const resp = await forkPublicDiagram(schemaData.diagramId);
+      showSuccess(resp);
     } catch (err) {
       showError(err.message);
     }

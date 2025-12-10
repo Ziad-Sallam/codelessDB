@@ -14,15 +14,9 @@ import java.util.UUID;
 public interface ViewsRepository extends JpaRepository<DiagramView, UserDiagramId> {
 
     @Modifying
-    @Query(
-            value = """
-           INSERT INTO diagram_views (user_id, diagram_id)
-           VALUES (:userId, :diagramId)
-           ON CONFLICT DO NOTHING
-        """,
-            nativeQuery = true
-    )
+    @Query(value = """
+               INSERT IGNORE INTO diagram_views (user_id, public_diagram_id)
+               VALUES (:userId, :diagramId)
+            """, nativeQuery = true)
     int insertIfNotExists(int userId, UUID diagramId);
 }
-
-

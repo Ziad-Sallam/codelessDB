@@ -38,5 +38,5 @@ export async function publishSchema(diagramId, shortDescription, detailedDescrip
 		throw new Error(error.message);
 	}
 
-	return response;
+	return response.text();
 }
