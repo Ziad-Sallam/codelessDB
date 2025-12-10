@@ -19,4 +19,12 @@ public interface PublicDiagramRepository extends JpaRepository<PublicDiagram, UU
         WHERE p.id = :id
     """)
     void incrementViews(@Param("id") UUID id);
+
+    @Modifying
+    @Query("""
+        UPDATE PublicDiagram p
+        SET p.forks = p.forks + 1
+        WHERE p.id = :id
+        """)
+    void incrementForks(@Param("id") UUID id);
 }

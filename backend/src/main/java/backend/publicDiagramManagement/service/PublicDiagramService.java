@@ -1,11 +1,9 @@
 package backend.publicDiagramManagement.service;
 
 
-import backend.publicDiagramManagement.dto.PublicDiagramDraftDto;
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
-import backend.publicDiagramManagement.dto.publish.PublishDiagramDto;
 import backend.publicDiagramManagement.dto.publish.PublishDiagramRequestDto;
 import backend.publicDiagramManagement.dto.search.SearchRequestDto;
 import backend.publicDiagramManagement.dto.user.PublicUserInfoDto;
@@ -21,7 +19,7 @@ public interface PublicDiagramService {
 
     PublicDiagramDto viewPublicDiagram(int userId, UUID diagramId);
 
-    PublicDiagramDto forkPublicDiagram(int userId, UUID diagramId);
+    void forkPublicDiagram(int userId, UUID diagramId);
 
     Page<ToBePublishedDiagramDto> getToBePublishedDiagrams(int userId, Pageable pageable);
 

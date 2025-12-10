@@ -1,8 +1,11 @@
 package backend.publicDiagramManagement.service;
 
 import backend.entities.Diagram;
+import backend.entities.User;
+import backend.entities.joins.PublicDiagramUserId;
 import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.CannedQueriesDiagrams;
+import backend.entities.publicDiagramEntities.DiagramFork;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
@@ -12,8 +15,11 @@ import backend.publicDiagramManagement.dto.publish.PublishDiagramRequestDto;
 import backend.publicDiagramManagement.dto.search.SearchRequestDto;
 import backend.publicDiagramManagement.dto.user.PublicUserInfoDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
+import backend.publicDiagramManagement.repository.ForkRepository;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.publicDiagramManagement.repository.ViewsRepository;
+import backend.user.Role;
+import backend.user.UserService;
 import backend.userDiagramManagement.dto.ContributorDto;
 import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
@@ -44,6 +50,8 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     private final HashtagService hashtagService;
     private final ViewsService viewsService;
     private final ViewsRepository viewsRepository;
+    private final ForkRepository forkRepository;
+    private final UserService userService;
 
     public PublicDiagram getPublicDiagramOrThrow(UUID diagramId) {
         return publicDiagramRepository.findById(diagramId)
@@ -135,23 +143,83 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     }
 
     @Override
-    public PublicDiagramDto forkPublicDiagram(int userId, UUID diagramId) {
-        return null;
+    @Transactional
+    public void forkPublicDiagram(int userId, UUID diagramId) {
+
+        Diagram original = userDiagramService.getDiagramOrThrow(diagramId);
+        PublicDiagram publicDiagram = getPublicDiagramOrThrow(original);
+
+        // Clone diagram
+        Diagram cloned = Diagram.builder()
+                .name(original.getName())
+                .ddl(original.getDdl())
+                .content(original.getContent())
+                .thumbnail(original.getThumbnail())
+                .build();
+        diagramRepository.save(cloned);
+
+        // Attach clone to user
+        UserDiagram ud = UserDiagram.builder()
+                .user(userService.getUserOrThrow(userId))
+                .diagram(cloned)
+                .role(Role.OWNER)
+                .build();
+        userDiagramRepository.save(ud);
+
+        // Save fork record
+        PublicDiagramUserId forkId = PublicDiagramUserId.builder()
+                .userId(userId)
+                .publicDiagramId(publicDiagram.getId())
+                .build();
+
+        DiagramFork fork = DiagramFork.builder()
+                .id(forkId)
+                .originalDiagram(publicDiagram)
+                .build();
+
+        forkRepository.save(fork);
+
+        publicDiagramRepository.incrementForks(publicDiagram.getId());
     }
 
     @Override
     public Page<ToBePublishedDiagramDto> getToBePublishedDiagrams(int userId, Pageable pageable) {
-        return null;
-    }
 
-    @Override
-    public void starPublicDiagram(int userId, UUID diagramId) {
+        Page<Diagram> diagrams =
+                userDiagramRepository.findUnpublishedDiagramsByUser(userId, pageable);
 
+        return diagrams.map(d -> ToBePublishedDiagramDto.builder()
+                .diagramId(d.getId())
+                .name(d.getName())
+                .thumbnail(d.getThumbnail())
+                .createdAt(d.getCreatedAt())
+                .lastModified(d.getLastModified())
+                .ddl(d.getDdl())
+                .contributors(userDiagramService.getContributors(d.getId()))
+                .build()
+        );
     }
 
     @Override
     public Page<DiagramInfoDto> getForkedPublicDiagrams(int userId, Pageable pageable) {
-        return null;
+
+        Page<Diagram> forkedDiagrams =
+                forkRepository.findForkedDiagramsByUser(userId, pageable);
+
+        return forkedDiagrams.map(diagram -> {
+
+            List<ContributorDto> contributors =
+                    userDiagramService.getContributors(diagram.getId());
+
+            Role role = Role.OWNER;
+
+            return DiagramInfoDto.toDto(diagram, role, contributors);
+        });
+    }
+
+    @Override
+    public void starPublicDiagram(int userId, UUID diagramId) {
+        
     }
 
     @Override

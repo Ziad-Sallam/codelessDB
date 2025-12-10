@@ -1,5 +1,6 @@
 package backend.user;
 
+import backend.user.exceptions.UserException;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -170,4 +171,16 @@ public class UserService {
 			throw new OtpSendFailedException("Failed to send OTP. Please try again.");
 		}
 	}
+
+    public User getUserOrThrow(int userId) {
+        User user = userRepository.findById(userId);
+
+        if (user == null) {
+            throw new UserNotFoundException("User not found with id: " + userId);
+        }
+
+        return user;
+    }
+
+
 }

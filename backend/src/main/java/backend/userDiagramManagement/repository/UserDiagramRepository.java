@@ -1,11 +1,13 @@
 package backend.userDiagramManagement.repository;
 
+import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.entities.joins.UserDiagramId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.sql.Date;
 import java.util.List;
@@ -38,4 +40,13 @@ public interface UserDiagramRepository extends JpaRepository<UserDiagram, UserDi
     boolean existsByDiagram_Id(UUID diagramId);
 
     UserDiagram findFirstByDiagram_Id(UUID diagramId);
+
+    @Query("""
+        SELECT u.diagram
+        FROM UserDiagram u
+        WHERE u.user.id = :userId
+        AND u.diagram.publicDiagram IS NULL
+        """)
+    Page<Diagram> findUnpublishedDiagramsByUser(int userId, Pageable pageable);
+
 }

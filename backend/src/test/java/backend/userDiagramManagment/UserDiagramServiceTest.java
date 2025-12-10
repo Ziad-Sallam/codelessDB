@@ -231,7 +231,7 @@ class UserDiagramServiceTest {
         assertEquals("thumb.png", dto.getThumbnail());
         assertEquals(Role.OWNER, dto.getRole());
         assertEquals(1, dto.getContributorDtos().size());
-        assertEquals("john", dto.getContributorDtos().get(0).name());
+        assertEquals("john", dto.getContributorDtos().get(0).getName());
     }
 
     // ------------------------------------------------------------

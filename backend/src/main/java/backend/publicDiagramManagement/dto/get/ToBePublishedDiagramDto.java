@@ -10,9 +10,6 @@ import java.sql.Date;
 import java.util.List;
 import java.util.UUID;
 
-
-// the user must be the owner
-// the diagram must be not published
 @Data
 @Builder
 @AllArgsConstructor
