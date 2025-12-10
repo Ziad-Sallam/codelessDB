@@ -1,7 +1,6 @@
-package backend.publicDiagramManagement;
+package backend.publicDiagramManagement.PublucDiagramServiceTest;
 
 import backend.entities.Diagram;
-import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;

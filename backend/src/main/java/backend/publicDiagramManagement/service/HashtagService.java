@@ -3,11 +3,12 @@ package backend.publicDiagramManagement.service;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.publicDiagramManagement.repository.HashtagRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,8 @@ public class HashtagService {
 
     @Cacheable(value = "hashtags", key = "#name")
     public Hashtag findOrCreate(String name) {
+        Objects.requireNonNull(name, "Hashtag name cannot be null");
+
         return hashtagRepository.findByName(name)
                 .orElseGet(() -> hashtagRepository.save(
                         Hashtag.builder()
@@ -33,8 +36,20 @@ public class HashtagService {
                 .collect(Collectors.toSet());
     }
 
+    @Cacheable(value = "hashtagNames")
     public List<String> getAll() {
-        return new ArrayList<>();
+        return hashtagRepository.findAll()
+                .stream()
+                .map(Hashtag::getName)
+                .collect(Collectors.toList());
+    }
+
+    @CacheEvict(value = {"hashtags", "hashtagNames"}, allEntries = true)
+    public Hashtag create(String name) {
+        Hashtag h = Hashtag.builder()
+                .name(name)
+                .build();
+
+        return hashtagRepository.save(h);
     }
 }
-

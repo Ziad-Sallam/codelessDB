@@ -1,4 +1,4 @@
-package backend.publicDiagramManagement;
+package backend.publicDiagramManagement.PublucDiagramServiceTest;
 
 import backend.entities.Diagram;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
