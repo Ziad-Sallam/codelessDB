@@ -36,8 +36,8 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 		>
 			<Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
 				<Box>
-					<Typography variant="h6" style={{fontWeight:"600",fontSize:"28px", fontFamily: 'Poppins', color: "#cadfffff"}}>CodelessDB</Typography>
-					<Typography variant="caption" sx={{ opacity: 1, fontSize:"13px" }}>
+					<Typography variant="h6" style={{ fontWeight: "600", fontSize: "28px", fontFamily: 'Poppins', color: "#cadfffff" }}>CodelessDB</Typography>
+					<Typography variant="caption" sx={{ opacity: 1, fontSize: "13px" }}>
 						Shared workspace
 					</Typography>
 				</Box>
@@ -58,6 +58,18 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 					<ListItemText primary="Recents" />
 				</ListItemButton>
 				 */}
+
+				<ListItemButton
+					selected={leftNav === "all"}
+					onClick={() => navigate('/discover')}
+					sx={{ borderRadius: 1, mb: 1 }}
+				>
+					<ListItemIcon sx={{ color: "white" }}>
+						<SchemaIcon />
+					</ListItemIcon>
+					<ListItemText primary="Discover" />
+				</ListItemButton>
+
 				<ListItemButton
 					selected={leftNav === "all"}
 					onClick={() => navigate('/diagrams')}
@@ -67,17 +79,6 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 						<SchemaIcon />
 					</ListItemIcon>
 					<ListItemText primary="Your diagrams" />
-				</ListItemButton>
-
-				<ListItemButton
-					selected={leftNav === "all"}
-					onClick={() => navigate('/public')}
-					sx={{ borderRadius: 1, mb: 1 }}
-				>
-					<ListItemIcon sx={{ color: "white" }}>
-						<SchemaIcon />
-					</ListItemIcon>
-					<ListItemText primary="Public diagrams" />
 				</ListItemButton>
 
 				<ListItemButton

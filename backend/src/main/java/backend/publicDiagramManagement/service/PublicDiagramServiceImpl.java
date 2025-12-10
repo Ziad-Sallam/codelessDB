@@ -63,55 +63,54 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     @Override
     @Transactional
     public void publishDiagram(int userId, PublishDiagramRequestDto dto) {
-
+        
         UserDiagram userDiagram =
-                userDiagramService.getUserDiagramOrThrow(userId, dto.getDiagramId());
-
+        userDiagramService.getUserDiagramOrThrow(userId, dto.getDiagramId());
+        
         userDiagramService.checkOwner(userDiagram, "publish");
-
+        
         Diagram diagram = userDiagram.getDiagram();
-
+        
         PublicDiagram publicDiagram =
-                publicDiagramRepository.findById(diagram.getId())
-                        .orElseGet(() -> {
-                            PublicDiagram pd = new PublicDiagram();
-                            pd.setDiagram(diagram);
-                            pd.setId(diagram.getId());
-                            pd.setStars(0);
-                            pd.setForks(0);
-                            pd.setViews(0);
-                            return pd;
-                        });
-
+        publicDiagramRepository.findById(diagram.getId())
+        .orElseGet(() -> {
+            PublicDiagram pd = new PublicDiagram();
+            pd.setDiagram(diagram);
+            // pd.setId(diagram.getId());
+            pd.setStars(0);
+            pd.setForks(0);
+            pd.setViews(0);
+            return pd;
+        });
+        
         // Public metadata only
         publicDiagram.setShortDescription(dto.getShortDescription());
         publicDiagram.setDetailedDescription(dto.getDetailedDescription());
-
+        
         // Hashtags
         Set<Hashtag> hashtags =
-                hashtagService.resolveHashtags(new HashSet<>(dto.getHashTags()));
+        hashtagService.resolveHashtags(new HashSet<>(dto.getHashTags()));
         publicDiagram.setHashtags(hashtags);
-
         // Canned Queries
         Set<CannedQueriesDiagrams> cannedQueries =
-                dto.getCannedQueries().stream()
-                        .map(q -> {
-                            CannedQueriesDiagrams e = new CannedQueriesDiagrams();
-                            e.setName(q.getName());
-                            e.setDescription(q.getDescription());
-                            e.setQuery(q.getQuery());
-                            e.setPublicDiagram(publicDiagram);
-                            return e;
+        dto.getCannedQueries().stream()
+        .map(q -> {
+            CannedQueriesDiagrams e = new CannedQueriesDiagrams();
+            e.setName(q.getName());
+            e.setDescription(q.getDescription());
+            e.setQuery(q.getQuery());
+            e.setPublicDiagram(publicDiagram);
+            return e;
                         })
                         .collect(Collectors.toSet());
 
-        if (publicDiagram.getCannedQueries() == null) {
-            publicDiagram.setCannedQueries(new HashSet<>());
-        }
-
+                        if (publicDiagram.getCannedQueries() == null) {
+                            publicDiagram.setCannedQueries(new HashSet<>());
+                        }
+                        
         publicDiagram.getCannedQueries().clear();
         publicDiagram.getCannedQueries().addAll(cannedQueries);
-
+        
         publicDiagramRepository.save(publicDiagram);
     }
 

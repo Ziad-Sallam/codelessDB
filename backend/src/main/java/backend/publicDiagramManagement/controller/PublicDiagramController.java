@@ -47,7 +47,8 @@ public class PublicDiagramController {
             @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<ToBePublishedDiagramDto> toBePublishedDiagrams = publicDiagramService.getToBePublishedDiagrams(authUser.userId(), pageable);
+        Page<ToBePublishedDiagramDto> toBePublishedDiagrams = publicDiagramService
+                .getToBePublishedDiagrams(authUser.userId(), pageable);
         return ResponseEntity.ok(toBePublishedDiagrams);
     }
 
@@ -94,7 +95,8 @@ public class PublicDiagramController {
             @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<PublicDiagramInfoDto> forkedDiagrams = publicDiagramService.getForkedPublicDiagrams(authUser.userId(), pageable);
+        Page<PublicDiagramInfoDto> forkedDiagrams = publicDiagramService.getForkedPublicDiagrams(authUser.userId(),
+                pageable);
         return ResponseEntity.ok(forkedDiagrams);
     }
 
@@ -105,7 +107,8 @@ public class PublicDiagramController {
             @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<PublicDiagramInfoDto> staredDiagrams = publicDiagramService.getStaredPublicDiagrams(authUser.userId(), pageable);
+        Page<PublicDiagramInfoDto> staredDiagrams = publicDiagramService.getStaredPublicDiagrams(authUser.userId(),
+                pageable);
         return ResponseEntity.ok(staredDiagrams);
     }
 
@@ -117,7 +120,8 @@ public class PublicDiagramController {
             @RequestBody SearchRequestDto searchRequestDto) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<PublicDiagramInfoDto> publicDiagramsInfos = publicDiagramService.searchPublicDiagrams(searchRequestDto, pageable);
+        Page<PublicDiagramInfoDto> publicDiagramsInfos = publicDiagramService.searchPublicDiagrams(searchRequestDto,
+                pageable);
         return ResponseEntity.ok(publicDiagramsInfos);
     }
 
@@ -129,7 +133,8 @@ public class PublicDiagramController {
             @RequestBody SearchRequestDto searchRequestDto) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<PublicUserInfoDto> publicUserInfos = publicDiagramService.searchUsersByPublicDiagrams(searchRequestDto, pageable);
+        Page<PublicUserInfoDto> publicUserInfos = publicDiagramService.searchUsersByPublicDiagrams(searchRequestDto,
+                pageable);
         return ResponseEntity.ok(publicUserInfos);
     }
 

@@ -26,8 +26,7 @@ public interface UserDiagramRepository extends JpaRepository<UserDiagram, UserDi
             String diagramName,
             LocalDateTime createdAtStart,
             LocalDateTime createdAtEnd,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     // 3. Check existence of UserDiagram for a specific user and diagram
     boolean existsByUser_IdAndDiagram_Id(int userId, UUID diagramId);
@@ -43,11 +42,12 @@ public interface UserDiagramRepository extends JpaRepository<UserDiagram, UserDi
     UserDiagram findFirstByDiagram_Id(UUID diagramId);
 
     @Query("""
-        SELECT u.diagram
-        FROM UserDiagram u
-        WHERE u.user.id = :userId
-        AND u.diagram.publicDiagram IS NULL
-        """)
+            SELECT u.diagram
+            FROM UserDiagram u
+            WHERE u.user.id = :userId
+            AND u.role = 'OWNER'
+            AND NOT EXISTS (SELECT p FROM PublicDiagram p WHERE p.diagram = u.diagram)
+            """)
     Page<Diagram> findUnpublishedDiagramsByUser(int userId, Pageable pageable);
 
 }
