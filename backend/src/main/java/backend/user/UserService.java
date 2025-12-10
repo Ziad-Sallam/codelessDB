@@ -122,6 +122,12 @@ public class UserService {
 				throw new EmailAlreadyExistsException("Email already exists");
 			}
 			user.setEmail(userDto.getEmail());
+
+		} else if (userDto.getBio() != null) {
+			user.setBio(userDto.getBio());
+
+		} else if (userDto.getPublicProfile() != null) {
+			user.setPublicProfile(userDto.getPublicProfile());
 		}
 
 		userRepository.save(user);
@@ -172,15 +178,14 @@ public class UserService {
 		}
 	}
 
-    public User getUserOrThrow(int userId) {
-        User user = userRepository.findById(userId);
+	public User getUserOrThrow(int userId) {
+		User user = userRepository.findById(userId);
 
-        if (user == null) {
-            throw new UserNotFoundException("User not found with id: " + userId);
-        }
+		if (user == null) {
+			throw new UserNotFoundException("User not found with id: " + userId);
+		}
 
-        return user;
-    }
-
+		return user;
+	}
 
 }

@@ -18,16 +18,20 @@ public class UserDto {
 
 	@JsonProperty("password")
 	private String rawPassword;
-	
+
 	private String picture;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime createdAt;
+	private String bio;
+	private String publicProfile;
 
 	public UserDto(User user) {
 		this.username = user.getUsername();
 		this.email = user.getEmail();
-    	this.rawPassword = null;
+		this.rawPassword = null;
 		this.picture = user.getPicture();
 		this.createdAt = user.getCreatedAt();
+		this.bio = user.getBio();
+		this.publicProfile = user.getPublicProfile();
 	}
 }

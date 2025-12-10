@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar,
   CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  Menu, MenuItem
+  Menu, MenuItem, Switch
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,7 @@ export default function UserProfile() {
   const { user, setUser } = useAuth();
 
   const [leftNav, setLeftNav] = useState("profile");
-  const [profileData, setProfileData] = useState({ username: "", email: "", picture: "", createdAt: "" });
+  const [profileData, setProfileData] = useState({ username: "", email: "", picture: "", createdAt: "", bio: "", publicProfile: "" });
   const [editMode, setEditMode] = useState({});
   const [tempData, setTempData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,8 @@ export default function UserProfile() {
       email: user.email,
       picture: user.picture,
       createdAt: user.createdAt,
+      bio: user.bio || "",
+      publicProfile: user.publicProfile || "",
     });
     setLoading(false);
 
@@ -96,7 +98,7 @@ export default function UserProfile() {
       localStorage.setItem("token_for_reset", token);
       localStorage.setItem("email", profileData.email);
       localStorage.setItem("resetSource", "profile");
-      
+
       navigate("/password-reset?flow=reset");
 
       // navigate("/register?flow=reset");
@@ -225,6 +227,10 @@ export default function UserProfile() {
                 <Typography variant="h6" className="profile-info-title">Basic Info</Typography>
                 <ProfileField label="Username" field="username" icon={PersonIcon} editable={true} />
                 <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
+                <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline={true} rows={4} />
+
+                <ProfileField label="Public Profile" field="publicProfile" icon={PersonIcon} editable={true} multiline={true} rows={2} />
+
                 <PasswordField />
               </CardContent>
             </Card>
