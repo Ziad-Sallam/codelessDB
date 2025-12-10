@@ -161,7 +161,6 @@ const DatabaseManager: React.FC = () => {
 
     return (
       `CREATE DATABASE IF NOT EXISTS ${newName};\n` +
-      `USE ${newName};\n\n` +
       rest.trimStart()
     );
   }

@@ -3,14 +3,44 @@ import CodeMirror from '@uiw/react-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import './CodeEditor.css';
 import { useNavigate } from "react-router-dom";
+import { parse } from "sql-parser-cst";
 
 function CodeEditor({ initialCode, onClose }) {
-  const [code, setCode] = useState(initialCode || '');
+  const removeUseStatements = (sql) => {
+
+  const statements = sql
+    .split(";")
+    .map(s => s.trim())
+    .filter(Boolean)
+    .filter(stmt => !/^USE\s+/i.test(stmt));
+
+
+  return statements.map(s => s + ";").join("\n\n");
+};
+
+  const [code, setCode] = useState(removeUseStatements(initialCode) || '');
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleAction = () => {
     sessionStorage.setItem("sql", code);
     navigate("/database-configuration");
+  };
+
+
+
+  const handleChange = (value) => {
+    setCode(value);
+    try {
+      console.log(value)
+      parse(value.trim(), {
+        dialect: "mysql" 
+      });       
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    }
+    console.log(error)
   };
 
   return (
@@ -28,12 +58,25 @@ function CodeEditor({ initialCode, onClose }) {
         <CodeMirror
           value={code}
           extensions={[sql()]}
-          onChange={(value) => setCode(value)}
+          onChange={handleChange}
           theme='dark'
         />
 
+
         <div className="editor-footer">
-          <button className="editor-btn" onClick={handleAction}>
+          <div className="error-wrapper">
+            {error && (
+              <div className="sql-error">
+                <strong>Syntax Error:</strong> {error}
+              </div>
+            )}
+          </div>
+
+          <button 
+            className="editor-btn" 
+            onClick={handleAction}
+            disabled={!!error}
+          >
             Create Database
           </button>
         </div>
