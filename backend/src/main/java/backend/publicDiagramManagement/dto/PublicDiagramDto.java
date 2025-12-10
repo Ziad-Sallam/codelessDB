@@ -42,7 +42,9 @@ public class PublicDiagramDto {
     private int forks;
     private int views;
 
-    public static PublicDiagramDto toDto(Diagram diagram, PublicDiagram publicDiagram, List<ContributorDto> contributorDtos) {
+    private boolean isStared;
+
+    public static PublicDiagramDto toDto(Diagram diagram, PublicDiagram publicDiagram, List<ContributorDto> contributorDtos, boolean isStared) {
         return PublicDiagramDto.builder()
                 .diagramId(diagram.getId())
                 .name(diagram.getName())
@@ -58,6 +60,7 @@ public class PublicDiagramDto {
                 .stars(publicDiagram.getStars())
                 .forks(publicDiagram.getForks())
                 .views(publicDiagram.getViews())
+                .isStared(isStared)
                 .build();
     }
 }
