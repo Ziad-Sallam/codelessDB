@@ -63,42 +63,10 @@ public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 			log.info("Received binary message for Diagram ID {} with {} bytes.", diagramId, payload.remaining());
 
 			// Broadcast the received message ONLY to clients in the same diagram/room
-			broadcastBinaryMessage(diagramId, payload.array(), session.getId());
+			roomManager.sendUpdate(diagramId, payload.array(), session.getId());
 		
 		} else {
 			log.warn("Ignoring binary message from session {} as diagramId is missing.", session.getId());
 		}
-	}
-
-	/**
-	 * Broadcasts a raw binary message ONLY to clients in the specified room,
-	 * excluding the sender.
-	 * * @param diagramId The room/diagram ID to broadcast within.
-	 * 
-	 * @param data     The byte array to send.
-	 * @param senderId The session ID of the sender to exclude from the broadcast.
-	 */
-	public void broadcastBinaryMessage(String diagramId, byte[] data, String senderId) {
-		BinaryMessage message = new BinaryMessage(data);
-
-		Set<WebSocketSession> roomSessions = roomManager.getSessionsInRoom(diagramId);
-
-		if (roomSessions == null || roomSessions.isEmpty()) {
-			log.warn("No sessions found for diagramId: {}", diagramId);
-			return;
-		}
-
-		// Stream and send to the targeted room sessions
-		roomSessions.parallelStream().forEach(session -> {
-			if (session.isOpen() && !session.getId().equals(senderId)) {
-				try {
-					session.sendMessage(message);
-				
-				} catch (IOException e) {
-					log.error("Error sending message to session {} in diagram {}:\n {}",
-								 session.getId(), diagramId, e.getMessage());
-				}
-			}
-		});
 	}
 }
