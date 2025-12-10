@@ -10,7 +10,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j; // Recommended for logging instead of direct System.out
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.web.socket.WebSocketSession;
 
