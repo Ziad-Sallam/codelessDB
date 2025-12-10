@@ -9,9 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -53,7 +56,7 @@ class DatabaseManagementControllerTest {
     }
 
     @Test
-    void createDatabase_serviceThrowsException_returnsException() throws Exception {
+    void createDatabase_serviceThrowsException_returnsBadRequest() {
         CreateDatabaseDTO dto = new CreateDatabaseDTO();
         AuthUser authUser = mock(AuthUser.class);
         when(authUser.userId()).thenReturn(1);
@@ -61,12 +64,60 @@ class DatabaseManagementControllerTest {
         when(databaseManagementService.createDatabase(dto, 1))
                 .thenThrow(new RuntimeException("DB error"));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
-            controller.createDatabase(dto, authUser);
-        });
+        ResponseEntity<?> response = controller.createDatabase(dto, authUser);
 
-        assertEquals("DB error", ex.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertEquals("DB error", body.get("error"));
     }
+
+    @Test
+    void createServer_serviceThrowsException_returnsBadRequest() {
+        // Arrange
+        CreateServerDTO dto = new CreateServerDTO();
+
+        AuthUser authUser = mock(AuthUser.class);
+        when(authUser.userId()).thenReturn(1);
+
+        when(databaseManagementService.createServer(dto, 1))
+                .thenThrow(new RuntimeException("Server creation failed"));
+
+        // Act
+        ResponseEntity<?> response = controller.createServer(dto, authUser);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> body = (Map<String, String>) response.getBody();
+
+        assertNotNull(body);
+        assertEquals("Server creation failed", body.get("error"));
+    }
+
+    @Test
+    void getUserDatabases_validUser_returnsOkResponse() {
+        // Arrange
+        AuthUser authUser = mock(AuthUser.class);
+        when(authUser.userId()).thenReturn(1);
+
+        SendDatabasesDTO dto = new SendDatabasesDTO();
+        when(databaseManagementService.getUserDatabases(1))
+                .thenReturn(dto);
+
+        // Act
+        ResponseEntity<?> response = controller.getUserDAtabases(authUser);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertSame(dto, response.getBody());
+
+        verify(databaseManagementService).getUserDatabases(1);
+    }
+
+
+
 
     /* --------------------------------------------------------
        createServer

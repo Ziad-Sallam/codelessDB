@@ -3,6 +3,7 @@ package backend.entities;
 import java.sql.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,12 +31,19 @@ public class CannedQueriesDB {
   @Column(nullable = false, length = 100)
   private String name;
 
+  @Column(columnDefinition = "TEXT")
+  private String description;
+
   @Column(nullable = false, columnDefinition = "TEXT")
   private String query;
 
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
   private Date createdAt;
+
+  @Column(nullable = false)
+  @UpdateTimestamp
+  private Date updatedAt;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_database_id", nullable = false)

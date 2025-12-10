@@ -163,12 +163,12 @@ const DatabaseConfiguration: React.FC = () => {
     if (!newName) return ddl;
 
     const HEADER_REGEX =
-      /^\s*CREATE\s+DATABASE[\s\S]*?;\s*USE\s+[\s\S]*?;\s*/i;
+      /^\s*CREATE\s+DATABASE[\s\S]*?;/i;
 
     const rest = ddl.replace(HEADER_REGEX, '');
 
     return (
-      `CREATE DATABASE IF NOT EXISTS ${newName};\n` +
+      `CREATE DATABASE IF NOT EXISTS ${newName};\n\n` +
       rest.trimStart()
     );
   }

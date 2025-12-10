@@ -4,8 +4,18 @@ import java.util.ArrayList;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
-import backend.entities.*;
+
+import backend.entities.User;
+import backend.entities.Server;
+import backend.entities.UserDatabase;
 import backend.user.UserRepository;
+
+import java.util.List;
+
+import javax.xml.crypto.Data;
+
+import java.util.ArrayList;
+
 import java.util.List;
 
 @Service
@@ -130,6 +140,22 @@ public class DatabaseManagementService {
         return dto;
     }
 
+    public SendDatabasesDTO getUserDatabases(int userId){
+        User usr = userRepository.findById(userId);
+        List<UserDatabase> dbs = usr.getAccessibleDatabases();
+        SendDatabasesDTO ans = new SendDatabasesDTO();
+        for(UserDatabase db : dbs){
+            Database temp = new Database();
+            temp.setDatabaseId(db.getId());
+            temp.setServerName(db.getServer().getName());
+            temp.setDatabaseName(db.getName());
+            temp.setDatabaseddl(db.getDdl());
+            ans.getDatabases().add(temp);
+        }
+        return ans;
+
+    }
+   
     public List<CreateServerDTO> getUserServers(int userId){
         User usr = userRepository.findById(userId);
         List<Server> servers =  usr.getServers();
@@ -143,5 +169,6 @@ public class DatabaseManagementService {
 
         return ans;
     }    
+    
 
 }
