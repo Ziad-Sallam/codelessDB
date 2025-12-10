@@ -44,7 +44,7 @@ export const routes = [
     ),
   },
   {
-    path: "/diagrams/:id",
+    path: "/diagrams/:roomId",
     element: (
       <ProtectedRoute>
         <Schema />

@@ -6,13 +6,13 @@ import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 import { useNotification } from "../../../components/NotificationContext";
 import ColumnRow from "./ColumnRow";
+import { useCollaboration } from "../CollaborationContext.jsx";
 
 const Node = ({ id, data, dragging }) => {
   const { showSuccess, showError, showWarning } = useNotification();
 
-  const { setNodes } = useReactFlow();
-  const { getNodes } = useReactFlow();
-  const nodes = getNodes();
+  const { updateNodeData: updateYjsNode, nodes } = useCollaboration();
+
   const [constraintsWindow, setConstraintsWindow] = React.useState({});
 
   const toggleConstraint = (id) => {
@@ -28,16 +28,10 @@ const Node = ({ id, data, dragging }) => {
 
   const updateNodeData = useCallback(
     (newData) => {
-      setNodes((nodes) =>
-        nodes.map((node) => {
-          if (node.id === id) {
-            return { ...node, data: { ...node.data, ...newData } };
-          }
-          return node;
-        })
-      );
+      // Call the context function to update Yjs
+      updateYjsNode(id, newData);
     },
-    [id, setNodes]
+    [id, updateYjsNode]
   );
 
   const onNameChange = useCallback(
@@ -124,25 +118,7 @@ const Node = ({ id, data, dragging }) => {
       name: `attr_${data.columns.length}`,
       dataType: "VARCHAR",
       dataTypeLength: 45,
-      // dataTypePrecision: 10,
-      // dataTypeScale: 0,
-      // dataTypeValues: [],
-      constraints: {
-        // PRIMARY_KEY: false,
-        // NOT_NULL: false,
-        // FOREIGN_KEY: false,
-        // ForeignKeyOnDelete: "CASCADE",
-        // ForeignKeyOnUpdate: "CASCADE",
-        // UNIQUE: false,
-        // DEFAULT: false,
-        // defaultValue: "",
-        // CHECK: false,
-        // checkCondition: ">",
-        // checkValue: "",
-        // autoIncrement: false,
-        // indexed: false,
-      },
-      // references: { tableName: "", columnName: "" },
+      constraints: {},
     };
     updateNodeData({ columns: [...data.columns, newCol] });
   };
