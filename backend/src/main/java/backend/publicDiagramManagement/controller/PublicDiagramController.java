@@ -78,6 +78,15 @@ public class PublicDiagramController {
         return ResponseEntity.ok("Diagram stared successfully :)");
     }
 
+    @DeleteMapping("/unstar/{diagramId}")
+    public ResponseEntity<?> unstarPublicDiagram(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable UUID diagramId) {
+
+        publicDiagramService.unstarPublicDiagram(authUser.userId(), diagramId);
+        return ResponseEntity.ok("Diagram stared successfully :)");
+    }
+
     @GetMapping("/forkedDiagrams")
     public ResponseEntity<?> getForkedDiagram(
             @AuthenticationPrincipal AuthUser authUser,
