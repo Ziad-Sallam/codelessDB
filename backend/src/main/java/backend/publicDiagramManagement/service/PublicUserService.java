@@ -45,6 +45,7 @@ public class PublicUserService {
                 .url(user.getProfileWebsiteUrl())
                 .publicCount(publicCount)
                 .totalStars(totalStars)
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 
