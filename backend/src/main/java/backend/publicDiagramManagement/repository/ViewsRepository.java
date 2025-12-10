@@ -25,3 +25,4 @@ public interface ViewsRepository extends JpaRepository<DiagramView, UserDiagramI
     int insertIfNotExists(int userId, UUID diagramId);
 }
 
+

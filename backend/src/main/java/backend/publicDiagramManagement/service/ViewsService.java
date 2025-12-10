@@ -9,6 +9,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -18,10 +20,15 @@ public class ViewsService {
     PublicDiagramRepository publicDiagramRepository;
 
     @Transactional
-    public void addView(int userId, PublicDiagram publicDiagram) {
-        int inserted = viewsRepository.insertIfNotExists(userId, publicDiagram.getId());
+    public boolean addView(int userId, UUID diagramId) {
 
-        if (inserted == 1)
-            publicDiagramRepository.incrementViews(publicDiagram.getId());
+        int inserted = viewsRepository.insertIfNotExists(userId, diagramId);
+
+        if (inserted == 1) {
+            publicDiagramRepository.incrementViews(diagramId);
+            return true; // view was counted
+        }
+
+        return false; // user already viewed
     }
 }

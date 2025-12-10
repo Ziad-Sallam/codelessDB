@@ -13,7 +13,9 @@ import backend.publicDiagramManagement.dto.search.SearchRequestDto;
 import backend.publicDiagramManagement.dto.user.PublicUserInfoDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
+import backend.publicDiagramManagement.repository.ViewsRepository;
 import backend.userDiagramManagement.dto.ContributorDto;
+import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
@@ -41,11 +43,22 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     private final UserDiagramService userDiagramService;
     private final HashtagService hashtagService;
     private final ViewsService viewsService;
+    private final ViewsRepository viewsRepository;
 
     public PublicDiagram getPublicDiagramOrThrow(UUID diagramId) {
         return publicDiagramRepository.findById(diagramId)
                 .orElseThrow(() -> new PublicDiagramException.DiagramNotFoundException(
                         "Public diagram not found " + diagramId));
+    }
+
+    public PublicDiagram getPublicDiagramOrThrow(Diagram diagram) {
+        PublicDiagram pd = diagram.getPublicDiagram();
+        if (pd == null) {
+            throw new PublicDiagramException.DiagramNotFoundException(
+                    "Public diagram not found " + diagram.getId()
+            );
+        }
+        return pd;
     }
 
     @Override
@@ -104,13 +117,20 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     }
 
 
-    @Override
     @Transactional
     public PublicDiagramDto viewPublicDiagram(int userId, UUID diagramId) {
+
         Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
-        PublicDiagram publicDiagram = getPublicDiagramOrThrow(diagramId);
-        viewsService.addView(userId, publicDiagram);
+        PublicDiagram publicDiagram = getPublicDiagramOrThrow(diagram);
+
+        boolean newView = viewsService.addView(userId, diagramId);
+
+        if (newView) {
+            publicDiagram.setViews(publicDiagram.getViews() + 1);
+        }
+
         List<ContributorDto> contributors = userDiagramService.getContributors(diagramId);
+
         return PublicDiagramDto.toDto(diagram, publicDiagram, contributors);
     }
 
