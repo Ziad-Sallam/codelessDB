@@ -1,11 +1,13 @@
 package backend.userDiagramManagement.service;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import backend.userDiagramManagement.dto.ContributorDto;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class UserDiagramService implements IUserDiagramService {
+    private static final LocalDateTime MIN_DATE = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
+    private static final LocalDateTime MAX_DATE = LocalDateTime.of(2100, 12, 31, 23, 59, 59);
 
     private final DiagramRepository diagramRepository;
     private final UserRepository userRepository;
@@ -75,10 +79,6 @@ public class UserDiagramService implements IUserDiagramService {
         }
     }
 
-    private Date parseDateOrDefault(String dateStr, String defaultDate) {
-        return dateStr != null ? Date.valueOf(dateStr) : Date.valueOf(defaultDate);
-    }
-
     @Override
     @Transactional
     public Page<DiagramInfoDto> getDiagramsByUserId(int userId, Pageable pageable) {
@@ -110,7 +110,7 @@ public class UserDiagramService implements IUserDiagramService {
 
     @Override
     @Transactional
-    public Date updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
+    public LocalDateTime updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
         getUserOrThrow(userId);
         Diagram diagram = getDiagramOrThrow(diagramId);
         UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
@@ -166,14 +166,25 @@ public class UserDiagramService implements IUserDiagramService {
         return DiagramDto.toDto(diagram, userDiagram.getRole());
     }
 
-    @Override
+
     @Transactional
-    public Page<DiagramInfoDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable) {
+    public Page<DiagramInfoDto> searchDiagrams(int userId,
+                                               DiagramSearchRequestDto request,
+                                               Pageable pageable) {
+
         getUserOrThrow(userId);
 
-        String nameFilter = request.getName() != null ? request.getName() : "";
-        Date startDate = parseDateOrDefault(request.getStart(), "1970-01-01");
-        Date endDate = parseDateOrDefault(request.getEnd(), "2100-12-31");
+        String nameFilter = Optional
+                .ofNullable(request.getName())
+                .orElse("");
+
+        LocalDateTime startDate = Optional
+                .ofNullable(request.getStart())
+                .orElse(MIN_DATE);
+
+        LocalDateTime endDate = Optional
+                .ofNullable(request.getEnd())
+                .orElse(MAX_DATE);
 
         return userDiagramRepository
                 .findAllByUser_IdAndDiagram_NameContainingIgnoreCaseAndDiagram_CreatedAtBetween(
@@ -181,9 +192,13 @@ public class UserDiagramService implements IUserDiagramService {
                         nameFilter,
                         startDate,
                         endDate,
-                        pageable)
-                .map(ud -> DiagramInfoDto.toDto(ud.getDiagram(), ud.getRole(),
-                        getContributors(ud.getDiagram().getId())));
+                        pageable
+                )
+                .map(ud -> DiagramInfoDto.toDto(
+                        ud.getDiagram(),
+                        ud.getRole(),
+                        getContributors(ud.getDiagram().getId())
+                ));
     }
 
     @Override

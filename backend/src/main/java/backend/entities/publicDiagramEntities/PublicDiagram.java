@@ -49,6 +49,7 @@ public class PublicDiagram {
     @CreationTimestamp
     private LocalDateTime publishedAt;
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "public_diagram_hashtags",
@@ -58,16 +59,20 @@ public class PublicDiagram {
     private Set<Hashtag> hashtags = new HashSet<>();
 
     /* Canned queries attached to the public diagram */
+    @Builder.Default
     @OneToMany(mappedBy = "publicDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CannedQueriesDiagrams> cannedQueries = new HashSet<>();
 
     /* Stars, views, forks - reverse side (optional, lazy loaded) */
+    @Builder.Default
     @OneToMany(mappedBy = "publicDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DiagramStar> starsEntities = new HashSet<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "publicDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DiagramView> viewEntities = new HashSet<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "originalDiagram", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DiagramFork> forkEntities = new HashSet<>();
 }

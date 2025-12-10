@@ -25,6 +25,22 @@ public interface PublicDiagramRepository extends JpaRepository<PublicDiagram, UU
         UPDATE PublicDiagram p
         SET p.forks = p.forks + 1
         WHERE p.id = :id
-        """)
+    """)
     void incrementForks(@Param("id") UUID id);
+
+    @Modifying
+    @Query("""
+        UPDATE PublicDiagram p
+        SET p.stars = p.stars + 1
+        WHERE p.id = :id
+    """)
+    void incrementStar(@Param("id") UUID id);
+
+    @Modifying
+    @Query("""
+        UPDATE PublicDiagram p
+        SET p.stars = p.stars - 1
+        WHERE p.id = :id AND p.stars > 0
+    """)
+    void decrementStar(@Param("id") UUID id);
 }

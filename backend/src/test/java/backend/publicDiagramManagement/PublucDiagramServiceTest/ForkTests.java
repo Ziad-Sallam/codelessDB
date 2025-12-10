@@ -3,6 +3,7 @@ package backend.publicDiagramManagement.PublucDiagramServiceTest;
 import backend.entities.Diagram;
 import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.PublicDiagram;
+import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
 import backend.publicDiagramManagement.repository.ForkRepository;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
@@ -10,7 +11,6 @@ import backend.publicDiagramManagement.service.PublicDiagramServiceImpl;
 import backend.user.Role;
 import backend.user.UserService;
 import backend.userDiagramManagement.dto.ContributorDto;
-import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
@@ -66,9 +66,6 @@ public class ForkTests {
         originalDiagram.setPublicDiagram(publicDiagram);
     }
 
-    // ----------------------------------------------------------
-    // ✅ 1. Successful fork: clone + record + increment
-    // ----------------------------------------------------------
     @Test
     void fork_success_createsCloneAndRecord() {
 
@@ -76,7 +73,7 @@ public class ForkTests {
                 .thenReturn(originalDiagram);
 
         when(userService.getUserOrThrow(5))
-                .thenReturn(null);  // not used in identity
+                .thenReturn(null);
 
         service.forkPublicDiagram(5, diagramId);
 
@@ -93,28 +90,38 @@ public class ForkTests {
         verify(publicDiagramRepository).incrementForks(diagramId);
     }
 
-    // ----------------------------------------------------------
-    // ✅ 2. Fetch forked diagrams → mapped to DiagramInfoDto
-    // ----------------------------------------------------------
     @Test
-    void getForkedDiagrams_returnsDiagramInfoDto() {
+    void getForkedDiagrams_returnsPublicDiagramInfoDto() {
 
         UUID forkedId = UUID.randomUUID();
-        Diagram forkDiagram = Diagram.builder()
+
+        // Build public diagram (includes Diagram inside)
+        Diagram diagram = Diagram.builder()
                 .id(forkedId)
                 .name("Forked")
                 .ddl("DDL")
                 .build();
 
-        Page<Diagram> page = new PageImpl<>(
-                List.of(forkDiagram),
+        PublicDiagram publicDiagram = PublicDiagram.builder()
+                .id(forkedId)
+                .diagram(diagram)
+                .shortDescription("Short")
+                .stars(5)
+                .views(10)
+                .forks(2)
+                .build();
+
+        Page<PublicDiagram> page = new PageImpl<>(
+                List.of(publicDiagram),
                 PageRequest.of(0, 10),
                 1
         );
 
-        when(forkRepository.findForkedDiagramsByUser(7, PageRequest.of(0,10)))
+        // ✅ new repository call returns PublicDiagram
+        when(forkRepository.findForkedPublicDiagramsByUser(7, PageRequest.of(0, 10)))
                 .thenReturn(page);
 
+        // contributors
         List<ContributorDto> contributors = List.of(
                 new ContributorDto("Alice", "pic", Role.OWNER)
         );
@@ -122,25 +129,33 @@ public class ForkTests {
         when(userDiagramService.getContributors(forkedId))
                 .thenReturn(contributors);
 
-        Page<DiagramInfoDto> result =
-                service.getForkedPublicDiagrams(7, PageRequest.of(0,10));
+        // ✅ service now returns PublicDiagramInfoDto
+        Page<PublicDiagramInfoDto> result =
+                service.getForkedPublicDiagrams(7, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
 
-        DiagramInfoDto dto = result.getContent().get(0);
+        PublicDiagramInfoDto dto = result.getContent().get(0);
 
+        // base diagram fields
         assertEquals("Forked", dto.getName());
-        assertEquals(Role.OWNER, dto.getRole());
-        assertEquals(1, dto.getContributorDtos().size());
-        assertEquals("Alice", dto.getContributorDtos().get(0).getName());
+        assertEquals(forkedId, dto.getDiagramId());
 
-        verify(forkRepository).findForkedDiagramsByUser(7, PageRequest.of(0,10));
+        // contributors
+        assertEquals(1, dto.getContributors().size());
+        assertEquals("Alice", dto.getContributors().get(0).getName());
+
+        // public diagram fields
+        assertEquals(5, dto.getStars());
+        assertEquals(10, dto.getViews());
+        assertEquals(2, dto.getForks());
+        assertEquals("Short", dto.getShortDescription());
+
+        // verify interactions
+        verify(forkRepository).findForkedPublicDiagramsByUser(7, PageRequest.of(0, 10));
         verify(userDiagramService).getContributors(forkedId);
     }
 
-    // ----------------------------------------------------------
-    // ✅ 3. Forking missing diagram → throws
-    // ----------------------------------------------------------
     @Test
     void fork_missingDiagram_throws() {
 
@@ -151,9 +166,6 @@ public class ForkTests {
                 () -> service.forkPublicDiagram(1, diagramId));
     }
 
-    // ----------------------------------------------------------
-    // ✅ 4. Diagram exists but not public → throws
-    // ----------------------------------------------------------
     @Test
     void fork_notPublicDiagram_throws() {
 

@@ -4,11 +4,13 @@ import backend.entities.Diagram;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.userDiagramManagement.dto.ContributorDto;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -21,8 +23,13 @@ public class PublicDiagramDto {
     private UUID diagramId;
     private String name;
     private String thumbnail;
-    private Date createdAt;
-    private Date lastModified;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastModified;
+
     private List<ContributorDto> contributors;
 
     private String shortDescription;

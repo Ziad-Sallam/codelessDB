@@ -1,6 +1,7 @@
 package backend.entities;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,19 +38,20 @@ public class Diagram {
   @Column(columnDefinition = "JSON")
   private String content;
 
+  @Builder.Default
   @Lob
   @Column(nullable = false)
-  private String ddl;
+  private String ddl = "";
   
   private String thumbnail;
   
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
-  private Date createdAt;
+  private LocalDateTime createdAt;
   
   @Column(nullable = false)
   @UpdateTimestamp
-  private Date lastModified;
+  private LocalDateTime lastModified;
 
   @OneToOne(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private PublicDiagram publicDiagram;

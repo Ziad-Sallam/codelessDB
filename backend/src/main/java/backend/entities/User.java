@@ -3,6 +3,8 @@ package backend.entities;
 import java.sql.Date;
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 
 import backend.entities.joins.UserDiagram;
@@ -15,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -24,56 +27,55 @@ public class User {
     private int id;
 
     @Column(nullable = false, unique = true, length = 50)
-    @NotBlank(message = "Username is mandatory")
+    @NotBlank
     @Size(min = 3, max = 50)
     private String username;
 
     @Column(nullable = false, unique = true, length = 100)
-    @NotBlank(message = "Email is mandatory")
+    @NotBlank
     @Email
     private String email;
 
     @Column(nullable = false, length = 60)
     private String password;
 
-    @Column(length = 255)
     private String picture;
-
-    @Column(length = 500)
     private String bio;
-
-    @Column(length = 255)
     private String profileWebsiteUrl;
 
-    @Column(nullable = false, updatable = false)
     @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private Date createdAt;
 
-    /* ------------------------------ FOLLOWERS & FOLLOWING ------------------------------ */
+    /* ---------------- FOLLOWERS ---------------- */
 
-    /** Users who follow THIS user */
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_followers",
-            joinColumns = @JoinColumn(name = "user_id"),              // this user
-            inverseJoinColumns = @JoinColumn(name = "follower_id")    // users who follow
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "follower_id")
     )
     private Set<User> followers = new HashSet<>();
 
-    /** Users THIS user follows */
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_following",
-            joinColumns = @JoinColumn(name = "follower_id"),          // this user
-            inverseJoinColumns = @JoinColumn(name = "user_id")        // users being followed
+            joinColumns = @JoinColumn(name = "follower_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> following = new HashSet<>();
 
-    /* ------------------------------ DIAGRAM RELATIONSHIP ------------------------------ */
+    /* ---------------- DIAGRAMS ---------------- */
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserDiagram> userDiagrams = new HashSet<>();
 
+    /* ---------------- SERVERS ---------------- */
+
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_servers",
@@ -82,9 +84,13 @@ public class User {
     )
     private Set<Server> servers = new HashSet<>();
 
+    /* ---------------- DATABASES ---------------- */
+
+    @JsonIgnore
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDatabase> ownedDatabases = new ArrayList<>();
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_database_access",

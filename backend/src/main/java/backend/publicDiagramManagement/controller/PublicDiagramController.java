@@ -85,7 +85,7 @@ public class PublicDiagramController {
             @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<DiagramInfoDto> forkedDiagrams = publicDiagramService.getForkedPublicDiagrams(authUser.userId(), pageable);
+        Page<PublicDiagramInfoDto> forkedDiagrams = publicDiagramService.getForkedPublicDiagrams(authUser.userId(), pageable);
         return ResponseEntity.ok(forkedDiagrams);
     }
 
@@ -96,7 +96,7 @@ public class PublicDiagramController {
             @RequestParam(defaultValue = "10") int pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<DiagramInfoDto> staredDiagrams = publicDiagramService.getStaredPublicDiagrams(authUser.userId(), pageable);
+        Page<PublicDiagramInfoDto> staredDiagrams = publicDiagramService.getStaredPublicDiagrams(authUser.userId(), pageable);
         return ResponseEntity.ok(staredDiagrams);
     }
 

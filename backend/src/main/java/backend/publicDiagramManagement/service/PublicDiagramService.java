@@ -25,9 +25,11 @@ public interface PublicDiagramService {
 
     void starPublicDiagram(int userId, UUID diagramId);
 
-    Page<DiagramInfoDto> getForkedPublicDiagrams(int userId, Pageable pageable);
+    void unstarPublicDiagram(int userId, UUID diagramId);
 
-    Page<DiagramInfoDto> getStaredPublicDiagrams(int userId, Pageable pageable);
+    Page<PublicDiagramInfoDto> getForkedPublicDiagrams(int userId, Pageable pageable);
+
+    Page<PublicDiagramInfoDto> getStaredPublicDiagrams(int userId, Pageable pageable);
 
     Page<PublicDiagramInfoDto> searchPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable);
 

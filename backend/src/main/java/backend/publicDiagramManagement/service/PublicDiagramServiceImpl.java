@@ -1,13 +1,9 @@
 package backend.publicDiagramManagement.service;
 
 import backend.entities.Diagram;
-import backend.entities.User;
 import backend.entities.joins.PublicDiagramUserId;
 import backend.entities.joins.UserDiagram;
-import backend.entities.publicDiagramEntities.CannedQueriesDiagrams;
-import backend.entities.publicDiagramEntities.DiagramFork;
-import backend.entities.publicDiagramEntities.Hashtag;
-import backend.entities.publicDiagramEntities.PublicDiagram;
+import backend.entities.publicDiagramEntities.*;
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
@@ -17,11 +13,11 @@ import backend.publicDiagramManagement.dto.user.PublicUserInfoDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
 import backend.publicDiagramManagement.repository.ForkRepository;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
+import backend.publicDiagramManagement.repository.StarRepository;
 import backend.publicDiagramManagement.repository.ViewsRepository;
 import backend.user.Role;
 import backend.user.UserService;
 import backend.userDiagramManagement.dto.ContributorDto;
-import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
@@ -32,12 +28,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.sql.Date;
-
-
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +43,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     private final ViewsService viewsService;
     private final ViewsRepository viewsRepository;
     private final ForkRepository forkRepository;
+    private final StarRepository starRepository;
     private final UserService userService;
 
     public PublicDiagram getPublicDiagramOrThrow(UUID diagramId) {
@@ -201,30 +194,73 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     }
 
     @Override
-    public Page<DiagramInfoDto> getForkedPublicDiagrams(int userId, Pageable pageable) {
+    public Page<PublicDiagramInfoDto> getForkedPublicDiagrams(int userId, Pageable pageable) {
 
-        Page<Diagram> forkedDiagrams =
-                forkRepository.findForkedDiagramsByUser(userId, pageable);
+        Page<PublicDiagram> forkedDiagrams = forkRepository.findForkedPublicDiagramsByUser(userId, pageable);
 
-        return forkedDiagrams.map(diagram -> {
-
-            List<ContributorDto> contributors =
-                    userDiagramService.getContributors(diagram.getId());
-
-            Role role = Role.OWNER;
-
-            return DiagramInfoDto.toDto(diagram, role, contributors);
+        return forkedDiagrams.map(publicDiagram -> {
+            List<ContributorDto> contributors = userDiagramService.getContributors(publicDiagram.getId());
+            return PublicDiagramInfoDto.toDto(publicDiagram, contributors);
         });
     }
 
+
+
     @Override
+    @Transactional
     public void starPublicDiagram(int userId, UUID diagramId) {
-        
+        Diagram original = userDiagramService.getDiagramOrThrow(diagramId);
+        PublicDiagram publicDiagram = getPublicDiagramOrThrow(original);
+
+        PublicDiagramUserId starId = PublicDiagramUserId.builder()
+                .userId(userId)
+                .publicDiagramId(publicDiagram.getId())
+                .build();
+
+        if (starRepository.existsById(starId)) {
+            return;
+        }
+
+        DiagramStar star = DiagramStar.builder()
+                .id(starId)
+                .publicDiagram(publicDiagram)
+                .build();
+
+        starRepository.save(star);
+
+        publicDiagramRepository.incrementStar(publicDiagram.getId());
     }
 
     @Override
-    public Page<DiagramInfoDto> getStaredPublicDiagrams(int userId, Pageable pageable) {
-        return null;
+    @Transactional
+    public void unstarPublicDiagram(int userId, UUID diagramId) {
+        Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
+        PublicDiagram publicDiagram = getPublicDiagramOrThrow(diagram);
+
+        PublicDiagramUserId id = PublicDiagramUserId.builder()
+                .userId(userId)
+                .publicDiagramId(publicDiagram.getId())
+                .build();
+
+        if (!starRepository.existsById(id)) {
+            return;
+        }
+
+        starRepository.deleteById(id);
+
+        publicDiagramRepository.decrementStar(publicDiagram.getId());
+    }
+
+    @Override
+    @Transactional
+    public Page<PublicDiagramInfoDto> getStaredPublicDiagrams(int userId, Pageable pageable) {
+
+        Page<PublicDiagram> starred = starRepository.findStarredPublicDiagramsByUser(userId, pageable);
+
+        return starred.map(publicDiagram -> {
+            List<ContributorDto> contributors = userDiagramService.getContributors(publicDiagram.getId());
+            return PublicDiagramInfoDto.toDto(publicDiagram, contributors);
+        });
     }
 
     @Override
