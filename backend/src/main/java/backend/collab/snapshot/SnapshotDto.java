@@ -2,6 +2,7 @@ package backend.collab.snapshot;
 
 import java.util.List;
 
+import backend.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -11,4 +12,8 @@ public class SnapshotDto {
 	private byte[] snapshot;
 	
 	private List<byte[]> updates;
+
+	private String username;	
+	
+	private Role role;
 }

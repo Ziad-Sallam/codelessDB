@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import backend.collab.services.RedisStreamService;
 import backend.entities.Diagram;
+import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.user.Role;
 import backend.userDiagramManagement.dto.DiagramDto;
@@ -32,12 +33,12 @@ public class SnapshotService {
 	private final RedisStreamService redisService;
 
 	public SnapshotDto getLatestDiagram(int userId, UUID diagramId) {
-		userDiagramService.getUserOrThrow(userId);
-		userDiagramService.getUserDiagramOrThrow(userId, diagramId);
+		String username = userDiagramService.getUserOrThrow(userId).getUsername();
+		Role role = userDiagramService.getUserDiagramOrThrow(userId, diagramId).getRole();
 		
 		byte[] snapshot = userDiagramService.getDiagramOrThrow(diagramId).getContent();
 		List<byte[]> updates = updatesRepository.findAllUpdateDataByDiagramId(diagramId.toString());
-		return new SnapshotDto(snapshot, updates);
+		return new SnapshotDto(snapshot, updates, username, role);
 	}
 	
 	public void takeSnapshot(int userId, UUID diagramId, byte[] state) {
