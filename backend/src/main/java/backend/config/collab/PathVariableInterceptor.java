@@ -15,6 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder; // New import for quer
 
 import backend.security.AuthUser;
 import backend.security.JwtExtractor;
+import backend.user.Role;
 import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.service.UserDiagramService;
 import lombok.RequiredArgsConstructor;
@@ -70,11 +71,12 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 
 			attributes.put("userId", authUser.userId());
 			attributes.put("username", authUser.username());
-
+			
 			UUID diagramId = UUID.fromString(diagramIdStr);
-
+			
 			// AUTHORIZATION (Check diagram access)
-			diagramService.getUserDiagramOrThrow(authUser.userId(), diagramId);
+			Role role = diagramService.getUserDiagramOrThrow(authUser.userId(), diagramId).getRole();
+			attributes.put("role", role);
 
 			log.info("Handshake successful. Diagram ID: {} | User: {}", diagramIdStr, authUser.username());
 

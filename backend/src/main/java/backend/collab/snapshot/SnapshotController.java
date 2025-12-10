@@ -1,6 +1,7 @@
-package backend.collab;
+package backend.collab.snapshot;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
@@ -12,42 +13,36 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import backend.collab.services.SnapshotService;
-import backend.collab.updateDto.DiagramUpdateRequestDto;
-import backend.collab.updateDto.DiagramUpdateResponseDto;
 import backend.security.AuthUser;
-import backend.userDiagramManagement.dto.DiagramDto;
+import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
+import backend.userDiagramManagement.dto.update.DiagramUpdateResponseDto;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/room")
+@RequestMapping("/snapshot")
 @RequiredArgsConstructor
-public class RoomController {
+public class SnapshotController {
 
 	private final SnapshotService snapshotService;
 
-	// @GetMapping("/search/{id}")
 	@GetMapping("/{id}")
-	public ResponseEntity<DiagramDto> searchDiagramById(
+	public ResponseEntity<?> getLatestDiagram(
 			@AuthenticationPrincipal AuthUser authUser,
 			@PathVariable UUID id) {
 
-		DiagramDto result = snapshotService.searchDiagramById(authUser.userId(), id);
+		SnapshotDto result = snapshotService.getLatestDiagram(authUser.userId(), id);
 		return ResponseEntity.ok(result);
 	}
 
-	@PutMapping("/snapshot/{id}")
-	public ResponseEntity<DiagramUpdateResponseDto> saveState(
+	@PutMapping("/{id}")
+	public ResponseEntity<?> saveState(
 			@AuthenticationPrincipal AuthUser authUser,
 			@PathVariable UUID id,
-			@RequestBody DiagramUpdateRequestDto request) {
+			@RequestBody byte[] state) {
 
-		Date updateDate = snapshotService.takeSnapshot(authUser.userId(), request, id);
+		snapshotService.takeSnapshot(authUser.userId(), id, state);
 
-		return ResponseEntity.ok(new DiagramUpdateResponseDto(
-				"Diagram updated successfully",
-				id,
-				updateDate));
+		return ResponseEntity.ok("Snapshot taken sucessfully");
 	}
 
 }

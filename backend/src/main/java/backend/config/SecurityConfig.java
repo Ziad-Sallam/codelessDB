@@ -17,10 +17,13 @@ import backend.security.JwtAuthenticationFilter;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig implements WebMvcConfigurer {
+	
 	@Value("${frontend.url}")
 	private String frontendUrl;
+	
 	@Autowired
 	private JwtAuthenticationFilter jwtFilter;
+	
 	@Autowired
 	private GoogleSuccessHandler googleSuccessHandler;
 
@@ -39,8 +42,8 @@ public class SecurityConfig implements WebMvcConfigurer {
 
 								,"/agent-ws/**",
 								"/api/messages/send",
-								"/database/create-mysql-container"
-								// "/ws/collab/**"
+								"/database/create-mysql-container",
+								"/ws/collab/**"
 							)
 						.permitAll().anyRequest().authenticated())
 

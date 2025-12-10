@@ -6,6 +6,8 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.Room;
+import backend.collab.snapshot.SnapshotService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -25,16 +27,14 @@ public interface RoomManager {
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 class RoomManagerImpl implements RoomManager {
 
-	@Autowired
-	private UpdateWriter updateWriter;
+	private final UpdateWriter updateWriter;
 
-	@Autowired
-	private SnapshotService snapshotService;
+	private final SnapshotService snapshotService;
 
-	@Autowired
-	private RedisStreamService redisService;
+	private final RedisStreamService redisService;
 
 	private final Map<String, Room> activeRooms = new ConcurrentHashMap<>();
 

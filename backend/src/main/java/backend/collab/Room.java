@@ -34,12 +34,14 @@ public class Room implements IRoom {
 	/* Thread-safe Set to store the active WebSocket sessions */
 	private final Set<WebSocketSession> sessions;
 	
-	private String lastSnapshot;
+	/**
+	 * Id of the user that the snapshots will be only accepted from him
+	 */
+	private int leaderId;
 
 	public Room(String diagramId) {
 		this.sessions = Collections.synchronizedSet(new HashSet<>());
 		this.diagramId = diagramId;
-		this.lastSnapshot = "";
 	}
 
 	@Override
@@ -72,6 +74,10 @@ public class Room implements IRoom {
 		sessions.add(session);
 	}
 
+	private void setLeader() {
+		// sessions.
+	}
+
 	/**
 	 * Removes a session from the room.
 	 * 
@@ -80,7 +86,10 @@ public class Room implements IRoom {
 	 */
 	@Override
 	public boolean removeSession(WebSocketSession session) {
-		return sessions.remove(session);
+		boolean exist = sessions.remove(session);
+		if (exist && !isEmpty())
+			setLeader();
+		return exist;	
 	}
 
 	/**

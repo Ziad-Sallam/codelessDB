@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.sql.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,8 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import backend.collab.services.SnapshotService;
-import backend.collab.updateDto.DiagramUpdateRequestDto;
+import backend.collab.snapshot.SnapshotDto;
+import backend.collab.snapshot.SnapshotService;
 import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.UserDiagram;
@@ -23,6 +24,7 @@ import backend.entities.joins.UserDiagramId;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.userDiagramManagement.dto.DiagramDto;
+import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
 import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
@@ -74,9 +76,9 @@ public class CollabTest {
 	// ------------------------------------------------------------
 	@Test
 	void updateDiagram_success() {
-		DiagramUpdateRequestDto request = new DiagramUpdateRequestDto();
-		request.setName("Updated");
-		request.setJsonContent(new byte[0]);
+		// DiagramUpdateRequestDto request = new DiagramUpdateRequestDto();
+		// request.setName("Updated");
+		// request.setJsonContent(new byte[0]);
 
 		when(userRepository.findById(1)).thenReturn(user);
 		when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
@@ -84,9 +86,9 @@ public class CollabTest {
 				.thenReturn(Optional.of(ownerLink));
 		when(diagramRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-		Date updated = service.takeSnapshot(1, request, diagram.getId());
+		service.takeSnapshot(1, diagram.getId(), new byte[0]);
 
-		assertNotNull(updated);
+		// assertNotNull(updated);
 		assertEquals("Updated", diagram.getName());
 		assertEquals("{updated}", diagram.getContent());
 	}
@@ -101,25 +103,40 @@ public class CollabTest {
 				.thenReturn(Optional.of(ownerLink));
 
 		assertThrows(DiagramException.PermissionDeniedException.class,
-				() -> service.takeSnapshot(1, new DiagramUpdateRequestDto(), diagram.getId()));
+				() -> service.takeSnapshot(1, diagram.getId(), diagram.getContent()));
 	}
 
 	// ------------------------------------------------------------
-	// SEARCH BY ID
+	// SEARCH BY ID + UPDATES
 	// ------------------------------------------------------------
 	@Test
-	void searchById_success() {
+	void searchById_success_withUpdates() {
+		// Arrange
 		when(userRepository.findById(1)).thenReturn(user);
 		when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
 		when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
 				.thenReturn(Optional.of(ownerLink));
 
-		DiagramDto dto = service.searchDiagramById(1, diagram.getId());
+		// Mock snapshot and updates
+		byte[] snapshotBytes = "{json}".getBytes();
+		byte[] update1 = "update1".getBytes();
+		byte[] update2 = "update2".getBytes();
 
-		assertEquals(diagram.getId(), dto.getId());
-		assertEquals("Test Diagram", dto.getName());
-		assertEquals("{json}", dto.getContent());
-		assertEquals(Role.OWNER, dto.getRole());
+		// when(diagramUpdateRepository.findAllUpdateDataByDiagramId(diagram.getId()))
+		// 		.thenReturn(List.of(update1, update2));
+
+		// Act
+		SnapshotDto dto = service.getLatestDiagram(1, diagram.getId());
+
+		// Assert
+		// assertEquals(diagram.getId(), dto.getId());
+		// assertEquals("Test Diagram", dto.getName());
+		assertArrayEquals(snapshotBytes, dto.getSnapshot()); // snapshot check
+		// assertEquals(Role.OWNER, dto.getRole());
+
+		// updates check
+		assertEquals(2, dto.getUpdates().size());
+		assertArrayEquals(update1, dto.getUpdates().get(0));
+		assertArrayEquals(update2, dto.getUpdates().get(1));
 	}
-
 }

@@ -3,8 +3,8 @@ package backend.collab;
 import backend.collab.Room;
 import backend.collab.services.RedisStreamService;
 import backend.collab.services.RoomManager;
-import backend.collab.services.SnapshotService;
 import backend.collab.services.UpdateWriter;
+import backend.collab.snapshot.SnapshotService;
 
 import org.junit.jupiter.api.*;
 import org.mockito.*;
