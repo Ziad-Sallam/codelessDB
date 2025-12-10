@@ -21,9 +21,9 @@ public class LoggingAspect {
       execution(* backend.userDiagramManagement.controller.UserDiagramController.*(..)) ||
       execution(* backend.userDiagramManagement.service.UserDiagramService.*(..)) ||
       execution(* backend.SQLGeneration.controller.SchemaController.*(..)) ||
-      execution(* backend.collab..*(..))
+      execution(* backend.collab..*(..)) ||
+      execution(* backend.config..*(..))
    """;
-      // execution(* backend.config..*(..))
 
    // Log method entry
    @Before(LOG_FILES)

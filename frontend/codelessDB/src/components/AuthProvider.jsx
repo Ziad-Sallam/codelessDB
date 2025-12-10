@@ -22,10 +22,12 @@ export function AuthProvider({ children }) {
 
         if (data) setUser(data);
         else localStorage.removeItem("authToken");
+      
       } catch (err) {
         console.error("Auth validation failed:", err);
         localStorage.removeItem("authToken");
         setUser(null);
+      
       } finally {
         setLoading(false);
       }

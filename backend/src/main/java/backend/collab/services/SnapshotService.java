@@ -23,7 +23,7 @@ public class SnapshotService {
 	private final UserDiagramService userDiagramService;
 
 	@Transactional
-	public Date updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
+	public Date takeSnapshot(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
 		userDiagramService.getUserOrThrow(userId);
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
 		UserDiagram userDiagram = userDiagramService.getUserDiagramOrThrow(userId, diagramId);

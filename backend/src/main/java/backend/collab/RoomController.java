@@ -36,13 +36,13 @@ public class RoomController {
 		return ResponseEntity.ok(result);
 	}
 
-	@PutMapping("/update/{id}")
+	@PutMapping("/snapshot/{id}")
 	public ResponseEntity<DiagramUpdateResponseDto> saveState(
 			@AuthenticationPrincipal AuthUser authUser,
 			@PathVariable UUID id,
 			@RequestBody DiagramUpdateRequestDto request) {
 
-		Date updateDate = snapshotService.updateDiagram(authUser.userId(), request, id);
+		Date updateDate = snapshotService.takeSnapshot(authUser.userId(), request, id);
 
 		return ResponseEntity.ok(new DiagramUpdateResponseDto(
 				"Diagram updated successfully",

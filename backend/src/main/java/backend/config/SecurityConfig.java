@@ -39,8 +39,8 @@ public class SecurityConfig implements WebMvcConfigurer {
 
 								,"/agent-ws/**",
 								"/api/messages/send",
-								"/database/create-mysql-container",
-								"/ws/collab/**"
+								"/database/create-mysql-container"
+								// "/ws/collab/**"
 							)
 						.permitAll().anyRequest().authenticated())
 
