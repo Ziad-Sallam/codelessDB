@@ -114,7 +114,6 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         publicDiagramRepository.save(publicDiagram);
     }
 
-
     @Transactional
     public PublicDiagramDto viewPublicDiagram(int userId, UUID diagramId) {
 
@@ -129,7 +128,9 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
 
         List<ContributorDto> contributors = userDiagramService.getContributors(diagramId);
 
-        return PublicDiagramDto.toDto(diagram, publicDiagram, contributors);
+        boolean isStared = starRepository.existsById(new PublicDiagramUserId(userId, diagramId));
+
+        return PublicDiagramDto.toDto(diagram, publicDiagram, contributors, isStared);
     }
 
     @Override
