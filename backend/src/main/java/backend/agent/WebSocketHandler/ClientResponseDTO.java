@@ -2,6 +2,11 @@ package backend.agent.WebSocketHandler;
 
 import java.util.List;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class ClientResponseDTO {
 
     private String correlationId;
@@ -60,57 +65,6 @@ public class ClientResponseDTO {
 
     }
 
-    public int getRowCount() {
-        return rowCount;
-    }
-    public void setRowCount(int rowsAffected) {
-        this.rowCount = rowsAffected;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-
-    public String getCorrelationId() {
-        return correlationId;
-    }
-
-    public void setCorrelationId(String correlationId) {
-        this.correlationId = correlationId;
-    }
-
-
-    public String getType() {
-        return type;
-    }
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public List<String> getColumns() {
-        return columns;
-    }
-    public void setColumns(List<String> columns) {
-        this.columns = columns;
-    }
-
-    public List<List<Object>> getRows() {
-        return rows;
-    }
-    public void setRows(List<List<Object>> rows) {
-        this.rows = rows;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-    public void setMessage(String message) {
-        this.message = message;
-    }
 
     @Override
     public String toString() {

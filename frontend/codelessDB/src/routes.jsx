@@ -5,6 +5,9 @@ import Schema from './pages/schemaDrawing/schema.jsx';
 import UserProfile from './pages/userprofile/UserProfile.jsx';
 
 import {ProtectedRoute, PublicRoute} from "./components/Routing.jsx";
+import DatabaseManager from './pages/databaseConfiguration/DatabaseManager.js';
+import TopBar from './components/TopBar.jsx';
+import LeftPanel from './components/LeftPanel';
 
 export const routes = [
   {
@@ -56,6 +59,14 @@ export const routes = [
     element: (
       <ProtectedRoute>
         <UserProfile />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/database-configuration",
+    element: (
+      <ProtectedRoute>
+        <DatabaseManager />
       </ProtectedRoute>
     ),
   },
