@@ -38,6 +38,15 @@ export const cannedQueriesApi = {
   },
 };
 export const databaseApi = {
+    getUserDatabases: async () => {
+      const response = await axios.get('http://localhost:8080/database/get-user-databases', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      return response.data;
+    },
   createDatabase: async (databaseData) => {
     const response = await api.post('/database/create', databaseData);
     return response.data;

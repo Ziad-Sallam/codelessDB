@@ -5,17 +5,18 @@ import LeftPanel from "../../components/LeftPanel";
 import TopBars from "../../components/Topbarforcannedquery";
 import QueryCard from "../../components/QueryCard";
 import QueryDialog from "../../components/QueryDialog";
+import DatabaseSelector from "../../components/DatabaseSelector";
 import { cannedQueriesApi } from "./cannedQueriesApi";
 import "./CannedQueries.css";
 
 export default function CannedQueriesPage() {
   const [queries, setQueries] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentDatabaseId] = useState(1); ///////////////////
-  const [currentDatabaseName] = useState("ProductionDB"); //////////////////////
+  const [currentDatabaseId, setCurrentDatabaseId] = useState(null);
+  const [currentDatabaseName, setCurrentDatabaseName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingQuery, setEditingQuery] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -23,7 +24,9 @@ export default function CannedQueriesPage() {
   });
 
   useEffect(() => {
-    fetchQueries();
+    if (currentDatabaseId) {
+      fetchQueries();
+    }
   }, [currentDatabaseId]);
 
   const fetchQueries = async () => {
@@ -51,6 +54,12 @@ export default function CannedQueriesPage() {
       setLoading(false);
     }
   };
+
+  const handleDatabaseChange = (databaseId, databaseName) => {
+    setCurrentDatabaseId(databaseId);
+    setCurrentDatabaseName(databaseName);
+  };
+
   const filteredQueries = useMemo(() => {
     return queries.filter((query) => {
       const s = searchTerm.toLowerCase();
@@ -62,14 +71,25 @@ export default function CannedQueriesPage() {
       );
     });
   }, [queries, searchTerm]);
+
   const handleCreate = () => {
+    if (!currentDatabaseId) {
+      setSnackbar({
+        open: true,
+        message: "Please select a database first",
+        severity: "warning",
+      });
+      return;
+    }
     setEditingQuery(null);
     setDialogOpen(true);
   };
+
   const handleEdit = (query) => {
     setEditingQuery(query);
     setDialogOpen(true);
   };
+
   const handleDelete = async (id) => {
     try {
       await cannedQueriesApi.deleteQuery(id, currentDatabaseId);
@@ -88,6 +108,7 @@ export default function CannedQueriesPage() {
       });
     }
   };
+
   const handleSave = async (formData) => {
     try {
       if (editingQuery) {
@@ -155,27 +176,11 @@ export default function CannedQueriesPage() {
       });
     }
   };
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
-  if (loading) {
-    return (
-      <Box className="canned-queries-container" sx={{ display: "flex" }}>
-        <LeftPanel />
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100vh",
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      </Box>
-    );
-  }
+
   return (
     <Box className="canned-queries-container" sx={{ display: "flex" }}>
       <LeftPanel />
@@ -186,7 +191,9 @@ export default function CannedQueriesPage() {
             <Box>
               <Box className="canned-queries-title-row">
                 <h1 className="canned-queries-title">Canned Queries</h1>
-                <span className="database-badge">{currentDatabaseName}</span>
+                {currentDatabaseName && (
+                  <span className="database-badge">{currentDatabaseName}</span>
+                )}
               </Box>
               <p className="canned-queries-subtitle">
                 Manage predefined query patterns for your schema
@@ -198,23 +205,45 @@ export default function CannedQueriesPage() {
                 startIcon={<AddIcon />}
                 className="new-query-button"
                 onClick={handleCreate}
+                disabled={!currentDatabaseId}
                 sx={{ textTransform: "none" }}
               >
                 New Query
               </Button>
             </div>
           </Box>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            {filteredQueries.map((q) => (
-              <QueryCard
-                key={q.id}
-                query={q}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-          {filteredQueries.length === 0 && (
+
+          <Box sx={{ mb: 3, maxWidth: 400 }}>
+            <DatabaseSelector
+              value={currentDatabaseId}
+              onChange={handleDatabaseChange}
+            />
+          </Box>
+          {loading && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                py: 8,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+          {!loading && currentDatabaseId && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+              {filteredQueries.map((q) => (
+                <QueryCard
+                  key={q.id}
+                  query={q}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+          {!loading && currentDatabaseId && filteredQueries.length === 0 && (
             <Box
               sx={{
                 textAlign: "center",
@@ -228,6 +257,18 @@ export default function CannedQueriesPage() {
                   ? "Create your first canned query to get started."
                   : "Try adjusting your search or create a new query."}
               </p>
+            </Box>
+          )}
+          {!loading && !currentDatabaseId && (
+            <Box
+              sx={{
+                textAlign: "center",
+                py: 8,
+                color: "text.secondary",
+              }}
+            >
+              <h3>Select a database</h3>
+              <p>Choose a database from the dropdown above to view and manage its canned queries.</p>
             </Box>
           )}
         </Box>
