@@ -38,7 +38,9 @@ public class SecurityConfig implements WebMvcConfigurer {
 								"/login/oauth2/**"
 
 								,"/agent-ws/**",
-								"/database/create-mysql-container"
+								"/database/create-mysql-container",
+								"/agent/create-container",
+								"/agent/communicate"
 							)
 						.permitAll().anyRequest().authenticated())
 
