@@ -126,14 +126,14 @@ export default function CannedQueriesPage() {
           queries.map((q) =>
             q.id === editingQuery.id
               ? {
-                  id: updatedQuery.id,
-                  title: updatedQuery.name,
-                  description: updatedQuery.description,
-                  body: updatedQuery.query,
-                  database: updatedQuery.databaseName,
-                  createdAt: new Date(updatedQuery.createdAt),
-                  updatedAt: new Date(updatedQuery.updatedAt),
-                }
+                id: updatedQuery.id,
+                title: updatedQuery.name,
+                description: updatedQuery.description,
+                body: updatedQuery.query,
+                database: updatedQuery.databaseName,
+                createdAt: new Date(updatedQuery.createdAt),
+                updatedAt: new Date(updatedQuery.updatedAt),
+              }
               : q
           )
         );
@@ -181,11 +181,19 @@ export default function CannedQueriesPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const handleSaveError = (errorMessage) => {
+    setSnackbar({
+      open: true,
+      message: errorMessage,
+      severity: "warning",
+    });
+  };
+
   return (
     <Box className="canned-queries-container" sx={{ display: "flex" }}>
       <LeftPanel />
       <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
-        <TopBars loadDiagrams={() => {}} />
+        <TopBars loadDiagrams={() => { }} />
         <Box sx={{ p: 3 }}>
           <Box className="canned-queries-header">
             <Box>
@@ -278,6 +286,7 @@ export default function CannedQueriesPage() {
         onClose={() => setDialogOpen(false)}
         query={editingQuery}
         onSave={handleSave}
+        onSaveError={handleSaveError}
         databaseId={currentDatabaseId}
       />
       <Snackbar

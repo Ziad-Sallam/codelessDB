@@ -13,6 +13,7 @@ import {
 
 import StorageIcon from "@mui/icons-material/Storage";
 import SchemaIcon from '@mui/icons-material/Schema';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 
 import { useNavigate } from "react-router-dom";
 
@@ -36,8 +37,8 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 		>
 			<Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
 				<Box>
-					<Typography variant="h6" style={{fontWeight:"600",fontSize:"28px", fontFamily: 'Poppins', color: "#cadfffff"}}>CodelessDB</Typography>
-					<Typography variant="caption" sx={{ opacity: 1, fontSize:"13px" }}>
+					<Typography variant="h6" style={{ fontWeight: "600", fontSize: "28px", fontFamily: 'Poppins', color: "#cadfffff" }}>CodelessDB</Typography>
+					<Typography variant="caption" sx={{ opacity: 1, fontSize: "13px" }}>
 						Shared workspace
 					</Typography>
 				</Box>
@@ -89,6 +90,17 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 						<StorageIcon />
 					</ListItemIcon>
 					<ListItemText primary="Servers" />
+				</ListItemButton>
+
+				<ListItemButton
+					selected={leftNav === "cannedQueries"}
+					onClick={() => navigate('/canned-queries')}
+					sx={{ borderRadius: 1, mb: 1 }}
+				>
+					<ListItemIcon sx={{ color: "white" }}>
+						<ListAltIcon />
+					</ListItemIcon>
+					<ListItemText primary="Canned Queries" />
 				</ListItemButton>
 
 			</List>

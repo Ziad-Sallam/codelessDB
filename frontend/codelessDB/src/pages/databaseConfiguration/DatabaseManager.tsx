@@ -5,6 +5,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import axios from "axios";
 import { useNotification } from '../../components/NotificationContext';
+import { useNavigate } from 'react-router-dom';
 
 
 interface ServerType {
@@ -23,7 +24,9 @@ interface DatabaseConfig {
 interface ServerFormData {
   serverName: string;
 }
-const API_BASE_URL = "http://localhost:8080";
+
+
+const API_BASE_URL: string = import.meta.env.VITE_BACKEND_URL;
 
 const serverApi = {
   async getUserServers(): Promise<ServerType[]> {
@@ -62,7 +65,7 @@ const serverApi = {
         }
       );
 
-      return response.data; // { serverId, serverName }
+      return response.data; 
 
     } catch (error: any) {
       console.error("Error creating server:", error);
@@ -109,11 +112,12 @@ const serverApi = {
 
 };
 
-const DatabaseManager: React.FC = () => {
+const DatabaseConfiguration: React.FC = () => {
   const [availableServers, setAvailableServers] = useState<ServerType[]>([]);
   const [isLoadingServers, setIsLoadingServers] = useState(true);
   const [leftNav, setLeftNav] = useState("all");
   const { showSuccess, showError } = useNotification();
+  const navigate = useNavigate();
   const [database, setDatabase] = useState<DatabaseConfig>({
 
     databaseName: '',
@@ -270,6 +274,7 @@ const DatabaseManager: React.FC = () => {
         databaseName: '',
         databasePassword: ''
       }))
+      navigate(`/database-manager/${result.databaseId}`);
     } catch (error: any) {
       showError(error.message);
     }
@@ -505,4 +510,4 @@ const DatabaseManager: React.FC = () => {
   );
 };
 
-export default DatabaseManager;
+export default DatabaseConfiguration;

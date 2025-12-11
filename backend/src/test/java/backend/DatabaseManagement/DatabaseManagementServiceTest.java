@@ -1,6 +1,7 @@
 package backend.DatabaseManagement;
 
 
+import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.CreateDatabaseDTO;
 import backend.databaseManagement.CreateServerDTO;
 import backend.databaseManagement.DatabaseManagementService;
@@ -30,14 +31,16 @@ class DatabaseManagementServiceTest {
     private UserRepository userRepository;
     private DatabaseManagementService service;
     private ServerRepository serverRepository;
+    private OnlineUserTracker tracker;
 
     @BeforeEach
     void setUp() {
         userDatabaseRepository = mock(UserDatabaseRepository.class);
         userRepository = mock(UserRepository.class);
         serverRepository = mock(ServerRepository.class);
+        tracker = mock(OnlineUserTracker.class);
         
-        service = new DatabaseManagementService(userDatabaseRepository, userRepository, serverRepository);
+        service = new DatabaseManagementService(userDatabaseRepository, userRepository, serverRepository, tracker);
     }
 
     @Test

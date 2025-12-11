@@ -1,8 +1,8 @@
 import axios from "axios";
-
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const getSignature = async (publicId) => {
   const response = await axios.get(
-    `http://localhost:8080/user/signature/upload?publicId=${publicId}`
+    API_BASE_URL +`/user/signature/upload?publicId=${publicId}`
   );
   return response.data;
 };

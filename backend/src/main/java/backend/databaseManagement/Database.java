@@ -11,5 +11,6 @@ public class Database{
     private String databaseName;
     private String serverName;
     private String databaseddl;
+    private boolean isConnected;
 
 }
