@@ -88,7 +88,9 @@ public class UserDiagramService implements IUserDiagramService {
                 .map(ud -> DiagramInfoDto.toDto(
                         ud.getDiagram(),
                         ud.getRole(),
-                        getContributors(ud.getDiagram().getId())));
+                        getContributors(ud.getDiagram().getId()),
+                        ud.getDiagram().getPublicDiagram() != null)
+                );
     }
 
     @Override
@@ -105,7 +107,7 @@ public class UserDiagramService implements IUserDiagramService {
                 .build();
 
         userDiagramRepository.save(join);
-        return DiagramInfoDto.toDto(diagram, Role.OWNER, getContributors(diagram.getId()));
+        return DiagramInfoDto.toDto(diagram, Role.OWNER, getContributors(diagram.getId()), false);
     }
 
     @Override
@@ -197,7 +199,8 @@ public class UserDiagramService implements IUserDiagramService {
                 .map(ud -> DiagramInfoDto.toDto(
                         ud.getDiagram(),
                         ud.getRole(),
-                        getContributors(ud.getDiagram().getId())
+                        getContributors(ud.getDiagram().getId()),
+                        ud.getDiagram().getPublicDiagram() != null
                 ));
     }
 

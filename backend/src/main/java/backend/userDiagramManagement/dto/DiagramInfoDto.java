@@ -32,7 +32,9 @@ public class DiagramInfoDto {
     private Role role;
     private List<ContributorDto> contributorDtos;
 
-    public static DiagramInfoDto toDto(Diagram diagram, Role role, List<ContributorDto> contributorDtos) {
+    private boolean isPublic;
+
+    public static DiagramInfoDto toDto(Diagram diagram, Role role, List<ContributorDto> contributorDtos,  boolean isPublic) {
         return DiagramInfoDto
                 .builder()
                 .role(role)
@@ -42,6 +44,7 @@ public class DiagramInfoDto {
                 .createdAt(diagram.getCreatedAt())
                 .lastModified(diagram.getLastModified())
                 .contributorDtos(contributorDtos)
+                .isPublic(isPublic)
                 .build();
     }
 }
