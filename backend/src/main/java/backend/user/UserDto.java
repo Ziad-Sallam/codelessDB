@@ -2,6 +2,7 @@ package backend.user;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,6 +26,8 @@ public class UserDto {
 	private String bio;
 	private String publicProfile;
 	private String profileWebsiteUrl;
+	private int aiQuotaRemaining;
+	private LocalDate aiQuotaResetDate;
 
 	public UserDto(User user) {
 		this.username = user.getUsername();
@@ -35,5 +38,7 @@ public class UserDto {
 		this.bio = user.getBio();
 		this.publicProfile = user.getPublicProfile();
 		this.profileWebsiteUrl = user.getProfileWebsiteUrl();
+		this.aiQuotaRemaining = user.getAiQuotaRemaining();
+		this.aiQuotaResetDate = user.getAiQuotaResetDate();
 	}
 }

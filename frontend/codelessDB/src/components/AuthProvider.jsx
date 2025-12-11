@@ -34,9 +34,15 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
+  // Function to update user quota after AI optimization
+  const updateUserQuota = (newQuota) => {
+    if (user) {
+      setUser({ ...user, aiQuotaRemaining: newQuota });
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider value={{ user, setUser, loading, updateUserQuota }}>
       {children}
     </AuthContext.Provider>
   );

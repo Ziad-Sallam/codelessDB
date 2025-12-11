@@ -3,6 +3,11 @@ package backend.entities;
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
@@ -47,6 +52,15 @@ public class User {
 
         @Column(length = 300)
         private String bio;
+    // AI Quota fields
+        @Column(nullable = false)
+        private int aiQuotaRemaining = 5;
+
+        @Column
+        private LocalDate aiQuotaResetDate;
+
+        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+        private Set<UserDiagram> userDiagrams = new HashSet<>();
 
         private String profileWebsiteUrl;
 
@@ -67,10 +81,6 @@ public class User {
         @JoinTable(name = "user_following", joinColumns = @JoinColumn(name = "follower_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
         private Set<User> following = new HashSet<>();
 
-
-        @JsonIgnore
-        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-        private Set<UserDiagram> userDiagrams = new HashSet<>();
 
 
         @JsonIgnore
