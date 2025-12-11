@@ -13,7 +13,7 @@ public class SnapshotDto {
 	
 	private List<byte[]> updates;
 
-	private String username;	
+	private String diagramName;	
 	
 	private Role role;
 }

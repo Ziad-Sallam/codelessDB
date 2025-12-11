@@ -6,12 +6,16 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.Room;
+import backend.collab.snapshot.DiagramPendingUpdateRepository;
 import backend.collab.snapshot.SnapshotService;
+import backend.entities.DiagramPendingUpdate;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -34,6 +38,8 @@ class RoomManagerImpl implements RoomManager {
 
 	private final SnapshotService snapshotService;
 
+	private final DiagramPendingUpdateRepository updatesRepository;
+
 	private final RedisStreamService redisService;
 
 	private final Map<String, Room> activeRooms = new ConcurrentHashMap<>();
@@ -44,6 +50,18 @@ class RoomManagerImpl implements RoomManager {
 		room.addSession(session);
 	}
 
+	@Transactional
+	private void insertUpdates(String diagramId, List<byte[]> updates) {
+		List<DiagramPendingUpdate> entities = updates.stream()
+				.map(update -> DiagramPendingUpdate.builder()
+						.diagramId(diagramId)
+						.updateData(update)
+						.build())
+				.toList();
+
+		updatesRepository.saveAll(entities);
+	}
+
 	@Override
 	public void leaveRoom(String roomId, WebSocketSession session) {
 		Room room = activeRooms.get(roomId);
@@ -52,6 +70,9 @@ class RoomManagerImpl implements RoomManager {
 			room.removeSession(session);
 			if (room.isEmpty()) {
 				activeRooms.remove(roomId);
+				// add redis updates in the DB updates table
+				List<byte[]> pendingUpdates = redisService.getAllUpdates(roomId);
+				insertUpdates(roomId, pendingUpdates);
 			}
 		}
 	}

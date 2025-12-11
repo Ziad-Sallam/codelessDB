@@ -33,12 +33,13 @@ public class SnapshotService {
 	private final RedisStreamService redisService;
 
 	public SnapshotDto getLatestDiagram(int userId, UUID diagramId) {
-		String username = userDiagramService.getUserOrThrow(userId).getUsername();
+		userDiagramService.getUserOrThrow(userId);
 		Role role = userDiagramService.getUserDiagramOrThrow(userId, diagramId).getRole();
 		
-		byte[] snapshot = userDiagramService.getDiagramOrThrow(diagramId).getContent();
+		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
+		byte[] snapshot = diagram.getContent();
 		List<byte[]> updates = updatesRepository.findAllUpdateDataByDiagramId(diagramId.toString());
-		return new SnapshotDto(snapshot, updates, username, role);
+		return new SnapshotDto(snapshot, updates, diagram.getName(), role);
 	}
 	
 	public void takeSnapshot(int userId, UUID diagramId, byte[] state) {
