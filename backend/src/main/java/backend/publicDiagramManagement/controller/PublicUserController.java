@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PublicUserController {
 
-    PublicUserService publicUserService;
+    private final PublicUserService publicUserService;
 
     @GetMapping("/designerProfile/{userName}")
     public ResponseEntity<?> getDesignerProfile(
@@ -43,7 +43,6 @@ public class PublicUserController {
 
         return ResponseEntity.ok(publicUserDto);
     }
-
 
     @GetMapping("/staredDiagrams/{userName}")
     public ResponseEntity<?> getStaredDiagram(

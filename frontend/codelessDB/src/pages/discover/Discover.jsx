@@ -63,7 +63,7 @@ export default function Discover() {
     try {
       const [diagramsResp, usersResp] = await Promise.all([
         fetchPublicDiagrams(page - 1, ITEMS_PER_PAGE, searchQuery, selectedHashtags),
-        fetchPublicUsers(page - 1, ITEMS_PER_PAGE, searchQuery, selectedHashtags)
+        fetchPublicUsers(0, ITEMS_PER_PAGE, searchQuery, selectedHashtags)
       ]);
 
       setPublicDiagrams(diagramsResp.content || []);
@@ -104,6 +104,10 @@ export default function Discover() {
     navigate(`/schema/preview/${s.diagramId}`);
   };
 
+  const handlePublishDiagram = () => {
+    navigate(`/schema/create`);
+  };
+
   return (
     <Box sx={{
       display: "flex",
@@ -127,37 +131,40 @@ export default function Discover() {
         <Box sx={{ flexGrow: 1, overflowY: "auto", pb: 4 }}>
 
           {/* Filters */}
-            <Box sx={{  px: 3,pt: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TrendingUpIcon color="primary" fontSize="small" />
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    Filter by Tags
-                  </Typography>
-                </Box>
-                <Button
+          <Box sx={{ px: 3, pt: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TrendingUpIcon color="primary" fontSize="small" />
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Filter by Tags
+                </Typography>
+              </Box>
+              {/* <Button
                   size="small"
                   onClick={() => setShowFilters(!showFilters)}
                   startIcon={!showFilters && <FilterIcon />}
                 >
                   {showFilters ? "Hide Filters" : "Show Filters"}
-                </Button>
-              </Box>
-
-              {showFilters && (
-                <CardContent>
-                  <HashtagInput
-                    hashtags={hashtags}
-                    selectedHashtags={selectedHashtags}
-                    onSelect={setSelectedHashtags}
-                  />
-                </CardContent>
-              )}
+                </Button> */}
+              <Button variant="contained" sx={{ marginLeft: "auto", mr: 2 }} onClick={handlePublishDiagram}>
+                Publish Diagram
+              </Button>
             </Box>
 
-            <Divider sx={{ mb: 2 }} />
+            {showFilters && (
+              <CardContent>
+                <HashtagInput
+                  hashtags={hashtags}
+                  selectedHashtags={selectedHashtags}
+                  onSelect={setSelectedHashtags}
+                />
+              </CardContent>
+            )}
+          </Box>
 
-          <Box sx={{ px: 3}}>
+          <Divider sx={{ mb: 2 }} />
+
+          <Box sx={{ px: 3 }}>
             <Box sx={{ mb: 2 }}>
               <UserCarousel users={featuredUsers} />
             </Box>

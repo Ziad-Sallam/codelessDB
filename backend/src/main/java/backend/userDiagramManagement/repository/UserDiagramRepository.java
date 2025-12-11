@@ -20,7 +20,8 @@ public interface UserDiagramRepository extends JpaRepository<UserDiagram, UserDi
     // 1. Find a single UserDiagram by user and diagram IDs
     Optional<UserDiagram> findByUser_IdAndDiagram_Id(int userId, UUID diagramId);
 
-    // 2. Search diagrams for a user with name containing and createdAt between dates, with pagination
+    // 2. Search diagrams for a user with name containing and createdAt between
+    // dates, with pagination
     Page<UserDiagram> findAllByUser_IdAndDiagram_NameContainingIgnoreCaseAndDiagram_CreatedAtBetween(
             int userId,
             String diagramName,
@@ -42,11 +43,13 @@ public interface UserDiagramRepository extends JpaRepository<UserDiagram, UserDi
     UserDiagram findFirstByDiagram_Id(UUID diagramId);
 
     @Query("""
-        SELECT ud.diagram
-        FROM UserDiagram ud
-        WHERE ud.user.id = :userId
-          AND ud.role = backend.user.Role.OWNER
-          AND ud.diagram.publicDiagram IS NULL
-    """)
+                SELECT ud.diagram
+                FROM UserDiagram ud
+                WHERE ud.user.id = :userId
+                  AND ud.role = 'OWNER'
+                  AND NOT EXISTS (
+                    SELECT 1 FROM PublicDiagram pd WHERE pd.diagram.id = ud.diagram.id
+                  )
+            """)
     Page<Diagram> findUnpublishedDiagramsByUser(int userId, Pageable pageable);
 }

@@ -32,7 +32,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             JOIN ud.diagram d
             JOIN d.publicDiagram pd
             LEFT JOIN pd.hashtags h
-            WHERE (
+            WHERE ud.role = 'OWNER'
+            AND (
                 :search IS NULL
                 OR :search = ''
                 OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))

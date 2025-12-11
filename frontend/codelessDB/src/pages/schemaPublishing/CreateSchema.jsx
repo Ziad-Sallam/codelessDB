@@ -92,6 +92,23 @@ export default function CreateSchema() {
   };
 
   useEffect(() => {
+    const savedData = localStorage.getItem("schemaData");
+    if (savedData) {
+      try {
+        const schemaData = JSON.parse(savedData);
+        setSelectedDiagram(schemaData);
+        setSchemaName(schemaData.name);
+        setShortDescription(schemaData.shortDescription);
+        setDescription(schemaData.detailedDescription);
+        setSelectedHashtags(schemaData.hashtags || []);
+        setQueries(schemaData.cannedQueries || []);
+        // Clear localStorage after restoration to prevent stale data
+        localStorage.removeItem("schemaData");
+      } catch (err) {
+        console.error("Failed to restore schema data:", err);
+        localStorage.removeItem("schemaData");
+      }
+    }
     loadHashtags();
     loadToBePublished();
   }, []);
@@ -105,7 +122,7 @@ export default function CreateSchema() {
 
   const completionSteps = [
     { label: "Select Diagram", completed: !!selectedDiagram },
-    { label: "Schema Name", completed: !!schemaName.trim() },
+    // { label: "Schema Name", completed: !!schemaName.trim() },
     { label: "Description", completed: !!shortDescription.trim() },
     // { label: "Hashtags", completed: selectedHashtags.length > 0 },
   ];
@@ -117,10 +134,10 @@ export default function CreateSchema() {
       showError("Please select a diagram first");
       return;
     }
-    if (!schemaName.trim()) {
-      showError("Please enter a schema name");
-      return;
-    }
+    // if (!schemaName.trim()) {
+    //   showError("Please enter a schema name");
+    //   return;
+    // }
     if (!shortDescription.trim()) {
       showError("Please enter a short description");
       return;
@@ -148,6 +165,10 @@ export default function CreateSchema() {
   };
 
   const handlePreview = () => {
+    if (!selectedDiagram) {
+      showError("Select a diagram first");
+      return;
+    }
     const schemaData = {
       diagramId: selectedDiagram.diagramId,
       name: schemaName,
@@ -160,7 +181,8 @@ export default function CreateSchema() {
       ddl: selectedDiagram.ddl,
       cannedQueries: queries,
     };
-    navigate("/schema/preview/draft", { state: { schemaData } });
+    localStorage.setItem("schemaData", JSON.stringify(schemaData));
+    navigate("/schema/preview/draft");
   };
 
   return (
@@ -228,14 +250,14 @@ export default function CreateSchema() {
                     subheader="Provide essential details about your database schema"
                   />
                   <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <TextField
+                    {/* <TextField
                       label="Schema Name"
                       required
                       fullWidth
                       value={schemaName}
                       onChange={(e) => setSchemaName(e.target.value)}
                       placeholder="e.g., CollegeDB, HospitalManagement"
-                    />
+                    /> */}
                     <Box>
                       <TextField
                         label="Short Description"

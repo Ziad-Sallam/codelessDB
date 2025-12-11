@@ -227,7 +227,7 @@ export default function UserProfile() {
             <Card className="profile-info-card">
               <CardContent className="profile-info-content">
                 <Typography variant="h6" className="profile-info-title">Basic Info</Typography>
-                <ProfileField label="Username" field="username" icon={PersonIcon} editable={true} />
+                <ProfileField label="Username" field="username" icon={PersonIcon} editable={false} />
                 <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
                 <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline={true} rows={4} />
 

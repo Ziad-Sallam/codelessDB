@@ -48,22 +48,6 @@ import { ContributorsSection } from "./preview/ContributorsSection";
 import { AboutSection } from "./preview/AboutSection";
 import { QueriesSection } from "./preview/QueriesSection";
 
-// const mockSchema = {
-//   diagramId: "1",
-//   name: "E-Commerce System",
-//   thumbnail: null,
-//   shortDescription: "",
-//   detailedDescription: "",
-//   hashtags: [],
-//   createdAt: new Date(),
-//   lastModified: new Date(),
-//   stars: null,
-//   forks: null,
-//   views: null,
-//   ddl: "",
-//   contributors: null,
-//   cannedQueries: []
-// };
 
 export default function SchemaPreview() {
   const { id } = useParams();
@@ -77,16 +61,24 @@ export default function SchemaPreview() {
   const [leftNav, setLeftNav] = useState("public");
 
   const [schemaData, setSchemaData] = useState(null);
-  const [loading, setLoading] = useState(!location.state?.schemaData);
+  const [loading, setLoading] = useState(true);
   const [ddlContent, setDdlContent] = useState(schemaData?.ddl || "");
 
   useEffect(() => {
-    if (location.state?.schemaData) {
-      setSchemaData({
-        ...location.state.schemaData,
-        createdAt: new Date(),
-        lastModified: new Date(),
-      });
+    const savedData = localStorage.getItem("schemaData");
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setSchemaData({
+          ...parsedData,
+          createdAt: new Date(),
+          lastModified: new Date(),
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to parse schema data:", err);
+        setLoading(true);
+      }
       return;
     }
     const fetchData = async () => {
@@ -96,7 +88,7 @@ export default function SchemaPreview() {
       try {
         const data = await getPublicDiagram(id);
         setSchemaData(data);
-        setIsStarred(data.isStarred || false);
+        setIsStarred(data.stared || false);
       } catch (err) {
         showError(err.message);
       } finally {
@@ -174,7 +166,7 @@ export default function SchemaPreview() {
       <Box sx={{ flexGrow: 1 }} />
 
       {/* Actions */}
-      <Stack direction="row" spacing={1} sx={{ pr: 2 }}>
+      {id !== 'draft' && <Stack direction="row" spacing={1} sx={{ pr: 2 }}>
 
         <Button variant="outlined" size="small" startIcon={<ShareIcon />} onClick={handleShare}>
           Share
@@ -191,7 +183,7 @@ export default function SchemaPreview() {
         >
           {isStarred ? "Starred" : "Star"}
         </Button>
-      </Stack>
+      </Stack>}
     </Box>
   ) : null;
 

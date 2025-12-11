@@ -66,6 +66,8 @@ public class UserService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
+		newUser.setPublicProfile(userDto.getUsername());
+		
 
 		if (userDto.getPicture() != null) {
 			newUser.setPicture(userDto.getPicture());
