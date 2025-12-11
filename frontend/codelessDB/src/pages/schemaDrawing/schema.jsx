@@ -108,7 +108,7 @@ const SchemaContent = () => {
 
         const payload = {
           state: base64State,
-          diagramName: schemaName
+          diagramName: schemaName,
         };
 
         console.log(payload);
@@ -239,7 +239,7 @@ const SchemaContent = () => {
   };
 
   const onSaveDiagram = async () => {
-    if (!id) {
+    if (!roomId) {
       showError("Diagram ID is missing. Cannot save.");
       return;
     }
@@ -248,16 +248,19 @@ const SchemaContent = () => {
 
     const thumbnailPNG = await takeSnapshot();
 
-    const thumbnailURL = await uploadToCloudinary(thumbnailPNG, id);
+    const thumbnailURL = await uploadToCloudinary(thumbnailPNG, roomId);
+
+    const binaryState = Y.encodeStateAsUpdate(ydoc);
+    const base64State = uint8ArrayToBase64(binaryState);
 
     const payload = {
-      name: schemaName,
-      jsonContent: JSON.stringify({ nodes, edges }),
-      thumbnail: thumbnailURL,
+      diagramName: schemaName,
+      state: base64State,
+      picture: thumbnailURL,
     };
 
     try {
-      await updateDiagram(id, payload);
+      await updateDiagram(roomId, payload);
       await takeSnapshot();
       showSuccess("Diagram saved successfully!");
     } catch (err) {
@@ -305,6 +308,9 @@ const SchemaContent = () => {
       />
       <div className="active-users">
         <ActiveUsers />
+      </div>
+      <div >
+        <button className="save-btn"onClick={onSaveDiagram}>Save</button>
       </div>
 
       <div className="drawing-canva">
