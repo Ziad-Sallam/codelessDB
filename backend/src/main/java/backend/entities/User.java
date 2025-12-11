@@ -1,6 +1,7 @@
 package backend.entities;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +64,13 @@ public class User {
     @CreationTimestamp
     private Date createdAt;
 
+    // AI Quota fields
+    @Column(nullable = false)
+    private int aiQuotaRemaining = 5;
+
+    @Column
+    private LocalDate aiQuotaResetDate;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserDiagram> userDiagrams = new HashSet<>();
 
@@ -70,15 +78,10 @@ public class User {
     @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
     private List<Server> servers = new ArrayList<>();
 
-
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDatabase> ownedDatabases = new ArrayList<>();
 
     @ManyToMany
-    @JoinTable(
-        name = "user_database_access",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "database_id")
-    )
+    @JoinTable(name = "user_database_access", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "database_id"))
     private List<UserDatabase> accessibleDatabases = new ArrayList<>();
 }

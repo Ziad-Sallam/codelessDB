@@ -3,7 +3,10 @@ import CodeMirror from '@uiw/react-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import { optimizeSQLWithGemini } from "./optimize.js";
 import ConfirmationModal from '../../../components/ConfirmationModal/ConfirmationModal.jsx';
+import { useAuth } from '../../../components/AuthProvider.jsx';
 import './CodeEditor.css';
+
+const MAX_AI_QUOTA = parseInt(import.meta.env.VITE_MAX_AI_QUOTA) || 5;
 
 function CodeEditor({ initialCode, onClose }) {
   const [code, setCode] = useState(initialCode || '');
@@ -14,6 +17,26 @@ function CodeEditor({ initialCode, onClose }) {
   const [optimizationError, setOptimizationError] = useState('');
   const [showModal, setShowModal] = useState(false);
 
+  const { user, updateUserQuota } = useAuth();
+  const aiQuota = user?.aiQuotaRemaining ?? MAX_AI_QUOTA;
+
+  // Calculate time until quota reset (midnight)
+  const getResetTimeMessage = () => {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    const hoursUntilReset = Math.floor((tomorrow - now) / (1000 * 60 * 60));
+    const minutesUntilReset = Math.floor(((tomorrow - now) % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hoursUntilReset > 0) {
+      return `Resets in ${hoursUntilReset}h ${minutesUntilReset}m`;
+    } else {
+      return `Resets in ${minutesUntilReset}m`;
+    }
+  };
+
   const handleAIOptimize = async () => {
     setIsOptimizing(true);
     setOptimizationError('');
@@ -23,10 +46,20 @@ function CodeEditor({ initialCode, onClose }) {
       setOptimizedSQL(result.optimizedSQL);
       setOptimizationSummary(result.summary);
 
+      // Update quota in auth context
+      if (user) {
+        updateUserQuota(aiQuota - 1);
+      }
+
       setActiveTab('optimized');
       console.log('AI Optimize clicked - implement Gemini integration');
     } catch (error) {
-      setOptimizationError('Failed to optimize SQL. Please try again.');
+      // Check if it's a quota error
+      if (error.message && error.message.includes('quota')) {
+        setOptimizationError(error.message);
+      } else {
+        setOptimizationError('Failed to optimize SQL. Please try again.');
+      }
       console.error('Optimization error:', error);
     } finally {
       setIsOptimizing(false);
@@ -48,12 +81,12 @@ function CodeEditor({ initialCode, onClose }) {
   const handleClose = () => {
     setShowModal(true)
   }
-  
+
   const handleModalConfirm = () => {
-      setOptimizedSQL('');
-      setOptimizationSummary('');
-      onClose()
-      setShowModal(false);
+    setOptimizedSQL('');
+    setOptimizationSummary('');
+    onClose()
+    setShowModal(false);
   };
 
   const handleModalCancel = () => {
@@ -94,10 +127,20 @@ function CodeEditor({ initialCode, onClose }) {
 
           {activeTab === 'generated' && (
             <div className="ai-optimize-section">
+              <span style={{
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: '12px',
+                color: aiQuota <= 0 ? '#f44336' : '#666',
+                marginRight: '12px',
+                fontWeight: 500
+              }}>
+                {getResetTimeMessage()}
+              </span>
               <button
                 className="ai-optimize-btn"
                 onClick={handleAIOptimize}
-                disabled={isOptimizing || !code}
+                disabled={isOptimizing || !code || aiQuota <= 0}
               >
                 {isOptimizing ? (
                   <>
@@ -107,7 +150,7 @@ function CodeEditor({ initialCode, onClose }) {
                 ) : (
                   <>
                     <span className="ai-icon">✨</span>
-                    AI Optimize
+                    AI Optimize ({aiQuota}/{MAX_AI_QUOTA})
                   </>
                 )}
               </button>

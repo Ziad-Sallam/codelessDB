@@ -11,6 +11,7 @@ import backend.SQLOptimization.dto.OptimizeSQLRequest;
 import backend.SQLOptimization.dto.OptimizeSQLResponse;
 import backend.SQLOptimization.service.SQLOptimizationService;
 import backend.security.AuthUser;
+import backend.user.UserService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,12 +20,16 @@ import lombok.RequiredArgsConstructor;
 public class SQLOptimizationController {
 
     private final SQLOptimizationService optimizationService;
+    private final UserService userService;
 
     @PostMapping("/optimize-sql")
     public ResponseEntity<OptimizeSQLResponse> optimizeSQL(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody OptimizeSQLRequest request) {
-        
+
+        // Check and decrement AI quota before processing
+        userService.checkAndDecrementAiQuota(authUser.userId());
+
         OptimizeSQLResponse response = optimizationService.optimizeSQL(request.getSqlCode());
         return ResponseEntity.ok(response);
     }

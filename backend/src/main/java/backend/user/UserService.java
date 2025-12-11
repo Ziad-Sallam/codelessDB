@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import backend.entities.User;
 import backend.security.AuthUser;
+import backend.user.exceptions.UserException;
 import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
@@ -169,5 +170,58 @@ public class UserService {
 		} catch (Exception e) {
 			throw new OtpSendFailedException("Failed to send OTP. Please try again.");
 		}
+	}
+
+	/**
+	 * Reset AI quota to 5 if the date has changed since last reset
+	 */
+	private void resetAiQuotaIfNeeded(User user) {
+		java.time.LocalDate today = java.time.LocalDate.now();
+
+		if (user.getAiQuotaResetDate() == null || !user.getAiQuotaResetDate().equals(today)) {
+			user.setAiQuotaRemaining(5);
+			user.setAiQuotaResetDate(today);
+			userRepository.save(user);
+		}
+	}
+
+	/**
+	 * Check if user has AI quota remaining, reset if needed, and decrement quota
+	 * 
+	 * @param userId User ID
+	 * @throws UserException.QuotaExceededException if quota is 0
+	 */
+	@Transactional
+	public void checkAndDecrementAiQuota(int userId) {
+		User user = userRepository.findById(userId);
+		if (user == null) {
+			throw new UserNotFoundException("User not found");
+		}
+
+		// Reset quota if date has changed
+		resetAiQuotaIfNeeded(user);
+
+		// Check if quota is available
+		if (user.getAiQuotaRemaining() <= 0) {
+			throw new UserException.QuotaExceededException(
+					"Daily AI quota exceeded. You have 0 requests remaining. Quota resets at midnight.");
+		}
+
+		// Decrement quota
+		user.setAiQuotaRemaining(user.getAiQuotaRemaining() - 1);
+		userRepository.save(user);
+	}
+
+	/**
+	 * Get current AI quota for a user (with reset check)
+	 */
+	public int getAiQuota(int userId) {
+		User user = userRepository.findById(userId);
+		if (user == null) {
+			throw new UserNotFoundException("User not found");
+		}
+
+		resetAiQuotaIfNeeded(user);
+		return user.getAiQuotaRemaining();
 	}
 }
