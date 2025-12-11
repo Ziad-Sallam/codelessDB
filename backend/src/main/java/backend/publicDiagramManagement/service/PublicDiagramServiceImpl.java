@@ -57,8 +57,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         PublicDiagram pd = diagram.getPublicDiagram();
         if (pd == null) {
             throw new PublicDiagramException.DiagramNotFoundException(
-                    "Public diagram not found " + diagram.getId()
-            );
+                    "Public diagram not found " + diagram.getId());
         }
         return pd;
     }
@@ -67,15 +66,13 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     @Transactional
     public void publishDiagram(int userId, PublishDiagramRequestDto dto) {
 
-        UserDiagram userDiagram =
-        userDiagramService.getUserDiagramOrThrow(userId, dto.getDiagramId());
+        UserDiagram userDiagram = userDiagramService.getUserDiagramOrThrow(userId, dto.getDiagramId());
 
         userDiagramService.checkOwner(userDiagram, "publish");
 
         Diagram diagram = userDiagram.getDiagram();
 
-        PublicDiagram publicDiagram =
-        publicDiagramRepository.findById(diagram.getId())
+        PublicDiagram publicDiagram = publicDiagramRepository.findById(diagram.getId())
                 .orElseGet(() -> {
                     PublicDiagram pd = new PublicDiagram();
                     pd.setDiagram(diagram);
@@ -91,12 +88,10 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         publicDiagram.setDetailedDescription(dto.getDetailedDescription());
 
         // Hashtags
-        Set<Hashtag> hashtags =
-        hashtagService.resolveHashtags(new HashSet<>(dto.getHashTags()));
+        Set<Hashtag> hashtags = hashtagService.resolveHashtags(new HashSet<>(dto.getHashTags()));
         publicDiagram.setHashtags(hashtags);
         // Canned Queries
-        Set<CannedQueriesDiagrams> cannedQueries =
-        dto.getCannedQueries().stream()
+        Set<CannedQueriesDiagrams> cannedQueries = dto.getCannedQueries().stream()
                 .map(q -> {
                     CannedQueriesDiagrams e = new CannedQueriesDiagrams();
                     e.setName(q.getName());
@@ -189,8 +184,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
                 .lastModified(d.getLastModified())
                 .ddl(d.getDdl())
                 .contributors(userDiagramService.getContributors(d.getId()))
-                .build()
-        );
+                .build());
     }
 
     @Override
@@ -203,8 +197,6 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
             return PublicDiagramInfoDto.toDto(publicDiagram, contributors);
         });
     }
-
-
 
     @Override
     @Transactional
@@ -312,6 +304,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     }
 
     @Override
+    @Transactional
     public void unPublishPublicDiagram(int userId, @NonNull UUID diagramId) {
 
         UserDiagram userDiagram = userDiagramService.getUserDiagramOrThrow(userId, diagramId);
@@ -321,14 +314,19 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
 
         if (publicDiagram == null) {
             throw new PublicDiagramException.DiagramNotFoundException(
-                    "The diagram is not public, so it cannot be unpublished."
-            );
+                    "The diagram is not public, so it cannot be unpublished.");
         }
 
         userDiagramService.checkOwner(userDiagram, "unpublish");
 
-        publicDiagramRepository.delete(publicDiagram);
+        UUID publicDiagramId = publicDiagram.getId();
 
+        // Set to null first to break the relationship
         diagram.setPublicDiagram(null);
+        diagramRepository.saveAndFlush(diagram);
+
+        // Delete by ID to avoid loading the entire entity graph with potential zero
+        // dates
+        publicDiagramRepository.deleteById(publicDiagramId);
     }
 }
