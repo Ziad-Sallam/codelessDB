@@ -20,6 +20,9 @@ import backend.userDiagramManagement.dto.update.DiagramUpdateResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+record State(String str) {
+}
+
 @RestController
 @RequestMapping("/snapshot")
 @RequiredArgsConstructor
@@ -40,9 +43,9 @@ public class SnapshotController {
 	public ResponseEntity<?> saveState(
 			@AuthenticationPrincipal AuthUser authUser,
 			@PathVariable UUID id,
-			@RequestBody String state) {
+			@RequestBody State state) {
 
-		byte[] statebin = Base64.getDecoder().decode(state);
+		byte[] statebin = Base64.getDecoder().decode(state.str());
 		snapshotService.takeSnapshot(authUser.userId(), id, statebin);
 
 		return ResponseEntity.ok("Snapshot taken sucessfully");
