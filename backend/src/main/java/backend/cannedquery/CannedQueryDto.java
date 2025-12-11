@@ -25,8 +25,8 @@ public class CannedQueryDto {
         this.name = entity.getName();
         this.description = entity.getDescription();
         this.query = entity.getQuery();
-        this.createdAt = entity.getCreatedAt();
-        this.updatedAt = entity.getUpdatedAt();
+        this.createdAt = Date.valueOf(entity.getCreatedAt().toLocalDate());
+        this.updatedAt = Date.valueOf(entity.getUpdatedAt().toLocalDate());
         this.databaseId = entity.getDatabase().getId();
         this.databaseName = entity.getDatabase().getName();
     }

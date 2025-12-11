@@ -8,56 +8,57 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import backend.security.GoogleSuccessHandler;
 import backend.security.JwtAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig implements WebMvcConfigurer {
-	@Value("${frontend.url}")
-	private String frontendUrl;
-	@Autowired
-	private JwtAuthenticationFilter jwtFilter;
-	@Autowired
-	private GoogleSuccessHandler googleSuccessHandler;
+public class SecurityConfig {
 
-	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http
-				.cors(cors -> {
-				})
-				.csrf(csrf -> csrf.ignoringRequestMatchers("/**"))
-				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/user/login/**",
-								"/user/signup/**",
-								"/user/signature/**",
-								"/oauth2/**",
-								"/login/oauth2/**"
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
-								,"/agent-ws/**",
-								"/database/create-mysql-container",
-								"/agent/create-container",
-								"/agent/communicate"
-							)
-						.permitAll().anyRequest().authenticated())
+    @Autowired
+    private JwtAuthenticationFilter jwtFilter;
 
-				.oauth2Login(oauth -> oauth.redirectionEndpoint(redirect -> redirect.baseUri("/login/oauth2/google"))
-						.successHandler(googleSuccessHandler).failureUrl("/login?error=true"))
-				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    @Autowired
+    private GoogleSuccessHandler googleSuccessHandler;
 
-		return http.build();
-	}
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(request -> {
+                CorsConfiguration corsConfig = new CorsConfiguration();
+                corsConfig.setAllowedOriginPatterns(Arrays.asList("*")); // allows any origin
+                corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                corsConfig.setAllowedHeaders(Arrays.asList("*"));
+                corsConfig.setAllowCredentials(true); // allow credentials (cookies, auth headers)
+                return corsConfig;
+            }))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/user/login/**",
+                    "/user/signup/**",
+                    "/user/signature/**",
+                    "/oauth2/**",
+                    "/login/oauth2/**",
+                    "/agent-ws/**",
+                    "/database/create-mysql-container"
+                ).permitAll()
+                .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth -> oauth
+                .redirectionEndpoint(redirect -> redirect.baseUri("/login/oauth2/google"))
+                .successHandler(googleSuccessHandler)
+                .failureUrl("/login?error=true")
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-	@Override
-	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/**")
-				.allowedOrigins(frontendUrl)
-				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-				.allowedHeaders("*")
-				.allowCredentials(true)
-				.maxAge(3600);
-	}
+        return http.build();
+    }
 }
