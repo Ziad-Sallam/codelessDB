@@ -143,6 +143,9 @@ public class UserDiagramService implements IUserDiagramService {
         userDiagramRepository.delete(userDiagram);
 
         if (userDiagram.getRole() == Role.OWNER) {
+            if (userDiagram.getDiagram().getPublicDiagram() != null)
+                throw new DiagramException.PermissionDeniedException("Can't delete public diagram, Unpublished it first");
+            
             UserDiagram anyOne = userDiagramRepository.findFirstByDiagram_Id(diagramId);
 
             if (anyOne != null) {
