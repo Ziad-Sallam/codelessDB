@@ -9,6 +9,7 @@ import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 import org.springframework.web.socket.CloseStatus;
 
 import backend.collab.services.RoomManager;
+import backend.user.Role;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -58,6 +59,12 @@ public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
 		ByteBuffer payload = message.getPayload();
 		String diagramId = getDiagramId(session);
+		Role role = (Role) session.getAttributes().get("role");
+
+		if (role == Role.READER) {
+			log.warn("Readers caannot send updates");
+			return;
+		}
 
 		if (diagramId != null) {
 			log.info("Received binary message for Diagram ID {} with {} bytes.", diagramId, payload.remaining());

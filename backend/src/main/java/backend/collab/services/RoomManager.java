@@ -21,6 +21,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.management.relation.Role;
+
 public interface RoomManager {
 	void joinRoom(String roomId, WebSocketSession session);
 
@@ -89,7 +91,6 @@ class RoomManagerImpl implements RoomManager {
 	 */
 	public void sendUpdate(String diagramId, byte[] data, String senderId) {
 		BinaryMessage message = new BinaryMessage(data);
-
 		Set<WebSocketSession> roomSessions = Optional.ofNullable(activeRooms.get(diagramId))
                												.map(Room::getSessions)
                												.orElse(Collections.emptySet());
@@ -100,21 +101,19 @@ class RoomManagerImpl implements RoomManager {
 			return;
 		}
 
-		updateWriter.submitWriteTask(() -> {
-			redisService.addUpdate(diagramId, data);
-		});
-
 		// Stream and send to the targeted room sessions
 		roomSessions.parallelStream().forEach(session -> {
 			if (session.isOpen() && !session.getId().equals(senderId)) {
 				try {
 					session.sendMessage(message);
-				
+					
 				} catch (IOException e) {
 					log.error("Error sending message to session {} in diagram {}:\n {}",
-								 session.getId(), diagramId, e.getMessage());
+					session.getId(), diagramId, e.getMessage());
 				}
 			}
 		});
+		
+		redisService.addUpdate(diagramId, data);
 	}
 }

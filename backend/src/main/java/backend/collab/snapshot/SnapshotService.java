@@ -52,7 +52,6 @@ public class SnapshotService {
 
 		String id = diagramId.toString();
 		redisService.removeDiagramHistory(id);
-		// redisService.deleteUntil(id, 0);
 		updatesRepository.deleteAllByDiagramId(id);
 	}
 
