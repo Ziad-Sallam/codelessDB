@@ -11,6 +11,11 @@ import TopBar from './components/TopBar.jsx';
 import LeftPanel from './components/LeftPanel';
 import DatabaseConfiguration from './pages/databaseConfiguration/DatabaseManager.js';
 import QueryRunner from './pages/databaseManager/QueryRunner.js';
+import Discover from './pages/discover/Discover.jsx';
+import SchemaPreview from './pages/schemaPreviewing/SchemaPreview.jsx';
+import CreateSchema from './pages/schemaPublishing/CreateSchema.jsx';
+import DesignerProfile from './pages/designerprofile/DesignerProfile.jsx';
+
 
 export const routes = [
   {
@@ -70,6 +75,12 @@ export const routes = [
     element: (
       <ProtectedRoute>
         <CannedQueries />
+        </ProtectedRoute>
+  )},{
+    path: "/discover",
+    element: (
+      <ProtectedRoute>
+        <Discover />
       </ProtectedRoute>
     ),
   },
@@ -88,6 +99,12 @@ export const routes = [
       <ProtectedRoute>
         <DatabaseConfiguration />
       </ProtectedRoute>
+    )},{
+    path: "/schema/preview/:id",
+    element: (
+      <ProtectedRoute>
+        <SchemaPreview />
+      </ProtectedRoute>
     ),
   },
   {
@@ -95,6 +112,20 @@ export const routes = [
     element: (
       <ProtectedRoute>
         <QueryRunner />
+      </ProtectedRoute>
+    )},{
+    path: "/schema/create",
+    element: (
+      <ProtectedRoute>
+        <CreateSchema />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/designer/:username",
+    element: (
+      <ProtectedRoute>
+        <DesignerProfile />
       </ProtectedRoute>
     ),
   },

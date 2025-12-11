@@ -1,35 +1,28 @@
 package backend.entities;
 
-import java.sql.Date;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import backend.entities.publicDiagramEntities.PublicDiagram;
+import jakarta.persistence.*;
 import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import backend.entities.joins.UserDiagram;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "diagrams")
 @Builder
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Diagram {
@@ -42,27 +35,27 @@ public class Diagram {
   private String name = "Untitled Diagram";
   
   @Column(columnDefinition = "JSON")
-  private String content; // to be continued
+  private String content;
+
+  @Builder.Default
+  @Lob
+  @Column(nullable = false)
+  private String ddl = "";
   
   private String thumbnail;
   
   @Column(nullable = false, updatable = false)
   @CreationTimestamp
-  private Date createdAt;
+  private LocalDateTime createdAt;
   
   @Column(nullable = false)
   @UpdateTimestamp
-  private Date lastModified;
-  
-  @Builder.Default
-  @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<CannedQueriesDiagrams> queries = new ArrayList<>();
-  
+  private LocalDateTime lastModified;
+
   @OneToOne(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private PublicDiagram publicDiagram;
   
   @Builder.Default
   @OneToMany(mappedBy = "diagram", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<UserDiagram> userDiagrams = new HashSet<>();
-
 }

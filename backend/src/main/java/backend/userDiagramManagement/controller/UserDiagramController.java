@@ -1,5 +1,6 @@
 package backend.userDiagramManagement.controller;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -71,7 +72,7 @@ public class UserDiagramController {
             @PathVariable UUID id,
             @RequestBody DiagramUpdateRequestDto request) {
 
-        Date updateDate = userDiagramService.updateDiagram(id(authUser), request, id);
+        LocalDateTime updateDate = userDiagramService.updateDiagram(id(authUser), request, id);
 
         return ResponseEntity.ok(new DiagramUpdateResponseDto(
                 "Diagram updated successfully",

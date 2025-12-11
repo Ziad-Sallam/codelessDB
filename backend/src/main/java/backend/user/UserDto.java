@@ -1,7 +1,9 @@
 package backend.user;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import backend.entities.User;
@@ -16,15 +18,22 @@ public class UserDto {
 
 	@JsonProperty("password")
 	private String rawPassword;
-	
+
 	private String picture;
-	private Date createdAt;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime createdAt;
+	private String bio;
+	private String publicProfile;
+	private String profileWebsiteUrl;
 
 	public UserDto(User user) {
 		this.username = user.getUsername();
 		this.email = user.getEmail();
-    	this.rawPassword = null;
+		this.rawPassword = null;
 		this.picture = user.getPicture();
 		this.createdAt = user.getCreatedAt();
+		this.bio = user.getBio();
+		this.publicProfile = user.getPublicProfile();
+		this.profileWebsiteUrl = user.getProfileWebsiteUrl();
 	}
 }

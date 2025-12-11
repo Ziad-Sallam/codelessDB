@@ -32,12 +32,14 @@ import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutli
 import EditIcon from "@mui/icons-material/Edit";
 import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PublicIcon from "@mui/icons-material/Public";
+import PublicOffIcon from "@mui/icons-material/PublicOff";
 import ShareIcon from "@mui/icons-material/Share";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import "./card.css";
 import Contributors from "./Contributors.jsx";
-import { deleteDiagram, renameDiagram, shareDiagram } from "./fetch.js";
+import { deleteDiagram, renameDiagram, shareDiagram, unpublishDiagram } from "./fetch.js";
 
 import { useNotification } from "../../components/NotificationContext";
 
@@ -92,8 +94,12 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
 
+	const [unpublishOpen, setUnpublishOpen] = useState(false);
+	const [unpublishLoading, setUnpublishLoading] = useState(false);
+
 	const userRole = d?.role || "READER";
 	const isOwner = userRole === "OWNER";
+	const isPublic = d?.public || false;
 	const roleConfig = getRoleConfig(userRole);
 
 	function openMenu(e) {
@@ -119,10 +125,10 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			setRenameOpen(false);
 			if (onUpdate) onUpdate(updated);
 			showSuccess("Diagram renamed successfully");
-		
+
 		} catch (err) {
 			showError(err.message || "Failed to rename diagram");
-		
+
 		} finally {
 			setRenameLoading(false);
 		}
@@ -148,20 +154,24 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			const updatedContributors = [...localContributors, newContributor];
 			setLocalContributors(updatedContributors);
 			const updatedDiagram = { ...d, contributors: updatedContributors };
-			
+
 			if (onUpdate) onUpdate(updatedDiagram);
 			setShareOpen(false);
 			showSuccess(`Shared with ${shareUsername}`);
-		
+
 		} catch (err) {
 			showError(err || "Failed to share diagram");
-		
+
 		} finally {
 			setShareLoading(false);
 		}
 	}
 
 	function handleDeleteClick() {
+		if (isPublic) {
+			showError("Cannot delete a public diagram. Please unpublish it first.");
+			return;
+		}
 		setDeleteOpen(true);
 	}
 
@@ -172,12 +182,31 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			setDeleteOpen(false);
 			if (onDelete) onDelete(d);
 			showSuccess("Diagram deleted successfully");
-		
+
 		} catch (err) {
 			showError(err.message || "Failed to delete diagram");
-		
+
 		} finally {
 			setDeleteLoading(false);
+		}
+	}
+
+	function handleUnpublishClick() {
+		setUnpublishOpen(true);
+	}
+
+	async function handleUnpublishConfirm() {
+		setUnpublishLoading(true);
+		try {
+			const resp = await unpublishDiagram(d.diagramId);
+			const updatedDiagram = { ...d, public: false };
+			if (onUpdate) onUpdate(updatedDiagram);
+			setUnpublishOpen(false);
+			showSuccess(resp);
+		} catch (err) {
+			showError(err.message || "Failed to unpublish diagram");
+		} finally {
+			setUnpublishLoading(false);
 		}
 	}
 
@@ -261,18 +290,38 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 							</MenuItem>
 						)}
 
-						<MenuItem
-							onClick={(e) => {
-								e.stopPropagation();
-								closeMenu();
-								handleDeleteClick();
-							}}
-						>
-							<ListItemIcon>
-								<DeleteIcon fontSize="small" />
-							</ListItemIcon>
-							<ListItemText>Delete</ListItemText>
-						</MenuItem>
+						{isOwner && isPublic && (
+							<MenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									closeMenu();
+									handleUnpublishClick();
+								}}
+							>
+								<ListItemIcon>
+									<PublicOffIcon fontSize="small" />
+								</ListItemIcon>
+								<ListItemText>Unpublish</ListItemText>
+							</MenuItem>
+						)}
+
+						{isOwner && (
+							<MenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									closeMenu();
+									handleDeleteClick();
+								}}
+								disabled={isPublic}
+							>
+								<ListItemIcon>
+									<DeleteIcon fontSize="small" />
+								</ListItemIcon>
+								<ListItemText>
+									Delete
+								</ListItemText>
+							</MenuItem>
+						)}
 
 						{!isOwner && (
 							<MenuItem disabled>
@@ -319,17 +368,32 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 							alignItems: "center",
 						}}
 					>
-						<Chip
-							icon={roleConfig.icon}
-							label={roleConfig.label}
-							size="small"
-							color={roleConfig.color}
-							sx={{
-								fontWeight: 600,
-								fontSize: 12,
-								height: 28,
-							}}
-						/>
+						<Box sx={{ display: "flex", gap: 1 }}>
+							<Chip
+								icon={roleConfig.icon}
+								label={roleConfig.label}
+								size="small"
+								color={roleConfig.color}
+								sx={{
+									fontWeight: 600,
+									fontSize: 12,
+									height: 28,
+								}}
+							/>
+							{isPublic && (
+								<Chip
+									icon={<PublicIcon sx={{ fontSize: 14 }} />}
+									label="Public"
+									size="small"
+									color="success"
+									sx={{
+										fontWeight: 600,
+										fontSize: 12,
+										height: 28,
+									}}
+								/>
+							)}
+						</Box>
 
 						<Box
 							className="avatar-stack"
@@ -482,6 +546,28 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 						disabled={deleteLoading}
 					>
 						{deleteLoading ? <CircularProgress size={20} /> : "Delete"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			<Dialog open={unpublishOpen} onClose={() => setUnpublishOpen(false)} maxWidth="sm" fullWidth>
+				<DialogTitle>Unpublish Diagram</DialogTitle>
+				<DialogContent>
+					<Typography>
+						Are you sure you want to unpublish "{d?.name}"? This will remove it from the public gallery.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setUnpublishOpen(false)} disabled={unpublishLoading}>
+						Cancel
+					</Button>
+					<Button
+						onClick={handleUnpublishConfirm}
+						variant="contained"
+						color="warning"
+						disabled={unpublishLoading}
+					>
+						{unpublishLoading ? <CircularProgress size={20} /> : "Unpublish"}
 					</Button>
 				</DialogActions>
 			</Dialog>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar,
   CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  Menu, MenuItem
+  Menu, MenuItem, Switch
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
+import LanguageIcon from "@mui/icons-material/Language";
 
 import LeftPanel from "../../components/LeftPanel.jsx";
 import theme from "../../theme.js";
@@ -27,7 +28,7 @@ export default function UserProfile() {
   const { user, setUser } = useAuth();
 
   const [leftNav, setLeftNav] = useState("profile");
-  const [profileData, setProfileData] = useState({ username: "", email: "", picture: "", createdAt: "" });
+  const [profileData, setProfileData] = useState({ username: "", email: "", picture: "", createdAt: "", bio: "", publicProfile: "" });
   const [editMode, setEditMode] = useState({});
   const [tempData, setTempData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,9 @@ export default function UserProfile() {
       email: user.email,
       picture: user.picture,
       createdAt: user.createdAt,
+      bio: user.bio || "",
+      publicProfile: user.publicProfile || "",
+      profileWebsiteUrl: user.profileWebsiteUrl || "",
     });
     setLoading(false);
 
@@ -96,7 +100,7 @@ export default function UserProfile() {
       localStorage.setItem("token_for_reset", token);
       localStorage.setItem("email", profileData.email);
       localStorage.setItem("resetSource", "profile");
-      
+
       navigate("/password-reset?flow=reset");
 
       // navigate("/register?flow=reset");
@@ -223,8 +227,14 @@ export default function UserProfile() {
             <Card className="profile-info-card">
               <CardContent className="profile-info-content">
                 <Typography variant="h6" className="profile-info-title">Basic Info</Typography>
-                <ProfileField label="Username" field="username" icon={PersonIcon} editable={true} />
+                <ProfileField label="Username" field="username" icon={PersonIcon} editable={false} />
                 <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
+                <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline={true} rows={4} />
+
+                <ProfileField label="Public Profile" field="publicProfile" icon={PersonIcon} editable={true} multiline={true} rows={2} />
+
+                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" />
+
                 <PasswordField />
               </CardContent>
             </Card>

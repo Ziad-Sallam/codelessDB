@@ -1,84 +1,90 @@
 package backend.entities;
 
 import java.sql.Date;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 
 import backend.entities.joins.UserDiagram;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String username;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private int id;
 
-    @Column(nullable = false, unique = true, length = 100)
-    @NotBlank(message = "Email is mandatory")
-    @Email(message = "Email should be valid")
-    @Size(max = 100, message = "Email must be at most 100 characters")
-    private String email;
+        @Column(nullable = false, unique = true, length = 50)
+        @NotBlank
+        @Size(min = 3, max = 50)
+        private String username;
 
-    /**
-     * Password field to store the user's password.
-     * `Should be hashed by Bycrypt before storing for security.`
-     */
-    @Column(nullable = false, length = 60)
-    @NotBlank(message = "Password is mandatory")
-    private String password;
+        @Column(nullable = false, unique = true, length = 100)
+        @NotBlank
+        @Email
+        private String email;
 
-    @Lob
-    @Column(columnDefinition = "LONGTEXT")
-    private String picture;
+        @Column(nullable = false, length = 60)
+        private String password;
 
-    @Column(nullable = false, updatable = false)
-    @CreationTimestamp
-    private Date createdAt;
+        private String picture;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UserDiagram> userDiagrams = new HashSet<>();
+        @Column(length = 300)
+        private String bio;
 
-    @ManyToMany
-    @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
-    private List<Server> servers = new ArrayList<>();
+        private String profileWebsiteUrl;
+
+        @Column(length = 300)
+        private String publicProfile;
+
+        @CreationTimestamp
+        @Column(nullable = false, updatable = false)
+        private LocalDateTime createdAt;
+
+        @JsonIgnore
+        @ManyToMany(fetch = FetchType.LAZY)
+        @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
+        private Set<User> followers = new HashSet<>();
+
+        @JsonIgnore
+        @ManyToMany(fetch = FetchType.LAZY)
+        @JoinTable(name = "user_following", joinColumns = @JoinColumn(name = "follower_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+        private Set<User> following = new HashSet<>();
 
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserDatabase> ownedDatabases = new ArrayList<>();
+        @JsonIgnore
+        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+        private Set<UserDiagram> userDiagrams = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-        name = "user_database_access",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "database_id")
-    )
-    private List<UserDatabase> accessibleDatabases = new ArrayList<>();
+
+        @JsonIgnore
+        @ManyToMany(fetch = FetchType.LAZY)
+        @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
+        private Set<Server> servers = new HashSet<>();
+
+
+        @JsonIgnore
+        @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<UserDatabase> ownedDatabases = new ArrayList<>();
+
+        @JsonIgnore
+        @ManyToMany(fetch = FetchType.LAZY)
+        @JoinTable(name = "user_database_access", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "database_id"))
+        private Set<UserDatabase> accessibleDatabases = new HashSet<>();
 }

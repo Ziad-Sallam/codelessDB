@@ -59,6 +59,18 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 					<ListItemText primary="Recents" />
 				</ListItemButton>
 				 */}
+
+				<ListItemButton
+					selected={leftNav === "all"}
+					onClick={() => navigate('/discover')}
+					sx={{ borderRadius: 1, mb: 1 }}
+				>
+					<ListItemIcon sx={{ color: "white" }}>
+						<SchemaIcon />
+					</ListItemIcon>
+					<ListItemText primary="Discover" />
+				</ListItemButton>
+
 				<ListItemButton
 					selected={leftNav === "all"}
 					onClick={() => navigate('/diagrams')}
@@ -68,17 +80,6 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 						<SchemaIcon />
 					</ListItemIcon>
 					<ListItemText primary="Your diagrams" />
-				</ListItemButton>
-
-				<ListItemButton
-					selected={leftNav === "all"}
-					onClick={() => navigate('/public')}
-					sx={{ borderRadius: 1, mb: 1 }}
-				>
-					<ListItemIcon sx={{ color: "white" }}>
-						<SchemaIcon />
-					</ListItemIcon>
-					<ListItemText primary="Public diagrams" />
 				</ListItemButton>
 
 				<ListItemButton

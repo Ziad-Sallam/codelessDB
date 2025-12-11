@@ -1,5 +1,6 @@
 package backend.user;
 
+import backend.user.exceptions.UserException;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -65,6 +66,8 @@ public class UserService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
+		newUser.setPublicProfile(userDto.getUsername());
+		
 
 		if (userDto.getPicture() != null) {
 			newUser.setPicture(userDto.getPicture());
@@ -121,6 +124,15 @@ public class UserService {
 				throw new EmailAlreadyExistsException("Email already exists");
 			}
 			user.setEmail(userDto.getEmail());
+
+		} else if (userDto.getBio() != null) {
+			user.setBio(userDto.getBio());
+
+		} else if (userDto.getPublicProfile() != null) {
+			user.setPublicProfile(userDto.getPublicProfile());
+
+		} else if (userDto.getProfileWebsiteUrl() != null) {
+			user.setProfileWebsiteUrl(userDto.getProfileWebsiteUrl());
 		}
 
 		userRepository.save(user);
@@ -170,4 +182,15 @@ public class UserService {
 			throw new OtpSendFailedException("Failed to send OTP. Please try again.");
 		}
 	}
+
+	public User getUserOrThrow(int userId) {
+		User user = userRepository.findById(userId);
+
+		if (user == null) {
+			throw new UserNotFoundException("User not found with id: " + userId);
+		}
+
+		return user;
+	}
+
 }

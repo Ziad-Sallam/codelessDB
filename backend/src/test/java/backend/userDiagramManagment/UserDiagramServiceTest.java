@@ -23,6 +23,7 @@ import org.mockito.*;
 import org.springframework.data.domain.*;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,8 +60,8 @@ class UserDiagramServiceTest {
                 .name("Test Diagram")
                 .content("{json}")
                 .thumbnail("thumb.png")
-                .lastModified(new Date(System.currentTimeMillis()))
-                .createdAt(new Date(System.currentTimeMillis()))
+                .lastModified(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         ownerLink = UserDiagram.builder()
@@ -133,7 +134,7 @@ class UserDiagramServiceTest {
                 .thenReturn(Optional.of(ownerLink));
         when(diagramRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Date updated = service.updateDiagram(1, request, diagram.getId());
+        LocalDateTime updated = service.updateDiagram(1, request, diagram.getId());
 
         assertNotNull(updated);
         assertEquals("Updated", diagram.getName());
@@ -230,8 +231,8 @@ class UserDiagramServiceTest {
         assertEquals("Test Diagram", dto.getName());
         assertEquals("thumb.png", dto.getThumbnail());
         assertEquals(Role.OWNER, dto.getRole());
-        assertEquals(1, dto.getContributors().size());
-        assertEquals("john", dto.getContributors().get(0).name());
+        assertEquals(1, dto.getContributorDtos().size());
+        assertEquals("john", dto.getContributorDtos().get(0).getName());
     }
 
     // ------------------------------------------------------------

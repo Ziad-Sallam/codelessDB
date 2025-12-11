@@ -52,7 +52,7 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
         userDto.setEmail(email);
         userDto.setRawPassword(UUID.randomUUID().toString());
 
-        String uniqueUsername = username;
+        String uniqueUsername = username.replaceAll(" ", "_");
         int attempt = new Random().nextInt(1, 100);
         while (userService.findUserByUsername(uniqueUsername) != null) {
           uniqueUsername = username + attempt;
