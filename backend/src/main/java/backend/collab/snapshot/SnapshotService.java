@@ -42,12 +42,21 @@ public class SnapshotService {
 		return new SnapshotDto(snapshot, updates, diagram.getName(), role);
 	}
 	
-	public void takeSnapshot(int userId, UUID diagramId, byte[] state) {
+	public void takeSnapshot(
+			int userId, 
+			UUID diagramId, 
+			byte[] state, 
+			String newDiagramName, 
+			String picture
+	) {
+
 		userDiagramService.getUserOrThrow(userId);
 		userDiagramService.getUserDiagramOrThrow(userId, diagramId);
 		
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
 		diagram.setContent(state);
+		diagram.setName(newDiagramName);
+		diagram.setThumbnail(picture);
 		diagramRepository.save(diagram);
 
 		String id = diagramId.toString();

@@ -9,6 +9,7 @@ import backend.collab.Room;
 import backend.collab.snapshot.DiagramPendingUpdateRepository;
 import backend.collab.snapshot.SnapshotService;
 import backend.entities.DiagramPendingUpdate;
+import backend.user.Role;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +22,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.management.relation.Role;
 
 public interface RoomManager {
 	void joinRoom(String roomId, WebSocketSession session);
 
 	void leaveRoom(String roomId, WebSocketSession session);
 
-	void sendUpdate(String diagramId, byte[] data, String senderId);
+	void sendUpdate(String diagramId, byte[] data, String senderId, Role role);
 }
 
 @Service
@@ -89,7 +89,7 @@ class RoomManagerImpl implements RoomManager {
 	 * @param data     The byte array to send.
 	 * @param senderId The session ID of the sender to exclude from the broadcast.
 	 */
-	public void sendUpdate(String diagramId, byte[] data, String senderId) {
+	public void sendUpdate(String diagramId, byte[] data, String senderId, Role role) {
 		BinaryMessage message = new BinaryMessage(data);
 		Set<WebSocketSession> roomSessions = Optional.ofNullable(activeRooms.get(diagramId))
                												.map(Room::getSessions)
@@ -98,6 +98,13 @@ class RoomManagerImpl implements RoomManager {
 
 		if (roomSessions == null || roomSessions.isEmpty()) {
 			log.warn("No sessions found for diagramId: {}", diagramId);
+			return;
+		}
+
+		final boolean cursorUpdate = (data[0] == 1);
+
+		if (role == Role.READER && !cursorUpdate) {
+			log.warn("Readers cannot send updates");
 			return;
 		}
 
@@ -113,7 +120,11 @@ class RoomManagerImpl implements RoomManager {
 				}
 			}
 		});
-		
+
+		// Cursor positions don't need to be stored
 		redisService.addUpdate(diagramId, data);
+		// if (!cursorUpdate) {
+		// }
+		
 	}
 }

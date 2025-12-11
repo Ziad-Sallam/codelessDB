@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import backend.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 
-record State(String state) {
-}
+record State(String state, String diagramName, String picture) { }
 
 @RestController
 @RequestMapping("/snapshot")
@@ -41,7 +40,7 @@ public class SnapshotController {
 			@RequestBody State state) {
 
 		byte[] statebin = Base64.getDecoder().decode(state.state());
-		snapshotService.takeSnapshot(authUser.userId(), id, statebin);
+		snapshotService.takeSnapshot(authUser.userId(), id, statebin, state.diagramName(), state.picture());
 
 		return ResponseEntity.ok("Snapshot taken sucessfully");
 	}

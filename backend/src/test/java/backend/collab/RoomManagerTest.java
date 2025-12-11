@@ -5,6 +5,7 @@ import backend.collab.services.RedisStreamService;
 import backend.collab.services.RoomManager;
 import backend.collab.services.UpdateWriter;
 import backend.collab.snapshot.SnapshotService;
+import backend.user.Role;
 
 import org.junit.jupiter.api.*;
 import org.mockito.*;
@@ -120,7 +121,7 @@ public class RoomManagerTest {
 
     @Test
     void testSendUpdate_noSessions() {
-        roomManager.sendUpdate("abc", "x".getBytes(), "sender");
+        roomManager.sendUpdate("abc", "x".getBytes(), "sender", Role.WRITER);
 
         // No room exists → nothing written
         verify(updateWriter, never()).submitWriteTask(any());
@@ -148,7 +149,7 @@ public class RoomManagerTest {
         roomManager.joinRoom(diagramId, other1);
         roomManager.joinRoom(diagramId, other2);
 
-        roomManager.sendUpdate(diagramId, data, "SENDER");
+        roomManager.sendUpdate(diagramId, data, "SENDER", Role.OWNER);
 
         // verify write task submitted
         verify(updateWriter, times(1)).submitWriteTask(any());
@@ -178,7 +179,7 @@ public class RoomManagerTest {
         roomManager.joinRoom(diagramId, sender);
         roomManager.joinRoom(diagramId, closed);
 
-        roomManager.sendUpdate(diagramId, data, "sender");
+        roomManager.sendUpdate(diagramId, data, "sender", Role.WRITER);
 
         // Closed session → should NEVER receive messages
         verify(closed, never()).sendMessage(any());
@@ -201,7 +202,7 @@ public class RoomManagerTest {
         roomManager.joinRoom(diagramId, sender);
         roomManager.joinRoom(diagramId, faulty);
 
-        assertDoesNotThrow(() -> roomManager.sendUpdate(diagramId, data, "S"));
+        assertDoesNotThrow(() -> roomManager.sendUpdate(diagramId, data, "S", Role.OWNER));
 
         // Even failed sends still count as attempted
         verify(faulty, times(1)).sendMessage(any());

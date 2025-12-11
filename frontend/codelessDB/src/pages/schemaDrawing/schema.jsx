@@ -106,9 +106,9 @@ const SchemaContent = () => {
         const binaryState = Y.encodeStateAsUpdate(ydoc);
         const base64State = uint8ArrayToBase64(binaryState);
 
-
         const payload = {
-          state: base64State
+          state: base64State,
+          diagramName: schemaName
         };
 
         console.log(payload);
@@ -119,7 +119,7 @@ const SchemaContent = () => {
       } catch (err) {
         console.error("❌ Autosave Failed:", err);
       }
-    }, 6000);
+    }, 60 * 1000);
 
     // Cleanup on unmount
     return () => clearInterval(saveInterval);

@@ -27,9 +27,12 @@ public class RedisConfig {
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setHashKeySerializer(new StringRedisSerializer());
 
-		RedisSerializer<byte[]> base64Serializer = new Base64StringSerializer();
-		template.setValueSerializer(base64Serializer);
-		template.setHashValueSerializer(base64Serializer);
+		template.setValueSerializer(RedisSerializer.byteArray());
+		template.setHashValueSerializer(RedisSerializer.byteArray());
+
+		// RedisSerializer<byte[]> base64Serializer = new Base64StringSerializer();
+		// template.setValueSerializer(base64Serializer);
+		// template.setHashValueSerializer(base64Serializer);
 
 		template.afterPropertiesSet();
 		return template;

@@ -86,7 +86,8 @@ public class CollabTest {
 				.thenReturn(Optional.of(ownerLink));
 		when(diagramRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-		service.takeSnapshot(1, diagram.getId(), new byte[0]);
+		String name = "test name";
+		service.takeSnapshot(1, diagram.getId(), new byte[0], name, "");
 
 		// assertNotNull(updated);
 		assertEquals("Updated", diagram.getName());
@@ -103,7 +104,7 @@ public class CollabTest {
 				.thenReturn(Optional.of(ownerLink));
 
 		assertThrows(DiagramException.PermissionDeniedException.class,
-				() -> service.takeSnapshot(1, diagram.getId(), diagram.getContent()));
+				() -> service.takeSnapshot(1, diagram.getId(), diagram.getContent(), "test name", ""));
 	}
 
 	// ------------------------------------------------------------
