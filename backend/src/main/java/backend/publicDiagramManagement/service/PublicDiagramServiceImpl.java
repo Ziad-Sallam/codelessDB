@@ -176,8 +176,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     @Override
     public Page<ToBePublishedDiagramDto> getToBePublishedDiagrams(int userId, Pageable pageable) {
 
-        Page<Diagram> diagrams =
-                userDiagramRepository.findUnpublishedDiagramsByUser(userId, pageable);
+        Page<Diagram> diagrams = userDiagramRepository.findUnpublishedDiagramsByUser(userId, pageable);
 
         return diagrams.map(d -> ToBePublishedDiagramDto.builder()
                 .diagramId(d.getId())

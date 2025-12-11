@@ -42,12 +42,11 @@ public interface UserDiagramRepository extends JpaRepository<UserDiagram, UserDi
     UserDiagram findFirstByDiagram_Id(UUID diagramId);
 
     @Query("""
-            SELECT u.diagram
-            FROM UserDiagram u
-            WHERE u.user.id = :userId
-            AND u.role = 'OWNER'
-            AND NOT EXISTS (SELECT p FROM PublicDiagram p WHERE p.diagram = u.diagram)
-            """)
+        SELECT ud.diagram
+        FROM UserDiagram ud
+        WHERE ud.user.id = :userId
+          AND ud.role = backend.user.Role.OWNER
+          AND ud.diagram.publicDiagram IS NULL
+    """)
     Page<Diagram> findUnpublishedDiagramsByUser(int userId, Pageable pageable);
-
 }
