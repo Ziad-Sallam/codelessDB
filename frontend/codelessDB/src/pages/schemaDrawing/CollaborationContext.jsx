@@ -42,11 +42,13 @@ export const CollaborationProvider = ({ roomId, children }) => {
   const { user } = useAuth();
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
+  const [schemaName, setSchemaName] = useState("Untitled Schema");
   const [cursors, setCursors] = useState([]);
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [ydoc, setYdoc] = useState(null);
   const [provider, setProvider] = useState(null);
   const [undoManager, setUndoManager] = useState(null);
+  
 
   const getRandomColor = () =>
     "#" + Math.floor(Math.random() * 16777215).toString(16);
@@ -64,6 +66,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
     const doc = new Y.Doc();
     const nodesMap = doc.getMap("nodes");
     const edgesMap = doc.getMap("edges");
+	const metaMap = doc.getMap("meta");
 
     // Connect to Spring Boot
     const wsProvider = new WebsocketProvider(
@@ -133,10 +136,16 @@ export const CollaborationProvider = ({ roomId, children }) => {
     const observer = () => {
       setNodes(Array.from(nodesMap.values()));
       setEdges(Array.from(edgesMap.values()));
+
+	  const syncedName = metaMap.get("name");
+      if (syncedName) {
+        setSchemaName(syncedName);
+      }
     };
 
     nodesMap.observeDeep(observer); // observeDeep detects nested data changes
     edgesMap.observeDeep(observer);
+	metaMap.observeDeep(observer);
 
     return () => {
       awareness.off("change", handleAwarenessChange);
@@ -193,13 +202,27 @@ const undo = useCallback(() => {
     }
   }, [undoManager]);
 
+  const lastCursorRef = useRef({ x: 0, y: 0 });
 
   const updateCursor = useCallback(
     throttle((x, y) => {
       if (provider && provider.awareness) {
-        provider.awareness.setLocalStateField("cursor", { x, y });
+
+        const newX = Math.round(x);
+        const newY = Math.round(y);
+        
+        if (
+          Math.abs(newX - lastCursorRef.current.x) < 2 &&
+          Math.abs(newY - lastCursorRef.current.y) < 2
+        ) {
+          return;
+        }
+
+        lastCursorRef.current = { x: newX, y: newY };
+
+        provider.awareness.setLocalStateField("cursor", { x: newX, y: newY });
       }
-    }, 50),
+    }, 100),
     [provider]
   );
 
@@ -223,7 +246,7 @@ const undo = useCallback(() => {
 
       // Clear the buffer after sending
       pendingUpdates.current.clear();
-    }, 50), // <-- 50ms Throttle Time (Adjust as needed)
+    }, 100), // <-- 50ms Throttle Time (Adjust as needed)
     [ydoc]
   );
 
@@ -305,12 +328,19 @@ const undo = useCallback(() => {
     ydoc.getMap("edges").set(edge.id, edge);
   };
 
+  const updateSchemaName = useCallback((name) => {
+    if (!ydoc) return;
+    ydoc.getMap("meta").set("name", name);
+  }, [ydoc]);
+
   return (
     <CollaborationContext.Provider
       value={{
 		ydoc,
         nodes,
         edges,
+		schemaName,
+		updateSchemaName,
         cursors,
         connectedUsers,
         updateCursor,

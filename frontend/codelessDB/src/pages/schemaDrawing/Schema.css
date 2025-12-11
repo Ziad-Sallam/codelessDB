@@ -184,6 +184,7 @@
   z-index: 10;
   width: 200px;
   padding: 8px 16px;
+  margin: 10px;
   background: #0f172a; /* Slate 900 */
   color: white;
   border: none;
@@ -203,9 +204,10 @@
 
 .active-users{
   position: fixed;
-  top: 10px;
+  top: 8px;
   right: 220px;
   z-index: 10;
+  margin: 10px;
 }
 
 .undo-redo{

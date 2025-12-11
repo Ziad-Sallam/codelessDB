@@ -57,6 +57,8 @@ const SchemaContent = () => {
     ydoc,
     nodes,
     edges,
+    schemaName,
+    updateSchemaName,
     cursors,
     updateCursor,
     onNodesChange,
@@ -72,7 +74,6 @@ const SchemaContent = () => {
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
   const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
   const [generatedSql, setGeneratedSql] = useState("");
-  const [schemaName, setSchemaName] = useState("");
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -128,7 +129,7 @@ const SchemaContent = () => {
     try{
       const response = await fetchDiagram(roomId);
       console.log(response);
-      setSchemaName(response.diagramName);
+      updateSchemaName(response.diagramName);
       setIsReadOnly(response.role === "READER"? true:false);
       loadCompositeYjsData(response.snapshot,response.updates); 
       
@@ -299,7 +300,7 @@ const SchemaContent = () => {
         className="schema-name"
         placeholder="Database Name"
         value={schemaName}
-        onChange={(e) => setSchemaName(e.target.value)}
+        onChange={(e) => updateSchemaName(e.target.value)}
         disabled={isReadOnly}
       />
       <div className="active-users">
