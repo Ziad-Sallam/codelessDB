@@ -145,5 +145,58 @@ public class MessageServiceTest {
         assertEquals("WS Error", ex.getMessage());
     }
 
+        @Test
+    void testDatabaseIsOnline_UnauthorizedAccess() {
+        User user = new User();
+        user.setAccessibleDatabases(Collections.emptyList());
+
+        UserDatabase db = new UserDatabase();
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                messageService.databaseIsOnline(1, 10)
+        );
+        assertEquals("Unauthrized Access", ex.getMessage());
+    }
+
+    @Test
+    void testDatabaseIsOnline_Online() {
+        UserDatabase db = new UserDatabase();
+        User user = new User();
+        user.setAccessibleDatabases(Collections.singletonList(db));
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
+        when(tracker.isOnline("10")).thenReturn(true);
+
+        Boolean result = messageService.databaseIsOnline(1, 10);
+        assertTrue(result);
+    }
+
+    @Test
+    void testDatabaseIsOnline_Offline() {
+        UserDatabase db = new UserDatabase();
+        User user = new User();
+        user.setAccessibleDatabases(Collections.singletonList(db));
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
+        when(tracker.isOnline("10")).thenReturn(false);
+
+        Boolean result = messageService.databaseIsOnline(1, 10);
+        assertFalse(result);
+    }
+
+    @Test
+    void testDatabaseIsOnline_UserNotFound() {
+        when(userRepository.findById(1)).thenReturn(null);
+
+        NullPointerException ex = assertThrows(NullPointerException.class, () ->
+                messageService.databaseIsOnline(1, 10)
+        );
+        // Optional: you could modify your method to throw RuntimeException("User not found") instead
+    }
+
 
 }
