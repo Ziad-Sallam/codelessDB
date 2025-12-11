@@ -11,6 +11,7 @@ import backend.publicDiagramManagement.service.HashtagService;
 import backend.publicDiagramManagement.service.PublicDiagramService;
 import backend.security.AuthUser;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -143,6 +144,15 @@ public class PublicDiagramController {
 
         List<String> hashtags = hashtagService.getAll();
         return ResponseEntity.ok(hashtags);
+    }
+
+    @DeleteMapping("/unpublish/{diagramId}")
+    public ResponseEntity<?> unPublishPublicDiagram(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable @NonNull UUID diagramId) {
+
+        publicDiagramService.unPublishPublicDiagram(authUser.userId(), diagramId);
+        return ResponseEntity.ok("The Public Diagram has been deleted successfully :)");
     }
 
 }

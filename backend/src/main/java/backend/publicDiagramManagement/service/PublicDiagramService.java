@@ -8,6 +8,7 @@ import backend.publicDiagramManagement.dto.publish.PublishDiagramRequestDto;
 import backend.publicDiagramManagement.dto.search.SearchRequestDto;
 import backend.publicDiagramManagement.dto.user.PublicUserInfoDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
+import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -35,4 +36,5 @@ public interface PublicDiagramService {
 
     Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable);
 
+    void unPublishPublicDiagram(int userId, @NonNull UUID diagramId);
 }

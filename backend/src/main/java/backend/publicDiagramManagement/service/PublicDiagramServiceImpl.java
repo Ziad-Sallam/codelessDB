@@ -25,6 +25,8 @@ import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
 import jakarta.transaction.Transactional;
+import lombok.Data;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -35,6 +37,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Data
 @RequiredArgsConstructor
 public class PublicDiagramServiceImpl implements PublicDiagramService {
 
@@ -306,5 +309,26 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
 
             return PublicUserInfoDto.toDto(user, publicCount, totalStars, score);
         });
+    }
+
+    @Override
+    public void unPublishPublicDiagram(int userId, @NonNull UUID diagramId) {
+
+        UserDiagram userDiagram = userDiagramService.getUserDiagramOrThrow(userId, diagramId);
+        Diagram diagram = userDiagram.getDiagram();
+
+        PublicDiagram publicDiagram = diagram.getPublicDiagram();
+
+        if (publicDiagram == null) {
+            throw new PublicDiagramException.DiagramNotFoundException(
+                    "The diagram is not public, so it cannot be unpublished."
+            );
+        }
+
+        userDiagramService.checkOwner(userDiagram, "unpublish");
+
+        publicDiagramRepository.delete(publicDiagram);
+
+        diagram.setPublicDiagram(null);
     }
 }
