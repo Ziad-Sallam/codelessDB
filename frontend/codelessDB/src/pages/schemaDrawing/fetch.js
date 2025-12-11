@@ -20,7 +20,7 @@ async function handleResponse(response) {
 }
 
 export async function fetchDiagram(diagramId) {
-  const response = await fetch(`${API_URL}/room/${diagramId}`, {
+  const response = await fetch(`${API_URL}/snapshot/${diagramId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export async function generateSQLFromBackend(finalJson) {
 }
 
 export async function updateDiagram(id, payload) {
-  const response = await fetch(`${API_URL}/room/update/${id}`, {
+  const response = await fetch(`${API_URL}/snapshot/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

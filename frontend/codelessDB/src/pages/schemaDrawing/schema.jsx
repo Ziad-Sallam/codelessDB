@@ -10,8 +10,7 @@ import {
   applyEdgeChanges,
   useReactFlow,
   ReactFlowProvider,
-  useViewport
-  
+  useViewport,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { nodeTypes, edgeTypes } from "./index";
@@ -30,21 +29,42 @@ import { uploadToCloudinary } from "../../components/uploadImage.js";
 import Cursor from "./Cursor";
 
 // 1. IMPORT HTML-TO-IMAGE
-import { toPng } from 'html-to-image';
+import { toPng } from "html-to-image";
 import Toolbar from "./ConnectionControls.jsx";
 
-import { CollaborationProvider, useCollaboration } from "./CollaborationContext.jsx";
+import {
+  CollaborationProvider,
+  useCollaboration,
+} from "./CollaborationContext.jsx";
+import ActiveUsers from "./ActiveUsers.jsx";
+import * as Y from "yjs";
 
+function uint8ArrayToBase64(bytes) {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
 
 const SchemaContent = () => {
-  
+  const {roomId} = useParams();
   const { showSuccess, showError, showWarning } = useNotification();
-  
+
   // 3. USE THE CONTEXT
- const { 
-    nodes, edges, cursors, updateCursor,
-    onNodesChange, onEdgesChange, 
-    addNodeYjs, addEdgeYjs 
+  const {
+    ydoc,
+    nodes,
+    edges,
+    cursors,
+    updateCursor,
+    onNodesChange,
+    onEdgesChange,
+    addNodeYjs,
+    addEdgeYjs,
+    updateNodeData,
+    loadCompositeYjsData
   } = useCollaboration();
 
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
@@ -57,38 +77,72 @@ const SchemaContent = () => {
 
   const { screenToFlowPosition } = useReactFlow();
 
-  const onMouseMove = useCallback((e) => {
-    // Convert pixel coordinates (e.clientX) to World coordinates (Flow X)
-    // This handles Zoom and Pan automatically.
-    const position = screenToFlowPosition({
-      x: e.clientX,
-      y: e.clientY,
-    });
-    
-    // Broadcast the World Position
-    updateCursor(position.x, position.y);
-  }, [screenToFlowPosition, updateCursor]);
+  const onMouseMove = useCallback(
+    (e) => {
+      // Convert pixel coordinates (e.clientX) to World coordinates (Flow X)
+      // This handles Zoom and Pan automatically.
+      const position = screenToFlowPosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
 
-  const loadDiagram = async () => {
-    try {
-      const response = await fetchDiagram(id);
-      const content = JSON.parse(response.content || "{}");
-      setNodes(content.nodes || []);
-      setEdges(content.edges || []);
-      setSchemaName(response.name);
-      setIsReadOnly(response.role == "READER" ? true : false);
-    } catch (err) {
-      showError && showError(err?.message || String(err));
+      // Broadcast the World Position
+      updateCursor(position.x, position.y);
+    },
+    [screenToFlowPosition, updateCursor]
+  );
+
+  useEffect(() => {
+    const saveInterval = setInterval(async () => {
+      if (!ydoc || !roomId) return;
+
+      console.log("⏳ Running 1-minute Autosave...");
+
+      try {
+        
+        const binaryState = Y.encodeStateAsUpdate(ydoc);
+        const base64State = uint8ArrayToBase64(binaryState);
+
+
+        const payload = {
+          state: base64State
+        };
+
+        console.log(payload);
+
+        await updateDiagram(roomId, payload);
+        console.log("✅ Autosave Complete!");
+
+      } catch (err) {
+        console.error("❌ Autosave Failed:", err);
+      }
+    }, 6000);
+
+    // Cleanup on unmount
+    return () => clearInterval(saveInterval);
+  }, [ydoc, roomId]); // Dependencies
+
+  const loadDigram = async () => {
+    try{
+      const response = await fetchDiagram(roomId);
+      console.log(response);
+      setSchemaName(response.diagramName);
+      setIsReadOnly(response.role === "READER"? true:false);
+      loadCompositeYjsData(response.snapshot,response.updates); 
+      
+    }catch(err){
+      showError(err.message);
     }
   };
 
   useEffect(() => {
-    loadDiagram();
-  }, []);
+    if (ydoc && roomId) {
+      loadDigram();
+    }
+  }, [ydoc, roomId]);
 
   const takeSnapshot = async () => {
-    
-    const viewport = document.querySelector('.react-flow__viewport');
+    const viewport = document.querySelector(".react-flow__viewport");
 
     await reactFlowInstance.fitView({ padding: 50 });
 
@@ -97,17 +151,14 @@ const SchemaContent = () => {
     try {
       const thumbnail = await toPng(viewport, {
         backgroundColor: "#ffffff",
-        quality: 1
+        quality: 1,
       });
-
 
       return thumbnail;
     } catch (err) {
       console.log("Error exporting:", err);
     }
   };
-
-  
 
   const onConnect = useCallback(
     (params) => {
@@ -118,7 +169,7 @@ const SchemaContent = () => {
         params.target,
         selectedRelationType,
         nodes,
-        {updateNodeData,addNodeYjs,addEdgeYjs}
+        { updateNodeData, addNodeYjs, addEdgeYjs }
       );
 
       const typeKey =
@@ -138,26 +189,26 @@ const SchemaContent = () => {
       };
       addEdgeYjs(newEdge);
     },
-    [selectedRelationType, addEdgeYjs]
+    [selectedRelationType, addEdgeYjs, nodes, updateNodeData, addNodeYjs]
   );
 
   const addNode = () => {
     const id = `${nodes.length + 1}_${Date.now()}`;
     const newNode = {
-        id,
-        type: "Defult-Node", // Make sure this matches your nodeTypes key
-        data: {
-          tableName: `Entity_${nodes.length + 1}`,
-          columns: [
-            {
-              id: `attr1_${id}`,
-              name: "id",
-              dataType: "INT",
-              constraints: { PRIMARY_KEY: true },
-            },
-          ],
-        },
-        position: { x: Math.random() * 400, y: Math.random() * 400 },
+      id,
+      type: "Defult-Node", // Make sure this matches your nodeTypes key
+      data: {
+        tableName: `Entity_${nodes.length + 1}`,
+        columns: [
+          {
+            id: `attr1_${id}`,
+            name: "id",
+            dataType: "INT",
+            constraints: { PRIMARY_KEY: true },
+          },
+        ],
+      },
+      position: { x: Math.random() * 400, y: Math.random() * 400 },
     };
     addNodeYjs(newNode);
   };
@@ -177,12 +228,12 @@ const SchemaContent = () => {
     const payload = {
       name: schemaName,
       jsonContent: JSON.stringify({ nodes, edges }),
-      thumbnail: thumbnailURL
+      thumbnail: thumbnailURL,
     };
 
     try {
       await updateDiagram(id, payload);
-      await takeSnapshot(); 
+      await takeSnapshot();
       showSuccess("Diagram saved successfully!");
     } catch (err) {
       showError(err.message);
@@ -209,12 +260,6 @@ const SchemaContent = () => {
       showError(err.message);
       setIsSqlPanelOpen(false);
     }
-
-  };
-
-  const printNodes = () => { 
-    console.log("Current Nodes:", nodes);
-    console.log(roomId)
   };
 
   return (
@@ -225,98 +270,97 @@ const SchemaContent = () => {
           onClose={() => setIsSqlPanelOpen(false)}
         />
       )}
-      <div className="header">
-        <input
-          placeholder="Database Name"
-          value={schemaName}
-          onChange={(e) => setSchemaName(e.target.value)}
-          disabled={isReadOnly}
-        />
-        {!isReadOnly && (
-          <button
-            className="save-btn"
-            onClick={onSaveDiagram}
-            disabled={isSaving}
-          >
-            {isSaving ? "Saving..." : "Save Diagram"}
-          </button>
-        )}
-      </div>
-      <ReactFlow
-        onInit={(instance) => setReactFlowInstance(instance)}
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        connectionMode="loose"
-        nodesDraggable={!isReadOnly}
-        nodesConnectable={!isReadOnly}
-        elementsSelectable={!isReadOnly}
-        zoomOnDoubleClick={!isReadOnly}
-        defaultEdgeOptions={{
-          style: { strokeWidth: 2, stroke: "#94a3b8" },
-        }}
-        //new props
-        proOptions={{ hideAttribution: true }}
-        nodeDragThreshold={2}
-        onlyRenderVisibleElements={true}
 
-      >
-        <MiniMap
-          style={{ borderRadius: 8, border: "1px solid #e2e8f0" }}
-          nodeColor="#cbd5e1"
-          maskColor="rgba(241, 245, 249, 0.6)"
-        />
-        {!isReadOnly && (
-          <Controls
-            style={{
-              borderRadius: 8,
-              overflow: "hidden",
-              border: "none",
-              boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-            }}
+      <input
+        className="schema-name"
+        placeholder="Database Name"
+        value={schemaName}
+        onChange={(e) => setSchemaName(e.target.value)}
+        disabled={isReadOnly}
+      />
+      <div className="active-users">
+        <ActiveUsers />
+      </div>
+
+      <div className="drawing-canva">
+        <ReactFlow
+          onInit={(instance) => setReactFlowInstance(instance)}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          connectionMode="loose"
+          nodesDraggable={!isReadOnly}
+          nodesConnectable={!isReadOnly}
+          elementsSelectable={!isReadOnly}
+          zoomOnDoubleClick={!isReadOnly}
+          defaultEdgeOptions={{
+            style: { strokeWidth: 2, stroke: "#94a3b8" },
+          }}
+          //new props
+          proOptions={{ hideAttribution: true }}
+          nodeDragThreshold={2}
+          onlyRenderVisibleElements={true}
+        >
+          <MiniMap
+            style={{ borderRadius: 8, border: "1px solid #e2e8f0" }}
+            nodeColor="#cbd5e1"
+            maskColor="rgba(241, 245, 249, 0.6)"
           />
-        )}
-        <Background color="#cbd5e1" gap={20} size={1} />
-        <CursorLayer>
-        {cursors.map((cursor) => (
-          <Cursor
-            key={cursor.id}
-            x={cursor.x}
-            y={cursor.y}
-            color={cursor.color}
-            name={cursor.name}
-          />
-        ))}
-        </CursorLayer>
-      </ReactFlow>
+          {!isReadOnly && (
+            <Controls
+              style={{
+                borderRadius: 8,
+                overflow: "hidden",
+                border: "none",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+              }}
+            />
+          )}
+          <Background color="#5f5f5fff" gap={20} size={1} variant="dots" />
+          <CursorLayer>
+            {cursors.map((cursor) => (
+              <Cursor
+                key={cursor.id}
+                x={cursor.x}
+                y={cursor.y}
+                color={cursor.color}
+                name={cursor.name}
+              />
+            ))}
+          </CursorLayer>
+        </ReactFlow>
+      </div>
 
       {!isSqlPanelOpen && !isReadOnly && (
-        <Toolbar addNode={addNode} selectedRelationType={selectedRelationType} setSelectedRelationType={setSelectedRelationType}/>
+        <div className="toolbar-container">
+          <Toolbar
+            addNode={addNode}
+            selectedRelationType={selectedRelationType}
+            setSelectedRelationType={setSelectedRelationType}
+          />
+        </div>
       )}
       <button className="generate" onClick={onGenerateSQL}>
         Generate SQL
-      </button>
-      <button className="generate" onClick={printNodes} style={{top:"120px"}}>
-        Print Nodes to Console
       </button>
     </div>
   );
 };
 
 export default function Schema() {
-    const { roomId } = useParams();
-    return (
-      <ReactFlowProvider>
-        <CollaborationProvider roomId={roomId}>
-            <SchemaContent />
-        </CollaborationProvider>
-        </ReactFlowProvider>
-    );
+  const { roomId } = useParams();
+  return (
+    <ReactFlowProvider>
+      <CollaborationProvider roomId={roomId}>
+        <SchemaContent />
+      </CollaborationProvider>
+    </ReactFlowProvider>
+  );
 }
 
 const CursorLayer = ({ children }) => {
@@ -325,16 +369,15 @@ const CursorLayer = ({ children }) => {
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         left: 0,
-        pointerEvents: 'none',
+        pointerEvents: "none",
         zIndex: 1000,
-        // 🛑 THE MAGIC: Apply the same transform as the flow canvas
         transform: `translate(${x}px, ${y}px) scale(${zoom})`,
-        transformOrigin: '0 0', 
-        width: '100%',
-        height: '100%',
+        transformOrigin: "0 0",
+        width: "100%",
+        height: "100%",
       }}
     >
       {children}

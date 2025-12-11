@@ -1,8 +1,6 @@
 package backend.collab.snapshot;
 
 import java.util.Base64;
-import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
@@ -15,12 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import backend.security.AuthUser;
-import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
-import backend.userDiagramManagement.dto.update.DiagramUpdateResponseDto;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-record State(String str) {
+record State(String state) {
 }
 
 @RestController
@@ -45,7 +40,7 @@ public class SnapshotController {
 			@PathVariable UUID id,
 			@RequestBody State state) {
 
-		byte[] statebin = Base64.getDecoder().decode(state.str());
+		byte[] statebin = Base64.getDecoder().decode(state.state());
 		snapshotService.takeSnapshot(authUser.userId(), id, statebin);
 
 		return ResponseEntity.ok("Snapshot taken sucessfully");
