@@ -64,7 +64,9 @@ const SchemaContent = () => {
     addNodeYjs,
     addEdgeYjs,
     updateNodeData,
-    loadCompositeYjsData
+    loadCompositeYjsData,
+    undo,
+    redo
   } = useCollaboration();
 
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
@@ -140,6 +142,28 @@ const SchemaContent = () => {
       loadDigram();
     }
   }, [ydoc, roomId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check for Ctrl (Windows) or Meta (Mac)
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === "z") {
+          e.preventDefault();
+          if (e.shiftKey) {
+            redo(); // Ctrl + Shift + Z
+          } else {
+            undo(); // Ctrl + Z
+          }
+        } else if (e.key === "y") {
+          e.preventDefault();
+          redo(); // Ctrl + Y
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
 
   const takeSnapshot = async () => {
     const viewport = document.querySelector(".react-flow__viewport");
@@ -342,8 +366,13 @@ const SchemaContent = () => {
             addNode={addNode}
             selectedRelationType={selectedRelationType}
             setSelectedRelationType={setSelectedRelationType}
+            undo={undo}
+            redo={redo}
           />
+
+          
         </div>
+        
       )}
       <button className="generate" onClick={onGenerateSQL}>
         Generate SQL

@@ -8,6 +8,7 @@ import React, {
   useRef,
 } from "react";
 import * as Y from "yjs";
+import { UndoManager } from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { applyNodeChanges, applyEdgeChanges } from "@xyflow/react";
 import throttle from "lodash/throttle";
@@ -45,6 +46,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [ydoc, setYdoc] = useState(null);
   const [provider, setProvider] = useState(null);
+  const [undoManager, setUndoManager] = useState(null);
 
   const getRandomColor = () =>
     "#" + Math.floor(Math.random() * 16777215).toString(16);
@@ -77,6 +79,12 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
     setYdoc(doc);
     setProvider(wsProvider);
+
+	const mgr = new UndoManager([nodesMap, edgesMap], {
+      captureTimeout: 500, // Group changes occurring within 500ms into one undo step (helps with dragging)
+    });
+    
+    setUndoManager(mgr);
 
     // --- AWARENESS SETUP (Cursors) ---
     const awareness = wsProvider.awareness;
@@ -172,6 +180,18 @@ export const CollaborationProvider = ({ roomId, children }) => {
     });
 }, [ydoc]);
 
+
+const undo = useCallback(() => {
+    if (undoManager) {
+      undoManager.undo();
+    }
+  }, [undoManager]);
+
+  const redo = useCallback(() => {
+    if (undoManager) {
+      undoManager.redo();
+    }
+  }, [undoManager]);
 
 
   const updateCursor = useCallback(
@@ -300,7 +320,9 @@ export const CollaborationProvider = ({ roomId, children }) => {
         addNodeYjs,
         addEdgeYjs,
         provider,
-		loadCompositeYjsData
+		loadCompositeYjsData,
+		undo,
+		redo
       }}
     >
       {children}

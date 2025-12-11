@@ -1,6 +1,20 @@
-export default function Toolbar({addNode,selectedRelationType,setSelectedRelationType}){
+export default function Toolbar({addNode,selectedRelationType,setSelectedRelationType,undo,redo}){
     return(
         <div className="schema-toolbar">
+          <button className="add-node-btn" onClick={undo}>
+             ↩
+          </button>
+          <button className="add-node-btn" onClick={redo}>
+              ↪
+          </button>
+          <div
+            style={{
+              width: 1,
+              height: 24,
+              background: "#e2e8f0",
+              margin: "0 4px",
+            }}
+          ></div>
           <RelationButton
             active={selectedRelationType === "1:1"}
             color="#3b82f6"

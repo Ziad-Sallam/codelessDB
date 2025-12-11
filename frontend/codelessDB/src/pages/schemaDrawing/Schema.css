@@ -207,3 +207,11 @@
   right: 220px;
   z-index: 10;
 }
+
+.undo-redo{
+  position: fixed;
+  top:150px;
+  right: 150px;
+  border: 10px solid black;
+
+}
