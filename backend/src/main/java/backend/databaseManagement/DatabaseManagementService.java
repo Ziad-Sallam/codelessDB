@@ -144,7 +144,7 @@ public class DatabaseManagementService {
 
     public SendDatabasesDTO getUserDatabases(int userId){
         User usr = userRepository.findById(userId);
-        List<UserDatabase> dbs = usr.getAccessibleDatabases();
+        List<UserDatabase> dbs = usr.getAccessibleDatabases().stream().toList();
         SendDatabasesDTO ans = new SendDatabasesDTO();
         for(UserDatabase db : dbs){
             Database temp = new Database();
@@ -161,7 +161,7 @@ public class DatabaseManagementService {
    
     public List<CreateServerDTO> getUserServers(int userId){
         User usr = userRepository.findById(userId);
-        List<Server> servers =  usr.getServers();
+        List<Server> servers = usr.getServers().stream().toList();
         List<CreateServerDTO> ans= new ArrayList<>();
         for(Server s : servers){
             CreateServerDTO temp = new CreateServerDTO();
