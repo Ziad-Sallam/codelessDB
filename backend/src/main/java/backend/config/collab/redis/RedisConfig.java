@@ -6,6 +6,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -26,11 +27,12 @@ public class RedisConfig {
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setHashKeySerializer(new StringRedisSerializer());
 
-		template.setValueSerializer(new ByteArraySerializer());
-		template.setHashValueSerializer(new ByteArraySerializer());
+		RedisSerializer<byte[]> base64Serializer = new Base64StringSerializer();
+		template.setValueSerializer(base64Serializer);
+		template.setHashValueSerializer(base64Serializer);
 
 		template.afterPropertiesSet();
 		return template;
 	}
-	
+
 }
