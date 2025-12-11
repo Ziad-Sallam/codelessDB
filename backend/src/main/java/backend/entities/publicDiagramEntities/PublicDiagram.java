@@ -34,7 +34,7 @@ public class PublicDiagram {
     private Diagram diagram;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    @Size(min = 5, max = 500)
+    @Size(min = 1, max = 500)
     private String shortDescription;
 
     @Column(columnDefinition = "TEXT")
