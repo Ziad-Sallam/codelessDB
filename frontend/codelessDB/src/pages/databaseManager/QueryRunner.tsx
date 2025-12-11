@@ -5,6 +5,9 @@ import LeftPanel from '../../components/LeftPanel';
 import QueryDialog from '../../components/QueryDialog';
 import { cannedQueriesApi } from '../cannedquery/cannedQueriesApi';
 import { Snackbar, Alert } from '@mui/material';
+import CodeMirror from '@uiw/react-codemirror';
+import { sql } from '@codemirror/lang-sql';
+import { placeholder } from '@codemirror/view';
 
 import axios from 'axios';
 
@@ -194,12 +197,27 @@ const QueryRunner: React.FC = () => {
     setQueryResult(null);
     setHasExecuted(false);
   };
-  const RECONNECT_COMMANDS = [
-    "Invoke-WebRequest -Uri \"http://localhost:8080/agent/communicate\" -OutFile \".\communicate.exe\"",
-    "Invoke-WebRequest -Uri \"http://localhost:8080/agent/create-container\" -OutFile \".\create_container.exe\"",
-    `.\create_container.exe "http://localhost:8080" ${databaseId}`,
-    `.\communicate.exe "ws://localhost:8080" ${databaseId}`
-  ];
+
+  const handleQueryChange = (value: string) => {
+    const statements = value.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    if (statements.length > 1) {
+      setSnackbar({
+        open: true,
+        message: 'Only one SQL query is allowed.',
+        severity: 'warning'
+      });
+      setQueryContent(statements[0]+";");
+    } else {
+      setQueryContent(value);
+    }
+  };
+
+const RECONNECT_COMMANDS = [
+  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/communicate" -OutFile ".\\communicate.exe"`,
+  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/create-container" -OutFile ".\\create_container.exe"`,
+  `.\\create_container.exe "http://${API_BASE_URL}" ${databaseId}`,
+  `.\\communicate.exe "ws://${API_BASE_URL}" ${databaseId}`
+];
 
 
   return (
@@ -294,14 +312,17 @@ const QueryRunner: React.FC = () => {
                 <label htmlFor="query-content" className="form-label">
                   SQL Query <span className="required">*</span>
                 </label>
-                <textarea
+                <CodeMirror
                   id="query-content"
                   className="query-textarea"
-                  placeholder="e.g., SHOW TABLES"
-                  rows={8}
                   value={queryContent}
-                  onChange={(e) => setQueryContent(e.target.value)}
-                  disabled={isExecuting || !isOnline}
+                  onChange={handleQueryChange}
+                  editable={!(isExecuting || !isOnline)}
+                  extensions={[
+                    sql(),                           // SQL syntax highlighting
+                    placeholder('e.g., SHOW TABLES') // Placeholder text
+                  ]}
+                  height="200px"
                 />
               </div>
 

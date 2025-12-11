@@ -72,22 +72,4 @@ public class MessageController {
                 .body(resource);
     }
 
-    @GetMapping("/local-ip")
-    public String getLocalIp() throws Exception {
-        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-        while (interfaces.hasMoreElements()) {
-            NetworkInterface ni = interfaces.nextElement();
-            if (ni.isLoopback() || !ni.isUp()) continue;
-
-            Enumeration<InetAddress> addresses = ni.getInetAddresses();
-            while (addresses.hasMoreElements()) {
-                InetAddress addr = addresses.nextElement();
-                if (!addr.isLoopbackAddress() && addr.isSiteLocalAddress()) {
-                    return "Local Network IP: " + addr.getHostAddress();
-                }
-            }
-        }
-        return "Local IP not found";
-    }
-
 }

@@ -5,6 +5,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import axios from "axios";
 import { useNotification } from '../../components/NotificationContext';
+import { useNavigate } from 'react-router-dom';
 
 
 interface ServerType {
@@ -116,6 +117,7 @@ const DatabaseConfiguration: React.FC = () => {
   const [isLoadingServers, setIsLoadingServers] = useState(true);
   const [leftNav, setLeftNav] = useState("all");
   const { showSuccess, showError } = useNotification();
+  const navigate = useNavigate();
   const [database, setDatabase] = useState<DatabaseConfig>({
 
     databaseName: '',
@@ -272,6 +274,7 @@ const DatabaseConfiguration: React.FC = () => {
         databaseName: '',
         databasePassword: ''
       }))
+      navigate(`/database-manager/${result.databaseId}`);
     } catch (error: any) {
       showError(error.message);
     }

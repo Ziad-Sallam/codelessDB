@@ -1,30 +1,39 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/database';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
+// Create a central Axios instance
 const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization' : `Bearer ${localStorage.getItem('authToken')}`
+  },
 });
 
+// Add Authorization header automatically
+// api.interceptors.request.use(
+//   (config) => {
+//     const token = localStorage.getItem('authToken');
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+//     return config;
+//   },
+//   (error) => Promise.reject(error)
+// );
+
+// API methods
 export const serversApi = {
-    getUserServers: async () => {
-        const response = await api.get('/get-user-servers');
-        return response.data;
-    },
-    getUserDatabases: async () => {
-        const response = await api.get('/get-user-databases');
-        return response.data;
-    },
+  getUserServers: async () => {
+    const { data } = await api.get('/database/get-user-servers');
+    return data;
+  },
+
+  getUserDatabases: async () => {
+    const { data } = await api.get('/database/get-user-databases');
+    return data;
+  },
 };
 
 export default serversApi;

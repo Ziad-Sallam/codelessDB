@@ -39,7 +39,7 @@ export const cannedQueriesApi = {
 };
 export const databaseApi = {
   getUserDatabases: async () => {
-    const response = await axios.get('http://localhost:8080/database/get-user-databases', {
+    const response = await axios.get(API_BASE_URL + '/database/get-user-databases', {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -48,7 +48,7 @@ export const databaseApi = {
     return response.data;
   },
   getDatabaseDDL: async (databaseId) => {
-    const response = await axios.get('http://localhost:8080/database/get-user-databases', {
+    const response = await axios.get(API_BASE_URL + '/database/get-user-databases', {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
