@@ -80,14 +80,17 @@ class UnpublishTests {
                 .thenReturn(ownerLink);
 
         // delete() should be called
-        doNothing().when(publicDiagramRepository).delete(publicDiagram);
+        // mock deleteById instead of delete
+        doNothing().when(publicDiagramRepository).deleteById(publicDiagram.getId());
 
         service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID);
+
+        // verify deleteById called once
+        verify(publicDiagramRepository, times(1)).deleteById(publicDiagram.getId());
 
         // diagram no longer has public entry
         assertNull(diagram.getPublicDiagram());
 
-        verify(publicDiagramRepository, times(1)).delete(publicDiagram);
     }
 
     // -------------------------------------------------------------
@@ -129,25 +132,23 @@ class UnpublishTests {
 
         assertThrows(RuntimeException.class,
                 () -> service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID));
-    }
+        }
 
     // -------------------------------------------------------------
     // ✅ Test: Repository delete is actually called with correct entity
     // -------------------------------------------------------------
-    @Test
-    void unpublish_repositoryDeleteCalled() {
+        @Test
+        void unpublish_repositoryDeleteByIdCalled() {
         when(userDiagramService.getUserDiagramOrThrow(USER_ID, DIAGRAM_ID))
                 .thenReturn(ownerLink);
 
         service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID);
 
-        ArgumentCaptor<PublicDiagram> captor =
-                ArgumentCaptor.forClass(PublicDiagram.class);
+        // Verify deleteById called with correct ID
+        verify(publicDiagramRepository, times(1))
+                .deleteById(publicDiagram.getId());
+        }
 
-        verify(publicDiagramRepository, times(1)).delete(captor.capture());
-
-        assertEquals(publicDiagram, captor.getValue());
-    }
 
     // -------------------------------------------------------------
     // ✅ Test: After deletion, diagram.publicDiagram is null

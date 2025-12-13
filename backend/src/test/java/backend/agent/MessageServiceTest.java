@@ -54,7 +54,7 @@ public class MessageServiceTest {
     @Test
     void testDatabaseNotConnected() {
         User mockUser = new User();
-        mockUser.setAccessibleDatabases(Collections.emptyList());
+        mockUser.setAccessibleDatabases(Collections.emptySet());
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.emptySet());
@@ -69,7 +69,7 @@ public class MessageServiceTest {
     @Test
     void testDatabaseNotFound() {
         User mockUser = new User();
-        mockUser.setAccessibleDatabases(Collections.emptyList());
+        mockUser.setAccessibleDatabases(Collections.emptySet());
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(
@@ -88,7 +88,7 @@ public class MessageServiceTest {
     @Test
     void testUnauthorizedAccess() {
         User mockUser = new User();
-        mockUser.setAccessibleDatabases(Collections.emptyList()); 
+        mockUser.setAccessibleDatabases(Collections.emptySet()); 
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.singleton("5"));
@@ -107,7 +107,7 @@ public class MessageServiceTest {
     void testSuccessfulQuery() throws Exception {
         User mockUser = new User();
         UserDatabase mockDB = new UserDatabase();
-        mockUser.setAccessibleDatabases(Collections.singletonList(mockDB));
+        mockUser.setAccessibleDatabases(Collections.singleton(mockDB));
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.singleton("5"));
@@ -129,7 +129,7 @@ public class MessageServiceTest {
        
         User mockUser = new User();
         UserDatabase mockDB = new UserDatabase();
-        mockUser.setAccessibleDatabases(Collections.singletonList(mockDB));
+        mockUser.setAccessibleDatabases(Collections.singleton(mockDB));
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.singleton("5"));
@@ -148,7 +148,7 @@ public class MessageServiceTest {
         @Test
     void testDatabaseIsOnline_UnauthorizedAccess() {
         User user = new User();
-        user.setAccessibleDatabases(Collections.emptyList());
+        user.setAccessibleDatabases(Collections.emptySet());
 
         UserDatabase db = new UserDatabase();
         when(userRepository.findById(1)).thenReturn(user);
@@ -164,7 +164,7 @@ public class MessageServiceTest {
     void testDatabaseIsOnline_Online() {
         UserDatabase db = new UserDatabase();
         User user = new User();
-        user.setAccessibleDatabases(Collections.singletonList(db));
+        user.setAccessibleDatabases(Collections.singleton(db));
 
         when(userRepository.findById(1)).thenReturn(user);
         when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
@@ -178,7 +178,7 @@ public class MessageServiceTest {
     void testDatabaseIsOnline_Offline() {
         UserDatabase db = new UserDatabase();
         User user = new User();
-        user.setAccessibleDatabases(Collections.singletonList(db));
+        user.setAccessibleDatabases(Collections.singleton(db));
 
         when(userRepository.findById(1)).thenReturn(user);
         when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
@@ -192,7 +192,7 @@ public class MessageServiceTest {
     void testDatabaseIsOnline_UserNotFound() {
         when(userRepository.findById(1)).thenReturn(null);
 
-        NullPointerException ex = assertThrows(NullPointerException.class, () ->
+        assertThrows(NullPointerException.class, () ->
                 messageService.databaseIsOnline(1, 10)
         );
         // Optional: you could modify your method to throw RuntimeException("User not found") instead

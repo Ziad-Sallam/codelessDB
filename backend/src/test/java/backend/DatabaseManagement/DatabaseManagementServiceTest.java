@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -170,7 +171,7 @@ class DatabaseManagementServiceTest {
         // Mock owner
         User owner = new User();
         owner.setId(1);
-        owner.setServers(new ArrayList<>());
+        
         when(userRepository.findById(1)).thenReturn(owner);
 
         // Mock serverRepository.save to assign ID when creating server
@@ -220,7 +221,7 @@ class DatabaseManagementServiceTest {
         // Owner with empty servers (no access)
         User owner = new User();
         owner.setId(1);
-        owner.setServers(new ArrayList<>());
+        
         when(userRepository.findById(1)).thenReturn(owner);
 
         // Server exists
@@ -244,7 +245,6 @@ class DatabaseManagementServiceTest {
 
         User owner = new User();
         owner.setId(1);
-        owner.setServers(new ArrayList<>());
         when(userRepository.findById(1)).thenReturn(owner);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
@@ -325,7 +325,6 @@ class DatabaseManagementServiceTest {
 
         User owner = new User();
         owner.setId(1);
-        owner.setServers(new ArrayList<>());
 
         when(userRepository.findById(1)).thenReturn(owner);
         when(serverRepository.save(any(Server.class))).thenAnswer(invocation -> {
@@ -338,7 +337,12 @@ class DatabaseManagementServiceTest {
 
         assertEquals(100, result.getServerId());
         assertEquals(1, owner.getServers().size()); // Owner’s servers updated
-        assertEquals("MyServer", owner.getServers().get(0).getName());
+        assertTrue(
+            owner.getServers()
+                .stream()
+                .anyMatch(s -> "MyServer".equals(s.getName()))
+        );
+
 
         // Verify save calls
         verify(serverRepository, times(1)).save(any(Server.class));
@@ -362,11 +366,10 @@ class DatabaseManagementServiceTest {
     }
 
 
-        @Test
+    @Test
     void testGetUserServers_success() {
         User user = new User();
         user.setId(1);
-        user.setServers(new ArrayList<>());
 
         Server s1 = new Server();
         s1.setId(10);
@@ -386,18 +389,21 @@ class DatabaseManagementServiceTest {
         assertNotNull(result);
         assertEquals(2, result.size());
 
-        assertEquals(10, result.get(0).getServerId());
-        assertEquals("ServerOne", result.get(0).getServerName());
+        assertTrue( result.stream().anyMatch(s -> 
+            s.getServerName()=="ServerOne" && 
+            s.getServerId()==10)
+        );
 
-        assertEquals(20, result.get(1).getServerId());
-        assertEquals("ServerTwo", result.get(1).getServerName());
+        assertTrue(result.stream().anyMatch(s -> 
+            s.getServerName()=="ServerTwo" && 
+            s.getServerId()==20)
+        );
     }
 
     @Test
     void testGetUserServers_noServers_returnsEmptyList() {
         User user = new User();
         user.setId(1);
-        user.setServers(new ArrayList<>());
 
         when(userRepository.findById(1)).thenReturn(user);
 
@@ -427,7 +433,7 @@ class DatabaseManagementServiceTest {
         db2.setName("DB2");
         db2.setServer(server);
 
-        List<UserDatabase> databases = List.of(db1, db2);
+        Set<UserDatabase> databases = Set.of(db1, db2);
         user.setAccessibleDatabases(databases);
 
         when(userRepository.findById(userId)).thenReturn(user);
@@ -439,17 +445,24 @@ class DatabaseManagementServiceTest {
         assertNotNull(result);
         assertEquals(2, result.getDatabases().size());
 
-        Database first = result.getDatabases().get(0);
-        assertEquals(10, first.getDatabaseId());
-        assertEquals("DB1", first.getDatabaseName());
-        assertEquals("Server-1", first.getServerName());
+        assertTrue(
+            result.getDatabases().stream().anyMatch(db ->
+                db.getDatabaseId() == 10 &&
+                "DB1".equals(db.getDatabaseName()) &&
+                "Server-1".equals(db.getServerName())
+            )
+        );
 
-        Database second = result.getDatabases().get(1);
-        assertEquals(20, second.getDatabaseId());
-        assertEquals("DB2", second.getDatabaseName());
-        assertEquals("Server-1", second.getServerName());
+        assertTrue(
+            result.getDatabases().stream().anyMatch(db ->
+                db.getDatabaseId() == 20 &&
+                "DB2".equals(db.getDatabaseName()) &&
+                "Server-1".equals(db.getServerName())
+            )
+        );
 
         verify(userRepository).findById(userId);
+
     }    
 
 
@@ -475,8 +488,8 @@ class DatabaseManagementServiceTest {
         existingDb.setName("test_db");
         existingDb.setServer(server);
 
-        owner.setServers(List.of(server));
-        owner.setAccessibleDatabases(List.of(existingDb));
+        owner.setServers(Set.of(server));
+        owner.setAccessibleDatabases(Set.of(existingDb));
 
         when(userRepository.findById(ownerId)).thenReturn(owner);
         when(serverRepository.findById(10)).thenReturn(Optional.of(server));
