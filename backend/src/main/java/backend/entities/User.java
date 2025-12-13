@@ -27,70 +27,67 @@ import lombok.Setter;
 @AllArgsConstructor
 public class User {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
-        @Column(nullable = false, unique = true, length = 50)
-        @NotBlank
-        @Size(min = 3, max = 50)
-        private String username;
+    @Column(nullable = false, unique = true, length = 50)
+    @NotBlank
+    @Size(min = 3, max = 50)
+    private String username;
 
-        @Column(nullable = false, unique = true, length = 100)
-        @NotBlank
-        @Email
-        private String email;
+    @Column(nullable = false, unique = true, length = 100)
+    @NotBlank
+    @Email
+    private String email;
 
-        @Column(nullable = false, length = 60)
-        private String password;
+    @Column(nullable = false, length = 60)
+    private String password;
 
-        private String picture;
+    private String picture;
 
-        @Column(length = 300)
-        private String bio;
+    @Column(length = 300)
+    private String bio;
     // AI Quota fields
-        @Column(nullable = false)
-        private int aiQuotaRemaining = 5;
+    @Column(nullable = false)
+    private int aiQuotaRemaining = 5;
 
-        @Column
-        private LocalDateTime aiQuotaResetDate;
+    @Column
+    private LocalDateTime aiQuotaResetDate;
 
-        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-        private Set<UserDiagram> userDiagrams = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserDiagram> userDiagrams = new HashSet<>();
 
-        private String profileWebsiteUrl;
+    private String profileWebsiteUrl;
 
-        @Column(length = 300)
-        private String publicProfile;
+    @Column(length = 300)
+    private String publicProfile;
 
-        @CreationTimestamp
-        @Column(nullable = false, updatable = false)
-        private LocalDateTime createdAt;
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-        @JsonIgnore
-        @ManyToMany(fetch = FetchType.LAZY)
-        @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
-        private Set<User> followers = new HashSet<>();
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
+    private Set<User> followers = new HashSet<>();
 
-        @JsonIgnore
-        @ManyToMany(fetch = FetchType.LAZY)
-        @JoinTable(name = "user_following", joinColumns = @JoinColumn(name = "follower_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-        private Set<User> following = new HashSet<>();
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_following", joinColumns = @JoinColumn(name = "follower_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<User> following = new HashSet<>();
 
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
+    private Set<Server> servers = new HashSet<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserDatabase> ownedDatabases = new ArrayList<>();
 
-        @JsonIgnore
-        @ManyToMany(fetch = FetchType.LAZY)
-        @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
-        private Set<Server> servers = new HashSet<>();
-
-
-        @JsonIgnore
-        @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-        private List<UserDatabase> ownedDatabases = new ArrayList<>();
-
-        @JsonIgnore
-        @ManyToMany(fetch = FetchType.LAZY)
-        @JoinTable(name = "user_database_access", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "database_id"))
-        private Set<UserDatabase> accessibleDatabases = new HashSet<>();
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_database_access", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "database_id"))
+    private Set<UserDatabase> accessibleDatabases = new HashSet<>();
 }

@@ -9,6 +9,7 @@ import backend.entities.UserDatabase;
 
 @Repository
 public interface UserDatabaseRepository extends JpaRepository<UserDatabase, Integer> {
-List<UserDatabase> findByOwnerId(Integer ownerId);
-boolean existsByNameAndOwnerId(String name, Integer ownerId);
+    List<UserDatabase> findByOwnerId(Integer ownerId);
+
+    boolean existsByNameAndOwnerId(String name, Integer ownerId);
 }

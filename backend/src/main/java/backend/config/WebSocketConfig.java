@@ -8,14 +8,15 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import backend.agent.WebSocketHandler.*;
+import backend.agent.WebSocketHandler.StompUserInterceptor;
+import backend.agent.WebSocketHandler.UserHandshakeInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Autowired
-    private StompUserInterceptor stompUserInterceptor;
+	private StompUserInterceptor stompUserInterceptor;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -31,9 +32,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 				.addInterceptors(new UserHandshakeInterceptor());
 		// .withSockJS(); // WebSocket endpoint
 	}
+
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.interceptors(stompUserInterceptor);	
+		registration.interceptors(stompUserInterceptor);
 	}
 
 }

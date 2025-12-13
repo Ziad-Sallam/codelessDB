@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import backend.security.AuthUser;
 
-
 @RestController
 @RequestMapping("/database")
 public class DatabaseManagementController {
@@ -29,7 +28,8 @@ public class DatabaseManagementController {
 
         try {
             // Attempt to create the database
-            CreateDatabaseDTO createdDatabase = databaseManagementService.createDatabase(createDatabaseDTO, authUser.userId());
+            CreateDatabaseDTO createdDatabase = databaseManagementService.createDatabase(createDatabaseDTO,
+                    authUser.userId());
             return ResponseEntity.ok(createdDatabase);
 
         } catch (RuntimeException e) {
@@ -40,24 +40,21 @@ public class DatabaseManagementController {
         }
     }
 
-
     @PostMapping("/create-server")
     public ResponseEntity<?> createServer(@RequestBody CreateServerDTO createServerDTO,
-        @AuthenticationPrincipal AuthUser authUser) {
+            @AuthenticationPrincipal AuthUser authUser) {
 
         try {
-            
+
             CreateServerDTO createdServer = databaseManagementService.createServer(createServerDTO, authUser.userId());
             return ResponseEntity.ok(createdServer);
         } catch (RuntimeException e) {
             return ResponseEntity
                     .badRequest()
                     .body(Map.of(
-                            "error", e.getMessage()
-                    ));
+                            "error", e.getMessage()));
         }
     }
-
 
     @PostMapping("/create-mysql-container")
     public ResponseEntity<?> createMysqlContainer(@RequestBody int id) {
@@ -71,14 +68,14 @@ public class DatabaseManagementController {
     }
 
     @GetMapping("/get-user-servers")
-    public ResponseEntity<?> getUserServers(@AuthenticationPrincipal AuthUser authUser){
+    public ResponseEntity<?> getUserServers(@AuthenticationPrincipal AuthUser authUser) {
         List<CreateServerDTO> ans = databaseManagementService.getUserServers(authUser.userId());
         return ResponseEntity.ok(ans);
     }
 
     @GetMapping("/get-user-databases")
     public ResponseEntity<?> getUserDAtabases(@AuthenticationPrincipal AuthUser authUser) {
-    
+
         SendDatabasesDTO sendDatabases = databaseManagementService.getUserDatabases(authUser.userId());
         return ResponseEntity.ok(sendDatabases);
 

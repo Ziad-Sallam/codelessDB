@@ -1,7 +1,10 @@
 package backend.databaseManagement;
 
-
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Data
 @NoArgsConstructor
@@ -15,5 +18,5 @@ public class InitiateDatabaseDTO {
     private String wsUrl;
     private String containerName;
     private int containerId;
-    
+
 }

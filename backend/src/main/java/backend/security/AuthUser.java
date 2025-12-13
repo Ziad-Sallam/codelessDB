@@ -1,3 +1,4 @@
 package backend.security;
 
-public record AuthUser(int userId, String username) {}
+public record AuthUser(int userId, String username) {
+}

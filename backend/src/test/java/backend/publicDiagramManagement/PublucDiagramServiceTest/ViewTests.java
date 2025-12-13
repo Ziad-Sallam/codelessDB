@@ -1,31 +1,33 @@
 package backend.publicDiagramManagement.PublucDiagramServiceTest;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import backend.entities.Diagram;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
-import backend.publicDiagramManagement.repository.ForkRepository;
-import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.publicDiagramManagement.repository.StarRepository;
-import backend.publicDiagramManagement.repository.ViewsRepository;
-import backend.publicDiagramManagement.service.HashtagService;
 import backend.publicDiagramManagement.service.PublicDiagramServiceImpl;
 import backend.publicDiagramManagement.service.ViewsService;
-import backend.user.UserService;
 import backend.userDiagramManagement.dto.ContributorDto;
-import backend.userDiagramManagement.repository.DiagramRepository;
-import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ViewTests {
@@ -33,17 +35,12 @@ class ViewTests {
     // ------------------------------------------------------------
     // Mock ALL dependencies (constructor injection!)
     // ------------------------------------------------------------
-
-    @Mock private UserDiagramRepository userDiagramRepository;
-    @Mock private DiagramRepository diagramRepository;
-    @Mock private PublicDiagramRepository publicDiagramRepository;
-    @Mock private UserDiagramService userDiagramService;
-    @Mock private HashtagService hashtagService;
-    @Mock private ViewsService viewsService;
-    @Mock private ViewsRepository viewsRepository;
-    @Mock private ForkRepository forkRepository;
-    @Mock private StarRepository starRepository;  // ✅ REQUIRED (prevents NPE)
-    @Mock private UserService userService;
+    @Mock
+    private UserDiagramService userDiagramService;
+    @Mock
+    private ViewsService viewsService;
+    @Mock
+    private StarRepository starRepository; // ✅ REQUIRED (prevents NPE)
 
     @InjectMocks
     private PublicDiagramServiceImpl service;
@@ -158,8 +155,8 @@ class ViewTests {
 
         when(userDiagramService.getDiagramOrThrow(diagramId)).thenReturn(diagram);
         when(viewsService.addView(21, diagramId))
-                .thenReturn(true)      // first time
-                .thenReturn(false);    // second time
+                .thenReturn(true) // first time
+                .thenReturn(false); // second time
         when(userDiagramService.getContributors(diagramId))
                 .thenReturn(Collections.emptyList());
         when(starRepository.existsById(any())).thenReturn(false);
@@ -181,8 +178,7 @@ class ViewTests {
 
         List<ContributorDto> contributors = List.of(
                 new ContributorDto("Bob", "p1", null),
-                new ContributorDto("Carol", "p2", null)
-        );
+                new ContributorDto("Carol", "p2", null));
 
         when(userDiagramService.getDiagramOrThrow(diagramId)).thenReturn(diagram);
         when(viewsService.addView(99, diagramId)).thenReturn(false);

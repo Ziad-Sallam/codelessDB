@@ -1,16 +1,17 @@
 package backend.agent.HTTPHandler;
 
-import backend.agent.WebSocketHandler.OnlineUserTracker;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import backend.agent.WebSocketHandler.AgentController;
 import backend.agent.WebSocketHandler.AgentMessageDTO;
 import backend.agent.WebSocketHandler.ClientResponseDTO;
+import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.entities.User;
+import backend.entities.UserDatabase;
 import backend.user.UserRepository;
-import backend.entities.*;;
+;
 
 @Service
 public class MessageService {
@@ -24,40 +25,43 @@ public class MessageService {
             UserRepository userRepository,
             UserDatabaseRepository userDatabaseRepository,
             OnlineUserTracker tracker,
-            AgentController agentController
-    ) {
+            AgentController agentController) {
         this.userRepository = userRepository;
         this.userDatabaseRepository = userDatabaseRepository;
         this.tracker = tracker;
         this.agentController = agentController;
     }
 
-    public ClientResponseDTO runQuery(int databaseId, AgentMessageDTO message, int userId){
+    public ClientResponseDTO runQuery(int databaseId, AgentMessageDTO message, int userId) {
         ClientResponseDTO clientResponse;
         User user = userRepository.findById(userId);
-        if (user == null) throw new RuntimeException("User not found");
-        if(!tracker.getOnlineUsers().contains(Integer.toString(databaseId))) 
+        if (user == null)
+            throw new RuntimeException("User not found");
+        if (!tracker.getOnlineUsers().contains(Integer.toString(databaseId)))
             throw new RuntimeException("Database not Connected Please Check your Server!");
 
         UserDatabase database = userDatabaseRepository.findById(databaseId).orElse(null);
-        if(database == null) throw new RuntimeException("Database not found");
-        
-        if(!user.getAccessibleDatabases().contains(database))throw new RuntimeException("Unauthrized Access");
+        if (database == null)
+            throw new RuntimeException("Database not found");
 
-        try{
+        if (!user.getAccessibleDatabases().contains(database))
+            throw new RuntimeException("Unauthrized Access");
+
+        try {
             clientResponse = agentController.sendToUser(databaseId, message);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
-        }  
+        }
         return clientResponse;
     }
 
-    public Boolean databaseIsOnline(int userId, int databaseId){
+    public Boolean databaseIsOnline(int userId, int databaseId) {
         User user = userRepository.findById(userId);
         UserDatabase database = userDatabaseRepository.findById(databaseId).orElse(null);
 
-        if(!user.getAccessibleDatabases().contains(database))throw new RuntimeException("Unauthrized Access");
-        return tracker.isOnline(Integer.toString(databaseId));      
+        if (!user.getAccessibleDatabases().contains(database))
+            throw new RuntimeException("Unauthrized Access");
+        return tracker.isOnline(Integer.toString(databaseId));
     }
-  
+
 }

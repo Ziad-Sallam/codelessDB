@@ -17,19 +17,16 @@ public class ClientResponseDTO {
     private boolean success;
     private String message;
 
-
-    
-
-    public ClientResponseDTO() {}
+    public ClientResponseDTO() {
+    }
 
     // Constructor for SELECT responses
-    public ClientResponseDTO(String correlationId, 
-                             String type, 
-                             List<String> columns, 
-                             List<List<Object>> rows, 
-                             int rowCount,
-                             boolean success
-                            ) {
+    public ClientResponseDTO(String correlationId,
+            String type,
+            List<String> columns,
+            List<List<Object>> rows,
+            int rowCount,
+            boolean success) {
         this.correlationId = correlationId;
         this.type = type;
         this.columns = columns;
@@ -40,12 +37,11 @@ public class ClientResponseDTO {
     }
 
     // Constructor for non-SELECT responses
-    public ClientResponseDTO(String correlationId, 
-                             boolean success, 
-                             String type, 
-                             int rowCount, 
-                             String message
-                            ) {
+    public ClientResponseDTO(String correlationId,
+            boolean success,
+            String type,
+            int rowCount,
+            String message) {
         this.correlationId = correlationId;
         this.success = success;
         this.type = type;
@@ -54,17 +50,15 @@ public class ClientResponseDTO {
     }
 
     // Constructor for Error responses
-    public ClientResponseDTO(String correlationId, 
-                             boolean success, 
-                             String message
-                            ) {
+    public ClientResponseDTO(String correlationId,
+            boolean success,
+            String message) {
         this.correlationId = correlationId;
         this.success = success;
         this.message = message;
         this.type = "ERROR";
 
     }
-
 
     @Override
     public String toString() {

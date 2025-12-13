@@ -11,7 +11,6 @@ import org.mockito.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +31,11 @@ class DatabaseManagementControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    /* --------------------------------------------------------
-       createDatabase
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * createDatabase
+     * --------------------------------------------------------
+     */
     @Test
     void createDatabase_success_returnsOk() throws Exception {
         CreateDatabaseDTO dto = new CreateDatabaseDTO();
@@ -116,12 +117,11 @@ class DatabaseManagementControllerTest {
         verify(databaseManagementService).getUserDatabases(1);
     }
 
-
-
-
-    /* --------------------------------------------------------
-       createServer
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * createServer
+     * --------------------------------------------------------
+     */
     @Test
     void createServer_success_returnsOk() throws Exception {
         CreateServerDTO dto = new CreateServerDTO();
@@ -141,9 +141,11 @@ class DatabaseManagementControllerTest {
         assertSame(returnedDTO, response.getBody());
     }
 
-    /* --------------------------------------------------------
-       createMysqlContainer
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * createMysqlContainer
+     * --------------------------------------------------------
+     */
     @Test
     void createMysqlContainer_success_returnsOk() throws BadRequestException {
         int databaseId = 50;
@@ -171,9 +173,11 @@ class DatabaseManagementControllerTest {
         assertNull(response.getBody());
     }
 
-    /* --------------------------------------------------------
-       getUserServers
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * getUserServers
+     * --------------------------------------------------------
+     */
     @Test
     void getUserServers_success_returnsList() {
         AuthUser authUser = mock(AuthUser.class);

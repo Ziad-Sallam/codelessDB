@@ -41,7 +41,6 @@ public class UserDatabase {
     @OneToMany(mappedBy = "database", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CannedQueriesDB> queries = new ArrayList<>();
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;

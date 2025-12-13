@@ -1,34 +1,32 @@
 package backend.databaseManagement;
 
 import java.util.ArrayList;
-
-import org.apache.coyote.BadRequestException;
-import org.springframework.stereotype.Service;
-
-import backend.entities.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import backend.agent.WebSocketHandler.OnlineUserTracker;
-import backend.entities.Server;
-import backend.entities.UserDatabase;
-import backend.user.UserRepository;
-
 import java.util.List;
 
+import org.apache.coyote.BadRequestException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import backend.agent.WebSocketHandler.OnlineUserTracker;
+import backend.entities.Server;
+import backend.entities.User;
+import backend.entities.UserDatabase;
+import backend.user.UserRepository;
 
 @Service
 public class DatabaseManagementService {
     private final UserDatabaseRepository userDatabaseRepository;
     private final UserRepository userRepository;
     private final ServerRepository serverRepository;
-    private final OnlineUserTracker tracker;  
+    private final OnlineUserTracker tracker;
 
     @Autowired
     public DatabaseManagementService(
-        UserDatabaseRepository userDatabaseRepository, 
-        UserRepository userRepository,
-        ServerRepository serverRepository,
-        OnlineUserTracker tracker
-        
+            UserDatabaseRepository userDatabaseRepository,
+            UserRepository userRepository,
+            ServerRepository serverRepository,
+            OnlineUserTracker tracker
+
     ) {
         this.userDatabaseRepository = userDatabaseRepository;
         this.userRepository = userRepository;
@@ -38,17 +36,21 @@ public class DatabaseManagementService {
     }
 
     public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId) throws RuntimeException {
-        if (createServerDTO == null) throw new RuntimeException("DTO cannot be null");
+        if (createServerDTO == null)
+            throw new RuntimeException("DTO cannot be null");
 
         User owner = userRepository.findById(ownerId);
-        if (owner == null) throw new RuntimeException("Owner not found");
+        if (owner == null)
+            throw new RuntimeException("Owner not found");
 
         String serverName = createServerDTO.getServerName();
-        if (serverName == null) throw new RuntimeException("Server name not found!");
+        if (serverName == null)
+            throw new RuntimeException("Server name not found!");
 
         boolean exists = owner.getServers().stream()
                 .anyMatch(s -> s.getName().equals(serverName));
-        if (exists) throw new RuntimeException("Server name already exists for this user!");
+        if (exists)
+            throw new RuntimeException("Server name already exists for this user!");
 
         Server newServer = new Server();
         newServer.setName(serverName);
@@ -63,13 +65,13 @@ public class DatabaseManagementService {
         return createServerDTO;
     }
 
-
     public CreateDatabaseDTO createDatabase(CreateDatabaseDTO dto, int ownerId) {
 
-        if (dto == null) throw new RuntimeException("DTO cannot be null");
+        if (dto == null)
+            throw new RuntimeException("DTO cannot be null");
 
         User owner = userRepository.findById(ownerId);
-                
+
         if (dto.getDatabaseName() == null || dto.getDatabasePassword() == null) {
             throw new RuntimeException("Missing required fields");
         }
@@ -77,15 +79,16 @@ public class DatabaseManagementService {
         Server server;
         Integer serverId = dto.getServerId();
         if (serverId != null) {
-            
+
             server = serverRepository.findById(dto.getServerId())
                     .orElseThrow(() -> new RuntimeException("Server not found"));
             dto.setServerName(server.getName());
-            
-            boolean hasAccess = owner.getServers().stream()
-                                .anyMatch(s -> s.getId() == server.getId());
 
-            if (!hasAccess) throw new RuntimeException("Unauthorized Access");
+            boolean hasAccess = owner.getServers().stream()
+                    .anyMatch(s -> s.getId() == server.getId());
+
+            if (!hasAccess)
+                throw new RuntimeException("Unauthorized Access");
 
         } else {
             if (dto.getServerName() == null)
@@ -102,8 +105,8 @@ public class DatabaseManagementService {
         }
 
         boolean exists = owner.getAccessibleDatabases().stream()
-        .anyMatch(db -> db.getServer().getId() == server.getId()
-                    && db.getName().equals(dto.getDatabaseName()));
+                .anyMatch(db -> db.getServer().getId() == server.getId()
+                        && db.getName().equals(dto.getDatabaseName()));
         if (exists) {
             throw new RuntimeException("Database name already exists on this server for this user");
         }
@@ -121,7 +124,6 @@ public class DatabaseManagementService {
 
         return dto;
     }
-
 
     public InitiateDatabaseDTO initiateDatabase(int id) throws BadRequestException {
 
@@ -142,11 +144,11 @@ public class DatabaseManagementService {
         return dto;
     }
 
-    public SendDatabasesDTO getUserDatabases(int userId){
+    public SendDatabasesDTO getUserDatabases(int userId) {
         User usr = userRepository.findById(userId);
         List<UserDatabase> dbs = usr.getAccessibleDatabases().stream().toList();
         SendDatabasesDTO ans = new SendDatabasesDTO();
-        for(UserDatabase db : dbs){
+        for (UserDatabase db : dbs) {
             Database temp = new Database();
             temp.setDatabaseId(db.getId());
             temp.setServerName(db.getServer().getName());
@@ -158,12 +160,12 @@ public class DatabaseManagementService {
         return ans;
 
     }
-   
-    public List<CreateServerDTO> getUserServers(int userId){
+
+    public List<CreateServerDTO> getUserServers(int userId) {
         User usr = userRepository.findById(userId);
         List<Server> servers = usr.getServers().stream().toList();
-        List<CreateServerDTO> ans= new ArrayList<>();
-        for(Server s : servers){
+        List<CreateServerDTO> ans = new ArrayList<>();
+        for (Server s : servers) {
             CreateServerDTO temp = new CreateServerDTO();
             temp.setServerId(s.getId());
             temp.setServerName(s.getName());
@@ -171,7 +173,6 @@ public class DatabaseManagementService {
         }
 
         return ans;
-    }    
-    
+    }
 
 }

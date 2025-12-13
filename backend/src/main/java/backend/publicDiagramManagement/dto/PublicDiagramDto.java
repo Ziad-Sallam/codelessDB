@@ -1,18 +1,19 @@
 package backend.publicDiagramManagement.dto;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import backend.entities.Diagram;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.userDiagramManagement.dto.ContributorDto;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -43,7 +44,8 @@ public class PublicDiagramDto {
 
     private boolean isStared;
 
-    public static PublicDiagramDto toDto(Diagram diagram, PublicDiagram publicDiagram, List<ContributorDto> contributorDtos, boolean isStared) {
+    public static PublicDiagramDto toDto(Diagram diagram, PublicDiagram publicDiagram,
+            List<ContributorDto> contributorDtos, boolean isStared) {
         return PublicDiagramDto.builder()
                 .diagramId(diagram.getId())
                 .name(diagram.getName())

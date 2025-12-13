@@ -1,17 +1,18 @@
 package backend.SQLOptimization;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import backend.SQLOptimization.dto.OptimizeSQLRequest;
-
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 class OptimizeSQLRequestTest {
 
@@ -55,4 +56,3 @@ class OptimizeSQLRequestTest {
         assertFalse(violations.isEmpty());
     }
 }
-

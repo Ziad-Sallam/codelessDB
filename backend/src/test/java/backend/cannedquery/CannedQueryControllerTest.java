@@ -25,7 +25,6 @@ class CannedQueryControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    
     @Test
     void getAllQueriesByDatabase_success_returnsOk() {
         List<CannedQueryDto> queries = List.of(new CannedQueryDto(), new CannedQueryDto());
@@ -49,7 +48,6 @@ class CannedQueryControllerTest {
         assertTrue(response.getBody().toString().contains("DB error"));
     }
 
- 
     @Test
     void getQueryById_success_returnsOk() {
         CannedQueryDto dto = new CannedQueryDto();
@@ -73,7 +71,6 @@ class CannedQueryControllerTest {
         assertEquals("Not found", response.getBody());
     }
 
-    
     @Test
     void createQuery_success_returnsCreated() {
         CannedQueryDto dto = new CannedQueryDto();
@@ -111,7 +108,6 @@ class CannedQueryControllerTest {
         assertEquals("Already exists", response.getBody());
     }
 
-   
     @Test
     void updateQuery_success_returnsOk() {
         CannedQueryDto dto = new CannedQueryDto();
@@ -149,7 +145,6 @@ class CannedQueryControllerTest {
         assertEquals("Not found", response.getBody());
     }
 
-   
     @Test
     void deleteQuery_success_returnsOk() {
         AuthUser authUser = mock(AuthUser.class);
@@ -171,7 +166,6 @@ class CannedQueryControllerTest {
         assertEquals("Not found", response.getBody());
     }
 
-    
     @Test
     void getAllQueriesByDatabase_internalServerError() {
         when(cannedQueryService.getAllQueriesByDatabase(1))

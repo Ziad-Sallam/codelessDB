@@ -10,8 +10,5 @@ import lombok.*;
 @Setter
 public class SendDatabasesDTO {
     private List<Database> databases = new ArrayList<>();
-    
+
 }
-
-
- 

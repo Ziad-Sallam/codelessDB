@@ -1,22 +1,30 @@
 package backend.publicDiagramManagement;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.publicDiagramManagement.repository.HashtagRepository;
 import backend.publicDiagramManagement.service.HashtagService;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class HashtagServiceTest {
@@ -83,8 +91,7 @@ class HashtagServiceTest {
         when(hashtagRepository.save(any()))
                 .thenReturn(t2);
 
-        Set<Hashtag> result =
-                hashtagService.resolveHashtags(Set.of("a", "b"));
+        Set<Hashtag> result = hashtagService.resolveHashtags(Set.of("a", "b"));
 
         assertEquals(2, result.size());
         assertTrue(result.contains(t1));
@@ -100,8 +107,7 @@ class HashtagServiceTest {
     // ----------------------------------------------------------
     @Test
     void resolveHashtags_emptySet_returnsEmpty() {
-        Set<Hashtag> result =
-                hashtagService.resolveHashtags(Collections.emptySet());
+        Set<Hashtag> result = hashtagService.resolveHashtags(Collections.emptySet());
 
         assertTrue(result.isEmpty());
 
@@ -115,8 +121,7 @@ class HashtagServiceTest {
     void getAll_returnsNames() {
         List<Hashtag> list = List.of(
                 Hashtag.builder().id(1).name("sql").build(),
-                Hashtag.builder().id(2).name("db").build()
-        );
+                Hashtag.builder().id(2).name("db").build());
 
         when(hashtagRepository.findAll()).thenReturn(list);
 
@@ -151,9 +156,7 @@ class HashtagServiceTest {
     // ----------------------------------------------------------
     @Test
     void findOrCreate_nullName_throwsException() {
-        assertThrows(NullPointerException.class, () ->
-                hashtagService.findOrCreate(null)
-        );
+        assertThrows(NullPointerException.class, () -> hashtagService.findOrCreate(null));
     }
 
     // ----------------------------------------------------------
@@ -166,8 +169,7 @@ class HashtagServiceTest {
         when(hashtagRepository.findByName("x"))
                 .thenReturn(Optional.of(t));
 
-        Set<Hashtag> result =
-                hashtagService.resolveHashtags(new HashSet<>(List.of("x", "x", "x")));
+        Set<Hashtag> result = hashtagService.resolveHashtags(new HashSet<>(List.of("x", "x", "x")));
 
         assertEquals(1, result.size());
         assertTrue(result.contains(t));

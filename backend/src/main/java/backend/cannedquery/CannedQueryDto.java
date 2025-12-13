@@ -30,6 +30,7 @@ public class CannedQueryDto {
         this.databaseId = entity.getDatabase().getId();
         this.databaseName = entity.getDatabase().getName();
     }
+
     public CannedQueryDto(String name, String description, String query, Integer databaseId) {
         this.name = name;
         this.description = description;

@@ -25,27 +25,27 @@ class AgentControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    /* --------------------------------------------------------
-       sendToUser
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * sendToUser
+     * --------------------------------------------------------
+     */
 
     @Test
     void sendToUser_successfulResponse() throws Exception {
-        AgentMessageDTO message =
-                new AgentMessageDTO("agent", "run", "corr-1");
+        AgentMessageDTO message = new AgentMessageDTO("agent", "run", "corr-1");
 
         int userId = 5;
 
         // Run sendToUser asynchronously (since it blocks on future.get)
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<ClientResponseDTO> resultFuture =
-                executor.submit(() -> agentController.sendToUser(userId, message));
+        Future<ClientResponseDTO> resultFuture = executor
+                .submit(() -> agentController.sendToUser(userId, message));
 
         // Small delay to ensure sendToUser has registered the future
         Thread.sleep(100);
 
-        ClientResponseDTO response =
-                new ClientResponseDTO("corr-1", true, "OK");
+        ClientResponseDTO response = new ClientResponseDTO("corr-1", true, "OK");
 
         agentController.handleClientResponse(response);
 
@@ -59,29 +59,25 @@ class AgentControllerTest {
                 .convertAndSendToUser(
                         "5",
                         "/queue/reply",
-                        message
-                );
+                        message);
 
         executor.shutdownNow();
     }
 
     @Test
     void sendToUser_generatesCorrelationId_ifMissing() throws Exception {
-        AgentMessageDTO message =
-                new AgentMessageDTO("agent", "execute", null);
+        AgentMessageDTO message = new AgentMessageDTO("agent", "execute", null);
 
         int userId = 10;
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<ClientResponseDTO> future =
-                executor.submit(() -> agentController.sendToUser(userId, message));
+        Future<ClientResponseDTO> future = executor.submit(() -> agentController.sendToUser(userId, message));
 
         Thread.sleep(100);
 
         assertNotNull(message.getCorrelationId());
 
-        ClientResponseDTO response =
-                new ClientResponseDTO(message.getCorrelationId(), true, "OK");
+        ClientResponseDTO response = new ClientResponseDTO(message.getCorrelationId(), true, "OK");
 
         agentController.handleClientResponse(response);
 
@@ -94,8 +90,7 @@ class AgentControllerTest {
 
     @Test
     void sendToUser_timeoutThrowsException() {
-        AgentMessageDTO message =
-                new AgentMessageDTO("agent", "long-running", "timeout-id");
+        AgentMessageDTO message = new AgentMessageDTO("agent", "long-running", "timeout-id");
 
         int userId = 7;
 
@@ -106,16 +101,16 @@ class AgentControllerTest {
         assertTrue(ex.getMessage().contains("Timeout waiting for client response"));
     }
 
-    /* --------------------------------------------------------
-       handleClientResponse
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * handleClientResponse
+     * --------------------------------------------------------
+     */
 
     @Test
     void handleClientResponse_withNoWaitingRequest_doesNothing() {
-        ClientResponseDTO response =
-                new ClientResponseDTO("unknown-id", true, "OK");
+        ClientResponseDTO response = new ClientResponseDTO("unknown-id", true, "OK");
 
-        assertDoesNotThrow(() ->
-                agentController.handleClientResponse(response));
+        assertDoesNotThrow(() -> agentController.handleClientResponse(response));
     }
 }

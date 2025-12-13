@@ -1,5 +1,27 @@
 package backend.publicDiagramManagement.PublucDiagramServiceTest;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
 import backend.entities.Diagram;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
@@ -7,28 +29,16 @@ import backend.publicDiagramManagement.service.PublicDiagramServiceImpl;
 import backend.userDiagramManagement.dto.ContributorDto;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ToBePublishedTests {
 
-    @Mock private UserDiagramRepository userDiagramRepository;
-    @Mock private UserDiagramService userDiagramService;
-    @Mock private PublicDiagramRepository publicDiagramRepository;
+    @Mock
+    private UserDiagramRepository userDiagramRepository;
+    @Mock
+    private UserDiagramService userDiagramService;
+    @Mock
+    private PublicDiagramRepository publicDiagramRepository;
 
     @InjectMocks
     private PublicDiagramServiceImpl service;
@@ -61,8 +71,7 @@ class ToBePublishedTests {
         when(userDiagramRepository.findUnpublishedDiagramsByUser(eq(userId), any()))
                 .thenReturn(emptyPage);
 
-        Page<ToBePublishedDiagramDto> result =
-                service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
+        Page<ToBePublishedDiagramDto> result = service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -86,14 +95,12 @@ class ToBePublishedTests {
                 ContributorDto.builder()
                         .name("Owner")
                         .picture("pic.png")
-                        .build()
-        );
+                        .build());
 
         when(userDiagramService.getContributors(diagramId))
                 .thenReturn(contributors);
 
-        Page<ToBePublishedDiagramDto> output =
-                service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
+        Page<ToBePublishedDiagramDto> output = service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
 
         assertEquals(1, output.getTotalElements());
 
@@ -129,8 +136,7 @@ class ToBePublishedTests {
         when(userDiagramService.getContributors(any()))
                 .thenReturn(Collections.emptyList());
 
-        Page<ToBePublishedDiagramDto> result =
-                service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
+        Page<ToBePublishedDiagramDto> result = service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
 
         assertEquals(2, result.getTotalElements());
 
@@ -153,8 +159,7 @@ class ToBePublishedTests {
         when(userDiagramRepository.findUnpublishedDiagramsByUser(eq(userId), eq(pageable)))
                 .thenReturn(page);
 
-        Page<ToBePublishedDiagramDto> result =
-                service.getToBePublishedDiagrams(userId, pageable);
+        Page<ToBePublishedDiagramDto> result = service.getToBePublishedDiagrams(userId, pageable);
 
         assertEquals(20, result.getTotalElements());
         assertEquals(4, result.getTotalPages());
@@ -177,8 +182,7 @@ class ToBePublishedTests {
         when(userDiagramService.getContributors(diagramId))
                 .thenReturn(Collections.emptyList());
 
-        Page<ToBePublishedDiagramDto> result =
-                service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
+        Page<ToBePublishedDiagramDto> result = service.getToBePublishedDiagrams(userId, PageRequest.of(0, 10));
 
         ToBePublishedDiagramDto dto = result.getContent().get(0);
 

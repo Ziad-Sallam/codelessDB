@@ -1,6 +1,5 @@
 package backend.cannedquery;
 
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +35,7 @@ public class CannedQueryService {
         }
         return new CannedQueryDto(query);
     }
+
     @Transactional
     public CannedQueryDto createQuery(CannedQueryDto dto) {
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
@@ -48,7 +48,8 @@ public class CannedQueryService {
             throw new IllegalArgumentException("Database ID is required");
         }
 
-        UserDatabase database = userDatabaseRepository.findById(dto.getDatabaseId()).orElseThrow(() -> new RuntimeException("Database not found"));
+        UserDatabase database = userDatabaseRepository.findById(dto.getDatabaseId())
+                .orElseThrow(() -> new RuntimeException("Database not found"));
 
         if (cannedQueryRepository.existsByNameAndDatabaseId(dto.getName(), dto.getDatabaseId())) {
             throw new RuntimeException("A query with this name already exists for this database");
@@ -91,6 +92,7 @@ public class CannedQueryService {
         CannedQueriesDB updated = cannedQueryRepository.save(existing);
         return new CannedQueryDto(updated);
     }
+
     @Transactional
     public void deleteQuery(Integer id, Integer databaseId) {
         CannedQueriesDB existing = cannedQueryRepository.findByIdAndDatabaseId(id, databaseId);

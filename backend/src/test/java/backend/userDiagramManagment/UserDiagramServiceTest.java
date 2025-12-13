@@ -256,7 +256,8 @@ class UserDiagramServiceTest {
         when(userRepository.findByUsername("mike")).thenReturn(target);
         when(userDiagramRepository.findByUser_IdAndDiagram_Id(2, diagram.getId()))
                 .thenReturn(Optional.empty());
-        when(userDiagramRepository.save(any(UserDiagram.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userDiagramRepository.save(any(UserDiagram.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         DiagramShareResponseDto res = service.shareDiagram(1, diagram.getId(), req);
 

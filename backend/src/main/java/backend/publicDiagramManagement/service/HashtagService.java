@@ -1,22 +1,23 @@
 package backend.publicDiagramManagement.service;
 
-import backend.entities.publicDiagramEntities.Hashtag;
-import backend.publicDiagramManagement.repository.HashtagRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+import backend.entities.publicDiagramEntities.Hashtag;
+import backend.publicDiagramManagement.repository.HashtagRepository;
+import lombok.AllArgsConstructor;
+
 @Service
 @AllArgsConstructor
 public class HashtagService {
 
-    private HashtagRepository hashtagRepository;
+    private final HashtagRepository hashtagRepository;
 
     @Cacheable(value = "hashtags", key = "#name")
     public Hashtag findOrCreate(String name) {
@@ -26,8 +27,7 @@ public class HashtagService {
                 .orElseGet(() -> hashtagRepository.save(
                         Hashtag.builder()
                                 .name(name)
-                                .build()
-                ));
+                                .build()));
     }
 
     public Set<Hashtag> resolveHashtags(Set<String> names) {
@@ -44,7 +44,7 @@ public class HashtagService {
                 .collect(Collectors.toList());
     }
 
-    @CacheEvict(value = {"hashtags", "hashtagNames"}, allEntries = true)
+    @CacheEvict(value = { "hashtags", "hashtagNames" }, allEntries = true)
     public Hashtag create(String name) {
         Hashtag h = Hashtag.builder()
                 .name(name)

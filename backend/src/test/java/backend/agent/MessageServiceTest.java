@@ -36,7 +36,7 @@ public class MessageServiceTest {
         tracker = mock(OnlineUserTracker.class);
         agentController = mock(AgentController.class);
 
-        messageService = new MessageService(userRepository, userDatabaseRepository,tracker, agentController);
+        messageService = new MessageService(userRepository, userDatabaseRepository, tracker, agentController);
 
     }
 
@@ -44,9 +44,8 @@ public class MessageServiceTest {
     void testUserNotFound() {
         when(userRepository.findById(10)).thenReturn(null);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                messageService.runQuery(5, new AgentMessageDTO(), 10)
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> messageService.runQuery(5, new AgentMessageDTO(), 10));
 
         assertEquals("User not found", ex.getMessage());
     }
@@ -59,9 +58,8 @@ public class MessageServiceTest {
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.emptySet());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                messageService.runQuery(5, new AgentMessageDTO(), 10)
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> messageService.runQuery(5, new AgentMessageDTO(), 10));
 
         assertEquals("Database not Connected Please Check your Server!", ex.getMessage());
     }
@@ -73,14 +71,12 @@ public class MessageServiceTest {
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(
-                Collections.singleton("5")
-        );
+                Collections.singleton("5"));
 
         when(userDatabaseRepository.findById(5)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                messageService.runQuery(5, new AgentMessageDTO(), 10)
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> messageService.runQuery(5, new AgentMessageDTO(), 10));
 
         assertEquals("Database not found", ex.getMessage());
     }
@@ -88,7 +84,7 @@ public class MessageServiceTest {
     @Test
     void testUnauthorizedAccess() {
         User mockUser = new User();
-        mockUser.setAccessibleDatabases(Collections.emptySet()); 
+        mockUser.setAccessibleDatabases(Collections.emptySet());
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.singleton("5"));
@@ -96,9 +92,8 @@ public class MessageServiceTest {
         UserDatabase db = new UserDatabase();
         when(userDatabaseRepository.findById(5)).thenReturn(Optional.of(db));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                messageService.runQuery(5, new AgentMessageDTO(), 10)
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> messageService.runQuery(5, new AgentMessageDTO(), 10));
 
         assertEquals("Unauthrized Access", ex.getMessage());
     }
@@ -126,7 +121,7 @@ public class MessageServiceTest {
 
     @Test
     void testAgentControllerThrowsException() throws Exception {
-       
+
         User mockUser = new User();
         UserDatabase mockDB = new UserDatabase();
         mockUser.setAccessibleDatabases(Collections.singleton(mockDB));
@@ -138,14 +133,13 @@ public class MessageServiceTest {
         when(agentController.sendToUser(eq(5), any()))
                 .thenThrow(new Exception("WS Error"));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                messageService.runQuery(5, new AgentMessageDTO(), 10)
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> messageService.runQuery(5, new AgentMessageDTO(), 10));
 
         assertEquals("WS Error", ex.getMessage());
     }
 
-        @Test
+    @Test
     void testDatabaseIsOnline_UnauthorizedAccess() {
         User user = new User();
         user.setAccessibleDatabases(Collections.emptySet());
@@ -154,9 +148,7 @@ public class MessageServiceTest {
         when(userRepository.findById(1)).thenReturn(user);
         when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                messageService.databaseIsOnline(1, 10)
-        );
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> messageService.databaseIsOnline(1, 10));
         assertEquals("Unauthrized Access", ex.getMessage());
     }
 
@@ -192,11 +184,7 @@ public class MessageServiceTest {
     void testDatabaseIsOnline_UserNotFound() {
         when(userRepository.findById(1)).thenReturn(null);
 
-        assertThrows(NullPointerException.class, () ->
-                messageService.databaseIsOnline(1, 10)
-        );
-        // Optional: you could modify your method to throw RuntimeException("User not found") instead
+        assertThrows(NullPointerException.class, () -> messageService.databaseIsOnline(1, 10));
     }
-
 
 }

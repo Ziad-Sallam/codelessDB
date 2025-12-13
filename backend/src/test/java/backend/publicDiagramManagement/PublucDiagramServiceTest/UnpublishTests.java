@@ -1,24 +1,30 @@
 package backend.publicDiagramManagement.PublucDiagramServiceTest;
 
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.PublicDiagram;
+import backend.publicDiagramManagement.exceptions.PublicDiagramException;
+import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.publicDiagramManagement.service.PublicDiagramServiceImpl;
 import backend.user.Role;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
-import backend.publicDiagramManagement.exceptions.PublicDiagramException;
-import backend.publicDiagramManagement.repository.PublicDiagramRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class UnpublishTests {
 
@@ -49,8 +55,7 @@ class UnpublishTests {
                 publicDiagramRepository,
                 userDiagramService,
                 null, null, null,
-                null, null, null, null
-        );
+                null, null, null, null);
 
         owner = new User();
         owner.setId(USER_ID);
@@ -103,11 +108,9 @@ class UnpublishTests {
         when(userDiagramService.getUserDiagramOrThrow(USER_ID, DIAGRAM_ID))
                 .thenReturn(ownerLink);
 
-        PublicDiagramException.DiagramNotFoundException ex =
-                assertThrows(
-                        PublicDiagramException.DiagramNotFoundException.class,
-                        () -> service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID)
-                );
+        PublicDiagramException.DiagramNotFoundException ex = assertThrows(
+                PublicDiagramException.DiagramNotFoundException.class,
+                () -> service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID));
 
         assertTrue(ex.getMessage().contains("not public"));
     }
@@ -132,13 +135,13 @@ class UnpublishTests {
 
         assertThrows(RuntimeException.class,
                 () -> service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID));
-        }
+    }
 
     // -------------------------------------------------------------
     // ✅ Test: Repository delete is actually called with correct entity
     // -------------------------------------------------------------
-        @Test
-        void unpublish_repositoryDeleteByIdCalled() {
+    @Test
+    void unpublish_repositoryDeleteByIdCalled() {
         when(userDiagramService.getUserDiagramOrThrow(USER_ID, DIAGRAM_ID))
                 .thenReturn(ownerLink);
 
@@ -147,8 +150,7 @@ class UnpublishTests {
         // Verify deleteById called with correct ID
         verify(publicDiagramRepository, times(1))
                 .deleteById(publicDiagram.getId());
-        }
-
+    }
 
     // -------------------------------------------------------------
     // ✅ Test: After deletion, diagram.publicDiagram is null
@@ -163,4 +165,3 @@ class UnpublishTests {
         assertNull(diagram.getPublicDiagram());
     }
 }
-

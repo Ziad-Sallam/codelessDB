@@ -48,16 +48,16 @@ class SQLOptimizationIntegrationTest {
     void testEndToEndOptimization_Success() throws Exception {
         // Mock Gemini response
         String geminiResponse = """
-            {
-              "candidates": [{
-                "content": {
-                  "parts": [{
-                    "text": "{\\"optimizedSQL\\": \\"SELECT id, name FROM users WHERE active = 1\\", \\"summary\\": \\"Added index and optimized WHERE clause\\"}"
+                {
+                  "candidates": [{
+                    "content": {
+                      "parts": [{
+                        "text": "{\\"optimizedSQL\\": \\"SELECT id, name FROM users WHERE active = 1\\", \\"summary\\": \\"Added index and optimized WHERE clause\\"}"
+                      }]
+                    }
                   }]
                 }
-              }]
-            }
-            """;
+                """;
 
         // Mock RestTemplate exchange
         when(restTemplate.exchange(
@@ -65,7 +65,7 @@ class SQLOptimizationIntegrationTest {
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
                 eq(String.class)))
-            .thenReturn(new ResponseEntity<>(geminiResponse, HttpStatus.OK));
+                .thenReturn(new ResponseEntity<>(geminiResponse, HttpStatus.OK));
 
         // Create a mock AuthUser
         AuthUser authUser = new AuthUser(1, "testUser");
@@ -84,10 +84,10 @@ class SQLOptimizationIntegrationTest {
                 .with(authentication(auth))
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.optimizedSQL")
-                .value("SELECT id, name FROM users WHERE active = 1"))
-            .andExpect(jsonPath("$.summary")
-                .value("Added index and optimized WHERE clause"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.optimizedSQL")
+                        .value("SELECT id, name FROM users WHERE active = 1"))
+                .andExpect(jsonPath("$.summary")
+                        .value("Added index and optimized WHERE clause"));
     }
 }

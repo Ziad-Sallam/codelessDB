@@ -22,6 +22,7 @@ import backend.security.AuthUser;
 public class CannedQueryController {
     @Autowired
     private CannedQueryService cannedQueryService;
+
     @GetMapping("/database/{databaseId}")
     public ResponseEntity<?> getAllQueriesByDatabase(
             @PathVariable Integer databaseId,
@@ -34,6 +35,7 @@ public class CannedQueryController {
                     .body("Error fetching queries: " + e.getMessage());
         }
     }
+
     @GetMapping("/{id}/database/{databaseId}")
     public ResponseEntity<?> getQueryById(
             @PathVariable Integer id,
@@ -50,6 +52,7 @@ public class CannedQueryController {
                     .body("Error fetching query: " + e.getMessage());
         }
     }
+
     @PostMapping
     public ResponseEntity<?> createQuery(
             @RequestBody CannedQueryDto dto,
@@ -68,6 +71,7 @@ public class CannedQueryController {
                     .body("Error creating query: " + e.getMessage());
         }
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateQuery(
             @PathVariable Integer id,
@@ -87,6 +91,7 @@ public class CannedQueryController {
                     .body("Error updating query: " + e.getMessage());
         }
     }
+
     @DeleteMapping("/{id}/database/{databaseId}")
     public ResponseEntity<?> deleteQuery(
             @PathVariable Integer id,

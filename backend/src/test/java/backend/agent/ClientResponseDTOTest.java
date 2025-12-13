@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test;
 
 class ClientResponseDTOTest {
 
-    /* --------------------------------------------------------
-       Default constructor + setters
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * Default constructor + setters
+     * --------------------------------------------------------
+     */
 
     @Test
     void defaultConstructor_andSetters_workCorrectly() {
@@ -33,9 +35,11 @@ class ClientResponseDTOTest {
         assertEquals("OK", dto.getMessage());
     }
 
-    /* --------------------------------------------------------
-       SELECT constructor
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * SELECT constructor
+     * --------------------------------------------------------
+     */
 
     @Test
     void selectConstructor_setsAllFields_andDefaultMessage() {
@@ -45,8 +49,7 @@ class ClientResponseDTOTest {
                 List.of("id"),
                 List.of(List.of(1)),
                 1,
-                true
-        );
+                true);
 
         assertEquals("corr-2", dto.getCorrelationId());
         assertEquals("SELECT", dto.getType());
@@ -56,9 +59,11 @@ class ClientResponseDTOTest {
         assertEquals("Query executed successfully.", dto.getMessage());
     }
 
-    /* --------------------------------------------------------
-       Non-SELECT constructor
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * Non-SELECT constructor
+     * --------------------------------------------------------
+     */
 
     @Test
     void nonSelectConstructor_setsAllFields() {
@@ -67,8 +72,7 @@ class ClientResponseDTOTest {
                 true,
                 "UPDATE",
                 5,
-                "5 rows updated"
-        );
+                "5 rows updated");
 
         assertEquals("corr-3", dto.getCorrelationId());
         assertEquals("UPDATE", dto.getType());
@@ -77,17 +81,18 @@ class ClientResponseDTOTest {
         assertEquals("5 rows updated", dto.getMessage());
     }
 
-    /* --------------------------------------------------------
-       Error constructor
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * Error constructor
+     * --------------------------------------------------------
+     */
 
     @Test
     void errorConstructor_setsErrorType() {
         ClientResponseDTO dto = new ClientResponseDTO(
                 "corr-4",
                 false,
-                "Syntax error"
-        );
+                "Syntax error");
 
         assertEquals("corr-4", dto.getCorrelationId());
         assertFalse(dto.isSuccess());
@@ -95,17 +100,18 @@ class ClientResponseDTOTest {
         assertEquals("Syntax error", dto.getMessage());
     }
 
-    /* --------------------------------------------------------
-       toString
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * toString
+     * --------------------------------------------------------
+     */
 
     @Test
     void toString_containsImportantFields() {
         ClientResponseDTO dto = new ClientResponseDTO(
                 "corr-5",
                 false,
-                "Failure occurred"
-        );
+                "Failure occurred");
 
         String str = dto.toString();
 

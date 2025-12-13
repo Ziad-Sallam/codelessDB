@@ -1,30 +1,37 @@
 package backend.DatabaseManagement;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.apache.coyote.BadRequestException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.CreateDatabaseDTO;
 import backend.databaseManagement.CreateServerDTO;
 import backend.databaseManagement.DatabaseManagementService;
 import backend.databaseManagement.InitiateDatabaseDTO;
-import backend.databaseManagement.Database;
 import backend.databaseManagement.SendDatabasesDTO;
 import backend.databaseManagement.ServerRepository;
 import backend.databaseManagement.UserDatabaseRepository;
-import backend.entities.*;
+import backend.entities.Server;
+import backend.entities.User;
+import backend.entities.UserDatabase;
 import backend.user.UserRepository;
-import org.apache.coyote.BadRequestException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 class DatabaseManagementServiceTest {
 
@@ -40,7 +47,7 @@ class DatabaseManagementServiceTest {
         userRepository = mock(UserRepository.class);
         serverRepository = mock(ServerRepository.class);
         tracker = mock(OnlineUserTracker.class);
-        
+
         service = new DatabaseManagementService(userDatabaseRepository, userRepository, serverRepository, tracker);
     }
 
@@ -73,7 +80,7 @@ class DatabaseManagementServiceTest {
 
     @Test
     void testCreateDatabase_nullDTO() {
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        assertThrows(RuntimeException.class, () -> {
             service.createDatabase(null, 1);
         });
     }
@@ -87,7 +94,7 @@ class DatabaseManagementServiceTest {
 
         when(userRepository.findById(999)).thenReturn(null);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        assertThrows(RuntimeException.class, () -> {
             service.createDatabase(dto, 999);
         });
     }
@@ -119,8 +126,8 @@ class DatabaseManagementServiceTest {
     }
 
     @Test
-    void testCreateDatabase_nullServerId_nullServerName(){
-        CreateDatabaseDTO dto = new CreateDatabaseDTO(); 
+    void testCreateDatabase_nullServerId_nullServerName() {
+        CreateDatabaseDTO dto = new CreateDatabaseDTO();
         dto.setDatabaseName("TestDB");
         dto.setDatabasePassword("password123");
         dto.setDdl("CREATE TABLE test(id INT)");
@@ -133,9 +140,9 @@ class DatabaseManagementServiceTest {
     }
 
     @Test
-    void testCreateDatabase_nullDatabaseName(){
-        CreateDatabaseDTO dto = new CreateDatabaseDTO(); 
-        
+    void testCreateDatabase_nullDatabaseName() {
+        CreateDatabaseDTO dto = new CreateDatabaseDTO();
+
         dto.setDatabasePassword("password123");
         dto.setDdl("CREATE TABLE test(id INT)");
 
@@ -147,8 +154,8 @@ class DatabaseManagementServiceTest {
     }
 
     @Test
-    void testCreateDatabase_nullDatabasePassword(){
-        CreateDatabaseDTO dto = new CreateDatabaseDTO(); 
+    void testCreateDatabase_nullDatabasePassword() {
+        CreateDatabaseDTO dto = new CreateDatabaseDTO();
         dto.setDatabaseName("TestDB");
         dto.setDdl("CREATE TABLE test(id INT)");
 
@@ -171,7 +178,7 @@ class DatabaseManagementServiceTest {
         // Mock owner
         User owner = new User();
         owner.setId(1);
-        
+
         when(userRepository.findById(1)).thenReturn(owner);
 
         // Mock serverRepository.save to assign ID when creating server
@@ -182,11 +189,13 @@ class DatabaseManagementServiceTest {
         });
 
         // Mock serverRepository.findById after creation
-        when(serverRepository.findById(10)).thenReturn(Optional.of(new Server() {{
-            setId(10);
-            setName("Server");
-            setOwner(owner);
-        }}));
+        when(serverRepository.findById(10)).thenReturn(Optional.of(new Server() {
+            {
+                setId(10);
+                setName("Server");
+                setOwner(owner);
+            }
+        }));
 
         // Mock userDatabaseRepository.save to assign DB ID
         doAnswer(invocation -> {
@@ -199,9 +208,9 @@ class DatabaseManagementServiceTest {
         CreateDatabaseDTO result = service.createDatabase(dto, 1);
 
         // Assertions
-        assertEquals(10, result.getServerId());           // Server ID set
-        assertEquals(100, result.getDatabaseId());       // Database ID set
-        assertEquals("Server", result.getServerName());  // Server name remains
+        assertEquals(10, result.getServerId()); // Server ID set
+        assertEquals(100, result.getDatabaseId()); // Database ID set
+        assertEquals("Server", result.getServerName()); // Server name remains
         assertEquals("TestDB", result.getDatabaseName());
 
         // Verify interactions
@@ -221,7 +230,7 @@ class DatabaseManagementServiceTest {
         // Owner with empty servers (no access)
         User owner = new User();
         owner.setId(1);
-        
+
         when(userRepository.findById(1)).thenReturn(owner);
 
         // Server exists
@@ -338,11 +347,9 @@ class DatabaseManagementServiceTest {
         assertEquals(100, result.getServerId());
         assertEquals(1, owner.getServers().size()); // Owner’s servers updated
         assertTrue(
-            owner.getServers()
-                .stream()
-                .anyMatch(s -> "MyServer".equals(s.getName()))
-        );
-
+                owner.getServers()
+                        .stream()
+                        .anyMatch(s -> "MyServer".equals(s.getName())));
 
         // Verify save calls
         verify(serverRepository, times(1)).save(any(Server.class));
@@ -364,7 +371,6 @@ class DatabaseManagementServiceTest {
 
         assertEquals("Server name not found!", ex.getMessage());
     }
-
 
     @Test
     void testGetUserServers_success() {
@@ -389,15 +395,11 @@ class DatabaseManagementServiceTest {
         assertNotNull(result);
         assertEquals(2, result.size());
 
-        assertTrue( result.stream().anyMatch(s -> 
-            s.getServerName()=="ServerOne" && 
-            s.getServerId()==10)
-        );
+        assertTrue(result.stream().anyMatch(s -> s.getServerName() == "ServerOne" &&
+                s.getServerId() == 10));
 
-        assertTrue(result.stream().anyMatch(s -> 
-            s.getServerName()=="ServerTwo" && 
-            s.getServerId()==20)
-        );
+        assertTrue(result.stream().anyMatch(s -> s.getServerName() == "ServerTwo" &&
+                s.getServerId() == 20));
     }
 
     @Test
@@ -446,25 +448,18 @@ class DatabaseManagementServiceTest {
         assertEquals(2, result.getDatabases().size());
 
         assertTrue(
-            result.getDatabases().stream().anyMatch(db ->
-                db.getDatabaseId() == 10 &&
-                "DB1".equals(db.getDatabaseName()) &&
-                "Server-1".equals(db.getServerName())
-            )
-        );
+                result.getDatabases().stream().anyMatch(db -> db.getDatabaseId() == 10 &&
+                        "DB1".equals(db.getDatabaseName()) &&
+                        "Server-1".equals(db.getServerName())));
 
         assertTrue(
-            result.getDatabases().stream().anyMatch(db ->
-                db.getDatabaseId() == 20 &&
-                "DB2".equals(db.getDatabaseName()) &&
-                "Server-1".equals(db.getServerName())
-            )
-        );
+                result.getDatabases().stream().anyMatch(db -> db.getDatabaseId() == 20 &&
+                        "DB2".equals(db.getDatabaseName()) &&
+                        "Server-1".equals(db.getServerName())));
 
         verify(userRepository).findById(userId);
 
-    }    
-
+    }
 
     @Test
     void createDatabase_databaseNameAlreadyExists_throwsException() {
@@ -497,13 +492,11 @@ class DatabaseManagementServiceTest {
         // Act + Assert
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
-                () -> service.createDatabase(dto, ownerId)
-        );
+                () -> service.createDatabase(dto, ownerId));
 
         assertEquals(
                 "Database name already exists on this server for this user",
-                ex.getMessage()
-        );
+                ex.getMessage());
 
         // Verify no save happened
         verify(userDatabaseRepository, never()).save(any());
