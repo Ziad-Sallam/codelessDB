@@ -1,9 +1,6 @@
 package backend.entities;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +14,6 @@ import backend.entities.joins.UserDiagram;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -57,7 +53,7 @@ public class User {
         private int aiQuotaRemaining = 5;
 
         @Column
-        private LocalDate aiQuotaResetDate;
+        private LocalDateTime aiQuotaResetDate;
 
         @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
         private Set<UserDiagram> userDiagrams = new HashSet<>();

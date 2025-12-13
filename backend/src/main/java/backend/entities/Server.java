@@ -16,7 +16,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,9 +34,6 @@ public class Server {
   @Column(nullable = false, length = 100)
   private String name;
 
-  // @Column(nullable = false)
-  // @NotBlank(message = "Password is mandatory")
-  // private String password;
 
   @ManyToMany(mappedBy = "servers")
   private List<User> hasAccess = new ArrayList<>();

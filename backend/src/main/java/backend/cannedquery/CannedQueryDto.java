@@ -1,6 +1,6 @@
 package backend.cannedquery;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 
 import backend.entities.CannedQueriesDB;
 import lombok.AllArgsConstructor;
@@ -15,8 +15,8 @@ public class CannedQueryDto {
     private String name;
     private String description;
     private String query;
-    private Date createdAt;
-    private Date updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Integer databaseId;
     private String databaseName;
 
@@ -25,8 +25,8 @@ public class CannedQueryDto {
         this.name = entity.getName();
         this.description = entity.getDescription();
         this.query = entity.getQuery();
-        this.createdAt = Date.valueOf(entity.getCreatedAt().toLocalDate());
-        this.updatedAt = Date.valueOf(entity.getUpdatedAt().toLocalDate());
+        this.createdAt = entity.getCreatedAt();
+        this.updatedAt = entity.getUpdatedAt();
         this.databaseId = entity.getDatabase().getId();
         this.databaseName = entity.getDatabase().getName();
     }

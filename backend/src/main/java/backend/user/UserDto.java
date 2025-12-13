@@ -1,6 +1,5 @@
 package backend.user;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 
@@ -27,7 +26,7 @@ public class UserDto {
 	private String publicProfile;
 	private String profileWebsiteUrl;
 	private int aiQuotaRemaining;
-	private LocalDate aiQuotaResetDate;
+	private LocalDateTime aiQuotaResetDate;
 
 	public UserDto(User user) {
 		this.username = user.getUsername();

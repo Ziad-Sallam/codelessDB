@@ -1,7 +1,6 @@
 package backend.userDiagramManagement.controller;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;

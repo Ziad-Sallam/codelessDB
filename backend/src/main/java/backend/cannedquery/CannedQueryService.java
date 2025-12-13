@@ -1,6 +1,7 @@
 package backend.cannedquery;
 
-import java.sql.Date;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,8 +59,8 @@ public class CannedQueryService {
         entity.setDescription(dto.getDescription());
         entity.setQuery(dto.getQuery());
         entity.setDatabase(database);
-        entity.setCreatedAt(new Date(System.currentTimeMillis()));
-        entity.setUpdatedAt(new Date(System.currentTimeMillis()));
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
 
         CannedQueriesDB saved = cannedQueryRepository.save(entity);
         return new CannedQueryDto(saved);
@@ -86,7 +87,7 @@ public class CannedQueryService {
         existing.setName(dto.getName());
         existing.setDescription(dto.getDescription());
         existing.setQuery(dto.getQuery());
-        existing.setUpdatedAt(new Date(System.currentTimeMillis()));
+        existing.setUpdatedAt(LocalDateTime.now());
         CannedQueriesDB updated = cannedQueryRepository.save(existing);
         return new CannedQueryDto(updated);
     }

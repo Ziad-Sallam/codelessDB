@@ -1,7 +1,6 @@
 package backend.agent.HTTPHandler;
 
 import java.nio.file.Paths;
-import java.util.Enumeration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;

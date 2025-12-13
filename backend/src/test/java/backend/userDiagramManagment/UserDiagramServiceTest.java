@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.data.domain.*;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.*;
 

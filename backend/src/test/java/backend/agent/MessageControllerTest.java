@@ -11,9 +11,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import backend.security.AuthUser;
 
-import java.nio.file.Paths;
-import java.nio.file.Path;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
