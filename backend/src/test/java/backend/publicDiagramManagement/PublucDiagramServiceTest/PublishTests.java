@@ -31,7 +31,7 @@ import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.CannedQueriesDiagrams;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
-import backend.publicDiagramManagement.dto.CannedQueryDto;
+import backend.publicDiagramManagement.dto.DiagramCannedQueryDto;
 import backend.publicDiagramManagement.dto.publish.PublishDiagramRequestDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
 import backend.publicDiagramManagement.repository.ForkRepository;
@@ -85,8 +85,7 @@ class PublishTests {
         dto.setShortDescription("short");
         dto.setDetailedDescription("detailed");
         dto.setHashTags(List.of("#sql", "#erd"));
-        dto.setCannedQueries(List.of(
-                new CannedQueryDto("Q1", "desc", "SELECT 1")));
+        dto.setCannedQueries(List.of(new DiagramCannedQueryDto("Q1", "desc", "SELECT 1")));
 
         diagram = Diagram.builder().id(diagramId).build();
 

@@ -36,7 +36,7 @@ public class PublicDiagramDto {
     private String detailedDescription;
     private String ddl;
     private List<String> hashTags;
-    private List<CannedQueryDto> cannedQueries;
+    private List<DiagramCannedQueryDto> cannedQueries;
 
     private int stars;
     private int forks;
@@ -57,7 +57,7 @@ public class PublicDiagramDto {
                 .detailedDescription(publicDiagram.getDetailedDescription())
                 .ddl(diagram.getDdl())
                 .hashTags(publicDiagram.getHashtags().stream().map(Hashtag::getName).toList())
-                .cannedQueries(publicDiagram.getCannedQueries().stream().map(CannedQueryDto::toDto).toList())
+                .cannedQueries(publicDiagram.getCannedQueries().stream().map(DiagramCannedQueryDto::toDto).toList())
                 .stars(publicDiagram.getStars())
                 .forks(publicDiagram.getForks())
                 .views(publicDiagram.getViews())

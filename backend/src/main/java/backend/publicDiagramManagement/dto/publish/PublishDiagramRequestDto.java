@@ -1,6 +1,6 @@
 package backend.publicDiagramManagement.dto.publish;
 
-import backend.publicDiagramManagement.dto.CannedQueryDto;
+import backend.publicDiagramManagement.dto.DiagramCannedQueryDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +18,5 @@ public class PublishDiagramRequestDto {
     private String shortDescription;
     private String detailedDescription;
     private List<String> hashTags;
-    private List<CannedQueryDto> cannedQueries;
+    private List<DiagramCannedQueryDto> cannedQueries;
 }
