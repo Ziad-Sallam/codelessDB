@@ -5,7 +5,6 @@ import backend.user.exceptions.UserException;
 import java.time.LocalDateTime;
 
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,17 +19,15 @@ import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import backend.user.exceptions.UserException.OtpSendFailedException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService {
 
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 
-	@Autowired
-	private JavaMailSender mailSender;
+	private final JavaMailSender mailSender;
 
 	private String encodePassword(String rawPassword) {
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

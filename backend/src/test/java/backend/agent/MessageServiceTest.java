@@ -36,7 +36,7 @@ public class MessageServiceTest {
         tracker = mock(OnlineUserTracker.class);
         agentController = mock(AgentController.class);
 
-        messageService = new MessageService(userRepository, userDatabaseRepository, tracker, agentController);
+        messageService = new MessageService(tracker, agentController, userDatabaseRepository, userRepository);
 
     }
 

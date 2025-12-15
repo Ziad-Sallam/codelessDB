@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,14 +11,15 @@ import backend.databaseManagement.UserDatabaseRepository;
 import backend.entities.CannedQueriesDB;
 import backend.entities.UserDatabase;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class CannedQueryService {
 
-    @Autowired
-    private CannedQueryRepository cannedQueryRepository;
+    private final CannedQueryRepository cannedQueryRepository;
 
-    @Autowired
-    private UserDatabaseRepository userDatabaseRepository;
+    private final UserDatabaseRepository userDatabaseRepository;
 
     public List<CannedQueryDto> getAllQueriesByDatabase(Integer databaseId) {
         List<CannedQueriesDB> queries = cannedQueryRepository.findByDatabaseId(databaseId);

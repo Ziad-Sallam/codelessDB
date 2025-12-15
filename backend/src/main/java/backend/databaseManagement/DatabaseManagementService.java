@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.coyote.BadRequestException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import backend.agent.WebSocketHandler.OnlineUserTracker;
@@ -12,28 +11,15 @@ import backend.entities.Server;
 import backend.entities.User;
 import backend.entities.UserDatabase;
 import backend.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class DatabaseManagementService {
     private final UserDatabaseRepository userDatabaseRepository;
     private final UserRepository userRepository;
     private final ServerRepository serverRepository;
     private final OnlineUserTracker tracker;
-
-    @Autowired
-    public DatabaseManagementService(
-            UserDatabaseRepository userDatabaseRepository,
-            UserRepository userRepository,
-            ServerRepository serverRepository,
-            OnlineUserTracker tracker
-
-    ) {
-        this.userDatabaseRepository = userDatabaseRepository;
-        this.userRepository = userRepository;
-        this.serverRepository = serverRepository;
-        this.tracker = tracker;
-
-    }
 
     public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId) throws RuntimeException {
         if (createServerDTO == null)

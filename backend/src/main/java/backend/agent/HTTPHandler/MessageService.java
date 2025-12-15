@@ -1,6 +1,5 @@
 package backend.agent.HTTPHandler;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import backend.agent.WebSocketHandler.AgentController;
@@ -11,26 +10,16 @@ import backend.databaseManagement.UserDatabaseRepository;
 import backend.entities.User;
 import backend.entities.UserDatabase;
 import backend.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 ;
 
 @Service
+@RequiredArgsConstructor
 public class MessageService {
     private final OnlineUserTracker tracker;
     private final AgentController agentController;
     private final UserDatabaseRepository userDatabaseRepository;
     private final UserRepository userRepository;
-
-    @Autowired
-    public MessageService(
-            UserRepository userRepository,
-            UserDatabaseRepository userDatabaseRepository,
-            OnlineUserTracker tracker,
-            AgentController agentController) {
-        this.userRepository = userRepository;
-        this.userDatabaseRepository = userDatabaseRepository;
-        this.tracker = tracker;
-        this.agentController = agentController;
-    }
 
     public ClientResponseDTO runQuery(int databaseId, AgentMessageDTO message, int userId) {
         ClientResponseDTO clientResponse;

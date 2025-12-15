@@ -14,19 +14,19 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import backend.security.GoogleSuccessHandler;
 import backend.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    @Autowired
-    private JwtAuthenticationFilter jwtFilter;
+    private final JwtAuthenticationFilter jwtFilter;
 
-    @Autowired
-    private GoogleSuccessHandler googleSuccessHandler;
+    private final GoogleSuccessHandler googleSuccessHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

@@ -6,17 +6,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
+@RequiredArgsConstructor
 public class AgentController {
 
-    @Autowired
-    private SimpMessagingTemplate simpMessagingTemplate;
-
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final ConcurrentHashMap<String, CompletableFuture<ClientResponseDTO>> pendingResponses = new ConcurrentHashMap<>();
 
     public ClientResponseDTO sendToUser(int username, AgentMessageDTO message) throws Exception {

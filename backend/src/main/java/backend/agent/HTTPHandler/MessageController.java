@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -21,13 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 import backend.agent.WebSocketHandler.AgentMessageDTO;
 import backend.agent.WebSocketHandler.ClientResponseDTO;
 import backend.security.AuthUser;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/agent")
+@RequiredArgsConstructor
 public class MessageController {
 
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
 
     @PostMapping("/send")
     public ResponseEntity<?> sendToUser(@RequestBody MessageDTO request, @AuthenticationPrincipal AuthUser user) {
