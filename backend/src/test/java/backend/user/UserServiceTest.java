@@ -5,6 +5,7 @@ import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -12,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -21,10 +24,10 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 public class UserServiceTest {
 
-	@Mock
+	@MockBean
 	private UserRepository userRepository;
 
-	@InjectMocks
+	@Autowired
 	private UserService userService;
 
 	@BeforeEach
