@@ -51,10 +51,12 @@
 }
 
 .save-btn{
-  position: absolute;
-  right: 10px;
+  position: fixed;
+  left: 350px;
   top:10px;
-  width: 200px;
+  z-index: 10;
+  width: 100px;
+  margin: 10px;
   padding: 8px 16px;
   background: #e6e6e6; /* Slate 900 */
   color: rgb(15, 15, 15);
