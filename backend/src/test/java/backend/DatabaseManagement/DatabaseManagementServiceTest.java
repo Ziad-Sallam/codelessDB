@@ -28,6 +28,7 @@ import backend.databaseManagement.InitiateDatabaseDTO;
 import backend.databaseManagement.SendDatabasesDTO;
 import backend.databaseManagement.ServerRepository;
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
 import backend.entities.Server;
 import backend.entities.User;
 import backend.entities.UserDatabase;
@@ -296,7 +297,7 @@ class DatabaseManagementServiceTest {
     void testInitiateDatabase_invalidId_throwsBadRequest() {
         int invalidId = 0; // or any negative number
 
-        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
+        DatabaseNotFoundException exception = assertThrows(DatabaseNotFoundException.class, () -> {
             service.initiateDatabase(invalidId);
         });
 

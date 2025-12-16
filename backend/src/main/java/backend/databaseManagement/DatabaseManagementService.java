@@ -11,6 +11,14 @@ import backend.entities.Server;
 import backend.entities.User;
 import backend.entities.UserDatabase;
 import backend.user.UserRepository;
+import backend.user.exceptions.UserException.UserNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
+import backend.databaseManagement.exception.DatabaseException.ServerAlreadyExistsException;
+import backend.databaseManagement.exception.DatabaseException.ServerNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
+import org.springframework.security.access.AccessDeniedException;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,22 +29,22 @@ public class DatabaseManagementService {
     private final ServerRepository serverRepository;
     private final OnlineUserTracker tracker;
 
-    public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId) throws RuntimeException {
+    public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId){
         if (createServerDTO == null)
-            throw new RuntimeException("DTO cannot be null");
+            throw new MissingFieldException("DTO cannot be null");
 
         User owner = userRepository.findById(ownerId);
         if (owner == null)
-            throw new RuntimeException("Owner not found");
+            throw new UserNotFoundException("Owner not found");
 
         String serverName = createServerDTO.getServerName();
         if (serverName == null)
-            throw new RuntimeException("Server name not found!");
+            throw new ServerNotFoundException("Server name not found!");
 
         boolean exists = owner.getServers().stream()
                 .anyMatch(s -> s.getName().equals(serverName));
         if (exists)
-            throw new RuntimeException("Server name already exists for this user!");
+            throw new ServerAlreadyExistsException("Server name already exists for this user!");
 
         Server newServer = new Server();
         newServer.setName(serverName);
@@ -54,12 +62,12 @@ public class DatabaseManagementService {
     public CreateDatabaseDTO createDatabase(CreateDatabaseDTO dto, int ownerId) {
 
         if (dto == null)
-            throw new RuntimeException("DTO cannot be null");
+            throw new MissingFieldException("DTO cannot be null");
 
         User owner = userRepository.findById(ownerId);
 
         if (dto.getDatabaseName() == null || dto.getDatabasePassword() == null) {
-            throw new RuntimeException("Missing required fields");
+            throw new MissingFieldException("Missing required fields");
         }
 
         Server server;
@@ -67,25 +75,25 @@ public class DatabaseManagementService {
         if (serverId != null) {
 
             server = serverRepository.findById(dto.getServerId())
-                    .orElseThrow(() -> new RuntimeException("Server not found"));
+                    .orElseThrow(() -> new ServerNotFoundException("Server not found"));
             dto.setServerName(server.getName());
 
             boolean hasAccess = owner.getServers().stream()
                     .anyMatch(s -> s.getId() == server.getId());
 
             if (!hasAccess)
-                throw new RuntimeException("Unauthorized Access");
+                throw new AccessDeniedException("Unauthorized Access");
 
         } else {
             if (dto.getServerName() == null)
-                throw new RuntimeException("serverName is required when serverId is null");
+                throw new MissingFieldException("serverName is required when serverId is null");
 
             CreateServerDTO serverDTO = new CreateServerDTO();
             serverDTO.setServerName(dto.getServerName());
             serverDTO = createServer(serverDTO, ownerId);
 
             server = serverRepository.findById(serverDTO.getServerId())
-                    .orElseThrow(() -> new RuntimeException("Created server not found"));
+                    .orElseThrow(() -> new ServerNotFoundException("Created server not found"));
 
             dto.setServerId(server.getId());
         }
@@ -94,7 +102,7 @@ public class DatabaseManagementService {
                 .anyMatch(db -> db.getServer().getId() == server.getId()
                         && db.getName().equals(dto.getDatabaseName()));
         if (exists) {
-            throw new RuntimeException("Database name already exists on this server for this user");
+            throw new DatabaseAlreadyExistsException("Database name already exists on this server for this user");
         }
 
         UserDatabase db = new UserDatabase();
@@ -111,14 +119,14 @@ public class DatabaseManagementService {
         return dto;
     }
 
-    public InitiateDatabaseDTO initiateDatabase(int id) throws BadRequestException {
+    public InitiateDatabaseDTO initiateDatabase(int id) {
 
         if (id <= 0) {
-            throw new BadRequestException("Invalid database ID");
+            throw new DatabaseNotFoundException("Invalid database ID");
         }
 
         UserDatabase database = userDatabaseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Database not found"));
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
         InitiateDatabaseDTO dto = new InitiateDatabaseDTO();
         dto.setDatabaseName(database.getName());
