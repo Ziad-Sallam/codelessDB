@@ -119,7 +119,7 @@ const SchemaContent = () => {
       } catch (err) {
         console.error("❌ Autosave Failed:", err);
       }
-    }, 60 * 1000);
+    }, 10 * 1000);
 
     // Cleanup on unmount
     return () => clearInterval(saveInterval);

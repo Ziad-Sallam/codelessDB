@@ -53,6 +53,7 @@ public class UserServiceTest {
 		dto.setRawPassword("123");
 
 		assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
+		// assertF
 	}
 
 	@Test

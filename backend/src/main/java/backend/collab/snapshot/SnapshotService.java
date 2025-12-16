@@ -39,6 +39,8 @@ public class SnapshotService {
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
 		byte[] snapshot = diagram.getContent();
 		List<byte[]> updates = updatesRepository.findAllUpdateDataByDiagramId(diagramId.toString());
+		List<byte[]> redisUpdates = redisService.getAllUpdates(diagramId.toString());
+		updates.addAll(redisUpdates);
 		return new SnapshotDto(snapshot, updates, diagram.getName(), role);
 	}
 	

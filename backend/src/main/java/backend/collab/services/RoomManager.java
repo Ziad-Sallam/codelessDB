@@ -73,10 +73,10 @@ class RoomManagerImpl implements RoomManager {
 			if (room.isEmpty()) {
 				activeRooms.remove(roomId);
 				// add redis updates in the DB updates table
-				updateWriter.submitWriteTask(() -> {
-					List<byte[]> pendingUpdates = redisService.getAllUpdates(roomId);
-					insertUpdates(roomId, pendingUpdates);
-				});
+				List<byte[]> pendingUpdates = redisService.getAllUpdates(roomId);
+				insertUpdates(roomId, pendingUpdates);
+				// updateWriter.submitWriteTask(() -> {
+				// });
 			}
 		}
 	}
