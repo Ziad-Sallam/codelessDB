@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -15,17 +16,17 @@ import backend.user.UserDto;
 import backend.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
 
-  private final JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-  private final UserService userService;
+  @Autowired
+  private UserService userService;
 
   @Value("${frontend.url}")
   private String frontUrl;
@@ -60,7 +61,7 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
         userDto.setUsername(uniqueUsername);
         userDto.setPicture(picture);
 
-        userService.createUser(userDto);
+        int userId = userService.createUser(userDto);
 
         user = userService.findUserByEmail(email);
 
