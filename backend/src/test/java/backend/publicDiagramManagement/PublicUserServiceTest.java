@@ -1,5 +1,21 @@
 package backend.publicDiagramManagement;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
 import backend.entities.User;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
@@ -12,18 +28,6 @@ import backend.user.exceptions.UserException;
 import backend.userDiagramManagement.dto.ContributorDto;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.springframework.data.domain.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 public class PublicUserServiceTest {
 
@@ -45,8 +49,7 @@ public class PublicUserServiceTest {
                 userRepository,
                 diagramRepository,
                 publicDiagramRepository,
-                userDiagramService
-        );
+                userDiagramService);
     }
 
     // ----------------------------------------------------
@@ -101,8 +104,7 @@ public class PublicUserServiceTest {
                                 .thumbnail("t")
                                 .createdAt(LocalDateTime.now())
                                 .lastModified(LocalDateTime.now())
-                                .build()
-                )
+                                .build())
                 .shortDescription("short")
                 .stars(5)
                 .forks(2)
@@ -115,10 +117,9 @@ public class PublicUserServiceTest {
                 .thenReturn(page);
 
         when(userDiagramService.getContributors(pd.getId()))
-                .thenReturn(List.of(new ContributorDto("john","aasd",  Role.OWNER)));
+                .thenReturn(List.of(new ContributorDto("john", "aasd", Role.OWNER)));
 
-        Page<PublicDiagramInfoDto> result =
-                service.getPublicDiagrams("john", PageRequest.of(0, 10));
+        Page<PublicDiagramInfoDto> result = service.getPublicDiagrams("john", PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getName()).isEqualTo("D1");
@@ -140,8 +141,7 @@ public class PublicUserServiceTest {
                                 .thumbnail("t2")
                                 .createdAt(LocalDateTime.now())
                                 .lastModified(LocalDateTime.now())
-                                .build()
-                )
+                                .build())
                 .shortDescription("s2")
                 .stars(9)
                 .forks(1)
@@ -154,10 +154,9 @@ public class PublicUserServiceTest {
                 .thenReturn(page);
 
         when(userDiagramService.getContributors(pd.getId()))
-                .thenReturn(List.of(new ContributorDto("john","aasd", Role.OWNER)));
+                .thenReturn(List.of(new ContributorDto("john", "aasd", Role.OWNER)));
 
-        Page<PublicDiagramInfoDto> result =
-                service.getStaredPublicDiagrams("john", PageRequest.of(0, 10));
+        Page<PublicDiagramInfoDto> result = service.getStaredPublicDiagrams("john", PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getStars()).isEqualTo(9);

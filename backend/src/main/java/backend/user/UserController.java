@@ -2,7 +2,6 @@ package backend.user;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,24 +16,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 
 import backend.entities.User;
 import backend.security.AuthUser;
 import backend.security.JwtUtil;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
 
-	@Autowired
-	private UserService userService;
+	private final UserService userService;
 
-	@Autowired
-	private JwtUtil jwtUtil;
+	private final JwtUtil jwtUtil;
 
-	@Autowired
-	private Cloudinary cloudinary;
+	private final Cloudinary cloudinary;
 
 	@Value("${cloudinary.upload_preset}")
 	private String uploadPreset;
@@ -104,7 +101,7 @@ public class UserController {
 	public Map<String, Object> getSignature(@RequestParam String publicId) {
 		long timestamp = System.currentTimeMillis() / 1000;
 
-		Map<String, Object> paramsToSign = ObjectUtils.asMap(
+		Map<String, Object> paramsToSign = Map.of(
 				"timestamp", timestamp,
 				"upload_preset", uploadPreset,
 				"public_id", publicId,

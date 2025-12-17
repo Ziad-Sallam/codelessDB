@@ -1,25 +1,28 @@
 package backend.cannedquery;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import backend.cannedquery.exception.CannedQueryException.CannedQueryNotFoundException;
+import backend.cannedquery.exception.CannedQueryException.CannedQueryAlreadyExistsException;
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
 import backend.entities.CannedQueriesDB;
 import backend.entities.UserDatabase;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class CannedQueryService {
 
-    @Autowired
-    private CannedQueryRepository cannedQueryRepository;
+    private final CannedQueryRepository cannedQueryRepository;
 
-    @Autowired
-    private UserDatabaseRepository userDatabaseRepository;
+    private final UserDatabaseRepository userDatabaseRepository;
 
     public List<CannedQueryDto> getAllQueriesByDatabase(Integer databaseId) {
         List<CannedQueriesDB> queries = cannedQueryRepository.findByDatabaseId(databaseId);
@@ -31,26 +34,28 @@ public class CannedQueryService {
     public CannedQueryDto getQueryById(Integer id, Integer databaseId) {
         CannedQueriesDB query = cannedQueryRepository.findByIdAndDatabaseId(id, databaseId);
         if (query == null) {
-            throw new RuntimeException("Canned query not found");
+            throw new CannedQueryNotFoundException("Canned query not found");
         }
         return new CannedQueryDto(query);
     }
+
     @Transactional
     public CannedQueryDto createQuery(CannedQueryDto dto) {
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Query name is required");
+            throw new MissingFieldException("Query name is required");
         }
         if (dto.getQuery() == null || dto.getQuery().trim().isEmpty()) {
-            throw new IllegalArgumentException("Query body is required");
+            throw new MissingFieldException("Query body is required");
         }
         if (dto.getDatabaseId() == null) {
-            throw new IllegalArgumentException("Database ID is required");
+            throw new MissingFieldException("Database ID is required");
         }
 
-        UserDatabase database = userDatabaseRepository.findById(dto.getDatabaseId()).orElseThrow(() -> new RuntimeException("Database not found"));
+        UserDatabase database = userDatabaseRepository.findById(dto.getDatabaseId())
+                .orElseThrow(() -> new RuntimeException("Database not found"));
 
         if (cannedQueryRepository.existsByNameAndDatabaseId(dto.getName(), dto.getDatabaseId())) {
-            throw new RuntimeException("A query with this name already exists for this database");
+            throw new CannedQueryAlreadyExistsException("A query with this name already exists for this database");
         }
 
         CannedQueriesDB entity = new CannedQueriesDB();
@@ -58,8 +63,8 @@ public class CannedQueryService {
         entity.setDescription(dto.getDescription());
         entity.setQuery(dto.getQuery());
         entity.setDatabase(database);
-        entity.setCreatedAt(new Date(System.currentTimeMillis()));
-        entity.setUpdatedAt(new Date(System.currentTimeMillis()));
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
 
         CannedQueriesDB saved = cannedQueryRepository.save(entity);
         return new CannedQueryDto(saved);
@@ -69,32 +74,33 @@ public class CannedQueryService {
     public CannedQueryDto updateQuery(Integer id, CannedQueryDto dto) {
         CannedQueriesDB existing = cannedQueryRepository.findByIdAndDatabaseId(id, dto.getDatabaseId());
         if (existing == null) {
-            throw new RuntimeException("Canned query not found");
+            throw new CannedQueryNotFoundException("Canned query not found");
         }
 
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Query name is required");
+            throw new MissingFieldException("Query name is required");
         }
         if (dto.getQuery() == null || dto.getQuery().trim().isEmpty()) {
-            throw new IllegalArgumentException("Query body is required");
+            throw new MissingFieldException("Query body is required");
         }
         if (!existing.getName().equals(dto.getName())) {
             if (cannedQueryRepository.existsByNameAndDatabaseId(dto.getName(), dto.getDatabaseId())) {
-                throw new RuntimeException("A query with this name already exists for this database");
+                throw new CannedQueryAlreadyExistsException("A query with this name already exists for this database");
             }
         }
         existing.setName(dto.getName());
         existing.setDescription(dto.getDescription());
         existing.setQuery(dto.getQuery());
-        existing.setUpdatedAt(new Date(System.currentTimeMillis()));
+        existing.setUpdatedAt(LocalDateTime.now());
         CannedQueriesDB updated = cannedQueryRepository.save(existing);
         return new CannedQueryDto(updated);
     }
+
     @Transactional
     public void deleteQuery(Integer id, Integer databaseId) {
         CannedQueriesDB existing = cannedQueryRepository.findByIdAndDatabaseId(id, databaseId);
         if (existing == null) {
-            throw new RuntimeException("Canned query not found");
+            throw new CannedQueryNotFoundException("Canned query not found");
         }
         cannedQueryRepository.delete(existing);
     }

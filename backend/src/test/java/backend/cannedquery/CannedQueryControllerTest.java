@@ -1,16 +1,23 @@
 package backend.cannedquery;
 
 import backend.security.AuthUser;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import backend.cannedquery.exception.CannedQueryException.CannedQueryNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
+import backend.cannedquery.exception.CannedQueryException.CannedQueryAlreadyExistsException;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
+import backend.databaseManagement.exception.DatabaseException;
 
 class CannedQueryControllerTest {
 
@@ -25,7 +32,6 @@ class CannedQueryControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    
     @Test
     void getAllQueriesByDatabase_success_returnsOk() {
         List<CannedQueryDto> queries = List.of(new CannedQueryDto(), new CannedQueryDto());
@@ -40,16 +46,16 @@ class CannedQueryControllerTest {
 
     @Test
     void getAllQueriesByDatabase_exception_returnsInternalServerError() {
-        when(cannedQueryService.getAllQueriesByDatabase(1)).thenThrow(new RuntimeException("DB error"));
+        when(cannedQueryService.getAllQueriesByDatabase(1)).thenThrow(new CannedQueryNotFoundException("DB error"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.getAllQueriesByDatabase(1, authUser);
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.getAllQueriesByDatabase(1, authUser));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("DB error"));
+        assertTrue(ex.getMessage().contains("DB error"));
     }
 
- 
     @Test
     void getQueryById_success_returnsOk() {
         CannedQueryDto dto = new CannedQueryDto();
@@ -64,16 +70,15 @@ class CannedQueryControllerTest {
 
     @Test
     void getQueryById_notFound_returnsNotFound() {
-        when(cannedQueryService.getQueryById(1, 1)).thenThrow(new RuntimeException("Not found"));
+        when(cannedQueryService.getQueryById(1, 1)).thenThrow(new CannedQueryNotFoundException("Not found"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.getQueryById(1, 1, authUser);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Not found", response.getBody());
+        CannedQueryNotFoundException ex = assertThrows(
+                CannedQueryNotFoundException.class,
+                () -> controller.getQueryById(1, 1, authUser));
+        assertTrue(ex.getMessage().contains("Not found"));
     }
 
-    
     @Test
     void createQuery_success_returnsCreated() {
         CannedQueryDto dto = new CannedQueryDto();
@@ -90,28 +95,30 @@ class CannedQueryControllerTest {
     @Test
     void createQuery_badRequest_returnsBadRequest() {
         CannedQueryDto dto = new CannedQueryDto();
-        when(cannedQueryService.createQuery(dto)).thenThrow(new IllegalArgumentException("Invalid input"));
+        when(cannedQueryService.createQuery(dto)).thenThrow(new MissingFieldException("Invalid input"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.createQuery(dto, authUser);
+        MissingFieldException ex = assertThrows(
+                MissingFieldException.class,
+                () -> controller.createQuery(dto, authUser));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid input", response.getBody());
+        assertTrue(ex.getMessage().contains("Invalid input"));
     }
 
     @Test
     void createQuery_conflict_returnsConflict() {
         CannedQueryDto dto = new CannedQueryDto();
-        when(cannedQueryService.createQuery(dto)).thenThrow(new RuntimeException("Already exists"));
+        when(cannedQueryService.createQuery(dto)).thenThrow(new CannedQueryAlreadyExistsException("Already exists"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.createQuery(dto, authUser);
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Already exists", response.getBody());
+        CannedQueryAlreadyExistsException ex = assertThrows(
+                CannedQueryAlreadyExistsException.class,
+                () -> controller.createQuery(dto, authUser));
+
+        assertTrue(ex.getMessage().contains("Already exists"));
     }
 
-   
     @Test
     void updateQuery_success_returnsOk() {
         CannedQueryDto dto = new CannedQueryDto();
@@ -128,13 +135,16 @@ class CannedQueryControllerTest {
     @Test
     void updateQuery_badRequest_returnsBadRequest() {
         CannedQueryDto dto = new CannedQueryDto();
-        when(cannedQueryService.updateQuery(1, dto)).thenThrow(new IllegalArgumentException("Invalid name"));
+        when(cannedQueryService.updateQuery(1, dto))
+                .thenThrow(new DatabaseException.MissingFieldException("Invalid name"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.updateQuery(1, dto, authUser);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid name", response.getBody());
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.updateQuery(1, dto, authUser));
+
+        assertTrue(ex.getMessage().contains("Invalid name"));
     }
 
     @Test
@@ -143,20 +153,21 @@ class CannedQueryControllerTest {
         when(cannedQueryService.updateQuery(1, dto)).thenThrow(new RuntimeException("Not found"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.updateQuery(1, dto, authUser);
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.updateQuery(1, dto, authUser));
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Not found", response.getBody());
+        assertTrue(ex.getMessage().contains("Not found"));
     }
 
-   
     @Test
-    void deleteQuery_success_returnsOk() {
+    void deleteQuery_success_returnsNoContent() {
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.deleteQuery(1, 1, authUser);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Query deleted successfully", response.getBody());
+        ResponseEntity<Void> response = controller.deleteQuery(1, 1, authUser);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody()); // 204 responses have no body
         verify(cannedQueryService).deleteQuery(1, 1);
     }
 
@@ -165,23 +176,24 @@ class CannedQueryControllerTest {
         doThrow(new RuntimeException("Not found")).when(cannedQueryService).deleteQuery(1, 1);
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.deleteQuery(1, 1, authUser);
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.deleteQuery(1, 1, authUser));
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Not found", response.getBody());
+        assertTrue(ex.getMessage().contains("Not found"));
     }
 
-    
     @Test
     void getAllQueriesByDatabase_internalServerError() {
         when(cannedQueryService.getAllQueriesByDatabase(1))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.getAllQueriesByDatabase(1, authUser);
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.getAllQueriesByDatabase(1, authUser));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Unexpected error"));
+        assertTrue(ex.getMessage().contains("Unexpected error"));
     }
 
     @Test
@@ -190,10 +202,12 @@ class CannedQueryControllerTest {
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.getQueryById(1, 1, authUser);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Unexpected error"));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.getQueryById(1, 1, authUser));
+
+        assertTrue(ex.getMessage().contains("Unexpected error"));
     }
 
     @Test
@@ -203,10 +217,12 @@ class CannedQueryControllerTest {
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.createQuery(dto, authUser);
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Unexpected error"));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.createQuery(dto, authUser));
+
+        assertTrue(ex.getMessage().contains("Unexpected error"));
     }
 
     @Test
@@ -216,10 +232,12 @@ class CannedQueryControllerTest {
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.updateQuery(1, dto, authUser);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Unexpected error"));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.updateQuery(1, dto, authUser));
+
+        assertTrue(ex.getMessage().contains("Unexpected error"));
     }
 
     @Test
@@ -228,9 +246,12 @@ class CannedQueryControllerTest {
                 .when(cannedQueryService).deleteQuery(1, 1);
 
         AuthUser authUser = mock(AuthUser.class);
-        ResponseEntity<?> response = controller.deleteQuery(1, 1, authUser);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Unexpected error"));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.deleteQuery(1, 1, authUser));
+
+        assertTrue(ex.getMessage().contains("Unexpected error"));
     }
+
 }

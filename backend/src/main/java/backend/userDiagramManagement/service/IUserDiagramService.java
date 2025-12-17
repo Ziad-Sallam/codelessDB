@@ -1,5 +1,11 @@
 package backend.userDiagramManagement.service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
@@ -7,12 +13,6 @@ import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.UUID;
 
 public interface IUserDiagramService {
     DiagramInfoDto createDiagram(int userId, DiagramCreateRequestDto request);

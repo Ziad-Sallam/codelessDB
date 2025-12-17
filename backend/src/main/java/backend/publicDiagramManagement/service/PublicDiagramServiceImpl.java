@@ -1,10 +1,24 @@
 package backend.publicDiagramManagement.service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.PublicDiagramUserId;
 import backend.entities.joins.UserDiagram;
-import backend.entities.publicDiagramEntities.*;
+import backend.entities.publicDiagramEntities.CannedQueriesDiagrams;
+import backend.entities.publicDiagramEntities.DiagramFork;
+import backend.entities.publicDiagramEntities.DiagramStar;
+import backend.entities.publicDiagramEntities.Hashtag;
+import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
@@ -20,7 +34,6 @@ import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.UserService;
 import backend.userDiagramManagement.dto.ContributorDto;
-import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
@@ -28,13 +41,6 @@ import jakarta.transaction.Transactional;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Data
@@ -112,6 +118,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         publicDiagramRepository.save(publicDiagram);
     }
 
+    @Override
     @Transactional
     public PublicDiagramDto viewPublicDiagram(int userId, UUID diagramId) {
 

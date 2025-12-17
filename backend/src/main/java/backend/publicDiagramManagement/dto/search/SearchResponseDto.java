@@ -1,6 +1,5 @@
 package backend.publicDiagramManagement.dto.search;
 
-import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.user.PublicUserInfoDto;
 import lombok.AllArgsConstructor;

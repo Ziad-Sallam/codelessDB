@@ -1,13 +1,13 @@
 package backend.SQLOptimization.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +41,7 @@ public class SQLOptimizationService {
             String prompt = buildOptimizationPrompt(sqlCode);
             String geminiResponse = callGeminiAPI(prompt);
             return parseGeminiResponse(geminiResponse);
-            
+
         } catch (GeminiAPIException e) {
             log.error("Gemini API error: {}", e.getMessage());
             throw e;
@@ -52,67 +52,68 @@ public class SQLOptimizationService {
     }
 
     private String buildOptimizationPrompt(String sqlCode) {
-        return String.format("""
-            You are an expert database architect and SQL optimization specialist. Your task is to analyze and optimize the provided SQL code for better performance, readability, and best practices.
+        return String.format(
+                """
+                        You are an expert database architect and SQL optimization specialist. Your task is to analyze and optimize the provided SQL code for better performance, readability, and best practices.
 
-            **Original SQL:**
-            ```sql
-            %s
-            ```
+                        **Original SQL:**
+                        ```sql
+                        %s
+                        ```
 
-            **Your Task:**
-            1. Analyze the SQL code for potential performance issues, redundancies, and anti-patterns
-            2. Optimize the code following these priorities:
-               - Performance: Add appropriate indexes, optimize JOIN operations, remove redundant queries
-               - Readability: Improve formatting, naming conventions, and code structure
-               - Best Practices: Follow SQL standards, use proper data types, add constraints where needed
-               - Maintainability: Add comments for complex logic, use meaningful names
+                        **Your Task:**
+                        1. Analyze the SQL code for potential performance issues, redundancies, and anti-patterns
+                        2. Optimize the code following these priorities:
+                           - Performance: Add appropriate indexes, optimize JOIN operations, remove redundant queries
+                           - Readability: Improve formatting, naming conventions, and code structure
+                           - Best Practices: Follow SQL standards, use proper data types, add constraints where needed
+                           - Maintainability: Add comments for complex logic, use meaningful names
 
-            3. Provide your response in the following JSON format ONLY (no markdown, no additional text):
+                        3. Provide your response in the following JSON format ONLY (no markdown, no additional text):
 
-            {
-              "optimizedSQL": "The complete optimized SQL code here",
-              "summary": "A concise 2-3 sentence summary explaining the key optimizations made and their expected impact on performance and maintainability"
-            }
+                        {
+                          "optimizedSQL": "The complete optimized SQL code here",
+                          "summary": "A concise 2-3 sentence summary explaining the key optimizations made and their expected impact on performance and maintainability"
+                        }
 
-            **Important Guidelines:**
-            - Keep all original table names and column names unless there's a critical naming issue
-            - Maintain the original schema structure and relationships
-            - Focus on practical optimizations that provide real value
-            - If the SQL is already well-optimized, make minor improvements and acknowledge this in the summary
-            - Ensure the optimized SQL is syntactically correct and executable
-            - Add strategic indexes for foreign keys and frequently queried columns
-            - Use IF NOT EXISTS for safer execution
-            - Add helpful inline comments for complex operations
+                        **Important Guidelines:**
+                        - Keep all original table names and column names unless there's a critical naming issue
+                        - Maintain the original schema structure and relationships
+                        - Focus on practical optimizations that provide real value
+                        - If the SQL is already well-optimized, make minor improvements and acknowledge this in the summary
+                        - Ensure the optimized SQL is syntactically correct and executable
+                        - Add strategic indexes for foreign keys and frequently queried columns
+                        - Use IF NOT EXISTS for safer execution
+                        - Add helpful inline comments for complex operations
 
-            Return ONLY the JSON object, nothing else.
-            """, sqlCode);
+                        Return ONLY the JSON object, nothing else.
+                        """,
+                sqlCode);
     }
 
     private String callGeminiAPI(String prompt) {
         try {
             String requestBody = String.format("""
-                {
-                  "contents": [{
-                    "parts": [{
-                      "text": %s
-                    }]
-                  }]
-                }
-                """, objectMapper.writeValueAsString(prompt));
+                    {
+                      "contents": [{
+                        "parts": [{
+                          "text": %s
+                        }]
+                      }]
+                    }
+                    """, objectMapper.writeValueAsString(prompt));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            
+
             String urlWithKey = geminiApiUrl + "?key=" + geminiApiKey;
 
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
             ResponseEntity<String> response = restTemplate.exchange(
-                urlWithKey,
-                HttpMethod.POST,
-                entity,
-                String.class
-            );
+                    urlWithKey,
+                    HttpMethod.POST,
+                    entity,
+                    String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new GeminiAPIException("Gemini API returned error: " + response.getStatusCode());
@@ -129,14 +130,14 @@ public class SQLOptimizationService {
     private OptimizeSQLResponse parseGeminiResponse(String responseBody) {
         try {
             JsonNode root = objectMapper.readTree(responseBody);
-            
+
             String text = root.path("candidates")
-                .get(0)
-                .path("content")
-                .path("parts")
-                .get(0)
-                .path("text")
-                .asText();
+                    .get(0)
+                    .path("content")
+                    .path("parts")
+                    .get(0)
+                    .path("text")
+                    .asText();
 
             String cleanedText = text.trim();
             if (cleanedText.startsWith("```json")) {
@@ -146,7 +147,7 @@ public class SQLOptimizationService {
             }
 
             JsonNode result = objectMapper.readTree(cleanedText);
-            
+
             String optimizedSQL = result.path("optimizedSQL").asText();
             String summary = result.path("summary").asText();
 

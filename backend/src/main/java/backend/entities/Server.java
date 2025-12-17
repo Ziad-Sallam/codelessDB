@@ -16,7 +16,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,24 +27,20 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Server {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
-  @Column(nullable = false, length = 100)
-  private String name;
+    @Column(nullable = false, length = 100)
+    private String name;
 
-  // @Column(nullable = false)
-  // @NotBlank(message = "Password is mandatory")
-  // private String password;
+    @ManyToMany(mappedBy = "servers")
+    private List<User> hasAccess = new ArrayList<>();
 
-  @ManyToMany(mappedBy = "servers")
-  private List<User> hasAccess = new ArrayList<>();
+    @OneToMany(mappedBy = "server", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserDatabase> serverDatabases = new ArrayList<>();
 
-  @OneToMany(mappedBy = "server", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserDatabase> serverDatabases = new ArrayList<>();
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "owner_id", nullable = false)
-  private User owner;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 }

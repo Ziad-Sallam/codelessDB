@@ -21,7 +21,6 @@ public class JwtUtil {
 
     private final String secret = "TEST SECRET SKJDBW;KBF/;NFE/WEJFNBE/WNF/EWJNFVKEJNFKJEWBFHEWB;";
     private final Key key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-    // private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     @Value("${jwt.expiration-ms}")
     private long jwtExpirationMs;

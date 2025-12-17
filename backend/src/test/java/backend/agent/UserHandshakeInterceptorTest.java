@@ -36,9 +36,11 @@ class UserHandshakeInterceptorTest {
         attributes = new HashMap<>();
     }
 
-    /* --------------------------------------------------------
-       beforeHandshake
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * beforeHandshake
+     * --------------------------------------------------------
+     */
 
     @Test
     void beforeHandshake_withAuthorizationHeader_setsUserId() {
@@ -69,18 +71,18 @@ class UserHandshakeInterceptorTest {
         assertTrue(attributes.get("userId").toString().startsWith("anon-"));
     }
 
-    /* --------------------------------------------------------
-       afterHandshake
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * afterHandshake
+     * --------------------------------------------------------
+     */
 
     @Test
     void afterHandshake_doesNothing_andDoesNotThrow() {
-        assertDoesNotThrow(() ->
-                interceptor.afterHandshake(
-                        request,
-                        response,
-                        webSocketHandler,
-                        null
-                ));
+        assertDoesNotThrow(() -> interceptor.afterHandshake(
+                request,
+                response,
+                webSocketHandler,
+                null));
     }
 }

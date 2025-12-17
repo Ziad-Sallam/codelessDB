@@ -4,12 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
 import backend.entities.CannedQueriesDB;
 import backend.entities.UserDatabase;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,16 +47,16 @@ class CannedQueryServiceTest {
         query1.setName("Query1");
         query1.setQuery("SELECT * FROM table1");
         query1.setDatabase(database);
-        query1.setCreatedAt(new Date(System.currentTimeMillis()));
-        query1.setUpdatedAt(new Date(System.currentTimeMillis()));
+        query1.setCreatedAt(LocalDateTime.now());
+        query1.setUpdatedAt(LocalDateTime.now());
 
         query2 = new CannedQueriesDB();
         query2.setId(2);
         query2.setName("Query2");
         query2.setQuery("SELECT * FROM table2");
         query2.setDatabase(database);
-        query2.setCreatedAt(new Date(System.currentTimeMillis()));
-        query2.setUpdatedAt(new Date(System.currentTimeMillis()));
+        query2.setCreatedAt(LocalDateTime.now());
+        query2.setUpdatedAt(LocalDateTime.now());
     }
 
     @Test
@@ -101,8 +102,8 @@ class CannedQueryServiceTest {
         savedQuery.setName("Query3");
         savedQuery.setQuery("SELECT * FROM table3");
         savedQuery.setDatabase(database);
-        savedQuery.setCreatedAt(new Date(System.currentTimeMillis()));
-        savedQuery.setUpdatedAt(new Date(System.currentTimeMillis()));
+        savedQuery.setCreatedAt(LocalDateTime.now());
+        savedQuery.setUpdatedAt(LocalDateTime.now());
 
         when(cannedQueryRepository.save(any(CannedQueriesDB.class))).thenReturn(savedQuery);
 
@@ -155,7 +156,7 @@ class CannedQueryServiceTest {
         dto.setQuery("SELECT * FROM table");
         dto.setDatabaseId(1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.createQuery(dto)
         );
         assertEquals("Query name is required", exception.getMessage());
@@ -167,7 +168,7 @@ class CannedQueryServiceTest {
         dto.setName("MyQuery");
         dto.setDatabaseId(1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.createQuery(dto)
         );
         assertEquals("Query body is required", exception.getMessage());
@@ -179,7 +180,7 @@ class CannedQueryServiceTest {
         dto.setName("MyQuery");
         dto.setQuery("SELECT * FROM table");
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.createQuery(dto)
         );
         assertEquals("Database ID is required", exception.getMessage());
@@ -256,7 +257,7 @@ class CannedQueryServiceTest {
 
         when(cannedQueryRepository.findByIdAndDatabaseId(1, 1)).thenReturn(query1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.updateQuery(1, dto)
         );
         assertEquals("Query name is required", exception.getMessage());
@@ -271,7 +272,7 @@ class CannedQueryServiceTest {
 
         when(cannedQueryRepository.findByIdAndDatabaseId(1, 1)).thenReturn(query1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.updateQuery(1, dto)
         );
         assertEquals("Query body is required", exception.getMessage());

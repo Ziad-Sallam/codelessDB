@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CannedQueryDto {
+public class DiagramCannedQueryDto {
     private String name;
     private String description;
     private String query;
 
-    public static CannedQueryDto toDto(CannedQueriesDiagrams cannedQueriesDiagrams) {
-        return CannedQueryDto.builder()
+    public static DiagramCannedQueryDto toDto(CannedQueriesDiagrams cannedQueriesDiagrams) {
+        return DiagramCannedQueryDto.builder()
                 .name(cannedQueriesDiagrams.getName())
                 .description(cannedQueriesDiagrams.getDescription())
                 .query(cannedQueriesDiagrams.getQuery())

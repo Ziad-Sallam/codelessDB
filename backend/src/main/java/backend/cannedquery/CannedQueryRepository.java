@@ -10,6 +10,8 @@ import backend.entities.CannedQueriesDB;
 @Repository
 public interface CannedQueryRepository extends JpaRepository<CannedQueriesDB, Integer> {
     List<CannedQueriesDB> findByDatabaseId(Integer databaseId);
+
     CannedQueriesDB findByIdAndDatabaseId(Integer id, Integer databaseId);
+
     boolean existsByNameAndDatabaseId(String name, Integer databaseId);
 }

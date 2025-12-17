@@ -1,8 +1,10 @@
 package backend.user;
 
 import backend.user.exceptions.UserException;
+
+import java.time.LocalDateTime;
+
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -12,23 +14,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import backend.entities.User;
 import backend.security.AuthUser;
-import backend.user.exceptions.UserException;
 import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import backend.user.exceptions.UserException.OtpSendFailedException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService {
 
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 
-	@Autowired
-	private JavaMailSender mailSender;
+	private final JavaMailSender mailSender;
 
 	private String encodePassword(String rawPassword) {
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -198,11 +197,10 @@ public class UserService {
 	 * Reset AI quota to 5 if the date has changed since last reset
 	 */
 	private void resetAiQuotaIfNeeded(User user) {
-		java.time.LocalDate today = java.time.LocalDate.now();
 
-		if (user.getAiQuotaResetDate() == null || !user.getAiQuotaResetDate().equals(today)) {
+		if (user.getAiQuotaResetDate() == null || !user.getAiQuotaResetDate().equals(LocalDateTime.now())) {
 			user.setAiQuotaRemaining(5);
-			user.setAiQuotaResetDate(today);
+			user.setAiQuotaResetDate(LocalDateTime.now());
 			userRepository.save(user);
 		}
 	}

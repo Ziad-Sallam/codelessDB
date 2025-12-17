@@ -1,17 +1,20 @@
 package backend.SQLGeneration.dto;
 
-import lombok.*;
 import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SQLDataType {
     private SQLTypeName name;
-    private Integer length;        // CHAR/VARCHAR
-    private Integer precision;     // DECIMAL/NUMERIC
-    private Integer scale;         // DECIMAL/NUMERIC
-    private List<String> values;   // ENUM/SET
+    private Integer length; // CHAR/VARCHAR
+    private Integer precision; // DECIMAL/NUMERIC
+    private Integer scale; // DECIMAL/NUMERIC
+    private List<String> values; // ENUM/SET
 
     public String toDDL() {
         switch (name) {
@@ -22,7 +25,8 @@ public class SQLDataType {
                 int s = scale != null ? scale : 0;
                 return name + "(" + p + "," + s + ")";
             case ENUM, SET:
-                if (values == null || values.isEmpty()) return name + "()";
+                if (values == null || values.isEmpty())
+                    return name + "()";
                 String joined = String.join(",", values.stream()
                         .map(v -> "'" + v + "'")
                         .toArray(String[]::new));

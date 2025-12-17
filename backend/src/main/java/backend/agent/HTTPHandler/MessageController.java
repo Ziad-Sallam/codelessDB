@@ -1,54 +1,73 @@
 package backend.agent.HTTPHandler;
 
-import java.nio.file.Paths;
-import java.util.Enumeration;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import backend.agent.WebSocketHandler.*;
-import backend.security.AuthUser;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import backend.agent.WebSocketHandler.AgentMessageDTO;
+import backend.agent.WebSocketHandler.ClientResponseDTO;
+import backend.security.AuthUser;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/agent")
+@RequiredArgsConstructor
 public class MessageController {
 
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
 
     @PostMapping("/send")
-    public ResponseEntity<?> sendToUser(@RequestBody MessageDTO request,@AuthenticationPrincipal AuthUser user) {
+    public ResponseEntity<ClientResponseDTO> sendToUser(
+            @RequestBody MessageDTO request,
+            @AuthenticationPrincipal AuthUser user) {
+
+        if (user == null)
+            throw new RuntimeException("Unauthorized");
+
         AgentMessageDTO message = new AgentMessageDTO("Server", request.getContent());
-        try{
-            ClientResponseDTO res =  messageService.runQuery(request.getDatabaseId(), message,user.userId());
-            return ResponseEntity.ok(res);
-        }catch(Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-        
+
+        ClientResponseDTO res = messageService.runQuery(
+                request.getDatabaseId(),
+                message,
+                user.userId());
+
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/is-database-online")
-    public ResponseEntity<?> isDatabaseOnline( @RequestParam int databaseId, @AuthenticationPrincipal AuthUser user) {
-        try {
-            boolean x = messageService.databaseIsOnline(user.userId(), databaseId);
-            return ResponseEntity.ok(x);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Boolean> isDatabaseOnline(
+            @RequestParam int databaseId,
+            @AuthenticationPrincipal AuthUser user) {
+
+        if (user == null)
+            throw new RuntimeException("Unauthorized");
+
+        boolean online = messageService.databaseIsOnline(
+                user.userId(),
+                databaseId);
+
+        return ResponseEntity.ok(online);
     }
 
     @GetMapping("/create-container")
-    public ResponseEntity<Resource> downloadFile1() throws IOException {
-        Path path = Paths.get("backend/uploads/agent/dist/create_container.exe").toAbsolutePath();
+    public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
+        Path path = Paths.get(
+                "backend/uploads/agent/dist/create_container.exe")
+                .toAbsolutePath();
+
         Resource resource = new UrlResource(path.toUri());
 
         return ResponseEntity.ok()
@@ -59,8 +78,11 @@ public class MessageController {
     }
 
     @GetMapping("/communicate")
-    public ResponseEntity<Resource> downloadFile2() throws IOException {
-        Path path = Paths.get("backend/uploads/agent/dist/communicate.exe").toAbsolutePath();
+    public ResponseEntity<Resource> downloadCommunicate() throws IOException {
+        Path path = Paths.get(
+                "backend/uploads/agent/dist/communicate.exe")
+                .toAbsolutePath();
+
         Resource resource = new UrlResource(path.toUri());
 
         return ResponseEntity.ok()
@@ -69,5 +91,4 @@ public class MessageController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
-
 }

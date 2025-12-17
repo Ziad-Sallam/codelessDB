@@ -1,13 +1,10 @@
 package backend.userDiagramManagement.service;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import backend.userDiagramManagement.dto.ContributorDto;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +17,7 @@ import backend.entities.joins.UserDiagramId;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
+import backend.userDiagramManagement.dto.ContributorDto;
 import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
@@ -89,8 +87,7 @@ public class UserDiagramService implements IUserDiagramService {
                         ud.getDiagram(),
                         ud.getRole(),
                         getContributors(ud.getDiagram().getId()),
-                        ud.getDiagram().getPublicDiagram() != null)
-                );
+                        ud.getDiagram().getPublicDiagram() != null));
     }
 
     @Override
@@ -144,8 +141,9 @@ public class UserDiagramService implements IUserDiagramService {
 
         if (userDiagram.getRole() == Role.OWNER) {
             if (userDiagram.getDiagram().getPublicDiagram() != null)
-                throw new DiagramException.PermissionDeniedException("Can't delete public diagram, Unpublished it first");
-            
+                throw new DiagramException.PermissionDeniedException(
+                        "Can't delete public diagram, Unpublished it first");
+
             UserDiagram anyOne = userDiagramRepository.findFirstByDiagram_Id(diagramId);
 
             if (anyOne != null) {
@@ -171,11 +169,11 @@ public class UserDiagramService implements IUserDiagramService {
         return DiagramDto.toDto(diagram, userDiagram.getRole());
     }
 
-
+    @Override
     @Transactional
     public Page<DiagramInfoDto> searchDiagrams(int userId,
-                                               DiagramSearchRequestDto request,
-                                               Pageable pageable) {
+            DiagramSearchRequestDto request,
+            Pageable pageable) {
 
         getUserOrThrow(userId);
 
@@ -197,14 +195,12 @@ public class UserDiagramService implements IUserDiagramService {
                         nameFilter,
                         startDate,
                         endDate,
-                        pageable
-                )
+                        pageable)
                 .map(ud -> DiagramInfoDto.toDto(
                         ud.getDiagram(),
                         ud.getRole(),
                         getContributors(ud.getDiagram().getId()),
-                        ud.getDiagram().getPublicDiagram() != null
-                ));
+                        ud.getDiagram().getPublicDiagram() != null));
     }
 
     @Override

@@ -1,23 +1,30 @@
 package backend.DatabaseManagement;
 
-import backend.databaseManagement.*;
-
-import backend.security.AuthUser;
-
-import org.apache.coyote.BadRequestException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.apache.coyote.BadRequestException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import backend.databaseManagement.CreateDatabaseDTO;
+import backend.databaseManagement.CreateServerDTO;
+import backend.databaseManagement.DatabaseManagementController;
+import backend.databaseManagement.DatabaseManagementService;
+import backend.databaseManagement.InitiateDatabaseDTO;
+import backend.databaseManagement.SendDatabasesDTO;
+import backend.security.AuthUser;
 
 class DatabaseManagementControllerTest {
 
@@ -32,69 +39,70 @@ class DatabaseManagementControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    /* --------------------------------------------------------
-       createDatabase
-     -------------------------------------------------------- */
-    @Test
-    void createDatabase_success_returnsOk() throws Exception {
-        CreateDatabaseDTO dto = new CreateDatabaseDTO();
-        dto.setDatabaseName("TestDB");
-        dto.setDatabasePassword("pwd");
+    /*
+     * --------------------------------------------------------
+     * createDatabase
+     * --------------------------------------------------------
+     */
+@Test
+void createDatabase_success_returnsCreated() throws Exception {
+    // Arrange
+    CreateDatabaseDTO dto = new CreateDatabaseDTO();
+    dto.setDatabaseName("TestDB");
+    dto.setDatabasePassword("pwd");
 
-        AuthUser authUser = mock(AuthUser.class);
-        when(authUser.userId()).thenReturn(1);
+    AuthUser authUser = mock(AuthUser.class);
+    when(authUser.userId()).thenReturn(1);
 
-        CreateDatabaseDTO returnedDTO = new CreateDatabaseDTO();
-        returnedDTO.setDatabaseId(100);
+    CreateDatabaseDTO returnedDTO = new CreateDatabaseDTO();
+    returnedDTO.setDatabaseId(100);
 
-        when(databaseManagementService.createDatabase(dto, 1)).thenReturn(returnedDTO);
+    when(databaseManagementService.createDatabase(dto, 1)).thenReturn(returnedDTO);
 
-        ResponseEntity<?> response = controller.createDatabase(dto, authUser);
+    // Act
+    ResponseEntity<CreateDatabaseDTO> response = controller.createDatabase(dto, authUser);
 
-        assertEquals(200, response.getStatusCode().value());
-        assertSame(returnedDTO, response.getBody());
-    }
+    // Assert
+    assertEquals(HttpStatus.CREATED, response.getStatusCode()); // check for 201
+    assertEquals(returnedDTO.getDatabaseId(), response.getBody().getDatabaseId()); // check DTO contents
+}
 
-    @Test
-    void createDatabase_serviceThrowsException_returnsBadRequest() {
-        CreateDatabaseDTO dto = new CreateDatabaseDTO();
-        AuthUser authUser = mock(AuthUser.class);
-        when(authUser.userId()).thenReturn(1);
 
-        when(databaseManagementService.createDatabase(dto, 1))
-                .thenThrow(new RuntimeException("DB error"));
+@Test
+void createDatabase_serviceThrowsException_throwsRuntimeException() {
+    // Arrange
+    CreateDatabaseDTO dto = new CreateDatabaseDTO();
+    AuthUser authUser = mock(AuthUser.class);
+    when(authUser.userId()).thenReturn(1);
 
-        ResponseEntity<?> response = controller.createDatabase(dto, authUser);
+    when(databaseManagementService.createDatabase(dto, 1))
+            .thenThrow(new RuntimeException("DB error"));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    // Act & Assert
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> controller.createDatabase(dto, authUser));
 
-        Map<?, ?> body = (Map<?, ?>) response.getBody();
-        assertEquals("DB error", body.get("error"));
-    }
+    assertEquals("DB error", ex.getMessage());
+}
 
-    @Test
-    void createServer_serviceThrowsException_returnsBadRequest() {
-        // Arrange
-        CreateServerDTO dto = new CreateServerDTO();
 
-        AuthUser authUser = mock(AuthUser.class);
-        when(authUser.userId()).thenReturn(1);
+@Test
+void createServer_serviceThrowsException_throwsRuntimeException() {
+    // Arrange
+    CreateServerDTO dto = new CreateServerDTO();
+    AuthUser authUser = mock(AuthUser.class);
+    when(authUser.userId()).thenReturn(1);
 
-        when(databaseManagementService.createServer(dto, 1))
-                .thenThrow(new RuntimeException("Server creation failed"));
+    when(databaseManagementService.createServer(dto, 1))
+            .thenThrow(new RuntimeException("Server creation failed"));
 
-        // Act
-        ResponseEntity<?> response = controller.createServer(dto, authUser);
+    // Act & Assert
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> controller.createServer(dto, authUser));
 
-        // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertEquals("Server creation failed", ex.getMessage());
+}
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> body = (Map<String, String>) response.getBody();
-
-        assertNotNull(body);
-        assertEquals("Server creation failed", body.get("error"));
-    }
 
     @Test
     void getUserDatabases_validUser_returnsOkResponse() {
@@ -107,7 +115,7 @@ class DatabaseManagementControllerTest {
                 .thenReturn(dto);
 
         // Act
-        ResponseEntity<?> response = controller.getUserDAtabases(authUser);
+        ResponseEntity<?> response = controller.getUserDatabases(authUser);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -116,34 +124,39 @@ class DatabaseManagementControllerTest {
         verify(databaseManagementService).getUserDatabases(1);
     }
 
+    /*
+     * --------------------------------------------------------
+     * createServer
+     * --------------------------------------------------------
+     */
+@Test
+void createServer_success_returnsCreated() throws Exception {
+    // Arrange
+    CreateServerDTO dto = new CreateServerDTO();
+    dto.setServerName("MyServer");
+
+    AuthUser authUser = mock(AuthUser.class);
+    when(authUser.userId()).thenReturn(1);
+
+    CreateServerDTO returnedDTO = new CreateServerDTO();
+    returnedDTO.setServerId(10);
+
+    when(databaseManagementService.createServer(dto, 1)).thenReturn(returnedDTO);
+
+    // Act
+    ResponseEntity<CreateServerDTO> response = controller.createServer(dto, authUser);
+
+    // Assert
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertEquals(returnedDTO.getServerId(), response.getBody().getServerId());
+}
 
 
-
-    /* --------------------------------------------------------
-       createServer
-     -------------------------------------------------------- */
-    @Test
-    void createServer_success_returnsOk() throws Exception {
-        CreateServerDTO dto = new CreateServerDTO();
-        dto.setServerName("MyServer");
-
-        AuthUser authUser = mock(AuthUser.class);
-        when(authUser.userId()).thenReturn(1);
-
-        CreateServerDTO returnedDTO = new CreateServerDTO();
-        returnedDTO.setServerId(10);
-
-        when(databaseManagementService.createServer(dto, 1)).thenReturn(returnedDTO);
-
-        ResponseEntity<?> response = controller.createServer(dto, authUser);
-
-        assertEquals(200, response.getStatusCode().value());
-        assertSame(returnedDTO, response.getBody());
-    }
-
-    /* --------------------------------------------------------
-       createMysqlContainer
-     -------------------------------------------------------- */
+    /*
+     * --------------------------------------------------------
+     * createMysqlContainer
+     * --------------------------------------------------------
+     */
     @Test
     void createMysqlContainer_success_returnsOk() throws BadRequestException {
         int databaseId = 50;
@@ -158,22 +171,25 @@ class DatabaseManagementControllerTest {
         assertSame(dto, response.getBody());
     }
 
-    @Test
-    void createMysqlContainer_serviceThrowsException_returnsInternalServerError() throws BadRequestException {
-        int databaseId = 50;
+@Test
+void createMysqlContainer_serviceThrowsException_throwsRuntimeException() {
+    int databaseId = 50;
 
-        when(databaseManagementService.initiateDatabase(databaseId))
-                .thenThrow(new RuntimeException("DB not found"));
+    when(databaseManagementService.initiateDatabase(databaseId))
+            .thenThrow(new RuntimeException("DB not found"));
 
-        ResponseEntity<?> response = controller.createMysqlContainer(databaseId);
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> controller.createMysqlContainer(databaseId));
 
-        assertEquals(500, response.getStatusCode().value());
-        assertNull(response.getBody());
-    }
+    assertEquals("DB not found", ex.getMessage());
+}
 
-    /* --------------------------------------------------------
-       getUserServers
-     -------------------------------------------------------- */
+
+    /*
+     * --------------------------------------------------------
+     * getUserServers
+     * --------------------------------------------------------
+     */
     @Test
     void getUserServers_success_returnsList() {
         AuthUser authUser = mock(AuthUser.class);

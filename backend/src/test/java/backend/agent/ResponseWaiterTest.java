@@ -1,14 +1,18 @@
 package backend.agent;
 
-import backend.agent.WebSocketHandler.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import backend.agent.WebSocketHandler.ClientResponseDTO;
+import backend.agent.WebSocketHandler.ResponseWaiter;
 
 class ResponseWaiterTest {
 
@@ -56,9 +60,6 @@ class ResponseWaiterTest {
     void complete_removesWaiterAfterCompletion() {
         String correlationId = "corr-3";
         ClientResponseDTO response = new ClientResponseDTO();
-
-        CompletableFuture<ClientResponseDTO> future =
-                responseWaiter.createWaiter(correlationId);
 
         responseWaiter.complete(correlationId, response);
 

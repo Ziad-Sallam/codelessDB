@@ -34,12 +34,18 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ForkTests {
 
-    @Mock private UserDiagramService userDiagramService;
-    @Mock private UserDiagramRepository userDiagramRepository;
-    @Mock private DiagramRepository diagramRepository;
-    @Mock private UserService userService;
-    @Mock private PublicDiagramRepository publicDiagramRepository;
-    @Mock private ForkRepository forkRepository;
+    @Mock
+    private UserDiagramService userDiagramService;
+    @Mock
+    private UserDiagramRepository userDiagramRepository;
+    @Mock
+    private DiagramRepository diagramRepository;
+    @Mock
+    private UserService userService;
+    @Mock
+    private PublicDiagramRepository publicDiagramRepository;
+    @Mock
+    private ForkRepository forkRepository;
 
     @InjectMocks
     private PublicDiagramServiceImpl service;
@@ -114,8 +120,7 @@ public class ForkTests {
         Page<PublicDiagram> page = new PageImpl<>(
                 List.of(publicDiagram),
                 PageRequest.of(0, 10),
-                1
-        );
+                1);
 
         // ✅ new repository call returns PublicDiagram
         when(forkRepository.findForkedPublicDiagramsByUser(7, PageRequest.of(0, 10)))
@@ -123,15 +128,13 @@ public class ForkTests {
 
         // contributors
         List<ContributorDto> contributors = List.of(
-                new ContributorDto("Alice", "pic", Role.OWNER)
-        );
+                new ContributorDto("Alice", "pic", Role.OWNER));
 
         when(userDiagramService.getContributors(forkedId))
                 .thenReturn(contributors);
 
         // ✅ service now returns PublicDiagramInfoDto
-        Page<PublicDiagramInfoDto> result =
-                service.getForkedPublicDiagrams(7, PageRequest.of(0, 10));
+        Page<PublicDiagramInfoDto> result = service.getForkedPublicDiagrams(7, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
 

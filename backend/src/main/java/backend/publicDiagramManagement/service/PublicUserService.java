@@ -1,5 +1,11 @@
 package backend.publicDiagramManagement.service;
 
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import backend.entities.User;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
@@ -11,11 +17,6 @@ import backend.userDiagramManagement.dto.ContributorDto;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,6 @@ public class PublicUserService {
     private final DiagramRepository diagramRepository;
     private final PublicDiagramRepository publicDiagramRepository;
     private final UserDiagramService userDiagramService;
-
 
     public PublicUserDto getDesignerProfile(String userName) {
 
@@ -53,8 +53,7 @@ public class PublicUserService {
 
         Page<PublicDiagram> page = publicDiagramRepository.findPublicDiagramsByOwner(
                 userName,
-                pageable
-        );
+                pageable);
 
         return page.map(publicDiagram -> {
             List<ContributorDto> contributors = userDiagramService.getContributors(publicDiagram.getId());
@@ -66,8 +65,7 @@ public class PublicUserService {
 
         Page<PublicDiagram> page = publicDiagramRepository.findStaredPublicDiagramsByUser(
                 userName,
-                pageable
-        );
+                pageable);
 
         return page.map(publicDiagram -> {
             List<ContributorDto> contributors = userDiagramService.getContributors(publicDiagram.getId());

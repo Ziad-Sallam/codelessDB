@@ -1,7 +1,10 @@
 package backend.SQLGeneration.dto;
 
-import lombok.*;
 import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -13,4 +16,3 @@ public class AttributeDTO {
     private List<ConstraintDTO> constraints;
     private boolean indexed;
 }
-

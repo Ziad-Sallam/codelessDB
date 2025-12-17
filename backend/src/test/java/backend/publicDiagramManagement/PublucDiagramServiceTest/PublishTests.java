@@ -1,11 +1,37 @@
 package backend.publicDiagramManagement.PublucDiagramServiceTest;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import backend.entities.Diagram;
 import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.CannedQueriesDiagrams;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
-import backend.publicDiagramManagement.dto.CannedQueryDto;
+import backend.publicDiagramManagement.dto.DiagramCannedQueryDto;
 import backend.publicDiagramManagement.dto.publish.PublishDiagramRequestDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
 import backend.publicDiagramManagement.repository.ForkRepository;
@@ -19,29 +45,28 @@ import backend.user.UserService;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PublishTests {
 
-    @Mock private UserDiagramRepository userDiagramRepository;
-    @Mock private DiagramRepository diagramRepository;
-    @Mock private PublicDiagramRepository publicDiagramRepository;
-    @Mock private UserDiagramService userDiagramService;
-    @Mock private HashtagService hashtagService;
-    @Mock private ViewsService viewsService;
-    @Mock private ViewsRepository viewsRepository;
-    @Mock private ForkRepository forkRepository;
-    @Mock private UserService userService;
+    @Mock
+    private UserDiagramRepository userDiagramRepository;
+    @Mock
+    private DiagramRepository diagramRepository;
+    @Mock
+    private PublicDiagramRepository publicDiagramRepository;
+    @Mock
+    private UserDiagramService userDiagramService;
+    @Mock
+    private HashtagService hashtagService;
+    @Mock
+    private ViewsService viewsService;
+    @Mock
+    private ViewsRepository viewsRepository;
+    @Mock
+    private ForkRepository forkRepository;
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private PublicDiagramServiceImpl service;
@@ -60,9 +85,7 @@ class PublishTests {
         dto.setShortDescription("short");
         dto.setDetailedDescription("detailed");
         dto.setHashTags(List.of("#sql", "#erd"));
-        dto.setCannedQueries(List.of(
-                new CannedQueryDto("Q1", "desc", "SELECT 1")
-        ));
+        dto.setCannedQueries(List.of(new DiagramCannedQueryDto("Q1", "desc", "SELECT 1")));
 
         diagram = Diagram.builder().id(diagramId).build();
 
@@ -183,8 +206,7 @@ class PublishTests {
 
         service.publishDiagram(5, dto);
 
-        ArgumentCaptor<PublicDiagram> captor =
-                ArgumentCaptor.forClass(PublicDiagram.class);
+        ArgumentCaptor<PublicDiagram> captor = ArgumentCaptor.forClass(PublicDiagram.class);
 
         verify(publicDiagramRepository).save(captor.capture());
 
@@ -323,7 +345,7 @@ class PublishTests {
         existing.setDiagram(diagram);
 
         when(publicDiagramRepository.findById(diagramId))
-                .thenReturn(Optional.empty())   // first time
+                .thenReturn(Optional.empty()) // first time
                 .thenReturn(Optional.of(existing)); // second time
 
         when(hashtagService.resolveHashtags(any())).thenReturn(Set.of());

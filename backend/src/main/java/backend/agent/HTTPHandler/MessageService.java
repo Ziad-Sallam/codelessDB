@@ -1,63 +1,66 @@
 package backend.agent.HTTPHandler;
 
-import backend.agent.WebSocketHandler.OnlineUserTracker;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import backend.agent.WebSocketHandler.AgentController;
 import backend.agent.WebSocketHandler.AgentMessageDTO;
 import backend.agent.WebSocketHandler.ClientResponseDTO;
+import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.databaseManagement.exception.DatabaseException;
+import backend.entities.User;
+import backend.entities.UserDatabase;
+import backend.user.exceptions.UserException.UserNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.DatabaseNotConnectedException;
+
 import backend.user.UserRepository;
-import backend.entities.*;;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class MessageService {
     private final OnlineUserTracker tracker;
     private final AgentController agentController;
     private final UserDatabaseRepository userDatabaseRepository;
     private final UserRepository userRepository;
 
-    @Autowired
-    public MessageService(
-            UserRepository userRepository,
-            UserDatabaseRepository userDatabaseRepository,
-            OnlineUserTracker tracker,
-            AgentController agentController
-    ) {
-        this.userRepository = userRepository;
-        this.userDatabaseRepository = userDatabaseRepository;
-        this.tracker = tracker;
-        this.agentController = agentController;
-    }
-
-    public ClientResponseDTO runQuery(int databaseId, AgentMessageDTO message, int userId){
+    public ClientResponseDTO runQuery(int databaseId, AgentMessageDTO message, int userId) {
         ClientResponseDTO clientResponse;
         User user = userRepository.findById(userId);
-        if (user == null) throw new RuntimeException("User not found");
-        if(!tracker.getOnlineUsers().contains(Integer.toString(databaseId))) 
-            throw new RuntimeException("Database not Connected Please Check your Server!");
+        if (user == null)
+            throw new UserNotFoundException("User not found");
 
-        UserDatabase database = userDatabaseRepository.findById(databaseId).orElse(null);
-        if(database == null) throw new RuntimeException("Database not found");
-        
-        if(!user.getAccessibleDatabases().contains(database))throw new RuntimeException("Unauthrized Access");
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
-        try{
+        if (!user.getAccessibleDatabases().contains(database))
+            throw new DatabaseException.UnauthorizedAccessException("Unauthorized access");
+
+        if (!tracker.isOnline(String.valueOf(databaseId)))
+            throw new DatabaseNotConnectedException("Database not connected");
+
+        try {
             clientResponse = agentController.sendToUser(databaseId, message);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
-        }  
+        }
         return clientResponse;
     }
 
-    public Boolean databaseIsOnline(int userId, int databaseId){
-        User user = userRepository.findById(userId);
-        UserDatabase database = userDatabaseRepository.findById(databaseId).orElse(null);
+    public Boolean databaseIsOnline(int userId, int databaseId) {
 
-        if(!user.getAccessibleDatabases().contains(database))throw new RuntimeException("Unauthrized Access");
-        return tracker.isOnline(Integer.toString(databaseId));      
+        User user = userRepository.findById(userId);
+        if (user == null)
+            throw new UserNotFoundException("User not found");
+
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+
+        if (!user.getAccessibleDatabases().contains(database))
+            throw new DatabaseException.UnauthorizedAccessException("Unauthorized access");
+
+        return tracker.isOnline(String.valueOf(databaseId));
     }
-  
+
 }

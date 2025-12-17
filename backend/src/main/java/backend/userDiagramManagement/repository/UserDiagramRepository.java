@@ -1,7 +1,6 @@
 package backend.userDiagramManagement.repository;
 
 import backend.entities.Diagram;
-import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.entities.joins.UserDiagramId;
 import org.springframework.data.domain.Page;
@@ -9,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
