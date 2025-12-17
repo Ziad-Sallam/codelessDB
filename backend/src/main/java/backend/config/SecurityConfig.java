@@ -2,7 +2,7 @@ package backend.config;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,19 +13,16 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import backend.security.GoogleSuccessHandler;
 import backend.security.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Value("${frontend.url}")
-    private String frontendUrl;
+    @Autowired
+    private JwtAuthenticationFilter jwtFilter;
 
-    private final JwtAuthenticationFilter jwtFilter;
-
-    private final GoogleSuccessHandler googleSuccessHandler;
+    @Autowired
+    private GoogleSuccessHandler googleSuccessHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
