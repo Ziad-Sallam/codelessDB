@@ -8,7 +8,6 @@ import backend.databaseManagement.UserDatabaseRepository;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotConnectedException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
-import backend.databaseManagement.exception.DatabaseException.DatabaseNotConnectedException;
 import backend.agent.HTTPHandler.MessageService;
 import backend.entities.User;
 import backend.entities.UserDatabase;
@@ -81,7 +80,7 @@ public class MessageServiceTest {
 
         when(userDatabaseRepository.findById(5)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        DatabaseNotFoundException ex = assertThrows(DatabaseNotFoundException.class,
                 () -> messageService.runQuery(5, new AgentMessageDTO(), 10));
 
         assertEquals("Database not found", ex.getMessage());
@@ -147,7 +146,7 @@ void testSuccessfulQuery() throws Exception {
         when(agentController.sendToUser(eq(5), any()))
                 .thenThrow(new Exception("WS Error"));
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        DatabaseNotConnectedException ex = assertThrows(DatabaseNotConnectedException.class,
                 () -> messageService.runQuery(5, new AgentMessageDTO(), 10));
 
         assertEquals("Database not connected", ex.getMessage());

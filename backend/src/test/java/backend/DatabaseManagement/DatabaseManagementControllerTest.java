@@ -1,22 +1,30 @@
 package backend.DatabaseManagement;
 
-import backend.databaseManagement.*;
-
-import backend.security.AuthUser;
-
-import org.apache.coyote.BadRequestException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.apache.coyote.BadRequestException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import backend.databaseManagement.CreateDatabaseDTO;
+import backend.databaseManagement.CreateServerDTO;
+import backend.databaseManagement.DatabaseManagementController;
+import backend.databaseManagement.DatabaseManagementService;
+import backend.databaseManagement.InitiateDatabaseDTO;
+import backend.databaseManagement.SendDatabasesDTO;
+import backend.security.AuthUser;
 
 class DatabaseManagementControllerTest {
 

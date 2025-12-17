@@ -3,22 +3,20 @@ package backend.databaseManagement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import backend.agent.WebSocketHandler.OnlineUserTracker;
+import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
+import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
+import backend.databaseManagement.exception.DatabaseException.ServerAlreadyExistsException;
+import backend.databaseManagement.exception.DatabaseException.ServerNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.UnauthorizedAccessException;
 import backend.entities.Server;
 import backend.entities.User;
 import backend.entities.UserDatabase;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException.UserNotFoundException;
-import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
-import backend.databaseManagement.exception.DatabaseException.ServerAlreadyExistsException;
-import backend.databaseManagement.exception.DatabaseException.ServerNotFoundException;
-import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
-import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
-import org.springframework.security.access.AccessDeniedException;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -82,7 +80,7 @@ public class DatabaseManagementService {
                     .anyMatch(s -> s.getId() == server.getId());
 
             if (!hasAccess)
-                throw new AccessDeniedException("Unauthorized Access");
+                throw new UnauthorizedAccessException("Unauthorized Access");
 
         } else {
             if (dto.getServerName() == null)

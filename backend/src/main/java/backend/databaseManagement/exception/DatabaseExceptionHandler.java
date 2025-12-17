@@ -11,6 +11,7 @@ import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExi
 import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
 import backend.databaseManagement.exception.DatabaseException.ServerAlreadyExistsException;
 import backend.databaseManagement.exception.DatabaseException.ServerNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.UnauthorizedAccessException;
 import backend.config.ErrorResponse;
 
 @ControllerAdvice
@@ -50,6 +51,10 @@ public class DatabaseExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedAccess(UnauthorizedAccessException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR,

@@ -37,5 +37,10 @@ public class DatabaseException {
         }
     }
 
+    public static class UnauthorizedAccessException extends RuntimeException {
+        public UnauthorizedAccessException(String message) {
+            super(message);
+        }
+    }
 
 }
