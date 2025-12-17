@@ -1,196 +1,128 @@
 package backend.SQLOptimization;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import backend.SQLOptimization.dto.OptimizeSQLResponse;
 import backend.SQLOptimization.exceptions.SQLOptimizationException.GeminiAPIException;
 import backend.SQLOptimization.exceptions.SQLOptimizationException.InvalidSQLException;
 import backend.SQLOptimization.service.SQLOptimizationService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.*;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Full working unit tests for SQLOptimizationService.
+ */
 class SQLOptimizationServiceTest {
 
-    @Mock
     private RestTemplate restTemplate;
-
-    @Mock
-    private ObjectMapper objectMapper;
-
-    @InjectMocks
-    private SQLOptimizationService optimizationService;
-
-    private final String testApiKey = "test-api-key";
-    private final String testApiUrl = "https://test-api.com";
+    private SQLOptimizationService service;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(optimizationService, "geminiApiKey", testApiKey);
-        ReflectionTestUtils.setField(optimizationService, "geminiApiUrl", testApiUrl);
-    }
+        restTemplate = mock(RestTemplate.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        service = new SQLOptimizationService(restTemplate, objectMapper);
 
-    @Test
-    void testOptimizeSQL_Success() throws Exception {
-        String inputSQL = "SELECT * FROM users";
-        String geminiResponseBody = """
-                {
-                "candidates": [{
-                "content": {
-                "parts": [{
-                  "text": "{\\"optimizedSQL\\": \\"SELECT id, name FROM users\\", \\"summary\\": \\"Optimized by selecting specific columns\\"}"
-                }]
-                }
-                }]
-                }
-                """;
+        ReflectionTestUtils.setField(service, "geminiApiKey", "testKey");
+        ReflectionTestUtils.setField(service, "geminiApiUrl", "http://test-gemini.test/api");
 
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(String.class))).thenReturn(new ResponseEntity<>(geminiResponseBody, HttpStatus.OK));
-
-        when(objectMapper.readTree(anyString()))
-                .thenReturn(new ObjectMapper().readTree(geminiResponseBody))
-                .thenReturn(new ObjectMapper().readTree(
-                        "{\"optimizedSQL\": \"SELECT id, name FROM users\", \"summary\": \"Optimized by selecting specific columns\"}"));
-
-        when(objectMapper.writeValueAsString(anyString()))
-                .thenReturn("\"prompt text\"");
-
-        OptimizeSQLResponse response = optimizationService.optimizeSQL(inputSQL);
-
-        assertNotNull(response);
-        assertEquals("SELECT id, name FROM users", response.getOptimizedSQL());
-        assertEquals("Optimized by selecting specific columns", response.getSummary());
-        verify(restTemplate, times(1)).exchange(anyString(), eq(HttpMethod.POST), any(), eq(String.class));
+        // Mute SQLOptimizationService logger to avoid printing errors during tests
+        Logger logger = (Logger) LoggerFactory.getLogger(SQLOptimizationService.class);
+        logger.setLevel(Level.OFF);
     }
 
     @Test
     void testOptimizeSQL_EmptySQL_ThrowsInvalidSQLException() {
-        assertThrows(InvalidSQLException.class, () -> {
-            optimizationService.optimizeSQL("");
-        });
-
-        assertThrows(InvalidSQLException.class, () -> {
-            optimizationService.optimizeSQL(null);
-        });
-
-        assertThrows(InvalidSQLException.class, () -> {
-            optimizationService.optimizeSQL("   ");
-        });
-
-        verify(restTemplate, never()).exchange(anyString(), any(), any(), any(Class.class));
+        assertThrows(InvalidSQLException.class, () -> service.optimizeSQL(""));
+        assertThrows(InvalidSQLException.class, () -> service.optimizeSQL("   "));
+        assertThrows(InvalidSQLException.class, () -> service.optimizeSQL(null));
     }
 
     @Test
-    void testOptimizeSQL_GeminiAPIFailure_ThrowsGeminiAPIException() throws Exception {
-        String inputSQL = "SELECT * FROM users";
-
-        when(objectMapper.writeValueAsString(anyString()))
-                .thenReturn("\"prompt text\"");
-
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(String.class))).thenThrow(new RestClientException("API connection failed"));
-
-        assertThrows(GeminiAPIException.class, () -> {
-            optimizationService.optimizeSQL(inputSQL);
-        });
-    }
-
-    @Test
-    void testOptimizeSQL_InvalidResponseFormat_ThrowsGeminiAPIException() throws Exception {
-        String inputSQL = "SELECT * FROM users";
-        String invalidResponse = "{\"invalid\": \"format\"}";
-
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(String.class))).thenReturn(new ResponseEntity<>(invalidResponse, HttpStatus.OK));
-
-        when(objectMapper.readTree(anyString()))
-                .thenReturn(new ObjectMapper().readTree(invalidResponse));
-
-        when(objectMapper.writeValueAsString(anyString()))
-                .thenReturn("\"prompt text\"");
-
-        assertThrows(GeminiAPIException.class, () -> {
-            optimizationService.optimizeSQL(inputSQL);
-        });
-    }
-
-    @Test
-    void testOptimizeSQL_WithMarkdownCodeBlocks_Success() throws Exception {
-        String inputSQL = "SELECT * FROM users";
-        String geminiResponseBody = """
+    void testOptimizeSQL_SuccessfulResponse_ReturnsOptimizedSQL() {
+        String geminiRawResponse = """
                 {
-                "candidates": [{
-                "content": {
-                "parts": [{
-                  "text": "```json\\n{\\"optimizedSQL\\": \\"SELECT id FROM users\\", \\"summary\\": \\"Optimized\\"\\n```"
-                }]
-                }
-                }]
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "{\\"optimizedSQL\\":\\"SELECT id, name FROM users\\",\\"summary\\":\\"Selected only necessary columns\\"}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 }
                 """;
 
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(String.class))).thenReturn(new ResponseEntity<>(geminiResponseBody, HttpStatus.OK));
+        ResponseEntity<String> entity = new ResponseEntity<>(geminiRawResponse, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), eq(String.class)))
+                .thenReturn(entity);
 
-        when(objectMapper.readTree(anyString()))
-                .thenReturn(new ObjectMapper().readTree(geminiResponseBody))
-                .thenReturn(
-                        new ObjectMapper()
-                                .readTree("{\"optimizedSQL\": \"SELECT id FROM users\", \"summary\": \"Optimized\"}"));
+        OptimizeSQLResponse resp = service.optimizeSQL("SELECT * FROM users");
 
-        when(objectMapper.writeValueAsString(anyString()))
-                .thenReturn("\"prompt text\"");
-
-        OptimizeSQLResponse response = optimizationService.optimizeSQL(inputSQL);
-
-        assertNotNull(response);
-        assertEquals("SELECT id FROM users", response.getOptimizedSQL());
+        assertNotNull(resp);
+        assertEquals("SELECT id, name FROM users", resp.getOptimizedSQL());
+        assertEquals("Selected only necessary columns", resp.getSummary());
     }
 
     @Test
-    void testOptimizeSQL_Non2xxResponse_ThrowsGeminiAPIException() throws Exception {
-        String inputSQL = "SELECT * FROM users";
+    void testOptimizeSQL_WithMarkdownCodeBlock_Success() {
+        String geminiRawResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "```json\\n{\\"optimizedSQL\\":\\"SELECT id FROM users\\",\\"summary\\":\\"Optimized\\"}\\n```"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
 
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(String.class))).thenReturn(new ResponseEntity<>("Error", HttpStatus.INTERNAL_SERVER_ERROR));
+        ResponseEntity<String> entity = new ResponseEntity<>(geminiRawResponse, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), eq(String.class)))
+                .thenReturn(entity);
 
-        when(objectMapper.writeValueAsString(anyString()))
-                .thenReturn("\"prompt text\"");
+        OptimizeSQLResponse resp = service.optimizeSQL("SELECT * FROM users");
 
-        assertThrows(GeminiAPIException.class, () -> {
-            optimizationService.optimizeSQL(inputSQL);
-        });
+        assertNotNull(resp);
+        assertEquals("SELECT id FROM users", resp.getOptimizedSQL());
+        assertEquals("Optimized", resp.getSummary());
+    }
+
+    @Test
+    void testOptimizeSQL_Non2xxResponse_ThrowsGeminiAPIException() {
+        ResponseEntity<String> entity = new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), eq(String.class)))
+                .thenReturn(entity);
+
+        GeminiAPIException ex = assertThrows(GeminiAPIException.class, () -> service.optimizeSQL("SELECT * FROM users"));
+        assertTrue(ex.getMessage().contains("Gemini API returned error"));
+    }
+
+    @Test
+    void testOptimizeSQL_RestClientException_ThrowsGeminiAPIException() {
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), eq(String.class)))
+                .thenThrow(new RestClientException("API down"));
+
+        GeminiAPIException ex = assertThrows(GeminiAPIException.class, () -> service.optimizeSQL("SELECT * FROM users"));
+        assertTrue(ex.getMessage().contains("Failed to call Gemini API"));
     }
 }

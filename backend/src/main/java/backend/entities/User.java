@@ -48,13 +48,15 @@ public class User {
 
     @Column(length = 300)
     private String bio;
+
     // AI Quota fields
+    @Builder.Default
     @Column(nullable = false)
     private int aiQuotaRemaining = 5;
 
-    @Column
     private LocalDateTime aiQuotaResetDate;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserDiagram> userDiagrams = new HashSet<>();
 
@@ -68,25 +70,30 @@ public class User {
     private LocalDateTime createdAt;
 
     @JsonIgnore
+    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
     private Set<User> followers = new HashSet<>();
 
     @JsonIgnore
+    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_following", joinColumns = @JoinColumn(name = "follower_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> following = new HashSet<>();
 
     @JsonIgnore
+    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
     private Set<Server> servers = new HashSet<>();
 
     @JsonIgnore
+    @Builder.Default
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserDatabase> ownedDatabases = new ArrayList<>();
 
     @JsonIgnore
+    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_database_access", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "database_id"))
     private Set<UserDatabase> accessibleDatabases = new HashSet<>();
