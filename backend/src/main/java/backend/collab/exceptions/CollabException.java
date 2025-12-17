@@ -6,4 +6,10 @@ public class CollabException {
 			super(message);
 		}
 	}
+
+	public static class YDocUpdateException extends RuntimeException {
+		public YDocUpdateException(String message) {
+			super(message);
+		}
+	}
 }

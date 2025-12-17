@@ -32,17 +32,4 @@ public class SnapshotController {
 		SnapshotDto result = snapshotService.getLatestDiagram(authUser.userId(), id);
 		return ResponseEntity.ok(result);
 	}
-
-	@PutMapping("/{id}")
-	public ResponseEntity<?> saveState(
-			@AuthenticationPrincipal AuthUser authUser,
-			@PathVariable UUID id,
-			@RequestBody State state) {
-
-		byte[] statebin = Base64.getDecoder().decode(state.state());
-		snapshotService.takeSnapshot(authUser.userId(), id, statebin, state.diagramName(), state.picture());
-
-		return ResponseEntity.ok("Snapshot taken sucessfully");
-	}
-
 }

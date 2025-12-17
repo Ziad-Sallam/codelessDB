@@ -1,58 +1,80 @@
 package backend.collab;
 
 import java.io.Closeable;
+import java.io.IOException;
+
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.LongAdder;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import at.yrs4j.wrapper.interfaces.EncodingType;
+import at.yrs4j.wrapper.interfaces.YDoc;
+import at.yrs4j.wrapper.interfaces.YOptions;
+
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
+import backend.collab.services.UpdateWriter;
+import backend.collab.snapshot.SnapshotService;
+import backend.user.Role;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 interface IRoom extends Closeable {
 
 	void addSession(WebSocketSession session);
-	
+
 	boolean removeSession(WebSocketSession session);
-	
+
 	boolean isEmpty();
+
+	void doUpdate(byte[] update, String senderId, Role role);
+
+	void takeSnapshot();
 }
 
 @Slf4j
-@Getter
 public class Room implements IRoom {
-	
+
 	private static final int MAX_COLLABORATORS = 15;
-	
+
+	/**
+	 * Maximum number of updates done before taking
+	 * a snapshot and saving it in the DB
+	 */
+	private static final int SNAPSHOT_THRESHOLD = 300;
+
+	private final LongAdder updateCounter;
+
 	private final String diagramId;
-	
+
+	private final YDoc latestSnapshot;
+
+	@Autowired
+	private SnapshotService snapshotService;
+
 	/* Thread-safe Set to store the active WebSocket sessions */
 	private final Set<WebSocketSession> sessions;
-	
-	/**
-	 * Id of the user that the snapshots will be only accepted from him
-	 */
-	private int leaderId;
 
 	public Room(String diagramId) {
 		this.sessions = Collections.synchronizedSet(new HashSet<>());
 		this.diagramId = diagramId;
+		this.updateCounter = new LongAdder();
+		this.latestSnapshot = createYDocWithId();
 	}
 
-	@Override
-	public void close() {
-		sessions.forEach(session -> {
-			if (session.isOpen()) {
-				try {
-					session.close();
-					// Close the socket gracefully
-				} catch (Exception e) {
-					log.error("Error closing session {}: {}", session.getId(), e.getMessage());
-				}
-			}
-		});
-		sessions.clear();
+	private YDoc createYDocWithId() {
+		YOptions options = YOptions.create();
+		options.setEncoding(EncodingType.Y_OFFSET_UTF16);
+		options.setCollectionId(diagramId);
+		options.setSkipGc(false);
+
+		return YDoc.createWithOptions(options);
 	}
 
 	/**
@@ -70,10 +92,6 @@ public class Room implements IRoom {
 		sessions.add(session);
 	}
 
-	private void setLeader() {
-		// sessions.
-	}
-
 	/**
 	 * Removes a session from the room.
 	 * 
@@ -83,9 +101,7 @@ public class Room implements IRoom {
 	@Override
 	public boolean removeSession(WebSocketSession session) {
 		boolean exist = sessions.remove(session);
-		if (exist && !isEmpty())
-			setLeader();
-		return exist;	
+		return exist;
 	}
 
 	/**
@@ -96,5 +112,67 @@ public class Room implements IRoom {
 	@Override
 	public boolean isEmpty() {
 		return sessions.isEmpty();
+	}
+
+	@Override
+	public void doUpdate(byte[] update, String senderId, Role role) {
+
+		if (this.sessions == null || this.sessions.isEmpty()) {
+			log.warn("No sessions found for diagramId: {}", diagramId);
+			return;
+		}
+
+		final boolean cursorUpdate = (update[0] == 1);
+
+		if (role == Role.READER && !cursorUpdate) {
+			log.warn("Readers cannot send updates");
+			return;
+		}
+
+		this.updateCounter.increment();
+		if (updateCounter.sum() >= SNAPSHOT_THRESHOLD) {
+			takeSnapshot();
+			updateCounter.reset();
+		}
+
+		sendUpdatesToUsers(update, senderId);
+	}
+
+	private void sendUpdatesToUsers(byte[] update, String senderId) {
+		BinaryMessage message = new BinaryMessage(update);
+
+		// Stream and send to the targeted room sessions
+		this.sessions.parallelStream().forEach(session -> {
+			if (session.isOpen() && !session.getId().equals(senderId)) {
+				try {
+					session.sendMessage(message);
+
+				} catch (IOException e) {
+					log.error("Error sending message to session {} in diagram {}:\n {}",
+							session.getId(), diagramId, e.getMessage());
+				}
+			}
+		});
+	}
+
+	@Override
+	public void close() {
+		sessions.forEach(session -> {
+			if (session.isOpen()) {
+				try {
+					session.close();
+					// Close the socket gracefully
+				} catch (Exception e) {
+					log.error("Error closing session {}: {}", session.getId(), e.getMessage());
+				}
+			}
+		});
+		sessions.clear();
+		updateCounter.reset();
+	}
+
+	@Override
+	public void takeSnapshot() {
+		snapshotService.takeSnapshot(this.latestSnapshot, this.diagramId);
 	}
 }

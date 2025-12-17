@@ -10,8 +10,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class SnapshotDto {
 	private byte[] snapshot;
-	
-	private List<byte[]> updates;
 
 	private String diagramName;	
 	

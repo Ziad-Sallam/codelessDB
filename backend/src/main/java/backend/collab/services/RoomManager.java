@@ -5,9 +5,6 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.Room;
-import backend.collab.snapshot.DiagramPendingUpdateRepository;
-import backend.collab.snapshot.SnapshotService;
-import backend.entities.DiagramPendingUpdate;
 import backend.user.Role;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +32,6 @@ public interface RoomManager {
 @RequiredArgsConstructor
 class RoomManagerImpl implements RoomManager {
 
-	private final DiagramPendingUpdateRepository updatesRepository;
-
 	private final RedisStreamService redisService;
 
 	private final Map<String, Room> activeRooms = new ConcurrentHashMap<>();
@@ -47,18 +42,6 @@ class RoomManagerImpl implements RoomManager {
 		room.addSession(session);
 	}
 
-	@Transactional
-	private void insertUpdates(String diagramId, List<byte[]> updates) {
-		List<DiagramPendingUpdate> entities = updates.stream()
-				.map(update -> DiagramPendingUpdate.builder()
-						.diagramId(diagramId)
-						.updateData(update)
-						.build())
-				.toList();
-
-		updatesRepository.saveAll(entities);
-	}
-
 	@Override
 	public void leaveRoom(String roomId, WebSocketSession session) {
 		Room room = activeRooms.get(roomId);
@@ -67,11 +50,7 @@ class RoomManagerImpl implements RoomManager {
 			room.removeSession(session);
 			if (room.isEmpty()) {
 				activeRooms.remove(roomId);
-				// add redis updates in the DB updates table
-				List<byte[]> pendingUpdates = redisService.getAllUpdates(roomId);
-				insertUpdates(roomId, pendingUpdates);
-				// updateWriter.submitWriteTask(() -> {
-				// });
+				room.takeSnapshot();
 			}
 		}
 	}
@@ -85,36 +64,7 @@ class RoomManagerImpl implements RoomManager {
 	 * @param senderId The session ID of the sender to exclude from the broadcast.
 	 */
 	public void sendUpdate(String diagramId, byte[] data, String senderId, Role role) {
-		BinaryMessage message = new BinaryMessage(data);
-		Set<WebSocketSession> roomSessions = Optional.ofNullable(activeRooms.get(diagramId))
-               												.map(Room::getSessions)
-               												.orElse(Collections.emptySet());
-
-
-		if (roomSessions == null || roomSessions.isEmpty()) {
-			log.warn("No sessions found for diagramId: {}", diagramId);
-			return;
-		}
-
-		final boolean cursorUpdate = (data[0] == 1);
-
-		if (role == Role.READER && !cursorUpdate) {
-			log.warn("Readers cannot send updates");
-			return;
-		}
-
-		// Stream and send to the targeted room sessions
-		roomSessions.parallelStream().forEach(session -> {
-			if (session.isOpen() && !session.getId().equals(senderId)) {
-				try {
-					session.sendMessage(message);
-					
-				} catch (IOException e) {
-					log.error("Error sending message to session {} in diagram {}:\n {}",
-					session.getId(), diagramId, e.getMessage());
-				}
-			}
-		});
+		activeRooms.get(diagramId).doUpdate(data, senderId, role);
 
 		// Cursor positions don't need to be stored
 		redisService.addUpdate(diagramId, data);

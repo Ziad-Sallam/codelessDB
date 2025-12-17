@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
+import backend.collab.exceptions.CollabException.YDocUpdateException;
 import backend.config.ErrorResponse;
 
 @ControllerAdvice
@@ -17,6 +18,11 @@ public class CollabExceptionHandler {
 
    @ExceptionHandler(CollaboratorsCapacityException.class)
    public ResponseEntity<ErrorResponse> handleUserNotFound(CollaboratorsCapacityException ex) {
-      return build(HttpStatus.NOT_FOUND, ex.getMessage());
+      return build(HttpStatus.NOT_ACCEPTABLE, ex.getMessage());
+   }
+
+   @ExceptionHandler(YDocUpdateException.class)
+   public ResponseEntity<ErrorResponse> handleUserNotFound(YDocUpdateException ex) {
+      return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
    }
 }
