@@ -12,4 +12,10 @@ public class CollabException {
 			super(message);
 		}
 	}
+
+	public static class RoomNotFoundException extends RuntimeException {
+		public RoomNotFoundException(String message) {
+			super(message);
+		}
+	}
 }

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
+import backend.collab.exceptions.CollabException.RoomNotFoundException;
 import backend.collab.exceptions.CollabException.YDocUpdateException;
 import backend.config.ErrorResponse;
 
@@ -17,12 +18,17 @@ public class CollabExceptionHandler {
    }
 
    @ExceptionHandler(CollaboratorsCapacityException.class)
-   public ResponseEntity<ErrorResponse> handleUserNotFound(CollaboratorsCapacityException ex) {
+   public ResponseEntity<ErrorResponse> handleRoomCapacityExceed(CollaboratorsCapacityException ex) {
       return build(HttpStatus.NOT_ACCEPTABLE, ex.getMessage());
    }
 
    @ExceptionHandler(YDocUpdateException.class)
-   public ResponseEntity<ErrorResponse> handleUserNotFound(YDocUpdateException ex) {
+   public ResponseEntity<ErrorResponse> handleYDocInvalidUpdate(YDocUpdateException ex) {
       return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+   }
+   
+   @ExceptionHandler(RoomNotFoundException.class)
+   public ResponseEntity<ErrorResponse> handleRoomNotFound(RoomNotFoundException ex) {
+      return build(HttpStatus.NOT_FOUND, ex.getMessage());
    }
 }

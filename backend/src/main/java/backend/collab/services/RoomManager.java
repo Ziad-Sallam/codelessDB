@@ -5,6 +5,7 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.Room;
+import backend.collab.exceptions.CollabException.RoomNotFoundException;
 import backend.user.Role;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +65,11 @@ class RoomManagerImpl implements RoomManager {
 	 * @param senderId The session ID of the sender to exclude from the broadcast.
 	 */
 	public void sendUpdate(String diagramId, byte[] data, String senderId, Role role) {
-		activeRooms.get(diagramId).doUpdate(data, senderId, role);
+		Room room = activeRooms.get(diagramId);
+		if (room == null) {
+			throw new RoomNotFoundException("Room with diagramId %s is not found".formatted(diagramId));
+		}
+		room.doUpdate(data, senderId, role);
 
 		// Cursor positions don't need to be stored
 		redisService.addUpdate(diagramId, data);

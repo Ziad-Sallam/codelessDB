@@ -54,6 +54,7 @@ public class Room implements IRoom {
 	private final String diagramId;
 
 	private final YDoc latestSnapshot;
+	private final YOptions yOptions;
 
 	@Autowired
 	private SnapshotService snapshotService;
@@ -61,21 +62,22 @@ public class Room implements IRoom {
 	/* Thread-safe Set to store the active WebSocket sessions */
 	private final Set<WebSocketSession> sessions;
 
-	public Room(String diagramId) {
-		this.sessions = Collections.synchronizedSet(new HashSet<>());
-		this.diagramId = diagramId;
-		this.updateCounter = new LongAdder();
-		this.latestSnapshot = createYDocWithId();
-	}
+    public Room(String diagramId) {
+        this.sessions = Collections.synchronizedSet(new HashSet<>());
+        this.diagramId = diagramId;
+        this.updateCounter = new LongAdder();
 
-	private YDoc createYDocWithId() {
-		YOptions options = YOptions.create();
-		options.setEncoding(EncodingType.Y_OFFSET_UTF16);
-		options.setCollectionId(diagramId);
-		options.setSkipGc(false);
+        this.yOptions = createOptions();
+        this.latestSnapshot = YDoc.createWithOptions(this.yOptions);
+    }
 
-		return YDoc.createWithOptions(options);
-	}
+    private YOptions createOptions() {
+        YOptions options = YOptions.create();
+        options.setEncoding(EncodingType.Y_OFFSET_UTF16);
+        options.setCollectionId(diagramId);
+        options.setSkipGc(false);
+        return options;
+    }
 
 	/**
 	 * Adds a session to the room, checking the capacity limit.
