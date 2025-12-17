@@ -1,43 +1,40 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import {
-  addEdge,
-  MiniMap,
-  Controls,
   Background,
+  Controls,
+  MiniMap,
   ReactFlow,
-  applyNodeChanges,
-  applyEdgeChanges,
-  useReactFlow,
   ReactFlowProvider,
-  useViewport,
+  useReactFlow,
+  useViewport
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { nodeTypes, edgeTypes } from "./index";
-import "./Schema.css";
-import applyRelationLogic from "./connectingLogic/ConnectingLogic";
-import { validateSchema } from "./generate/CheckCorrectness";
-import { convertToJSON } from "./generate/JsonConverter";
-import CodeEditor from "./code-editor/CodeEditor.jsx";
-import {
-  generateSQLFromBackend,
-  updateDiagram,
-  fetchDiagram,
-} from "./fetch.js";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useNotification } from "../../components/NotificationContext";
 import { uploadToCloudinary } from "../../components/uploadImage.js";
-import Cursor from "./Cursor";
+import CodeEditor from "./code-editor/CodeEditor.jsx";
+import Cursor from "./collab/Cursor.jsx";
+import applyRelationLogic from "./connectingLogic/ConnectingLogic";
+import {
+  fetchDiagram,
+  generateSQLFromBackend,
+  updateDiagram,
+} from "./fetch.js";
+import { validateSchema } from "./generate/CheckCorrectness";
+import { convertToJSON } from "./generate/JsonConverter";
+import { edgeTypes, nodeTypes } from "./index";
+import "./Schema.css";
 
 // 1. IMPORT HTML-TO-IMAGE
 import { toPng } from "html-to-image";
 import Toolbar from "./ConnectionControls.jsx";
 
+import * as Y from "yjs";
+import ActiveUsers from "./collab/ActiveUsers.jsx";
 import {
   CollaborationProvider,
   useCollaboration,
-} from "./CollaborationContext.jsx";
-import ActiveUsers from "./ActiveUsers.jsx";
-import * as Y from "yjs";
+} from "./collab/CollaborationContext.jsx";
 
 function uint8ArrayToBase64(bytes) {
   let binary = '';
@@ -95,43 +92,13 @@ const SchemaContent = () => {
     [screenToFlowPosition, updateCursor]
   );
 
-  useEffect(() => {
-    const saveInterval = setInterval(async () => {
-      if (!ydoc || !roomId) return;
-
-      console.log("⏳ Running 1-minute Autosave...");
-
-      try {
-
-        const binaryState = Y.encodeStateAsUpdate(ydoc);
-        const base64State = uint8ArrayToBase64(binaryState);
-
-        const payload = {
-          state: base64State,
-          diagramName: schemaName,
-        };
-
-        console.log(payload);
-
-        await updateDiagram(roomId, payload);
-        console.log("✅ Autosave Complete!");
-
-      } catch (err) {
-        console.error("❌ Autosave Failed:", err);
-      }
-    }, 10 * 1000);
-
-    // Cleanup on unmount
-    return () => clearInterval(saveInterval);
-  }, [ydoc, roomId]); // Dependencies
-
   const loadDigram = async () => {
     try {
       const response = await fetchDiagram(roomId);
       // console.log(response);
       updateSchemaName(response.diagramName);
       setIsReadOnly(response.role === "READER" ? true : false);
-      loadCompositeYjsData(response.snapshot, response.updates);
+      loadCompositeYjsData(response.snapshot);
 
     } catch (err) {
       showError(err.message);

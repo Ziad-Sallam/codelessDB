@@ -1,12 +1,10 @@
+import { Handle, Position } from "@xyflow/react";
 import React, { memo, useCallback } from "react";
-import { Handle, Position, useReactFlow, useStore } from "@xyflow/react";
 import "./Node.css";
-import dataTypes from "./DataTypes";
-import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 import { useNotification } from "../../../components/NotificationContext";
+import { useCollaboration } from "../collab/CollaborationContext.jsx";
 import ColumnRow from "./ColumnRow";
-import { useCollaboration } from "../CollaborationContext.jsx";
 
 const Node = ({ id, data, dragging }) => {
   const { showSuccess, showError, showWarning } = useNotification();
