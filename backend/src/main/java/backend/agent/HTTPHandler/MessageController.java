@@ -30,30 +30,44 @@ public class MessageController {
     private final MessageService messageService;
 
     @PostMapping("/send")
-    public ResponseEntity<?> sendToUser(@RequestBody MessageDTO request, @AuthenticationPrincipal AuthUser user) {
-        AgentMessageDTO message = new AgentMessageDTO("Server", request.getContent());
-        try {
-            ClientResponseDTO res = messageService.runQuery(request.getDatabaseId(), message, user.userId());
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ClientResponseDTO> sendToUser(
+            @RequestBody MessageDTO request,
+            @AuthenticationPrincipal AuthUser user) {
 
+        if (user == null)
+            throw new RuntimeException("Unauthorized");
+
+        AgentMessageDTO message = new AgentMessageDTO("Server", request.getContent());
+
+        ClientResponseDTO res = messageService.runQuery(
+                request.getDatabaseId(),
+                message,
+                user.userId());
+
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/is-database-online")
-    public ResponseEntity<?> isDatabaseOnline(@RequestParam int databaseId, @AuthenticationPrincipal AuthUser user) {
-        try {
-            boolean x = messageService.databaseIsOnline(user.userId(), databaseId);
-            return ResponseEntity.ok(x);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Boolean> isDatabaseOnline(
+            @RequestParam int databaseId,
+            @AuthenticationPrincipal AuthUser user) {
+
+        if (user == null)
+            throw new RuntimeException("Unauthorized");
+
+        boolean online = messageService.databaseIsOnline(
+                user.userId(),
+                databaseId);
+
+        return ResponseEntity.ok(online);
     }
 
     @GetMapping("/create-container")
-    public ResponseEntity<Resource> downloadFile1() throws IOException {
-        Path path = Paths.get("backend/uploads/agent/dist/create_container.exe").toAbsolutePath();
+    public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
+        Path path = Paths.get(
+                "backend/uploads/agent/dist/create_container.exe")
+                .toAbsolutePath();
+
         Resource resource = new UrlResource(path.toUri());
 
         return ResponseEntity.ok()
@@ -64,8 +78,11 @@ public class MessageController {
     }
 
     @GetMapping("/communicate")
-    public ResponseEntity<Resource> downloadFile2() throws IOException {
-        Path path = Paths.get("backend/uploads/agent/dist/communicate.exe").toAbsolutePath();
+    public ResponseEntity<Resource> downloadCommunicate() throws IOException {
+        Path path = Paths.get(
+                "backend/uploads/agent/dist/communicate.exe")
+                .toAbsolutePath();
+
         Resource resource = new UrlResource(path.toUri());
 
         return ResponseEntity.ok()
@@ -74,5 +91,4 @@ public class MessageController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
-
 }

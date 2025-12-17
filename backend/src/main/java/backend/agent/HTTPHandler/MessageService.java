@@ -1,6 +1,5 @@
 package backend.agent.HTTPHandler;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import backend.agent.WebSocketHandler.AgentController;
@@ -8,6 +7,7 @@ import backend.agent.WebSocketHandler.AgentMessageDTO;
 import backend.agent.WebSocketHandler.ClientResponseDTO;
 import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.databaseManagement.exception.DatabaseException;
 import backend.entities.User;
 import backend.entities.UserDatabase;
 import backend.user.exceptions.UserException.UserNotFoundException;
@@ -35,7 +35,7 @@ public class MessageService {
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
         if (!user.getAccessibleDatabases().contains(database))
-            throw new AccessDeniedException("Unauthorized access");
+            throw new DatabaseException.UnauthorizedAccessException("Unauthorized access");
 
         if (!tracker.isOnline(String.valueOf(databaseId)))
             throw new DatabaseNotConnectedException("Database not connected");
@@ -57,9 +57,8 @@ public class MessageService {
         UserDatabase database = userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
-        // Check accessibility before checking online
         if (!user.getAccessibleDatabases().contains(database))
-            throw new AccessDeniedException("Unauthorized access");
+            throw new DatabaseException.UnauthorizedAccessException("Unauthorized access");
 
         return tracker.isOnline(String.valueOf(databaseId));
     }
