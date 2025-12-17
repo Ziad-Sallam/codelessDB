@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import backend.SQLOptimization.dto.OptimizeSQLRequest;
 import backend.security.AuthUser;
+import backend.security.GoogleSuccessHandler;
+import backend.security.JwtAuthenticationFilter;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
@@ -43,6 +45,12 @@ class SQLOptimizationIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    JwtAuthenticationFilter jwtFilter;
+
+    @MockBean
+    GoogleSuccessHandler googleSuccessHandler;
 
     @Test
     void testEndToEndOptimization_Success() throws Exception {
