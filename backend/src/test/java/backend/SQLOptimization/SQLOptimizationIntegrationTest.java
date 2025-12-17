@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
@@ -20,8 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import backend.SQLOptimization.dto.OptimizeSQLRequest;
 import backend.security.AuthUser;
-import backend.security.GoogleSuccessHandler;
-import backend.security.JwtAuthenticationFilter;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
@@ -33,7 +30,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")  
 class SQLOptimizationIntegrationTest {
 
     @Autowired
@@ -47,12 +43,6 @@ class SQLOptimizationIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @MockBean
-    JwtAuthenticationFilter jwtFilter;
-
-    @MockBean
-    GoogleSuccessHandler googleSuccessHandler;
 
     @Test
     void testEndToEndOptimization_Success() throws Exception {
