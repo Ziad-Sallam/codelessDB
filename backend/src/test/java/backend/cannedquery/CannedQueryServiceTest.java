@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
 import backend.entities.CannedQueriesDB;
 import backend.entities.UserDatabase;
 import org.junit.jupiter.api.BeforeEach;
@@ -155,7 +156,7 @@ class CannedQueryServiceTest {
         dto.setQuery("SELECT * FROM table");
         dto.setDatabaseId(1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.createQuery(dto)
         );
         assertEquals("Query name is required", exception.getMessage());
@@ -167,7 +168,7 @@ class CannedQueryServiceTest {
         dto.setName("MyQuery");
         dto.setDatabaseId(1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.createQuery(dto)
         );
         assertEquals("Query body is required", exception.getMessage());
@@ -179,7 +180,7 @@ class CannedQueryServiceTest {
         dto.setName("MyQuery");
         dto.setQuery("SELECT * FROM table");
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.createQuery(dto)
         );
         assertEquals("Database ID is required", exception.getMessage());
@@ -256,7 +257,7 @@ class CannedQueryServiceTest {
 
         when(cannedQueryRepository.findByIdAndDatabaseId(1, 1)).thenReturn(query1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.updateQuery(1, dto)
         );
         assertEquals("Query name is required", exception.getMessage());
@@ -271,7 +272,7 @@ class CannedQueryServiceTest {
 
         when(cannedQueryRepository.findByIdAndDatabaseId(1, 1)).thenReturn(query1);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        MissingFieldException exception = assertThrows(MissingFieldException.class, () ->
             cannedQueryService.updateQuery(1, dto)
         );
         assertEquals("Query body is required", exception.getMessage());

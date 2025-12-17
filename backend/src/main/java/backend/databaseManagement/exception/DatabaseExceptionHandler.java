@@ -55,6 +55,7 @@ public class DatabaseExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorizedAccess(UnauthorizedAccessException ex) {
         return build(HttpStatus.FORBIDDEN, ex.getMessage());
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR,
