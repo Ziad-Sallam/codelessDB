@@ -4,15 +4,11 @@ import java.io.Closeable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.web.socket.WebSocketSession;
 
 interface IRoom extends Closeable {
 

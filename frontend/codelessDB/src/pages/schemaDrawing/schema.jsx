@@ -49,7 +49,7 @@ function uint8ArrayToBase64(bytes) {
 }
 
 const SchemaContent = () => {
-  const {roomId} = useParams();
+  const { roomId } = useParams();
   const { showSuccess, showError, showWarning } = useNotification();
 
   // 3. USE THE CONTEXT
@@ -102,7 +102,7 @@ const SchemaContent = () => {
       console.log("⏳ Running 1-minute Autosave...");
 
       try {
-        
+
         const binaryState = Y.encodeStateAsUpdate(ydoc);
         const base64State = uint8ArrayToBase64(binaryState);
 
@@ -126,14 +126,14 @@ const SchemaContent = () => {
   }, [ydoc, roomId]); // Dependencies
 
   const loadDigram = async () => {
-    try{
+    try {
       const response = await fetchDiagram(roomId);
-      console.log(response);
+      // console.log(response);
       updateSchemaName(response.diagramName);
-      setIsReadOnly(response.role === "READER"? true:false);
-      loadCompositeYjsData(response.snapshot,response.updates); 
-      
-    }catch(err){
+      setIsReadOnly(response.role === "READER" ? true : false);
+      loadCompositeYjsData(response.snapshot, response.updates);
+
+    } catch (err) {
       showError(err.message);
     }
   };
@@ -310,7 +310,7 @@ const SchemaContent = () => {
         <ActiveUsers />
       </div>
       <div >
-        <button className="save-btn"onClick={onSaveDiagram}>Save</button>
+        <button className="save-btn" onClick={onSaveDiagram}>Save</button>
       </div>
 
       <div className="drawing-canva">
@@ -377,9 +377,9 @@ const SchemaContent = () => {
             redo={redo}
           />
 
-          
+
         </div>
-        
+
       )}
       <button className="generate" onClick={onGenerateSQL}>
         Generate SQL

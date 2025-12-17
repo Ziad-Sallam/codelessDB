@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.sql.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,8 +22,6 @@ import backend.entities.joins.UserDiagram;
 import backend.entities.joins.UserDiagramId;
 import backend.user.Role;
 import backend.user.UserRepository;
-import backend.userDiagramManagement.dto.DiagramDto;
-import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
 import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;

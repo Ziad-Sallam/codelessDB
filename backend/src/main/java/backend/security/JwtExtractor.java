@@ -1,17 +1,8 @@
 package backend.security;
 
-import java.io.IOException;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import backend.config.ErrorResponse;
-import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class JwtExtractor {

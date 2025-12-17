@@ -1,6 +1,5 @@
 package backend.collab.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -35,10 +34,6 @@ public interface RoomManager {
 @Slf4j
 @RequiredArgsConstructor
 class RoomManagerImpl implements RoomManager {
-
-	private final UpdateWriter updateWriter;
-
-	private final SnapshotService snapshotService;
 
 	private final DiagramPendingUpdateRepository updatesRepository;
 

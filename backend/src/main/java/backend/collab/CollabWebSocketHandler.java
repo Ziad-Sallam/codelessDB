@@ -3,7 +3,6 @@ package backend.collab;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 import org.springframework.web.socket.CloseStatus;
@@ -12,13 +11,7 @@ import backend.collab.services.RoomManager;
 import backend.user.Role;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
-
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Set;
-import java.util.HashSet;
 
 @Component
 @Slf4j
