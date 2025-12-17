@@ -154,10 +154,21 @@ const Register = () => {
     return c.length && c.upper && c.lower && c.number && c.symbol;
   }
 
+  // Username validation - check if contains only alphanumeric and underscores
+  function isValidUsername(value) {
+    // Returns true if username contains only letters, numbers, and underscores
+    return /^[a-zA-Z0-9_]+$/.test(value);
+  }
+
   // Step 1: Submit signup form
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!isValidUsername(username)) {
+      setError("Username can only contain letters, numbers, and underscores (no spaces or special characters).");
+      return;
+    }
 
     if (!checkStrength(password)) {
       setError("Password is weak.");

@@ -1,9 +1,10 @@
 package backend.userDiagramManagement.dto.update;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -11,5 +12,6 @@ import java.util.UUID;
 public class DiagramUpdateResponseDto {
     private String message;
     private UUID diagramId;
-    private Date updateDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updateDate;
 }

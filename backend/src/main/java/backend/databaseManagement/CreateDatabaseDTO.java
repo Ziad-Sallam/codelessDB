@@ -8,8 +8,10 @@ import lombok.*;
 @Getter
 @Setter
 public class CreateDatabaseDTO {
+    private Integer databaseId;
     private String databaseName;
     private String databasePassword;
-    private int serverId;
+    private Integer serverId;
     private String ddl;
+    private String serverName;
 }

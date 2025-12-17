@@ -2,7 +2,8 @@ package backend.userDiagramManagement.exceptions;
 
 public class DiagramException {
 
-    private DiagramException() {}
+    private DiagramException() {
+    }
 
     public static class DiagramNotFoundException extends RuntimeException {
         public DiagramNotFoundException(String message) {

@@ -1,0 +1,23 @@
+package backend.publicDiagramManagement.repository;
+
+import backend.entities.joins.PublicDiagramUserId;
+import backend.entities.publicDiagramEntities.DiagramFork;
+import backend.entities.publicDiagramEntities.PublicDiagram;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ForkRepository extends JpaRepository<DiagramFork, PublicDiagramUserId> {
+    @Query("""
+        SELECT pd
+        FROM DiagramFork f
+        JOIN PublicDiagram pd ON pd.id = f.originalDiagram.id
+        WHERE f.id.userId = :userId
+        ORDER BY f.forkedAt DESC
+    """)
+    Page<PublicDiagram> findForkedPublicDiagramsByUser(int userId, Pageable pageable);
+}
+

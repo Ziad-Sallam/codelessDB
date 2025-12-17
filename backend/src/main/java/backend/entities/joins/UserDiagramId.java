@@ -4,36 +4,34 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Embeddable
 @Builder
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDiagramId implements Serializable {
-	private int userId;
-	private UUID diagramId;
+    @Column(name = "user_id")
+    private int userId;
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
+    @Column(name = "diagram_id")
+    private UUID diagramId;
 
-		if (!(o instanceof UserDiagramId))
-			return false;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserDiagramId)) return false;
+        UserDiagramId that = (UserDiagramId) o;
+        return Objects.equals(userId, that.userId) &&
+                Objects.equals(diagramId, that.diagramId);
+    }
 
-		UserDiagramId that = (UserDiagramId) o;
-		return Objects.equals(userId, that.userId) &&
-				Objects.equals(diagramId, that.diagramId);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(userId, diagramId);
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, diagramId);
+    }
 }

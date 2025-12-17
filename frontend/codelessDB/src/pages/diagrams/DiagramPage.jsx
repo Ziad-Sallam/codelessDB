@@ -100,7 +100,7 @@ export default function DiagramPage() {
 			<LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
 
 			<Box component="main" sx={{ flexGrow: 1 }}>
-				<TopBar onSearchResults={onSearchResults} pageSize={ITEMS_PER_PAGE} page={page} loadDiagrams={loadDiagrams}/>
+				<TopBar onSearchResults={onSearchResults} pageSize={ITEMS_PER_PAGE} page={page} loadDiagrams={loadDiagrams} />
 
 
 				<Box sx={{ p: 3 }}>
@@ -126,7 +126,7 @@ export default function DiagramPage() {
 						<>
 							<Grid container spacing={3}>
 								{diagrams.map((diagram) => (
-									<Grid item key={diagram.diagramId} xs={12} sm={6} md={4} lg={3}>
+									<Grid key={diagram.diagramId} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
 										<DiagramCard
 											d={diagram}
 											onOpen={handleOpenDiagram}
@@ -137,7 +137,7 @@ export default function DiagramPage() {
 								))}
 
 								{diagrams.length === 0 && (
-									<Grid item xs={12}>
+									<Grid size={{ xs: 12 }}>
 										<Box sx={{ p: 6, textAlign: "center", bgcolor: "white", borderRadius: 2, boxShadow: 1 }}>
 											<Typography variant="h6">No diagrams found</Typography>
 											<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

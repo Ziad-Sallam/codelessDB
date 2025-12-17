@@ -1,7 +1,10 @@
 package backend.user;
 
+import backend.user.exceptions.UserException;
+
+import java.time.LocalDateTime;
+
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,17 +19,15 @@ import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import backend.user.exceptions.UserException.OtpSendFailedException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService {
 
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 
-	@Autowired
-	private JavaMailSender mailSender;
+	private final JavaMailSender mailSender;
 
 	private String encodePassword(String rawPassword) {
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -65,6 +66,8 @@ public class UserService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
+		newUser.setPublicProfile(userDto.getUsername());
+		
 
 		if (userDto.getPicture() != null) {
 			newUser.setPicture(userDto.getPicture());
@@ -121,6 +124,15 @@ public class UserService {
 				throw new EmailAlreadyExistsException("Email already exists");
 			}
 			user.setEmail(userDto.getEmail());
+
+		} else if (userDto.getBio() != null) {
+			user.setBio(userDto.getBio());
+
+		} else if (userDto.getPublicProfile() != null) {
+			user.setPublicProfile(userDto.getPublicProfile());
+
+		} else if (userDto.getProfileWebsiteUrl() != null) {
+			user.setProfileWebsiteUrl(userDto.getProfileWebsiteUrl());
 		}
 
 		userRepository.save(user);
@@ -169,5 +181,67 @@ public class UserService {
 		} catch (Exception e) {
 			throw new OtpSendFailedException("Failed to send OTP. Please try again.");
 		}
+	}
+
+	public User getUserOrThrow(int userId) {
+		User user = userRepository.findById(userId);
+
+		if (user == null) {
+			throw new UserNotFoundException("User not found with id: " + userId);
+		}
+
+		return user;
+	}
+
+	/**
+	 * Reset AI quota to 5 if the date has changed since last reset
+	 */
+	private void resetAiQuotaIfNeeded(User user) {
+
+		if (user.getAiQuotaResetDate() == null || !user.getAiQuotaResetDate().equals(LocalDateTime.now())) {
+			user.setAiQuotaRemaining(5);
+			user.setAiQuotaResetDate(LocalDateTime.now());
+			userRepository.save(user);
+		}
+	}
+
+	/**
+	 * Check if user has AI quota remaining, reset if needed, and decrement quota
+	 * 
+	 * @param userId User ID
+	 * @throws UserException.QuotaExceededException if quota is 0
+	 */
+	@Transactional
+	public void checkAndDecrementAiQuota(int userId) {
+		User user = userRepository.findById(userId);
+		if (user == null) {
+			throw new UserNotFoundException("User not found");
+		}
+
+		// Reset quota if date has changed
+		resetAiQuotaIfNeeded(user);
+
+		// Check if quota is available
+		if (user.getAiQuotaRemaining() <= 0) {
+			throw new UserException.QuotaExceededException(
+					"Daily AI quota exceeded. You have 0 requests remaining. Quota resets at midnight.");
+		}
+
+		// Decrement quota
+		user.setAiQuotaRemaining(user.getAiQuotaRemaining() - 1);
+		userRepository.save(user);
+	}
+
+	/**
+	 * Get current AI quota for a user (with reset check)
+	 */
+	public int getAiQuota(int userId) {
+		User user = userRepository.findById(userId);
+		if (user == null) {
+			throw new UserNotFoundException("User not found");
+		}
+
+		resetAiQuotaIfNeeded(user);
+		return user.getAiQuotaRemaining();
 	}
 }
