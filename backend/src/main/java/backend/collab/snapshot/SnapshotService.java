@@ -56,6 +56,7 @@ public class SnapshotService {
 		Diagram diagram = userDiagramService.getDiagramOrThrow(UUID.fromString(diagramId));
 
 		List<byte[]> redisUpdates = redisService.getAllUpdates(diagramId);
+		log.info("redis has {} updates", redisUpdates.size());
 		if (redisUpdates.isEmpty()) {
 			return; // nothing to snapshot
 		}
@@ -73,6 +74,7 @@ public class SnapshotService {
 			}
 
 			snapshot = txn.stateDiffV1(new byte[] { 0 });
+			// txn.commit();
 		}
 
 		diagram.setContent(snapshot);

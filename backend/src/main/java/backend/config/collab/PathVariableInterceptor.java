@@ -13,6 +13,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriComponentsBuilder; // New import for query parsing
 
+import backend.entities.joins.UserDiagram;
 import backend.security.AuthUser;
 import backend.security.JwtExtractor;
 import backend.user.Role;
@@ -75,7 +76,8 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 			UUID diagramId = UUID.fromString(diagramIdStr);
 			
 			// AUTHORIZATION (Check diagram access)
-			Role role = diagramService.getUserDiagramOrThrow(authUser.userId(), diagramId).getRole();
+			UserDiagram userDiagram = diagramService.getUserDiagramOrThrow(authUser.userId(), diagramId);
+			Role role = userDiagram.getRole();
 			attributes.put("role", role);
 
 			log.info("Handshake successful. Diagram ID: {} | User: {}", diagramIdStr, authUser.username());

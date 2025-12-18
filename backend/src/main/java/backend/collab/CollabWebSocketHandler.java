@@ -55,7 +55,7 @@ public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 		Role role = (Role) session.getAttributes().get("role");
 
 		if (diagramId != null) {
-			log.info("Received binary message for Diagram ID {} with {} bytes.", diagramId, payload.remaining());
+			// log.info("Received binary message for Diagram ID {} with {} bytes.", diagramId, payload.remaining());
 
 			// Broadcast the received message ONLY to clients in the same diagram/room
 			roomManager.sendUpdate(diagramId, payload.array(), session.getId(), role);

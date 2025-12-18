@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -18,7 +17,6 @@ import at.yrs4j.wrapper.interfaces.YDoc;
 import at.yrs4j.wrapper.interfaces.YOptions;
 
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
-import backend.collab.services.UpdateWriter;
 import backend.collab.snapshot.SnapshotService;
 import backend.user.Role;
 
@@ -49,35 +47,36 @@ public class Room implements IRoom {
 	 */
 	private static final int SNAPSHOT_THRESHOLD = 300;
 
-	private final LongAdder updateCounter;
-
 	private final String diagramId;
-
-	private final YDoc latestSnapshot;
-	private final YOptions yOptions;
-
-	@Autowired
-	private SnapshotService snapshotService;
-
+	
 	/* Thread-safe Set to store the active WebSocket sessions */
 	private final Set<WebSocketSession> sessions;
+	
+	private final YDoc latestSnapshot;
+	private final YOptions yOptions;
+	
+	private final LongAdder updateCounter;
+	
+	private final SnapshotService snapshotService;
 
-    public Room(String diagramId) {
-        this.sessions = Collections.synchronizedSet(new HashSet<>());
-        this.diagramId = diagramId;
-        this.updateCounter = new LongAdder();
 
-        this.yOptions = createOptions();
-        this.latestSnapshot = YDoc.createWithOptions(this.yOptions);
-    }
+	public Room(String diagramId, SnapshotService snapshotService) {
+		this.diagramId = diagramId;
+		this.sessions = Collections.synchronizedSet(new HashSet<>());
+		this.updateCounter = new LongAdder();
+		
+		this.yOptions = createOptions();
+		this.latestSnapshot = YDoc.createWithOptions(this.yOptions);
+		this.snapshotService = snapshotService;
+	}
 
-    private YOptions createOptions() {
-        YOptions options = YOptions.create();
-        options.setEncoding(EncodingType.Y_OFFSET_UTF16);
-        options.setCollectionId(diagramId);
-        options.setSkipGc(false);
-        return options;
-    }
+	private YOptions createOptions() {
+		YOptions options = YOptions.create();
+		options.setEncoding(EncodingType.Y_OFFSET_UTF16);
+		// options.setCollectionId(diagramId);
+		options.setSkipGc(false);
+		return options;
+	}
 
 	/**
 	 * Adds a session to the room, checking the capacity limit.
@@ -124,17 +123,19 @@ public class Room implements IRoom {
 			return;
 		}
 
-		final boolean cursorUpdate = (update[0] == 1);
-
-		if (role == Role.READER && !cursorUpdate) {
+		if (role == Role.READER) {
 			log.warn("Readers cannot send updates");
 			return;
 		}
 
-		this.updateCounter.increment();
-		if (updateCounter.sum() >= SNAPSHOT_THRESHOLD) {
-			takeSnapshot();
-			updateCounter.reset();
+		final boolean cursorUpdate = (update[0] == 1);
+
+		if (!cursorUpdate) {
+			this.updateCounter.increment();
+			if (updateCounter.sum() >= SNAPSHOT_THRESHOLD) {
+				takeSnapshot();
+				updateCounter.reset();
+			}
 		}
 
 		sendUpdatesToUsers(update, senderId);

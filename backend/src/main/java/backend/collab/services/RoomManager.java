@@ -6,6 +6,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.Room;
 import backend.collab.exceptions.CollabException.RoomNotFoundException;
+import backend.collab.snapshot.SnapshotService;
 import backend.user.Role;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,17 +30,18 @@ public interface RoomManager {
 }
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 class RoomManagerImpl implements RoomManager {
 
 	private final RedisStreamService redisService;
 
+	private final SnapshotService snapshotService;
+
 	private final Map<String, Room> activeRooms = new ConcurrentHashMap<>();
 
 	@Override
 	public void joinRoom(String roomId, WebSocketSession session) {
-		Room room = activeRooms.computeIfAbsent(roomId, k -> new Room(roomId));
+		Room room = activeRooms.computeIfAbsent(roomId, k -> new Room(roomId, snapshotService));
 		room.addSession(session);
 	}
 
@@ -71,10 +73,12 @@ class RoomManagerImpl implements RoomManager {
 		}
 		room.doUpdate(data, senderId, role);
 
+		final boolean cursorUpdate = (data[0] == 1);
+
 		// Cursor positions don't need to be stored
-		redisService.addUpdate(diagramId, data);
-		// if (!cursorUpdate) {
-		// }
+		if (!cursorUpdate) {
+			redisService.addUpdate(diagramId, data);
+		}
 		
 	}
 }
