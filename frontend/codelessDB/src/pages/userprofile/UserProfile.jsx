@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar,
   CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  Menu, MenuItem, Switch
+  Menu, MenuItem
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -28,9 +28,16 @@ export default function UserProfile() {
   const { user, setUser } = useAuth();
 
   const [leftNav, setLeftNav] = useState("profile");
-  const [profileData, setProfileData] = useState({ username: "", email: "", picture: "", createdAt: "", bio: "", publicProfile: "" });
+  const [profileData, setProfileData] = useState({
+    username: "",
+    email: "",
+    picture: "",
+    createdAt: "",
+    bio: "",
+    publicProfile: "",
+    profileWebsiteUrl: ""
+  });
   const [editMode, setEditMode] = useState({});
-  const [tempData, setTempData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -40,7 +47,6 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (!user) return;
-
     setProfileData({
       username: user.username,
       email: user.email,
@@ -48,7 +54,7 @@ export default function UserProfile() {
       createdAt: user.createdAt,
       bio: user.bio || "",
       publicProfile: user.publicProfile || "",
-      profileWebsiteUrl: user.profileWebsiteUrl || "",
+      profileWebsiteUrl: user.profileWebsiteUrl || ""
     });
     setLoading(false);
 
@@ -59,39 +65,52 @@ export default function UserProfile() {
     }
   }, [user]);
 
-  const showSnackbar = (message, severity) => setSnackbar({ open: true, message, severity });
+  const showSnackbar = (message, severity = "success") => setSnackbar({ open: true, message, severity });
   const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
   const handleEdit = (field) => {
-    setEditMode({ ...editMode, [field]: true });
-    setTempData({ ...tempData, [field]: profileData[field] });
+    setEditMode((p) => ({ ...p, [field]: true }));
   };
 
-  const handleSave = async (field, value = null) => {
+  const validateUrl = (raw) => {
+    if (!raw) return false;
+    try {
+      const candidate = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
+      new URL(candidate);
+      return candidate;
+    } catch {
+      return false;
+    }
+  };
+
+  const friendlyLabel = (field) => {
+    switch (field) {
+      case "profileWebsiteUrl": return "Website URL";
+      case "publicProfile": return "Public Profile";
+      default: return field.charAt(0).toUpperCase() + field.slice(1);
+    }
+  };
+
+  const saveField = async (field, value) => {
     setSaving(true);
     try {
-      const newValue = value ?? tempData[field];
-      await updateUserField(field, newValue);
-
-      setProfileData((prev) => ({ ...prev, [field]: newValue }));
-      setUser((prev) => ({
-        ...prev,
-        [field]: newValue
-      }));
-
-      setEditMode((prev) => ({ ...prev, [field]: false }));
-      showSnackbar(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`, "success");
-    } catch (error) {
-      console.error(`Error updating ${field}:`, error);
-      showSnackbar(error.response?.data?.message || `Error updating ${field}`, "error");
+      await updateUserField(field, value);
+      setProfileData((p) => ({ ...p, [field]: value }));
+      setUser((u) => u ? ({ ...u, [field]: value }) : u);
+      setEditMode((p) => ({ ...p, [field]: false }));
+      showSnackbar(`${friendlyLabel(field)} updated`, "success");
+    } catch (err) {
+      console.error("Error updating field", field, err);
+      const message = err?.response?.data?.message || `Error updating ${friendlyLabel(field)}`;
+      showSnackbar(message, "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleCancel = (field) => {
-    setEditMode({ ...editMode, [field]: false });
-    setTempData({ ...tempData, [field]: "" });
+  const handleCancel = (field, setFieldValue) => {
+    setEditMode((p) => ({ ...p, [field]: false }));
+    setFieldValue(profileData[field] ?? "");
   };
 
   const handleResetPassword = async () => {
@@ -100,53 +119,57 @@ export default function UserProfile() {
       localStorage.setItem("token_for_reset", token);
       localStorage.setItem("email", profileData.email);
       localStorage.setItem("resetSource", "profile");
-
       navigate("/password-reset?flow=reset");
-
-      // navigate("/register?flow=reset");
-    } catch (error) {
-      console.error("Error initiating password reset:", error);
-      showSnackbar(error.response?.data?.message || "Error initiating password reset", "error");
+    } catch (err) {
+      console.error("Error initiating password reset", err);
+      showSnackbar(err?.response?.data?.message || "Error initiating password reset", "error");
     }
   };
 
-  const handleCameraClick = (event) => setAnchorEl(event.currentTarget);
+  const handleCameraClick = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
-  const handleFileSelect = async (event) => {
-    const file = event.target.files[0];
-    if (!file || !file.type.startsWith("image/") || file.size > 1024 * 1024) {
-      return showSnackbar(!file ? "No file selected" : file.size > 1024 * 1024 ? "Image must be <1MB" : "Only image files allowed", "error");
-    }
+  const handleFileSelect = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return showSnackbar("No file selected", "error");
+    if (!file.type.startsWith("image/")) return showSnackbar("Only image files allowed", "error");
+    if (file.size > 1024 * 1024) return showSnackbar("Image must be < 1MB", "error");
     try {
       showSnackbar("Uploading image...", "info");
       const url = await uploadToCloudinary(file, profileData.email);
-      if (url) await handleSave("picture", url);
-    } catch {
+      if (url) await saveField("picture", url);
+    } catch (err) {
+      console.error(err);
       showSnackbar("Error uploading picture", "error");
+    } finally {
+      handleMenuClose();
     }
-    handleMenuClose();
   };
 
   const handleUrlSubmit = async () => {
     if (!imageUrl.trim()) return showSnackbar("Please enter a valid URL", "error");
-    await handleSave("picture", imageUrl);
+    const normalized = validateUrl(imageUrl.trim());
+    if (!normalized) return showSnackbar("Please enter a valid website URL for the image", "error");
+    await saveField("picture", normalized);
     setShowUrlDialog(false);
     setImageUrl("");
   };
 
   const handleUrlUpload = () => { setShowUrlDialog(true); handleMenuClose(); };
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    setUser(null);
-    navigate("/login");
-  };
+  const handleLogout = () => { localStorage.removeItem("authToken"); setUser(null); navigate("/login"); };
 
-  const getInitials = () => profileData.username ? profileData.username.substring(0, 2).toUpperCase() : "U";
+  const getInitials = () => profileData.username ? profileData.username.slice(0, 2).toUpperCase() : "U";
 
-  const ProfileField = ({ label, field, icon: Icon, type = "text", editable = true }) => {
-    const isEditing = editMode[field];
-    const currentValue = profileData[field];
+  // -------------------- Controlled ProfileField --------------------
+  const ProfileField = ({ label, field, icon: Icon, type = "text", editable = true, multiline = false, rows = 1, ...textFieldProps }) => {
+    const isEditing = !!editMode[field];
+    const value = profileData[field];
+    const [fieldValue, setFieldValue] = useState(value ?? "");
+
+    // Sync fieldValue when profileData changes
+    useEffect(() => {
+      if (!isEditing) setFieldValue(value ?? "");
+    }, [value, isEditing]);
 
     return (
       <Box className="profile-field" onClick={() => !isEditing && editable && handleEdit(field)}>
@@ -161,18 +184,41 @@ export default function UserProfile() {
             </IconButton>
           )}
         </Box>
+
         {isEditing ? (
-          <Box className="profile-field-edit" onClick={(e) => e.stopPropagation()}>
+          <Box className="profile-field-edit" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <TextField
-              fullWidth size="small" type={type} value={tempData[field]}
-              onChange={(e) => setTempData({ ...tempData, [field]: e.target.value })} autoFocus
+              fullWidth
+              size="small"
+              type={type}
+              value={fieldValue}
+              onChange={(e) => setFieldValue(e.target.value)}
+              multiline={multiline}
+              rows={rows}
+              {...textFieldProps}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  saveField(field, fieldValue);
+                }
+              }}
             />
-            <Button variant="contained" size="small" onClick={() => handleSave(field)} disabled={saving} className="save-button">Save</Button>
-            <Button variant="outlined" size="small" onClick={() => handleCancel(field)} className="cancel-button">Close</Button>
+            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+              <Button variant="contained" size="small" onClick={() => saveField(field, fieldValue)} disabled={saving} className="save-button">Save</Button>
+              <Button variant="outlined" size="small" onClick={() => handleCancel(field, setFieldValue)} className="cancel-button">Close</Button>
+            </Box>
           </Box>
         ) : (
           <Box className="profile-field-value">
-            <Typography variant="body1">{currentValue}</Typography>
+            {value ? (
+              <Typography variant="body1" sx={{ wordBreak: "break-word" }}>{value}</Typography>
+            ) : editable ? (
+              <Button size="small" variant="outlined" onClick={(e) => { e.stopPropagation(); handleEdit(field); }}>
+                Add {label}
+              </Button>
+            ) : (
+              <Typography variant="body1" color="text.disabled">Not set</Typography>
+            )}
           </Box>
         )}
       </Box>
@@ -196,26 +242,32 @@ export default function UserProfile() {
 
   return (
     <ThemeProvider theme={theme}>
-      <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
       <Box className="profile-layout">
-        <Box component="main" className="profile-main">
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '8px 24px', backgroundColor: '#f6f8fb' }}>
-            <Button variant="outlined" startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ textTransform: 'none', borderColor: '#b71c1c', color: '#ffffff', background: 'linear-gradient(45deg, #e53935 30%, #b71c1c 90%)', borderRadius: '10px', marginRight: '50px', '&:hover': { borderColor: '#ff7961', background: 'linear-gradient(45deg, #d32f2f 30%, #7f0000 90%)', boxShadow: '0 4px 8px 3px rgba(127, 0, 0, .4)' } }}>Logout</Button>
-          </Box>
+        <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
 
+        <Box component="main" className="profile-main">
           <Box className="profile-container">
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Button className="logout-button" startIcon={<LogoutIcon />} onClick={handleLogout}>Logout</Button>
+            </Box>
+
             <Card className="profile-header-card">
               <CardContent className="profile-header-content">
                 <Box className="profile-header-inner">
                   <Box className="profile-avatar-container">
                     <Avatar src={profileData.picture} className="profile-avatar">{!profileData.picture && getInitials()}</Avatar>
+
                     <input accept="image/*" style={{ display: "none" }} id="upload-photo" type="file" onChange={handleFileSelect} />
-                    <IconButton onClick={handleCameraClick} className="camera-button" size="small"><CameraAltIcon fontSize="small" /></IconButton>
+                    <IconButton onClick={handleCameraClick} className="camera-button" size="small">
+                      <CameraAltIcon fontSize="small" />
+                    </IconButton>
+
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                      <MenuItem><label htmlFor="upload-photo" style={{ cursor: 'pointer', width: '100%' }}>Upload from Computer</label></MenuItem>
+                      <MenuItem onClick={() => { document.getElementById("upload-photo").click(); }}>Upload from Computer</MenuItem>
                       <MenuItem onClick={handleUrlUpload}>Upload from URL</MenuItem>
                     </Menu>
                   </Box>
+
                   <Box className="profile-header-info">
                     <Typography variant="h4" className="profile-username">{profileData.username}</Typography>
                     {profileData.createdAt && <Typography variant="body2" className="profile-member-since">Member since {new Date(profileData.createdAt).toLocaleDateString()}</Typography>}
@@ -229,34 +281,31 @@ export default function UserProfile() {
                 <Typography variant="h6" className="profile-info-title">Basic Info</Typography>
                 <ProfileField label="Username" field="username" icon={PersonIcon} editable={false} />
                 <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
-                <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline={true} rows={4} />
-
-                <ProfileField label="Public Profile" field="publicProfile" icon={PersonIcon} editable={true} multiline={true} rows={2} />
-
-                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" />
-
+                <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline rows={4} type="text" inputProps={{ maxLength: 300 }} />
+                <ProfileField label="Public Profile Name" field="publicProfile" icon={PersonIcon} editable={true} rows={1} type="text" inputProps={{ maxLength: 100 }} />
+                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" inputProps={{ maxLength: 200 }} />
                 <PasswordField />
               </CardContent>
             </Card>
           </Box>
         </Box>
+
+        <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>{snackbar.message}</Alert>
+        </Snackbar>
+
+        <Dialog open={showUrlDialog} onClose={() => { setShowUrlDialog(false); setImageUrl(""); }} maxWidth="sm" fullWidth>
+          <DialogTitle>Upload Profile Picture from URL</DialogTitle>
+          <DialogContent>
+            <TextField autoFocus margin="dense" label="Image URL" type="url" fullWidth variant="outlined" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" sx={{ mt: 2 }} />
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Enter a direct link to an image (jpg, png, gif, etc.)</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setShowUrlDialog(false); setImageUrl(""); }}>Cancel</Button>
+            <Button onClick={handleUrlSubmit} variant="contained">Upload</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>{snackbar.message}</Alert>
-      </Snackbar>
-
-      <Dialog open={showUrlDialog} onClose={() => setShowUrlDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Upload Profile Picture from URL</DialogTitle>
-        <DialogContent>
-          <TextField autoFocus margin="dense" label="Image URL" type="url" fullWidth variant="outlined" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" sx={{ mt: 2 }} />
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Enter a direct link to an image (jpg, png, gif, etc.)</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setShowUrlDialog(false); setImageUrl(""); }}>Cancel</Button>
-          <Button onClick={handleUrlSubmit} variant="contained">Upload</Button>
-        </DialogActions>
-      </Dialog>
     </ThemeProvider>
   );
 }
