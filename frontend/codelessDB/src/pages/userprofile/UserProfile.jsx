@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar,
   CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -142,7 +142,7 @@ export default function UserProfile() {
       console.error(err);
       showSnackbar("Error uploading picture", "error");
     } finally {
-      handleMenuClose();
+      handleMenuClose(); // Close menu immediately after selection
     }
   };
 
@@ -234,7 +234,6 @@ export default function UserProfile() {
         </Box>
         <Button size="small" onClick={handleResetPassword} className="reset-password-button" variant="text" sx={{ textTransform: 'none', fontSize: '0.875rem' }}>Reset Password</Button>
       </Box>
-      <Box className="profile-field-value"><Typography variant="body1">••••••••</Typography></Box>
     </Box>
   );
 
@@ -254,17 +253,38 @@ export default function UserProfile() {
             <Card className="profile-header-card">
               <CardContent className="profile-header-content">
                 <Box className="profile-header-inner">
-                  <Box className="profile-avatar-container">
+                  <Box className="profile-avatar-container" sx={{ position: 'relative' }}>
                     <Avatar src={profileData.picture} className="profile-avatar">{!profileData.picture && getInitials()}</Avatar>
 
+                    {saving && (
+                      <Box sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        bgcolor: 'rgba(255,255,255,0.6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%'
+                      }}>
+                        <CircularProgress size={24} />
+                      </Box>
+                    )}
+
                     <input accept="image/*" style={{ display: "none" }} id="upload-photo" type="file" onChange={handleFileSelect} />
-                    <IconButton onClick={handleCameraClick} className="camera-button" size="small">
+                    <IconButton onClick={handleCameraClick} className="camera-button" size="small" disabled={saving}>
                       <CameraAltIcon fontSize="small" />
                     </IconButton>
 
-                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                      <MenuItem onClick={() => { document.getElementById("upload-photo").click(); }}>Upload from Computer</MenuItem>
-                      <MenuItem onClick={handleUrlUpload}>Upload from URL</MenuItem>
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={Boolean(anchorEl)}
+                      onClose={handleMenuClose}
+                    >
+                      <MenuItem onClick={() => { document.getElementById("upload-photo").click(); handleMenuClose(); }}>Upload from Computer</MenuItem>
+                      <MenuItem onClick={() => { handleUrlUpload(); handleMenuClose(); }}>Upload from URL</MenuItem>
                     </Menu>
                   </Box>
 
