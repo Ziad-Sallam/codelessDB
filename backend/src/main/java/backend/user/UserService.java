@@ -67,7 +67,6 @@ public class UserService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
 		newUser.setPublicProfile(userDto.getUsername());
-		
 
 		if (userDto.getPicture() != null) {
 			newUser.setPicture(userDto.getPicture());
@@ -164,15 +163,32 @@ public class UserService {
 		}
 	}
 
-	public String sendOtpEmail(String email) {
+	public String sendOtpEmail(String email, String explicitUsername) {
 		try {
 			SimpleMailMessage message = new SimpleMailMessage();
 			String otp = String.format("%05d", (int) (Math.random() * 100000));
 
-			message.setFrom("legendboudy@gmail.com");
+			String username = "User";
+
+			if (explicitUsername != null && !explicitUsername.trim().isEmpty()) {
+				username = explicitUsername;
+			} else {
+				User user = userRepository.findByEmail(email);
+				if (user != null) {
+					username = user.getUsername();
+				}
+			}
+
+			message.setFrom("codelessDB@no-reply.com");
 			message.setTo(email);
-			message.setSubject("Your Password Reset OTP");
-			message.setText("Your OTP is: " + otp + "");
+			message.setSubject("Your Verification Code");
+
+			String content = String.format(
+					"Dear %s,\n\n" +
+							"Your verification code for CodelessDB is %s. This code will expire in 5 minutes.",
+					username, otp);
+
+			message.setText(content);
 
 			mailSender.send(message);
 

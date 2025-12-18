@@ -43,6 +43,7 @@ const Register = () => {
   // OTP
   const [otpInput, setOtpInput] = useState(["", "", "", "", ""]);
   const [sentOtp, setSentOtp] = useState("");
+  const [otpTime, setOtpTime] = useState(null); 
   const [otpTimer, setOtpTimer] = useState(60);
   const [canResendOtp, setCanResendOtp] = useState(false);
 
@@ -116,8 +117,30 @@ const Register = () => {
       }
     }
     handleOAuthCallback();
-
   }, [navigate, searchParams, setUser]);
+
+  
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").trim();
+    if (!/^\d+$/.test(pastedData)) return;
+
+    const digits = pastedData.split("").slice(0, 5);
+    const newOtp = [...otpInput];
+
+    digits.forEach((digit, index) => {
+      newOtp[index] = digit;
+    });
+
+    setOtpInput(newOtp);
+
+    
+    const focusIndex = Math.min(digits.length, 4);
+    const inputs = document.querySelectorAll(".otp-container input");
+    if (inputs[focusIndex]) {
+      inputs[focusIndex].focus();
+    }
+  };
 
   // OTP Timer
   useEffect(() => {
@@ -184,8 +207,9 @@ const Register = () => {
 
     try {
       await validateSignup(email, username);
-      const otp = await sendOtp(email);
+      const otp = await sendOtp(email, username);
       setSentOtp(otp);
+      setOtpTime(Date.now());
       setOtpTimer(60);
       setCanResendOtp(false);
       setStep(STEPS.SIGNUP_OTP);
@@ -202,6 +226,12 @@ const Register = () => {
 
     if (entered != sentOtp) {
       setError("Invalid OTP. Try again.");
+      return;
+    }
+
+    // Check expiration (5 minutes = 300000 ms)
+    if (Date.now() - otpTime > 5 * 60 * 1000) {
+      setError("OTP has expired. Please request a new one.");
       return;
     }
 
@@ -236,6 +266,7 @@ const Register = () => {
 
       const otp = await sendOtp(email);
       setSentOtp(otp);
+      setOtpTime(Date.now());
       setOtpTimer(60);
       setCanResendOtp(false);
       setStep(STEPS.FORGOT_OTP);
@@ -252,6 +283,12 @@ const Register = () => {
 
     if (entered != sentOtp) {
       setError("Invalid OTP. Try again.");
+      return;
+    }
+
+    // Check expiration (5 minutes = 300000 ms)
+    if (Date.now() - otpTime > 5 * 60 * 1000) {
+      setError("OTP has expired. Please request a new one.");
       return;
     }
 
@@ -305,13 +342,15 @@ const Register = () => {
 
   // Resend OTP
   const handleResendOtp = async () => {
-    if (!canResendOtp) return;
+    if (!canResendOtp || loading) return;
 
     setLoading(true);
 
     try {
-      const otp = await sendOtp(email);
+      const user = step === STEPS.SIGNUP_OTP ? username : null;
+      const otp = await sendOtp(email, user);
       setSentOtp(otp);
+      setOtpTime(Date.now());
       setOtpTimer(60);
       setCanResendOtp(false);
       setError("");
@@ -467,6 +506,7 @@ const Register = () => {
                       e.target.previousSibling?.focus();
                     }
                   }}
+                  onPaste={handlePaste}
                 />
               ))}
             </div>
@@ -491,12 +531,12 @@ const Register = () => {
                 <span
                   onClick={handleResendOtp}
                   style={{
-                    color: canResendOtp ? "black" : "gray",
-                    cursor: canResendOtp ? "pointer" : "default",
-                    textDecoration: canResendOtp ? "underline" : "none",
+                    color: canResendOtp && !loading ? "black" : "gray",
+                    cursor: canResendOtp && !loading ? "pointer" : "default",
+                    textDecoration: canResendOtp && !loading ? "underline" : "none",
                   }}
                 >
-                  {canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`}
+                  {loading ? "Sending..." : (canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`)}
                 </span>
               </p>
             </div>
@@ -567,6 +607,7 @@ const Register = () => {
                       e.target.previousSibling?.focus();
                     }
                   }}
+                  onPaste={handlePaste}
                 />
               ))}
             </div>
@@ -591,12 +632,12 @@ const Register = () => {
                 <span
                   onClick={handleResendOtp}
                   style={{
-                    color: canResendOtp ? "black" : "gray",
-                    cursor: canResendOtp ? "pointer" : "default",
-                    textDecoration: canResendOtp ? "underline" : "none",
+                    color: canResendOtp && !loading ? "black" : "gray",
+                    cursor: canResendOtp && !loading ? "pointer" : "default",
+                    textDecoration: canResendOtp && !loading ? "underline" : "none",
                   }}
                 >
-                  {canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`}
+                  {loading ? "Sending..." : (canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`)}
                 </span>
               </p>
             </div>
