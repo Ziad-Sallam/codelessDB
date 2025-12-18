@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Avatar, Box, Button, Card, CardContent, TextField, Typography, Alert, Snackbar,
   CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -45,6 +45,9 @@ export default function UserProfile() {
   const [imageUrl, setImageUrl] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
 
+  const fieldRefs = useRef({});
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     if (!user) return;
     setProfileData({
@@ -64,6 +67,17 @@ export default function UserProfile() {
       localStorage.removeItem("passwordResetSuccess");
     }
   }, [user]);
+
+  useEffect(() => {
+    Object.keys(editMode).forEach((field) => {
+      if (editMode[field]) {
+        const el = fieldRefs.current[field];
+        if (el && typeof el.focus === "function") {
+          setTimeout(() => el.focus && el.focus(), 80);
+        }
+      }
+    });
+  }, [editMode]);
 
   const showSnackbar = (message, severity = "success") => setSnackbar({ open: true, message, severity });
   const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
@@ -91,6 +105,22 @@ export default function UserProfile() {
     }
   };
 
+  const handleSave = async (field) => {
+    const ref = fieldRefs.current[field];
+    const rawValue = ref ? ref.value : profileData[field];
+    const newValue = (rawValue !== undefined && rawValue !== null) ? String(rawValue).trim() : "";
+
+    if (field === "profileWebsiteUrl" && newValue) {
+      const normalized = validateUrl(newValue);
+      if (!normalized) {
+        return showSnackbar("Please enter a valid website URL (e.g. https://example.com)", "error");
+      }
+      return await saveField(field, normalized);
+    }
+
+    return await saveField(field, newValue);
+  };
+
   const saveField = async (field, value) => {
     setSaving(true);
     try {
@@ -108,9 +138,10 @@ export default function UserProfile() {
     }
   };
 
-  const handleCancel = (field, setFieldValue) => {
+  const handleCancel = (field) => {
     setEditMode((p) => ({ ...p, [field]: false }));
-    setFieldValue(profileData[field] ?? "");
+    const ref = fieldRefs.current[field];
+    if (ref) ref.value = profileData[field] ?? "";
   };
 
   const handleResetPassword = async () => {
@@ -126,8 +157,16 @@ export default function UserProfile() {
     }
   };
 
-  const handleCameraClick = (e) => setAnchorEl(e.currentTarget);
+  // Menu handling
+  const handleCameraClick = (e) => setAnchorEl((prev) => (prev ? null : e.currentTarget));
   const handleMenuClose = () => setAnchorEl(null);
+
+  const handleUploadFromComputer = () => {
+    handleMenuClose(); // close menu first
+    requestAnimationFrame(() => {
+      fileInputRef.current?.click();
+    });
+  };
 
   const handleFileSelect = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -142,7 +181,7 @@ export default function UserProfile() {
       console.error(err);
       showSnackbar("Error uploading picture", "error");
     } finally {
-      handleMenuClose(); // Close menu immediately after selection
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -155,21 +194,33 @@ export default function UserProfile() {
     setImageUrl("");
   };
 
-  const handleUrlUpload = () => { setShowUrlDialog(true); handleMenuClose(); };
-  const handleLogout = () => { localStorage.removeItem("authToken"); setUser(null); navigate("/login"); };
+  const handleUrlUpload = () => {
+    handleMenuClose(); // close menu first
+    setShowUrlDialog(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    setUser(null);
+    navigate("/login");
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (anchorEl && !anchorEl.contains(event.target)) {
+        handleMenuClose();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [anchorEl]);
 
   const getInitials = () => profileData.username ? profileData.username.slice(0, 2).toUpperCase() : "U";
 
-  // -------------------- Controlled ProfileField --------------------
   const ProfileField = ({ label, field, icon: Icon, type = "text", editable = true, multiline = false, rows = 1, ...textFieldProps }) => {
     const isEditing = !!editMode[field];
     const value = profileData[field];
-    const [fieldValue, setFieldValue] = useState(value ?? "");
-
-    // Sync fieldValue when profileData changes
-    useEffect(() => {
-      if (!isEditing) setFieldValue(value ?? "");
-    }, [value, isEditing]);
 
     return (
       <Box className="profile-field" onClick={() => !isEditing && editable && handleEdit(field)}>
@@ -191,21 +242,21 @@ export default function UserProfile() {
               fullWidth
               size="small"
               type={type}
-              value={fieldValue}
-              onChange={(e) => setFieldValue(e.target.value)}
+              defaultValue={value ?? ""}
+              inputRef={(el) => (fieldRefs.current[field] = el)}
               multiline={multiline}
               rows={rows}
               {...textFieldProps}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  saveField(field, fieldValue);
+                  handleSave(field);
                 }
               }}
             />
             <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-              <Button variant="contained" size="small" onClick={() => saveField(field, fieldValue)} disabled={saving} className="save-button">Save</Button>
-              <Button variant="outlined" size="small" onClick={() => handleCancel(field, setFieldValue)} className="cancel-button">Close</Button>
+              <Button variant="contained" size="small" onClick={() => handleSave(field)} disabled={saving} className="save-button">Save</Button>
+              <Button variant="outlined" size="small" onClick={() => handleCancel(field)} className="cancel-button">Close</Button>
             </Box>
           </Box>
         ) : (
@@ -253,38 +304,17 @@ export default function UserProfile() {
             <Card className="profile-header-card">
               <CardContent className="profile-header-content">
                 <Box className="profile-header-inner">
-                  <Box className="profile-avatar-container" sx={{ position: 'relative' }}>
+                  <Box className="profile-avatar-container">
                     <Avatar src={profileData.picture} className="profile-avatar">{!profileData.picture && getInitials()}</Avatar>
 
-                    {saving && (
-                      <Box sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        bgcolor: 'rgba(255,255,255,0.6)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '50%'
-                      }}>
-                        <CircularProgress size={24} />
-                      </Box>
-                    )}
-
-                    <input accept="image/*" style={{ display: "none" }} id="upload-photo" type="file" onChange={handleFileSelect} />
-                    <IconButton onClick={handleCameraClick} className="camera-button" size="small" disabled={saving}>
+                    <input ref={fileInputRef} accept="image/*" style={{ display: "none" }} type="file" onChange={handleFileSelect} />
+                    <IconButton onClick={handleCameraClick} className="camera-button" size="small">
                       <CameraAltIcon fontSize="small" />
                     </IconButton>
 
-                    <Menu
-                      anchorEl={anchorEl}
-                      open={Boolean(anchorEl)}
-                      onClose={handleMenuClose}
-                    >
-                      <MenuItem onClick={() => { document.getElementById("upload-photo").click(); handleMenuClose(); }}>Upload from Computer</MenuItem>
-                      <MenuItem onClick={() => { handleUrlUpload(); handleMenuClose(); }}>Upload from URL</MenuItem>
+                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} disablePortal={false}>
+                      <MenuItem onClick={handleUploadFromComputer}>Upload from Computer</MenuItem>
+                      <MenuItem onClick={handleUrlUpload}>Upload from URL</MenuItem>
                     </Menu>
                   </Box>
 
@@ -302,8 +332,8 @@ export default function UserProfile() {
                 <ProfileField label="Username" field="username" icon={PersonIcon} editable={false} />
                 <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
                 <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline rows={4} type="text" inputProps={{ maxLength: 300 }} />
-                <ProfileField label="Public Profile Name" field="publicProfile" icon={PersonIcon} editable={true} rows={1} type="text" inputProps={{ maxLength: 100 }} />
-                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" inputProps={{ maxLength: 200 }} />
+                <ProfileField label="Public Profile Name" field="publicProfile" icon={PersonIcon} editable={true} rows={1} inputProps={{ maxLength: 100 }} />
+                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" />
                 <PasswordField />
               </CardContent>
             </Card>
