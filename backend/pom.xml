@@ -54,30 +54,6 @@
         </dependency>
         <!-- .................................... -->
 
-        <!-- Y.js binding for java dependency (it is included in lib folder) -->
-        <dependency>
-            <groupId>at.yrs4j</groupId>
-            <artifactId>bindings</artifactId>
-            <version>0.2.0-alpha</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/bindings-0.2.0-alpha.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>at.yrs4j</groupId>
-            <artifactId>libnative-windows</artifactId>
-            <version>0.18.8</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/libnative-windows-0.18.8.jar</systemPath>
-        </dependency>
-
-        <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna</artifactId>
-            <version>5.14.0</version>
-        </dependency>
-        <!-- .................................... -->
-
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-client</artifactId>

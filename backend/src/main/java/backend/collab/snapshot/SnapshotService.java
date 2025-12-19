@@ -5,8 +5,6 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import at.yrs4j.wrapper.interfaces.YDoc;
-import at.yrs4j.wrapper.interfaces.YTransaction;
 import backend.collab.exceptions.CollabException.YDocUpdateException;
 import backend.collab.services.RedisStreamService;
 import backend.collab.services.UpdateWriter;

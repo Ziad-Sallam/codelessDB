@@ -12,10 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import at.yrs4j.wrapper.interfaces.EncodingType;
-import at.yrs4j.wrapper.interfaces.YDoc;
-import at.yrs4j.wrapper.interfaces.YOptions;
-
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
 import backend.collab.snapshot.SnapshotService;
 import backend.user.Role;
