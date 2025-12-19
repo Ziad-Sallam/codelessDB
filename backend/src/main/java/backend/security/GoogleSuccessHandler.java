@@ -61,8 +61,7 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
         userDto.setUsername(uniqueUsername);
         userDto.setPicture(picture);
 
-        int userId = userService.registerUser(userDto);
-        userService.enableUser(userId); // Explicitly enable OAuth users
+        int userId = userService.createUser(userDto);
 
         user = userService.findUserByEmail(email);
 

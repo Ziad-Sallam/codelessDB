@@ -38,7 +38,7 @@ class UserServiceTest {
         when(userRepository.existsByEmail("test@mail.com")).thenReturn(false);
         when(userRepository.existsByUsername("john")).thenReturn(false);
 
-        userService.registerUser(dto);
+        userService.createUser(dto);
         verify(userRepository, times(1)).save(any(User.class));
     }
 
@@ -48,7 +48,7 @@ class UserServiceTest {
         dto.setUsername("john");
         dto.setRawPassword("123");
 
-        assertThrows(IllegalArgumentException.class, () -> userService.registerUser(dto));
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
     }
 
     @Test
@@ -57,7 +57,7 @@ class UserServiceTest {
         dto.setEmail("test@mail.com");
         dto.setRawPassword("123");
 
-        assertThrows(IllegalArgumentException.class, () -> userService.registerUser(dto));
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
     }
 
     @Test
@@ -67,7 +67,7 @@ class UserServiceTest {
         dto.setUsername("   ");
         dto.setRawPassword("123");
 
-        assertThrows(IllegalArgumentException.class, () -> userService.registerUser(dto));
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
     }
 
     @Test
@@ -76,7 +76,7 @@ class UserServiceTest {
         dto.setEmail("test@mail.com");
         dto.setUsername("john");
 
-        assertThrows(IllegalArgumentException.class, () -> userService.registerUser(dto));
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
     }
 
     @Test
@@ -86,7 +86,7 @@ class UserServiceTest {
         dto.setUsername("john");
         dto.setRawPassword("123");
 
-        assertThrows(InvalidEmailException.class, () -> userService.registerUser(dto));
+        assertThrows(InvalidEmailException.class, () -> userService.createUser(dto));
     }
 
     @Test
@@ -98,7 +98,7 @@ class UserServiceTest {
 
         when(userRepository.existsByEmail("test@mail.com")).thenReturn(true);
 
-        assertThrows(EmailAlreadyExistsException.class, () -> userService.registerUser(dto));
+        assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(dto));
     }
 
     @Test
@@ -111,7 +111,7 @@ class UserServiceTest {
         when(userRepository.existsByEmail("test@mail.com")).thenReturn(false);
         when(userRepository.existsByUsername("john")).thenReturn(true);
 
-        assertThrows(UsernameAlreadyExistsException.class, () -> userService.registerUser(dto));
+        assertThrows(UsernameAlreadyExistsException.class, () -> userService.createUser(dto));
     }
 
     @Test

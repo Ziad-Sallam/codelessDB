@@ -48,15 +48,8 @@ public class UserController {
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> signup(@RequestBody UserDto userDto) {
-		int id = userService.registerUser(userDto);
-		return ResponseEntity.ok(id);
-	}
-
-	@PostMapping("/signup/verify")
-	public ResponseEntity<?> verifyUser(@RequestParam String email, @RequestParam String otp) {
-		AuthUser user = userService.verifyUser(email, otp);
-		String token = jwtUtil.generateToken(user.userId(), user.username());
-		return ResponseEntity.ok(token);
+		int id = userService.createUser(userDto);
+		return ResponseEntity.ok(jwtUtil.generateToken(id, userDto.getUsername()));
 	}
 
 	@PostMapping("/signup/send-otp/{email}")

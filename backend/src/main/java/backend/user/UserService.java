@@ -17,7 +17,6 @@ import backend.user.exceptions.UserException.InvalidEmailException;
 import backend.user.exceptions.UserException.OtpSendFailedException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
-import backend.user.exceptions.UserException.UserNotEnabledException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,7 +36,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public int registerUser(UserDto userDto) throws RuntimeException {
+	public int createUser(UserDto userDto) throws RuntimeException {
 		if (userDto.getEmail() == null) {
 			throw new IllegalArgumentException("Email is required");
 		}
@@ -73,21 +72,11 @@ public class UserService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(encodePassword(userDto.getRawPassword()));
 		newUser.setPublicProfile(userDto.getUsername());
-		newUser.setEnabled(false); // Inactive initially
 
 		if (userDto.getPicture() != null) {
 			newUser.setPicture(userDto.getPicture());
 		}
-
-		// Generate and Set OTP
-		String otp = String.format("%05d", (int) (Math.random() * 100000));
-		newUser.setOtp(otp);
-		newUser.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
-
 		userRepository.save(newUser);
-
-		// Send Email
-		sendOtpEmail(newUser.getEmail(), newUser.getUsername(), otp, "otp");
 
 		return newUser.getId();
 	}
@@ -102,37 +91,6 @@ public class UserService {
 		if (!new BCryptPasswordEncoder().matches(rawPassword, user.getPassword())) {
 			throw new BadCredentialsException("Invalid credentials, Password mismatch");
 		}
-
-		if (!user.isEnabled()) {
-			throw new UserNotEnabledException("Account is not verified. Please verify your email.");
-		}
-
-		return new AuthUser(user.getId(), user.getUsername());
-	}
-
-	@Transactional
-	public AuthUser verifyUser(String email, String otp) {
-		User user = userRepository.findByEmail(email);
-		if (user == null) {
-			throw new UserNotFoundException("User not found");
-		}
-
-		if (user.isEnabled()) {
-			return new AuthUser(user.getId(), user.getUsername()); // Already verified
-		}
-
-		if (user.getOtp() == null || !user.getOtp().equals(otp)) {
-			throw new BadCredentialsException("Invalid OTP");
-		}
-
-		if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
-			throw new BadCredentialsException("OTP has expired");
-		}
-
-		user.setEnabled(true);
-		user.setOtp(null);
-		user.setOtpExpiry(null);
-		userRepository.save(user);
 
 		return new AuthUser(user.getId(), user.getUsername());
 	}
@@ -210,41 +168,10 @@ public class UserService {
 		}
 	}
 
-	@Transactional
-	public void enableUser(int userId) {
-		User user = userRepository.findById(userId);
-		if (user != null) {
-			user.setEnabled(true);
-			user.setOtp(null);
-			user.setOtpExpiry(null);
-			userRepository.save(user);
-		}
-	}
-
 	public String sendOtpEmail(String email, String explicitUsername) {
-		// Wrapper for legacy or simple calls, generates new OTP
-		String otp = String.format("%05d", (int) (Math.random() * 100000));
-		// Logic to save this OTP if it's a resend or forgot password needs to be
-		// handled.
-		// For forgot password, we should probably have a dedicated method, or use this
-		// one and save to user.
-
-		User user = userRepository.findByEmail(email);
-		if (user != null) {
-			user.setOtp(otp);
-			user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
-			userRepository.save(user);
-			sendOtpEmail(email, explicitUsername, otp, "forgot");
-			return otp;
-		} else {
-			// If user not found, we shouldn't really send, but to prevent enumeration...
-			// For now, let's just throw or return.
-			throw new UserNotFoundException("User not found");
-		}
-	}
-
-	public void sendOtpEmail(String email, String explicitUsername, String otp, String flow) {
 		try {
+			String otp = String.format("%05d", (int) (Math.random() * 100000));
+
 			String username = "User";
 
 			if (explicitUsername != null && !explicitUsername.trim().isEmpty()) {
@@ -264,11 +191,6 @@ public class UserService {
 			helper.setTo(email);
 			helper.setSubject("Your Verification Code: " + otp);
 
-			// Build Link
-			// Flow: 'otp' (signup verify) or 'forgot' (password reset)
-			String link = String.format("%s/register?email=%s&otp=%s&flow=%s&username=%s",
-					frontendUrl, email, otp, flow, username);
-
 			String content = String.format(
 					"<div style=\"font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 10px;\">"
 							+
@@ -278,16 +200,18 @@ public class UserService {
 							+
 							"<p>You can also verify your account instantly by clicking the button below:</p>" +
 							"<div style=\"margin: 25px 0;\">" +
-							"  <a href=\"%s\" style=\"background-color: #4CAF50; color: white; padding: 14px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;\">Verify Account</a>"
+							"  <a href=\"%s/register?email=%s&otp=%s&flow=%s\" style=\"background-color: #4CAF50; color: white; padding: 14px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;\">Verify Account</a>"
 							+
 							"</div>" +
 							"<p style=\"font-size: 12px; color: #777;\">This code will expire in 5 minutes.</p>" +
 							"</div>",
-					username, otp, link);
+					username, otp, frontendUrl, email, otp, explicitUsername != null ? "otp" : "forgot");
 
 			helper.setText(content, true);
 
 			mailSender.send(message);
+
+			return otp;
 
 		} catch (Exception e) {
 			throw new OtpSendFailedException("Failed to send OTP. Please try again.");

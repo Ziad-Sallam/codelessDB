@@ -43,10 +43,4 @@ public class UserException {
 			super(message);
 		}
 	}
-
-	public static class UserNotEnabledException extends RuntimeException {
-		public UserNotEnabledException(String message) {
-			super(message);
-		}
-	}
 }
