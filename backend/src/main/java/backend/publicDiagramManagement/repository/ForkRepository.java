@@ -15,12 +15,12 @@ import backend.entities.publicDiagramEntities.PublicDiagram;
 @Repository
 public interface ForkRepository extends JpaRepository<DiagramFork, PublicDiagramUserId> {
     @Query("""
-        SELECT pd
-        FROM DiagramFork f
-        JOIN PublicDiagram pd ON pd.id = f.originalDiagram.id
-        WHERE f.id.userId = :userId
-        ORDER BY f.forkedAt DESC
-    """)
+                SELECT pd
+                FROM DiagramFork f
+                JOIN PublicDiagram pd ON pd.id = f.originalDiagram.id
+                WHERE f.id.userId = :userId
+                ORDER BY f.forkedAt DESC
+            """)
     Page<PublicDiagram> findForkedPublicDiagramsByUser(int userId, Pageable pageable);
 
     void deleteByOriginalDiagramId(UUID publicDiagramId);

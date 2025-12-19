@@ -89,12 +89,6 @@ export default function Contributors({
 
 	const isOwner = currentUserRole === "OWNER";
 
-	/**
-	 * Change role handler (uses username as unique identifier)
-	 * - optimistic update
-	 * - calls shareDiagram(diagramId, username, role) (backend)
-	 * - rolls back on error
-	 */
 	async function handleRoleChange(username, newRole) {
 		const target = localContributors.find((c) => String(c.name) === String(username));
 		if (!target) return;
@@ -177,31 +171,22 @@ export default function Contributors({
 		
 		const username = contributorToDelete;
 		setDeleteLoading(true);
-		setDeletingName(username); // Keep this if you want the list icon to spin too, or remove if redundant
+		setDeletingName(username);
 
 		try {
 			await shareDiagram(diagramId, username, null, true);
 			setLocalContributors((prev) => prev.filter((c) => String(c.name) !== String(username)));
 			setOuterContributors((prev) => prev.filter((c) => String(c.name) !== String(username)));
 			
-			// Close dialog only on success
 			setDeleteDialogOpen(false);
 			showSuccess(`Contributor ${username} is removed`);
 
 		} catch (err) {
 			showError(err);
-			// Do not close dialog on error so user can retry or see error
 		} finally {
 			setDeleteLoading(false);
 			setDeletingName(null);
-			// We clear contributorToDelete only if we closed the dialog, 
-			// but here we might want to keep it if there was an error. 
-			// However, typically we clear it when the dialog closes.
-			// Let's rely on the Dialog on close to clear it if we want, 
-			// or just leave it. If success, we closed it.
-			if (!deleteDialogOpen) { // This check is tricky because state update is async.
-				// Simpler: if we reached here, just stop loading.
-			}
+
 		}
 	}
 
@@ -218,12 +203,7 @@ export default function Contributors({
 			style={{ display: "none" }} // Ensure it doesn't affect layout
 		>
 		{/* Use a portal-friendly container interaction blocker */}
-			<style>{`
-				/* Optional: ensure dialogs rendered in portal don't get blocked by display:none of parent? 
-				   No, React portals render outside. The event bubbling is virtual. 
-				   The display:none on the wrapper ensures it takes no space in Card. 
-				   React events will still bubble to it. */
-			`}</style>
+			<style>{``}</style>
 		<Dialog
 			open={Boolean(open)}
 			onClose={onClose}
@@ -324,10 +304,6 @@ export default function Contributors({
 									</Avatar>
 								</ListItemAvatar>
 
-								{/*
-                  IMPORTANT: disableTypography to avoid ListItemText auto-wrapping primary/secondary inside <p>.
-                  We render our own Typography/Box nodes to avoid invalid nesting (Select renders div/fieldset).
-                */}
 								<ListItemText
 									disableTypography
 									primary={

@@ -16,11 +16,11 @@ import backend.entities.publicDiagramEntities.PublicDiagram;
 public interface StarRepository extends JpaRepository<DiagramStar, PublicDiagramUserId> {
 
     @Query("""
-        SELECT s.publicDiagram
-        FROM DiagramStar s
-        WHERE s.id.userId = :userId
-        ORDER BY s.starredAt DESC
-    """)
+                SELECT s.publicDiagram
+                FROM DiagramStar s
+                WHERE s.id.userId = :userId
+                ORDER BY s.starredAt DESC
+            """)
     Page<PublicDiagram> findStarredPublicDiagramsByUser(int userId, Pageable pageable);
 
     void deleteByIdPublicDiagramId(UUID publicDiagramId);

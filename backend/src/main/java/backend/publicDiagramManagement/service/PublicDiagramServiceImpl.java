@@ -325,7 +325,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         }
 
         userDiagramService.checkOwner(userDiagram, "unpublish");
-        
+
         UUID publicDiagramId = publicDiagram.getId();
         viewsRepository.deleteByIdPublicDiagramId(publicDiagramId);
         starRepository.deleteByIdPublicDiagramId(publicDiagramId);
