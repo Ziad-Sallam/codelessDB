@@ -206,18 +206,18 @@ const QueryRunner: React.FC = () => {
         message: 'Only one SQL query is allowed.',
         severity: 'warning'
       });
-      setQueryContent(statements[0]+";");
+      setQueryContent(statements[0] + ";");
     } else {
       setQueryContent(value);
     }
   };
 
-const RECONNECT_COMMANDS = [
-  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/communicate" -OutFile ".\\communicate.exe"`,
-  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/create-container" -OutFile ".\\create_container.exe"`,
-  `.\\create_container.exe "http://${API_BASE_URL}" ${databaseId}`,
-  `.\\communicate.exe "ws://${API_BASE_URL}" ${databaseId}`
-];
+  const RECONNECT_COMMANDS = [
+    `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/communicate" -OutFile ".\\communicate.exe"`,
+    `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/create-container" -OutFile ".\\create_container.exe"`,
+    `.\\create_container.exe "http://${API_BASE_URL}" ${databaseId}`,
+    `.\\communicate.exe "ws://${API_BASE_URL}" ${databaseId}`
+  ];
 
 
   return (
