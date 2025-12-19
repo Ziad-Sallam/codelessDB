@@ -158,9 +158,7 @@ export default function SchemaPreview() {
             {schemaData.name || "Untitled Schema"}
           </Typography>
         </Box>
-        <Typography variant="caption" color="text.secondary" noWrap display="block">
-          {schemaData.shortDescription || "No description"}
-        </Typography>
+        
       </Box>
 
       <Box sx={{ flexGrow: 1 }} />

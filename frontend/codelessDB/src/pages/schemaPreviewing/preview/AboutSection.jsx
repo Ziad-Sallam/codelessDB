@@ -7,6 +7,7 @@ import {
   CalendarToday as CalendarIcon,
   EditCalendar as EditCalendarIcon
 } from '@mui/icons-material';
+import { Info as InfoIcon } from '@mui/icons-material';
 
 export const AboutSection = ({ shortDescription, hashtags, stats, dates }) => {
   const formatDate = (dateString) => {
@@ -21,7 +22,14 @@ export const AboutSection = ({ shortDescription, hashtags, stats, dates }) => {
   return (
     <Card variant="outlined">
       <CardHeader
-        title={<Typography variant="subtitle2" fontWeight="bold">About</Typography>}
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <InfoIcon fontSize="small" />
+            <Typography variant="subtitle1" fontWeight="bold">
+              About
+            </Typography>
+          </Box>
+        }
         sx={{ pb: 1 }}
       />
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

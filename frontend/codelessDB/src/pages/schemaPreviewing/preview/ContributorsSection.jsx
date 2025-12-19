@@ -6,10 +6,12 @@ import {
   Visibility as EyeIcon
 } from '@mui/icons-material';
 
+// Map roles to icons
 const getRoleIcon = (role) => {
-  switch (role) {
+  switch (role.toUpperCase()) {
     case "OWNER":
       return CrownIcon;
+    case "WRITER":
     case "EDITOR":
       return EditIcon;
     default:
@@ -17,10 +19,12 @@ const getRoleIcon = (role) => {
   }
 };
 
+// Map roles to colors
 const getRoleColor = (role) => {
-  switch (role) {
+  switch (role.toUpperCase()) {
     case "OWNER":
       return "warning.main";
+    case "WRITER":
     case "EDITOR":
       return "info.main";
     default:
@@ -28,21 +32,34 @@ const getRoleColor = (role) => {
   }
 };
 
+// Role sorting priority
+const rolePriority = {
+  OWNER: 1,
+  WRITER: 2,
+  EDITOR: 2,
+  READER: 3
+};
+
 export const ContributorsSection = ({ collaborators, compact = false }) => {
+  // Sort collaborators by role priority
+  const sortedCollaborators = [...collaborators].sort(
+    (a, b) => (rolePriority[a.role.toUpperCase()] || 99) - (rolePriority[b.role.toUpperCase()] || 99)
+  );
+
   return (
     <Card variant="outlined">
       <CardHeader
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <UsersIcon fontSize="small" />
-            <Typography variant="subtitle2" fontWeight="bold">Contributors</Typography>
+            <Typography variant="subtitle1" fontWeight="bold">Contributors</Typography>
           </Box>
         }
         sx={{ pb: 1 }}
       />
       <CardContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {collaborators.map((collaborator) => {
+          {sortedCollaborators.map((collaborator) => {
             const RoleIcon = getRoleIcon(collaborator.role);
             const roleColor = getRoleColor(collaborator.role);
 
