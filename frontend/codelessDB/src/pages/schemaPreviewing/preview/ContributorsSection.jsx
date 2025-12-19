@@ -7,7 +7,6 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-// Map roles to icons
 const getRoleIcon = (role) => {
   switch (role.toUpperCase()) {
     case "OWNER":
@@ -20,7 +19,6 @@ const getRoleIcon = (role) => {
   }
 };
 
-// Map roles to colors
 const getRoleColor = (role) => {
   switch (role.toUpperCase()) {
     case "OWNER":
@@ -33,7 +31,6 @@ const getRoleColor = (role) => {
   }
 };
 
-// Role sorting priority
 const rolePriority = {
   OWNER: 1,
   WRITER: 2,
@@ -43,7 +40,6 @@ const rolePriority = {
 
 export const ContributorsSection = ({ collaborators, compact = false }) => {
   const navigate = useNavigate();
-  // Sort collaborators by role priority
   const sortedCollaborators = [...collaborators].sort(
     (a, b) => (rolePriority[a.role.toUpperCase()] || 99) - (rolePriority[b.role.toUpperCase()] || 99)
   );
