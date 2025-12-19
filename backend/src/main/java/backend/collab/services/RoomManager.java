@@ -56,7 +56,7 @@ class RoomManagerImpl implements RoomManager {
 		room.removeSession(session);
 		if (room.isEmpty()) {
 			activeRooms.remove(roomId);
-			room.takeSnapshot();
+			// room.takeSnapshot();
 			room.close();
 		}
 	}

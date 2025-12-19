@@ -34,7 +34,7 @@ public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 		
 		} else {
 			log.warn("Session {} established without a valid diagramId.", session.getId());
-			// Consider closing the session or handling sessions without an ID
+			session.close(CloseStatus.BAD_DATA);
 		}
 	}
 

@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.BinaryMessage;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
@@ -146,8 +147,8 @@ public class Room implements IRoom {
 		this.sessions.forEach(session -> {
 			if (session.isOpen()) {
 				try {
-					session.close();
-					// Close the socket gracefully
+					session.close(CloseStatus.NORMAL);
+
 				} catch (Exception e) {
 					log.error("Error closing session {}: {}", session.getId(), e.getMessage());
 				}

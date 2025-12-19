@@ -14,6 +14,7 @@ public class RedisStartupCleaner {
         this.redisConnectionFactory = redisConnectionFactory;
     }
 
+    @SuppressWarnings("deprecation")
     @PostConstruct
     public void clearRedisOnStartup() {
         try (RedisConnection connection = redisConnectionFactory.getConnection()) {

@@ -137,7 +137,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 			provider.destroy();
 			doc.destroy();
 		};
-	}, [roomId, user]);
+	}, []);
 
 	// ----------------- Snapshot Loader -----------------
 	const loadCompositeYjsData = useCallback((snapshotBase64) => {

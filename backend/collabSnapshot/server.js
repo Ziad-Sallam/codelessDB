@@ -37,7 +37,11 @@ app.post("/snapshot/:diagramId", async (request, response) => {
 			const value = fields[i + 1];           // Buffer from XRANGEBuffer
 			if (key === "update") {
 				// Convert Buffer to Uint8Array for Yjs
-				Y.applyUpdate(doc, new Uint8Array(value));
+				try {
+					Y.applyUpdate(doc, new Uint8Array(value));
+				} catch (err) {
+					console.error(`Failed to apply update for record ${id.toString()}:`, err);
+				}
 			}
 		}
 	}

@@ -34,6 +34,7 @@ public class SnapshotService {
 						.getUserDiagramOrThrow(userId, diagramId)
 						.getRole();
 
+		takeSnapshotThread(diagramId.toString());
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
 		byte[] snapshot = diagram.getContent();
 

@@ -58,7 +58,7 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 													  .getQueryParams()
 													  .getFirst("token");
 
-		log.info("Extracted token from query parameter: {}", token == null ? "No" : "Yes");
+		// log.info("Extracted token from query parameter: {}", token == null ? "No" : "Yes");
 
 		// AUTHENTICATION & AUTHORIZATION 
 		try {
@@ -80,7 +80,7 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 			Role role = userDiagram.getRole();
 			attributes.put("role", role);
 
-			log.info("Handshake successful. Diagram ID: {} | User: {}", diagramIdStr, authUser.username());
+			// log.info("Handshake successful. Diagram ID: {} | User: {}", diagramIdStr, authUser.username());
 
 			return true;
 
@@ -108,7 +108,7 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 			WebSocketHandler wsHandler,
 			Exception exception) {
 
-		log.info("Handshake Established");
+		// log.info("Handshake Established");
 		// Optional: Perform cleanup or logging after the handshake
 	}
 }
