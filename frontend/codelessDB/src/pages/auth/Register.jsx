@@ -8,7 +8,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   validateSignup,
   sendOtp,
-  completeSignup,
+  register,
+  verifyUser,
   requestPasswordReset,
   updatePassword,
   redirectToGoogleAuth,
@@ -57,6 +58,8 @@ const Register = () => {
 
   const { setUser } = useAuth();
 
+
+
   useEffect(() => {
     document.title = "Register | CodeLess";
   }, []);
@@ -92,9 +95,11 @@ const Register = () => {
       const flow = searchParams.get("flow");
       const otpParam = searchParams.get("otp");
       const emailParam = searchParams.get("email");
+      const usernameParam = searchParams.get("username");
 
       if (otpParam && emailParam) {
         setEmail(emailParam);
+        if (usernameParam) setUsername(usernameParam);
         const digits = otpParam.split("").slice(0, 5);
         const newOtp = ["", "", "", "", ""];
         digits.forEach((d, i) => (newOtp[i] = d));
@@ -231,8 +236,17 @@ const Register = () => {
 
     try {
       await validateSignup(email, username);
-      const otp = await sendOtp(email, username);
-      setSentOtp(otp);
+      // New Flow: Register immediately (creates inactive user)
+      // Note: register now generates and sends OTP internally/via backend
+      await register(username, email, password);
+
+      setSentOtp("12345"); // Dummy value, backend handles check. Or we can just ignore local check?
+      // Actually, standardizing: The backend 'register' doesn't return OTP (security).
+      // So 'sentOtp' state is now only used for... what?
+      // For 'Resend' we might need it? 
+      // If we use 'verifyUser(email, code)', we don't need 'sentOtp' locally to compare!
+      // So we can remove 'sentOtp' usage in handleVerifySignupOtp.
+
       setOtpTime(Date.now());
       setOtpTimer(60);
       setCanResendOtp(false);
@@ -248,21 +262,11 @@ const Register = () => {
   const handleVerifySignupOtp = async () => {
     const entered = otpInput.join("");
 
-    if (entered != sentOtp) {
-      setError("Invalid OTP. Try again.");
-      return;
-    }
-
-    // Check expiration (5 minutes = 300000 ms)
-    if (Date.now() - otpTime > 5 * 60 * 1000) {
-      setError("OTP has expired. Please request a new one.");
-      return;
-    }
-
+    // Start verification
     setLoading(true);
 
     try {
-      const token = await completeSignup(username, email, password);
+      const token = await verifyUser(email, entered);
       localStorage.setItem("authToken", token);
       const userData = await validateToken();
       setUser(userData);
@@ -534,6 +538,8 @@ const Register = () => {
                 />
               ))}
             </div>
+
+            {/* Password inputs removed as account is pre-created */}
 
             {error && <p className="error-message" style={{ marginBottom: "25px" }}>{error}</p>}
 

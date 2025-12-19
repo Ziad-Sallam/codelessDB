@@ -54,7 +54,8 @@ export async function sendOtp(email, username) {
   return response.data;
 }
 
-export async function completeSignup(username, email, password, picture = null) {
+// New Flow: Register first (creates inactive user), then verify
+export async function register(username, email, password, picture = null) {
   const response = await api.post("/user/signup", {
     username,
     email,
@@ -63,6 +64,12 @@ export async function completeSignup(username, email, password, picture = null) 
   });
   return response.data;
 }
+
+export async function verifyUser(email, otp) {
+  const response = await api.post(`/user/signup/verify?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`);
+  return response.data;
+}
+
 
 export async function requestPasswordReset(email) {
   const response = await api.post(`/user/login/forgot-password/${encodeURIComponent(email)}`);

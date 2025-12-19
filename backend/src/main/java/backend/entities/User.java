@@ -46,6 +46,15 @@ public class User {
 
     private String picture;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = false;
+
+    @Column(length = 10)
+    private String otp;
+
+    private LocalDateTime otpExpiry;
+
     @Column(length = 300)
     private String bio;
 
