@@ -36,8 +36,7 @@ public class RedisStreamService implements RedisDAO {
 	public void addUpdate(String diagramId, byte[] update) {
 		String key = streamKey(diagramId);
 		
-		Map<String, byte[]> map = new HashMap<>();
-		map.put("update", update);
+		Map<String, byte[]> map = Map.of("update", update);
 		
 		// The stream key is created automatically if it doesn't exist
 		// XADD stream:{docId} * update=<bytes>

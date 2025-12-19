@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,13 +49,13 @@ class RoomManagerImpl implements RoomManager {
 	@Override
 	public void leaveRoom(String roomId, WebSocketSession session) {
 		Room room = activeRooms.get(roomId);
+		if (room == null) return;
 
-		if (room != null) {
-			room.removeSession(session);
-			if (room.isEmpty()) {
-				activeRooms.remove(roomId);
-				room.takeSnapshot();
-			}
+		room.removeSession(session);
+		if (room.isEmpty()) {
+			activeRooms.remove(roomId);
+			room.takeSnapshot();
+			// room.close();
 		}
 	}
 

@@ -26,61 +26,37 @@ public class SnapshotService {
 
 	private final UserDiagramService userDiagramService;
 
-	private final RedisStreamService redisService;
+	private final YjsSnapshotClient snapshotClient;
 
 	private final UpdateWriter updateWriter;
 
 	public SnapshotDto getLatestDiagram(int userId, UUID diagramId) {
 		userDiagramService.getUserOrThrow(userId);
-		Role role = userDiagramService.getUserDiagramOrThrow(userId, diagramId).getRole();
-		
+		Role role = userDiagramService
+						.getUserDiagramOrThrow(userId, diagramId)
+						.getRole();
+
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
 		byte[] snapshot = diagram.getContent();
-		
+
 		return new SnapshotDto(snapshot, diagram.getName(), role);
 	}
 
-	/**
-	 * Move all updates from redis and apply it on the old YDoc snapshot <br>
-	 * Then save the latest snapshot from YDoc to the DB
-	 * 
-	 * @param diagramId
-	 */
-	public void takeSnapshot(YDoc document, String diagramId) {
-		updateWriter.submitWriteTask(() -> {
-			takeSnapshotThread(document, diagramId);
-		});
+	public void takeSnapshot(String diagramId) {
+		updateWriter.submitWriteTask(() -> takeSnapshotThread(diagramId));
 	}
 
-	private void takeSnapshotThread(YDoc document, String diagramId) {
+	private void takeSnapshotThread(String diagramId) {
 		Diagram diagram = userDiagramService.getDiagramOrThrow(UUID.fromString(diagramId));
 
-		List<byte[]> redisUpdates = redisService.getAllUpdates(diagramId);
-		log.info("redis has {} updates", redisUpdates.size());
-		if (redisUpdates.isEmpty()) {
-			return; // nothing to snapshot
+		// send a request to a Node.js worker node 
+		// to take a snapshot from redis updates and deletes them
+		byte[] snapshot = snapshotClient.snapshot(diagramId);
+		log.info("Snapshot taken {}", snapshot);
+		
+		if (snapshot != null && snapshot.length > 0) {
+			diagram.setContent(snapshot);
+			diagramRepository.save(diagram);
 		}
-
-		byte[] snapshot;
-
-		// lock per diagram and apply all pending updates
-		synchronized (document) {
-			YTransaction txn = document.writeTransaction();
-			for (byte[] update : redisUpdates) {
-				byte err = txn.apply(update);
-				if (err != 0) {
-					throw new YDocUpdateException("Invalid Yrs update for diagram " + diagramId);
-				}
-			}
-
-			snapshot = txn.stateDiffV1(new byte[] { 0 });
-			// txn.commit();
-		}
-
-		diagram.setContent(snapshot);
-		diagramRepository.save(diagram);
-
-		redisService.removeDiagramHistory(diagramId);
 	}
-
 }

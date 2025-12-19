@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import backend.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 
-record State(String state, String diagramName, String picture) { }
-
 @RestController
 @RequestMapping("/snapshot")
 @RequiredArgsConstructor

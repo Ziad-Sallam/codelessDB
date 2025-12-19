@@ -52,9 +52,6 @@ public class Room implements IRoom {
 	/* Thread-safe Set to store the active WebSocket sessions */
 	private final Set<WebSocketSession> sessions;
 	
-	private final YDoc latestSnapshot;
-	private final YOptions yOptions;
-	
 	private final LongAdder updateCounter;
 	
 	private final SnapshotService snapshotService;
@@ -65,17 +62,7 @@ public class Room implements IRoom {
 		this.sessions = Collections.synchronizedSet(new HashSet<>());
 		this.updateCounter = new LongAdder();
 		
-		this.yOptions = createOptions();
-		this.latestSnapshot = YDoc.createWithOptions(this.yOptions);
 		this.snapshotService = snapshotService;
-	}
-
-	private YOptions createOptions() {
-		YOptions options = YOptions.create();
-		options.setEncoding(EncodingType.Y_OFFSET_UTF16);
-		// options.setCollectionId(diagramId);
-		options.setSkipGc(false);
-		return options;
 	}
 
 	/**
@@ -160,7 +147,7 @@ public class Room implements IRoom {
 
 	@Override
 	public void close() {
-		sessions.forEach(session -> {
+		this.sessions.forEach(session -> {
 			if (session.isOpen()) {
 				try {
 					session.close();
@@ -170,12 +157,13 @@ public class Room implements IRoom {
 				}
 			}
 		});
-		sessions.clear();
-		updateCounter.reset();
+
+		this.sessions.clear();
+		this.updateCounter.reset();
 	}
 
 	@Override
 	public void takeSnapshot() {
-		snapshotService.takeSnapshot(this.latestSnapshot, this.diagramId);
+		snapshotService.takeSnapshot(this.diagramId);
 	}
 }

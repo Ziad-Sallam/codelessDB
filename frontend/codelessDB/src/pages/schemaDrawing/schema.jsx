@@ -95,7 +95,7 @@ const SchemaContent = () => {
   const loadDigram = async () => {
     try {
       const response = await fetchDiagram(roomId);
-      // console.log(response);
+      console.log(response);
       updateSchemaName(response.diagramName);
       setIsReadOnly(response.role === "READER" ? true : false);
       loadCompositeYjsData(response.snapshot);
@@ -106,10 +106,11 @@ const SchemaContent = () => {
   };
 
   useEffect(() => {
-    if (ydoc && roomId) {
-      loadDigram();
-    }
-  }, [ydoc, roomId]);
+    loadDigram();
+    // if (ydoc && roomId) {
+    // }
+  }, []);
+  // }, [ydoc, roomId]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
