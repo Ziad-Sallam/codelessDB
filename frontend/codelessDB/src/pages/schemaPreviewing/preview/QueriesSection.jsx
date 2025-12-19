@@ -6,17 +6,17 @@ import { useNotification } from '../../../components/NotificationContext';
 export const QueriesSection = ({ queries }) => {
   const { showSuccess } = useNotification();
 
-  const copyQuery = (query) => {
-    navigator.clipboard.writeText(query);
-    showSuccess("Query copied to clipboard!");
-  };
+  // const copyQuery = (query) => {
+  //   navigator.clipboard.writeText(query);
+  //   showSuccess("Query copied to clipboard!");
+  // };
 
   return (
     <Card variant="outlined">
       <CardHeader
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CodeIcon color="primary" />
+            {/* <CodeIcon color="primary" /> */}
             <Box>
               <Typography variant="h6" fontSize="1rem" fontWeight="bold">Predefined Transactions</Typography>
               <Typography variant="body2" color="text.secondary">Ready-to-use queries for common operations</Typography>
@@ -28,7 +28,7 @@ export const QueriesSection = ({ queries }) => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {queries.map((q) => (
             <Paper
-              // key={q.id}
+              key={q.id}
               variant="outlined"
               sx={{ p: 2, '&:hover': { borderColor: 'primary.main' }, transition: 'border-color 0.2s' }}
             >
@@ -39,14 +39,14 @@ export const QueriesSection = ({ queries }) => {
                   </Box>
                   <Typography variant="body2" color="text.secondary">{q.description}</Typography>
                 </Box>
-                <Button
+                {/* <Button
                   variant="outlined"
                   size="small"
                   startIcon={<CopyIcon />}
                   onClick={() => copyQuery(q.query)}
                 >
                   Copy
-                </Button>
+                </Button> */}
               </Box>
               <Box
                 sx={{

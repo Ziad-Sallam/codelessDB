@@ -88,6 +88,7 @@ export default function SchemaPreview() {
       try {
         const data = await getPublicDiagram(id);
         setSchemaData(data);
+        console.log(data);
         setIsStarred(data.stared || false);
       } catch (err) {
         showError(err.message);
@@ -262,7 +263,7 @@ export default function SchemaPreview() {
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs value={activeTab} onChange={handleTabChange} aria-label="schema tabs">
                     <Tab icon={<BookOpenIcon fontSize="small" />} iconPosition="start" label="Detailed Description" />
-                    {/* <Tab icon={<CodeIcon fontSize="small" />} iconPosition="start" label="DDL" /> */}
+                    <Tab icon={<CodeIcon fontSize="small" />} iconPosition="start" label="DDL" />
                     {schemaData.cannedQueries?.length > 0 && (
                       <Tab
                         icon={<FileTextIcon fontSize="small" />}

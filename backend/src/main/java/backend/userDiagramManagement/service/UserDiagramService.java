@@ -281,4 +281,14 @@ public class UserDiagramService implements IUserDiagramService {
                 request.getRole(),
                 targetUser.getPicture());
     }
+
+    @Override
+    @Transactional
+    public void updateDDL(UUID diagramId, String ddl) {
+        Diagram diagram = getDiagramOrThrow(diagramId);
+
+        diagram.setDdl(ddl);
+        diagramRepository.save(diagram);
+    }
+
 }

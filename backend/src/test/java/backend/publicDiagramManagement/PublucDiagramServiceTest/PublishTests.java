@@ -85,7 +85,7 @@ class PublishTests {
         dto.setShortDescription("short");
         dto.setDetailedDescription("detailed");
         dto.setHashTags(List.of("#sql", "#erd"));
-        dto.setCannedQueries(List.of(new DiagramCannedQueryDto("Q1", "desc", "SELECT 1")));
+        dto.setCannedQueries(List.of(new DiagramCannedQueryDto("SELECT 1", "Q1", "desc", 1)));
 
         diagram = Diagram.builder().id(diagramId).build();
 
