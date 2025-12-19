@@ -1,13 +1,16 @@
 package backend.publicDiagramManagement.repository;
 
-import backend.entities.joins.PublicDiagramUserId;
-import backend.entities.publicDiagramEntities.DiagramStar;
-import backend.entities.publicDiagramEntities.PublicDiagram;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import backend.entities.joins.PublicDiagramUserId;
+import backend.entities.publicDiagramEntities.DiagramStar;
+import backend.entities.publicDiagramEntities.PublicDiagram;
 
 @Repository
 public interface StarRepository extends JpaRepository<DiagramStar, PublicDiagramUserId> {
@@ -19,4 +22,6 @@ public interface StarRepository extends JpaRepository<DiagramStar, PublicDiagram
         ORDER BY s.starredAt DESC
     """)
     Page<PublicDiagram> findStarredPublicDiagramsByUser(int userId, Pageable pageable);
+
+    void deleteByIdPublicDiagramId(UUID publicDiagramId);
 }
