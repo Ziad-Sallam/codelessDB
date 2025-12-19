@@ -1,22 +1,12 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, Typography, Button, Box, Paper } from '@mui/material';
-import { Code as CodeIcon, ContentCopy as CopyIcon } from '@mui/icons-material';
-import { useNotification } from '../../../components/NotificationContext';
+import { Card, CardContent, CardHeader, Typography, Box, Paper } from '@mui/material';
 
 export const QueriesSection = ({ queries }) => {
-  const { showSuccess } = useNotification();
-
-  // const copyQuery = (query) => {
-  //   navigator.clipboard.writeText(query);
-  //   showSuccess("Query copied to clipboard!");
-  // };
 
   return (
     <Card variant="outlined">
       <CardHeader
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {/* <CodeIcon color="primary" /> */}
             <Box>
               <Typography variant="h6" fontSize="1rem" fontWeight="bold">Predefined Transactions</Typography>
               <Typography variant="body2" color="text.secondary">Ready-to-use queries for common operations</Typography>
@@ -39,14 +29,6 @@ export const QueriesSection = ({ queries }) => {
                   </Box>
                   <Typography variant="body2" color="text.secondary">{q.description}</Typography>
                 </Box>
-                {/* <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<CopyIcon />}
-                  onClick={() => copyQuery(q.query)}
-                >
-                  Copy
-                </Button> */}
               </Box>
               <Box
                 sx={{

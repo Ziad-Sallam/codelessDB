@@ -19,7 +19,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class CannedQueriesDiagrams {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    // @EqualsAndHashCode.Include
     private int id;
     
     @Column(nullable = false, columnDefinition = "TEXT")
