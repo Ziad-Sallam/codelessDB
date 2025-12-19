@@ -50,7 +50,7 @@ public class SnapshotService {
 
 		// send a request to a Node.js worker node 
 		// to take a snapshot from redis updates and deletes them
-		byte[] snapshot = snapshotClient.snapshot(diagramId);
+		byte[] snapshot = snapshotClient.snapshot(diagramId, diagram.getContent());
 		log.info("Snapshot taken {}", snapshot);
 		
 		if (snapshot != null && snapshot.length > 0) {

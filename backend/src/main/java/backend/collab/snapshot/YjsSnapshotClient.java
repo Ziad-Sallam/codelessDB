@@ -1,5 +1,7 @@
 package backend.collab.snapshot;
 
+import java.util.Base64;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,14 +25,13 @@ public class YjsSnapshotClient {
      * @param diagramId to take a snapshot
      * @return the binary snapshot state
      */
-    public byte[] snapshot(String diagramId) {
+    public byte[] snapshot(String diagramId, byte[] existingSnapshot) {
         String url = snapShotUrl + "/snapshot/" + diagramId;
-        System.out.println(url);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 
-        HttpEntity<Void> request = new HttpEntity<>(headers);
+        HttpEntity<byte[]> request = new HttpEntity<>(existingSnapshot, headers);
 
         ResponseEntity<byte[]> response =
                 restTemplate.exchange(
