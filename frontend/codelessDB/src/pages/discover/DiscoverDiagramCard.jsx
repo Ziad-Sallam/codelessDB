@@ -40,8 +40,9 @@ export default function DiscoverDiagramCard({ d, onClick }) {
 
   const handleContributorClick = (e, user) => {
     e.stopPropagation();
-    if (user?.username) {
-      navigate(`/designer/${user.username.replace("@", "").replace("%20", "")}`);
+    if (user?.name) {
+      
+      navigate(`/designer/${user.name.replace("@", "").replace("%20", "")}`);
     }
   };
 

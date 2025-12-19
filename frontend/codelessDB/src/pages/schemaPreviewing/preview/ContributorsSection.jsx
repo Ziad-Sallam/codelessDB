@@ -5,6 +5,7 @@ import {
   Edit as EditIcon,
   Visibility as EyeIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 // Map roles to icons
 const getRoleIcon = (role) => {
@@ -41,10 +42,18 @@ const rolePriority = {
 };
 
 export const ContributorsSection = ({ collaborators, compact = false }) => {
+  const navigate = useNavigate();
   // Sort collaborators by role priority
   const sortedCollaborators = [...collaborators].sort(
     (a, b) => (rolePriority[a.role.toUpperCase()] || 99) - (rolePriority[b.role.toUpperCase()] || 99)
   );
+
+  const handleContributorClick = (user) => {
+    if (user?.name) {
+
+      navigate(`/designer/${user.name.replace("@", "").replace("%20", "")}`);
+    }
+  };
 
   return (
     <Card variant="outlined">
@@ -70,12 +79,13 @@ export const ContributorsSection = ({ collaborators, compact = false }) => {
                     src={collaborator.picture}
                     alt={collaborator.name}
                     sx={{ width: 32, height: 32, cursor: 'pointer' }}
+                    onClick={() => handleContributorClick(collaborator)}
                   >
                     {collaborator.name.substring(0, 2).toUpperCase()}
                   </Avatar>
                 </Tooltip>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography variant="body2" fontWeight={500} noWrap>
+                  <Typography variant="body2" fontWeight={500} noWrap onClick={() => handleContributorClick(collaborator)} sx={{ cursor: 'pointer' }}>
                     {collaborator.name}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
