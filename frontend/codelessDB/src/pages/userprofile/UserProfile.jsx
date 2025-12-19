@@ -332,7 +332,7 @@ export default function UserProfile() {
                 <ProfileField label="Username" field="username" icon={PersonIcon} editable={false} />
                 <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
                 <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline rows={4} type="text" inputProps={{ maxLength: 300 }} />
-                <ProfileField label="Public Profile Name" field="publicProfile" icon={PersonIcon} editable={true} rows={1} inputProps={{ maxLength: 100 }} />
+                <ProfileField label="Public Profile Name" field="publicProfile" icon={PersonIcon} editable={true} rows={1} inputProps={{ maxLength: 50 }} />
                 <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" />
                 <PasswordField />
               </CardContent>

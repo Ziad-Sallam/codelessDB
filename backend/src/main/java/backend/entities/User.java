@@ -62,7 +62,7 @@ public class User {
 
     private String profileWebsiteUrl;
 
-    @Column(length = 300)
+    @Column(length = 50)
     private String publicProfile;
 
     @CreationTimestamp

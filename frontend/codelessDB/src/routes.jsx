@@ -7,14 +7,13 @@ import CannedQueries from './pages/cannedquery/CannedQueries.jsx';
 import ServersPage from './pages/servers/ServersPage.jsx';
 
 import { ProtectedRoute, PublicRoute } from "./components/Routing.jsx";
-import TopBar from './components/TopBar.jsx';
-import LeftPanel from './components/LeftPanel';
 import DatabaseConfiguration from './pages/databaseConfiguration/DatabaseManager.js';
 import QueryRunner from './pages/databaseManager/QueryRunner.js';
 import Discover from './pages/discover/Discover.jsx';
 import SchemaPreview from './pages/schemaPreviewing/SchemaPreview.jsx';
 import CreateSchema from './pages/schemaPublishing/CreateSchema.jsx';
 import DesignerProfile from './pages/designerprofile/DesignerProfile.jsx';
+import NotFound from './pages/NotFound.jsx';
 
 
 export const routes = [
@@ -75,8 +74,9 @@ export const routes = [
     element: (
       <ProtectedRoute>
         <CannedQueries />
-        </ProtectedRoute>
-  )},{
+      </ProtectedRoute>
+    )
+  }, {
     path: "/discover",
     element: (
       <ProtectedRoute>
@@ -99,7 +99,8 @@ export const routes = [
       <ProtectedRoute>
         <DatabaseConfiguration />
       </ProtectedRoute>
-    )},{
+    )
+  }, {
     path: "/schema/preview/:id",
     element: (
       <ProtectedRoute>
@@ -113,7 +114,8 @@ export const routes = [
       <ProtectedRoute>
         <QueryRunner />
       </ProtectedRoute>
-    )},{
+    )
+  }, {
     path: "/schema/create",
     element: (
       <ProtectedRoute>
@@ -127,6 +129,12 @@ export const routes = [
       <ProtectedRoute>
         <DesignerProfile />
       </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/*",
+    element: (
+      <NotFound />
     ),
   },
 ];

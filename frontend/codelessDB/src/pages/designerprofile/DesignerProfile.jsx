@@ -140,15 +140,15 @@ export default function DesignerProfile() {
                       alt={profile.name}
                       sx={{ width: 128, height: 128, mx: 'auto', mb: 2, border: 4, borderColor: 'background.paper', boxShadow: 2 }}
                     />
-                    <Typography variant="h5" fontWeight="bold" gutterBottom>
+                    <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                       {profile.name || profile.username}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" gutterBottom>
+                    <Typography variant="body1" color="text.secondary" gutterBottom sx={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                       @{profile.username}
                     </Typography>
 
                     {profile.bio && (
-                      <Typography variant="body2" sx={{ mt: 2, mb: 3 }}>
+                      <Typography variant="body2" sx={{ mt: 2, mb: 3, wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
                         {profile.bio}
                       </Typography>
                     )}
@@ -159,13 +159,13 @@ export default function DesignerProfile() {
                       {/* Location is not in current DTO, skipping */}
 
                       {profile.url && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LinkIcon fontSize="small" />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                          <LinkIcon fontSize="small" sx={{ flexShrink: 0 }} />
                           <a
                             href={profile.url.startsWith("http") ? profile.url : `https://${profile.url}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ color: 'inherit', textDecoration: 'none' }}
+                            style={{ color: 'inherit', textDecoration: 'none', wordWrap: 'break-word', overflowWrap: 'break-word', flex: 1, minWidth: 0 }}
                           >
                             {profile.url}
                           </a>
@@ -173,11 +173,11 @@ export default function DesignerProfile() {
                       )}
 
                       {profile.email && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                           {profile.email}
                         </Box>
                       )}
-                      
+
                       {profile.createdAt && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <CalendarIcon fontSize="small" />
