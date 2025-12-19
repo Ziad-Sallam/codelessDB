@@ -37,7 +37,6 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
 
   return (
     <Box sx={{ width: "100%", overflow: "hidden" }}>
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -65,9 +64,6 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
             <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
               {title}
             </Typography>
-            {/* <Typography variant="body2" color="text.secondary">
-              Connect with database designers
-            </Typography> */}
           </Box>
         </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
@@ -88,7 +84,6 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
         </Box>
       </Box>
 
-      {/* Carousel */}
       <Box
         ref={scrollContainerRef}
         sx={{
@@ -118,7 +113,7 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
               },
               position: "relative",
               overflow: "visible",
-              mt: 4, // Space for avatar
+              mt: 4,
               mb: 1,
             }}
             variant="outlined"
@@ -126,11 +121,9 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
               navigate(`/designer/${user.username.replace("@", "")}`)
             }
           >
-            {/* Gradient Header */}
             <Box
               sx={{
                 height: 60,
-                // background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.02) 100%)',
                 borderRadius: "4px 4px 0 0",
                 position: "absolute",
                 top: -32,
@@ -153,7 +146,7 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   mb: 1.5,
                 }}
               >
-                {/* {user.name.charAt(0)} */}
+                {user.name.charAt(0)}
               </Avatar>
 
               <CardContent
@@ -172,14 +165,11 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                     sx={{
                       fontWeight: 600,
                       lineHeight: 1.2,
-
-                      /* 2 lines, prefer whole words */
                       overflow: "hidden",
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
                       textOverflow: "ellipsis",
-
                       wordBreak: "normal",
                       overflowWrap: "anywhere",
                     }}
@@ -194,8 +184,6 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   sx={{
                     mb: 2,
                     minHeight: 40,
-
-                    /* 2 lines, truncate, long-word safe */
                     overflow: "hidden",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
