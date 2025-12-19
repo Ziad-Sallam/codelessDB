@@ -78,6 +78,11 @@ export default function Contributors({
 	const [changingRoleName, setChangingRoleName] = useState(null);
 	const [deletingName, setDeletingName] = useState(null);
 
+	// Confirmation Dialog State
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleteLoading, setDeleteLoading] = useState(false);
+	const [contributorToDelete, setContributorToDelete] = useState(null);
+
 	useEffect(() => {
 		setLocalContributors(Array.isArray(contributors) ? contributors : []);
 	}, [contributors]);
@@ -144,9 +149,9 @@ export default function Contributors({
 	}
 
 	/**
-	 * Delete contributor by username
+	 * Opens the delete confirmation dialog
 	 */
-	async function handleDelete(username) {
+	function handleDeleteClick(username) {
 		const target = localContributors.find((c) => String(c.name) === String(username));
 		if (!target) return;
 
@@ -154,30 +159,71 @@ export default function Contributors({
 			showWarning("Cannot remove an owner.");
 			return;
 		}
-		
+
 		if (String(username) === String(currentUserName)) {
 			showWarning("Cannot remove yourself.");
 			return;
 		}
 
-		if (!window.confirm(`Remove ${target.name} from contributors?`)) return;
+		setContributorToDelete(username);
+		setDeleteDialogOpen(true);
+	}
 
-		setDeletingName(username);
+	/**
+	 * Confirms deletion and calls API
+	 */
+	async function handleDeleteConfirm() {
+		if (!contributorToDelete) return;
+		
+		const username = contributorToDelete;
+		setDeleteLoading(true);
+		setDeletingName(username); // Keep this if you want the list icon to spin too, or remove if redundant
+
 		try {
-			const response = await shareDiagram(diagramId, username, null, true)
+			await shareDiagram(diagramId, username, null, true);
 			setLocalContributors((prev) => prev.filter((c) => String(c.name) !== String(username)));
-			setOuterContributors((prev) => prev.filter((c) => String(c.name) !== String(username)))
+			setOuterContributors((prev) => prev.filter((c) => String(c.name) !== String(username)));
+			
+			// Close dialog only on success
+			setDeleteDialogOpen(false);
 			showSuccess(`Contributor ${username} is removed`);
 
 		} catch (err) {
-			showError(err)
-
+			showError(err);
+			// Do not close dialog on error so user can retry or see error
 		} finally {
+			setDeleteLoading(false);
 			setDeletingName(null);
+			// We clear contributorToDelete only if we closed the dialog, 
+			// but here we might want to keep it if there was an error. 
+			// However, typically we clear it when the dialog closes.
+			// Let's rely on the Dialog on close to clear it if we want, 
+			// or just leave it. If success, we closed it.
+			if (!deleteDialogOpen) { // This check is tricky because state update is async.
+				// Simpler: if we reached here, just stop loading.
+			}
 		}
 	}
 
+	function handleCloseDeleteDialog() {
+		if (deleteLoading) return; // prevent closing while loading
+		setDeleteDialogOpen(false);
+		setContributorToDelete(null);
+	}
+
 	return (
+		<div
+			onClick={(e) => e.stopPropagation()}
+			onMouseDown={(e) => e.stopPropagation()}
+			style={{ display: "none" }} // Ensure it doesn't affect layout
+		>
+		{/* Use a portal-friendly container interaction blocker */}
+			<style>{`
+				/* Optional: ensure dialogs rendered in portal don't get blocked by display:none of parent? 
+				   No, React portals render outside. The event bubbling is virtual. 
+				   The display:none on the wrapper ensures it takes no space in Card. 
+				   React events will still bubble to it. */
+			`}</style>
 		<Dialog
 			open={Boolean(open)}
 			onClose={onClose}
@@ -252,7 +298,7 @@ export default function Contributors({
 												<span>
 													<IconButton
 														edge="end"
-														onClick={() => handleDelete(contributor.name)}
+														onClick={() => handleDeleteClick(contributor.name)}
 														disabled={!canDelete || deletingName === contributor.name}
 														aria-label={`delete-${contributor.name}`}
 														sx={{ color: canDelete ? "error.main" : "action.disabled" }}
@@ -360,6 +406,35 @@ export default function Contributors({
 				</Button>
 			</DialogActions>
 		</Dialog>
+
+		{/* Delete Confirmation Dialog */}
+		<Dialog
+			open={deleteDialogOpen}
+			onClose={handleCloseDeleteDialog}
+			maxWidth="sm"
+			fullWidth
+		>
+			<DialogTitle>Remove Contributor</DialogTitle>
+			<DialogContent>
+				<Typography>
+					Remove <strong>{contributorToDelete}</strong> from contributors?
+				</Typography>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={handleCloseDeleteDialog} disabled={deleteLoading}>
+					Cancel
+				</Button>
+				<Button
+					onClick={handleDeleteConfirm}
+					variant="contained"
+					color="error"
+					disabled={deleteLoading}
+				>
+					{deleteLoading ? <CircularProgress size={20} /> : "Remove"}
+				</Button>
+			</DialogActions>
+		</Dialog>
+		</div>
 	);
 }
 
