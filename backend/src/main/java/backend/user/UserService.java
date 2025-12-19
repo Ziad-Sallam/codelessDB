@@ -198,14 +198,9 @@ public class UserService {
 							"<p>Your verification code for CodelessDB is:</p>" +
 							"<h1 style=\"color: #000000ff; font-size: 32px; letter-spacing: 5px; user-select: all; -webkit-user-select: all; -moz-user-select: all; background: #f9f9f9; padding: 10px; border-radius: 5px; display: inline-block;\">%s</h1>"
 							+
-							"<p>You can also verify your account instantly by clicking the button below:</p>" +
-							"<div style=\"margin: 25px 0;\">" +
-							"  <a href=\"%s/register?email=%s&otp=%s&flow=%s\" style=\"background-color: #4CAF50; color: white; padding: 14px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;\">Verify Account</a>"
-							+
-							"</div>" +
-							"<p style=\"font-size: 12px; color: #777;\">This code will expire in 5 minutes.</p>" +
+							"<p>This code will expire in 5 minutes.</p>" +
 							"</div>",
-					username, otp, frontendUrl, email, otp, explicitUsername != null ? "otp" : "forgot");
+					username, otp);
 
 			helper.setText(content, true);
 
