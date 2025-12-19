@@ -43,7 +43,7 @@ const Register = () => {
   // OTP
   const [otpInput, setOtpInput] = useState(["", "", "", "", ""]);
   const [sentOtp, setSentOtp] = useState("");
-  const [otpTime, setOtpTime] = useState(null); 
+  const [otpTime, setOtpTime] = useState(null);
   const [otpTimer, setOtpTimer] = useState(60);
   const [canResendOtp, setCanResendOtp] = useState(false);
 
@@ -90,6 +90,25 @@ const Register = () => {
       }
 
       const flow = searchParams.get("flow");
+      const otpParam = searchParams.get("otp");
+      const emailParam = searchParams.get("email");
+
+      if (otpParam && emailParam) {
+        setEmail(emailParam);
+        const digits = otpParam.split("").slice(0, 5);
+        const newOtp = ["", "", "", "", ""];
+        digits.forEach((d, i) => (newOtp[i] = d));
+        setOtpInput(newOtp);
+        setSentOtp(otpParam);
+        setOtpTime(Date.now());
+
+        if (flow === "otp") {
+          setStep(STEPS.SIGNUP_OTP);
+        } else if (flow === "forgot") {
+          setStep(STEPS.FORGOT_OTP);
+        }
+        return;
+      }
 
       if (flow === "forgot") {
         setStep(STEPS.FORGOT_PASSWORD);
@@ -119,7 +138,7 @@ const Register = () => {
     handleOAuthCallback();
   }, [navigate, searchParams, setUser]);
 
-  
+
   const handlePaste = (e) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").trim();
@@ -134,7 +153,7 @@ const Register = () => {
 
     setOtpInput(newOtp);
 
-    
+
     const focusIndex = Math.min(digits.length, 4);
     const inputs = document.querySelectorAll(".otp-container input");
     if (inputs[focusIndex]) {
@@ -187,6 +206,11 @@ const Register = () => {
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!username || !username.trim()) {
+      setError("Username is required.");
+      return;
+    }
 
     if (!isValidUsername(username)) {
       setError("Username can only contain letters, numbers, and underscores (no spaces or special characters).");

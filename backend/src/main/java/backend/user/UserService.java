@@ -1,11 +1,8 @@
 package backend.user;
 
-import backend.user.exceptions.UserException;
-
 import java.time.LocalDateTime;
 
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,11 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import backend.entities.User;
 import backend.security.AuthUser;
+import backend.user.exceptions.UserException;
 import backend.user.exceptions.UserException.EmailAlreadyExistsException;
 import backend.user.exceptions.UserException.InvalidEmailException;
+import backend.user.exceptions.UserException.OtpSendFailedException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
-import backend.user.exceptions.UserException.OtpSendFailedException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,6 +26,9 @@ public class UserService {
 	private final UserRepository userRepository;
 
 	private final JavaMailSender mailSender;
+
+	@org.springframework.beans.factory.annotation.Value("${frontend.url}")
+	private String frontendUrl;
 
 	private String encodePassword(String rawPassword) {
 		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -42,6 +43,10 @@ public class UserService {
 
 		if (userDto.getUsername() == null) {
 			throw new IllegalArgumentException("Username is required");
+		}
+
+		if (userDto.getUsername().trim().isEmpty()) {
+			throw new IllegalArgumentException("Username cannot be empty");
 		}
 
 		if (userDto.getRawPassword() == null) {
@@ -165,7 +170,6 @@ public class UserService {
 
 	public String sendOtpEmail(String email, String explicitUsername) {
 		try {
-			SimpleMailMessage message = new SimpleMailMessage();
 			String otp = String.format("%05d", (int) (Math.random() * 100000));
 
 			String username = "User";
@@ -179,16 +183,31 @@ public class UserService {
 				}
 			}
 
-			message.setFrom("codelessDB@no-reply.com");
-			message.setTo(email);
-			message.setSubject("Your Verification Code");
+			jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+			org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(
+					message, true, "UTF-8");
+
+			helper.setFrom("codelessDB@no-reply.com");
+			helper.setTo(email);
+			helper.setSubject("Your Verification Code: " + otp);
 
 			String content = String.format(
-					"Dear %s,\n\n" +
-							"Your verification code for CodelessDB is %s. This code will expire in 5 minutes.",
-					username, otp);
+					"<div style=\"font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 10px;\">"
+							+
+							"<h2>Hello %s,</h2>" +
+							"<p>Your verification code for CodelessDB is:</p>" +
+							"<h1 style=\"color: #000000ff; font-size: 32px; letter-spacing: 5px; user-select: all; -webkit-user-select: all; -moz-user-select: all; background: #f9f9f9; padding: 10px; border-radius: 5px; display: inline-block;\">%s</h1>"
+							+
+							"<p>You can also verify your account instantly by clicking the button below:</p>" +
+							"<div style=\"margin: 25px 0;\">" +
+							"  <a href=\"%s/register?email=%s&otp=%s&flow=%s\" style=\"background-color: #4CAF50; color: white; padding: 14px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;\">Verify Account</a>"
+							+
+							"</div>" +
+							"<p style=\"font-size: 12px; color: #777;\">This code will expire in 5 minutes.</p>" +
+							"</div>",
+					username, otp, frontendUrl, email, otp, explicitUsername != null ? "otp" : "forgot");
 
-			message.setText(content);
+			helper.setText(content, true);
 
 			mailSender.send(message);
 
