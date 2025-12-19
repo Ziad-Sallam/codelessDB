@@ -42,7 +42,7 @@ public class Room implements IRoom {
 	 * Maximum number of updates done before taking
 	 * a snapshot and saving it in the DB
 	 */
-	private static final int SNAPSHOT_THRESHOLD = 300;
+	private static final int SNAPSHOT_THRESHOLD = 1;
 
 	private final String diagramId;
 	
