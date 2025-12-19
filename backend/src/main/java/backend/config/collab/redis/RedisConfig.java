@@ -27,16 +27,21 @@ public class RedisConfig {
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setHashKeySerializer(new StringRedisSerializer());
 
-		// template.setValueSerializer(RedisSerializer.byteArray());
-		// template.setHashValueSerializer(RedisSerializer.byteArray());
+		// Values stored in stream map should be raw bytes
+		RedisSerializer<byte[]> rawByteSerializer = new RedisSerializer<>() {
+			@Override
+			public byte[] serialize(byte[] bytes) {
+				return bytes; // no conversion
+			}
 
-		RedisSerializer<byte[]> rawByteSerializer = new ByteArraySerializer();
-    	template.setValueSerializer(rawByteSerializer);
-    	template.setHashValueSerializer(rawByteSerializer);
+			@Override
+			public byte[] deserialize(byte[] bytes) {
+				return bytes; // no conversion
+			}
+		};
 
-		// RedisSerializer<byte[]> base64Serializer = new Base64StringSerializer();
-		// template.setValueSerializer(base64Serializer);
-		// template.setHashValueSerializer(base64Serializer);
+		template.setValueSerializer(rawByteSerializer);
+		template.setHashValueSerializer(rawByteSerializer);
 
 		template.afterPropertiesSet();
 		return template;

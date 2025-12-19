@@ -17,6 +17,7 @@ function getDoc(diagramId) {
 app.post("/snapshot/:diagramId", async (request, response) => {
 	const { diagramId } = request.params;
 	const redisKey = `stream:${diagramId}`;
+	console.log(`Taking snapshot for diagramId ${diagramId} from Redis stream ${redisKey}`);
 
 	// Fetch all records in the stream
 	// XRANGE streamKey - +
@@ -27,20 +28,22 @@ app.post("/snapshot/:diagramId", async (request, response) => {
 	}
 
 	const doc = getDoc(diagramId);
+	console.log(`Applying ${records.length} updates to Y.Doc`);
 
-	// Apply all updates to Y.Doc
 	for (const [id, fields] of records) {
-		// fields is [key1, value1, key2, value2, ...] as Buffers
+		// fields: [key1, value1, ...]
 		for (let i = 0; i < fields.length; i += 2) {
-			const key = fields[i].toString();
-			const value = fields[i + 1];
+			const key = fields[i].toString();      // "update"
+			const value = fields[i + 1];           // Buffer from XRANGEBuffer
 			if (key === "update") {
-				Y.applyUpdate(doc, value);
+				// Convert Buffer to Uint8Array for Yjs
+				Y.applyUpdate(doc, new Uint8Array(value));
 			}
 		}
 	}
 
 	const snapshot = Y.encodeStateAsUpdate(doc);
+	console.log(`Snapshot size: ${snapshot.length} bytes`);
 
 	// Delete merged stream entries (XDEL)
 	const recordIds = records.map(r => r[0].toString());
@@ -49,6 +52,7 @@ app.post("/snapshot/:diagramId", async (request, response) => {
 	}
 
 	response.set("Content-Type", "application/octet-stream");
+	console.log(`Sending snapshot response for diagramId ${diagramId}`);
 	response.send(Buffer.from(snapshot));
 });
 

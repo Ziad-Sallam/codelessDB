@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 
 public interface RoomManager {
@@ -32,6 +33,7 @@ public interface RoomManager {
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 class RoomManagerImpl implements RoomManager {
 
 	private final RedisStreamService redisService;
@@ -55,15 +57,15 @@ class RoomManagerImpl implements RoomManager {
 		if (room.isEmpty()) {
 			activeRooms.remove(roomId);
 			room.takeSnapshot();
-			// room.close();
+			room.close();
 		}
 	}
 
 	/**
 	 * Broadcasts a raw binary message ONLY to clients in the specified room,
 	 * excluding the sender.
-	 * @param diagramId The room/diagram ID to broadcast within.
 	 * 
+	 * @param diagramId The room/diagram ID to broadcast within.
 	 * @param data     The byte array to send.
 	 * @param senderId The session ID of the sender to exclude from the broadcast.
 	 */
@@ -78,6 +80,7 @@ class RoomManagerImpl implements RoomManager {
 
 		// Cursor positions don't need to be stored
 		if (!cursorUpdate) {
+			log.info("Storing update {} for diagramId {}", data, diagramId);
 			redisService.addUpdate(diagramId, data);
 		}
 		

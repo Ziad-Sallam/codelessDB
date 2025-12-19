@@ -122,7 +122,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const syncObserver = () => {
 			setNodes(Array.from(nodesMap.values()));
 			setEdges(Array.from(edgesMap.values()));
-			
+
 			const name = metaMap.get("name");
 			if (name) setSchemaName(name);
 		};
@@ -141,11 +141,23 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 	// ----------------- Snapshot Loader -----------------
 	const loadCompositeYjsData = useCallback((snapshotBase64) => {
-		if (!ydocRef.current || !snapshotBase64) return;
-		const snapshot = base64ToBytes(snapshotBase64);
-		if (snapshot.byteLength > 0) {
-			Y.applyUpdate(ydocRef.current, snapshot);
-		}
+		const ydoc = ydocRef.current;
+		if (!ydoc) return;
+
+		ydoc.transact(() => {
+			// 1. Try applying the Snapshot (Database)
+			if (snapshotBase64) {
+				try {
+					const snapshotBytes = base64ToBytes(snapshotBase64);
+					if (snapshotBytes.byteLength > 0) {
+						Y.applyUpdate(ydoc, snapshotBytes);
+						console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);
+					}
+				} catch (err) {
+					console.error("❌ CRITICAL: Database Snapshot is corrupt!", err);
+				}
+			}
+		});
 	}, []);
 
 	// ----------------- Cursor Updates -----------------
@@ -203,11 +215,11 @@ export const CollaborationProvider = ({ roomId, children }) => {
 			if (change.type === "position" && change.position) {
 				pendingPositions.current.set(change.id, change.position);
 				flushPositions();
-			
+
 			} else if (change.type === "remove") {
 				nodesMap.delete(change.id);
 				pendingPositions.current.delete(change.id);
-			
+
 			} else if (change.type === "add") {
 				nodesMap.set(change.item.id, change.item);
 			}
