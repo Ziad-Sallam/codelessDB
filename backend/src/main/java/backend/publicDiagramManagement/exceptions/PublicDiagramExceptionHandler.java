@@ -1,6 +1,5 @@
 package backend.publicDiagramManagement.exceptions;
 
-import backend.config.ErrorResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,7 +7,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import static backend.userDiagramManagement.exceptions.DiagramException.*;
+import backend.config.ErrorResponse;
+import backend.publicDiagramManagement.exceptions.PublicDiagramException.DiagramNotFoundException;
+import backend.publicDiagramManagement.exceptions.PublicDiagramException.PermissionDeniedException;
 
 @ControllerAdvice
 public class PublicDiagramExceptionHandler {
@@ -25,11 +26,6 @@ public class PublicDiagramExceptionHandler {
     @ExceptionHandler(PermissionDeniedException.class)
     public ResponseEntity<ErrorResponse> handlePermissionDenied(PermissionDeniedException ex) {
         return build(HttpStatus.FORBIDDEN, ex.getMessage());
-    }
-
-    @ExceptionHandler(InvalidDiagramDataException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidDiagramData(InvalidDiagramDataException ex) {
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

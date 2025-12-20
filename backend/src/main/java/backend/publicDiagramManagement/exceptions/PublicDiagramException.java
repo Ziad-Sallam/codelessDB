@@ -16,28 +16,4 @@ public class PublicDiagramException {
             super(message);
         }
     }
-
-    public static class InvalidDiagramDataException extends RuntimeException {
-        public InvalidDiagramDataException(String message) {
-            super(message);
-        }
-    }
-
-    public static class AlreadyExistsException extends RuntimeException {
-        public AlreadyExistsException(String message) {
-            super(message);
-        }
-    }
-
-    public static class PublishFailedException extends RuntimeException {
-        public PublishFailedException(String message) {
-            super(message);
-        }
-    }
-
-    public static class NotPublicDiagramException extends RuntimeException {
-        public NotPublicDiagramException(String message) {
-            super(message);
-        }
-    }
 }

@@ -75,6 +75,29 @@ public class PublicUserServiceTest {
         assertThat(dto.getUsername()).isEqualTo("john");
         assertThat(dto.getPublicCount()).isEqualTo(3L);
         assertThat(dto.getTotalStars()).isEqualTo(10L);
+        assertThat(dto.isFollowed()).isFalse();
+    }
+
+    @Test
+    void testGetDesignerProfile_followed() {
+        User u = User.builder().id(2).username("john").build();
+        when(userRepository.findByUsername("john")).thenReturn(u);
+        when(userRepository.countFollowing(1, 2)).thenReturn(1L);
+
+        PublicUserDto dto = service.getDesignerProfile(1, "john");
+
+        assertThat(dto.isFollowed()).isTrue();
+    }
+
+    @Test
+    void testGetDesignerProfile_notFollowed() {
+        User u = User.builder().id(2).username("john").build();
+        when(userRepository.findByUsername("john")).thenReturn(u);
+        when(userRepository.countFollowing(1, 2)).thenReturn(0L);
+
+        PublicUserDto dto = service.getDesignerProfile(1, "john");
+
+        assertThat(dto.isFollowed()).isFalse();
     }
 
     // ----------------------------------------------------
@@ -177,6 +200,36 @@ public class PublicUserServiceTest {
     }
 
     @Test
+    void testFollowUser_userIdNotFound() {
+        when(userRepository.findById(1)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.followUser(1, "target"))
+                .isInstanceOf(UserException.UserNotFoundException.class)
+                .hasMessageContaining("No user found with id 1");
+    }
+
+    @Test
+    void testFollowUser_targetNotFound() {
+        User me = User.builder().id(1).build();
+        when(userRepository.findById(1)).thenReturn(me);
+        when(userRepository.findByUsername("target")).thenReturn(null);
+
+        assertThatThrownBy(() -> service.followUser(1, "target"))
+                .isInstanceOf(UserException.UserNotFoundException.class)
+                .hasMessageContaining("No user found with username target");
+    }
+
+    @Test
+    void testFollowUser_himself() {
+        User me = User.builder().id(1).build();
+        when(userRepository.findById(1)).thenReturn(me);
+        when(userRepository.findByUsername("me")).thenReturn(me);
+
+        assertThatThrownBy(() -> service.followUser(1, "me"))
+                .isInstanceOf(UserException.UserCantFollowHimselfException.class);
+    }
+
+    @Test
     void testFollowUser_alreadyFollowing() {
         User me = User.builder().id(1).username("me").build();
         User target = User.builder().id(2).username("target").build();
@@ -208,6 +261,24 @@ public class PublicUserServiceTest {
         // Verify native deletes are called
         verify(userRepository).removeFollowing(1, 2);
         verify(userRepository).removeFollower(2, 1);
+    }
+
+    @Test
+    void testUnfollowUser_userIdNotFound() {
+        when(userRepository.findById(1)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.unfollowUser(1, "target"))
+                .isInstanceOf(UserException.UserNotFoundException.class);
+    }
+
+    @Test
+    void testUnfollowUser_targetNotFound() {
+        User me = User.builder().id(1).build();
+        when(userRepository.findById(1)).thenReturn(me);
+        when(userRepository.findByUsername("target")).thenReturn(null);
+
+        assertThatThrownBy(() -> service.unfollowUser(1, "target"))
+                .isInstanceOf(UserException.UserNotFoundException.class);
     }
 
     @Test
