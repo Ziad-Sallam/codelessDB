@@ -1,6 +1,5 @@
 package backend.agent.WebSocketHandler;
 
-import java.util.UUID;
 import java.util.concurrent.*;
 
 import org.springframework.stereotype.Component;

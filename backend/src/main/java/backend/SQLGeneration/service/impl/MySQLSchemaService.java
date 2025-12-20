@@ -7,7 +7,6 @@ import backend.SQLGeneration.service.SchemaService;
 import backend.SQLGeneration.service.util.SchemaValidationException;
 import backend.SQLGeneration.service.util.SchemaValidatorService;
 import backend.SQLGeneration.service.util.TopoSortService;
-import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

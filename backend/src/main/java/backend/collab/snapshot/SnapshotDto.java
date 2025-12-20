@@ -1,7 +1,5 @@
 package backend.collab.snapshot;
 
-import java.util.List;
-
 import backend.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;

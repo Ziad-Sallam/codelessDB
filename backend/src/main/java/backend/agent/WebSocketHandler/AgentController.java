@@ -1,6 +1,5 @@
 package backend.agent.WebSocketHandler;
 
-import java.security.Principal;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
