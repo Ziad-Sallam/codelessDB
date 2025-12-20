@@ -164,6 +164,7 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
             volume_name: {"bind": "/var/lib/mysql", "mode": "rw"},
         },
         ports={"3306/tcp": select_random_port()},
+        
     )
 
     print("Waiting for MySQL to initialize (15s)...")
