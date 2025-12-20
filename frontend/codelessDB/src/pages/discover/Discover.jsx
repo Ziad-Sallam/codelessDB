@@ -98,7 +98,7 @@ export default function Discover() {
         showSuccess(`Unfollowed ${user.name}`);
       } else {
         await followUser(user.username);
-        showSuccess(`Following ${user.name}`);
+        showSuccess(`Followed ${user.name}`);
       }
       
       setFeaturedUsers((prev) =>

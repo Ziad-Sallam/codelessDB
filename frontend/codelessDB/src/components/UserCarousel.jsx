@@ -249,7 +249,7 @@ const UserCarousel = ({ users, title = "Featured Designers", onFollowToggle, cur
                   size="small"
                   fullWidth
                   disabled={currentUser && (currentUser.username === user.username || currentUser.id === user.id)}
-                  startIcon={<UserPlusIcon />}
+                  startIcon={user.isFollowed ? <UsersIcon /> : <UserPlusIcon />}
                   onClick={(e) => {
                     e.stopPropagation();
                     onFollowToggle && onFollowToggle(user);
@@ -257,7 +257,7 @@ const UserCarousel = ({ users, title = "Featured Designers", onFollowToggle, cur
                 >
                   {currentUser && (currentUser.username === user.username || currentUser.id === user.id) 
                     ? "You" 
-                    : (user.isFollowed ? "Following" : "Follow")}
+                    : (user.isFollowed ? "Unfollow" : "Follow")}
                 </Button>
               </CardContent>
             </Box>

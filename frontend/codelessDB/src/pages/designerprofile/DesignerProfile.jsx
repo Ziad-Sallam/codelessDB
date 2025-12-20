@@ -119,7 +119,7 @@ export default function DesignerProfile() {
         showSuccess(`Unfollowed ${profile.name || profile.username}`);
       } else {
         await followUser(profile.username);
-        showSuccess(`Following ${profile.name || profile.username}`);
+        showSuccess(`Followed ${profile.name || profile.username}`);
       }
 
       setProfile((prev) => ({
