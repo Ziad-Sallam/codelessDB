@@ -179,9 +179,6 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   >
                     {user.name}
                   </Typography>
-                  {/* <Typography variant="body2" color="text.secondary">
-                    {user.username}
-                  </Typography> */}
                 </Box>
 
                 <Typography
