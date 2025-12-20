@@ -70,7 +70,6 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
         print(f"Error: {e}")
         sys.exit(1)
 
-    # Request backend for names
     req = 0
     try:
 
@@ -213,7 +212,6 @@ def create_mysql_container(id: int, url: str = "http://localhost:8080"):
     connection.close()
 
     print("Databse Created Correctly !")
-    print(f'run:    .\communicate.exe \"{data["wsUrl"]}\" {data["containerId"]}')
 
     return 0
 
