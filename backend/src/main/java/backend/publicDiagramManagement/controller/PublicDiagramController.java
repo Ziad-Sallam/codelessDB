@@ -139,7 +139,7 @@ public class PublicDiagramController {
             @RequestBody SearchRequestDto searchRequestDto) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<PublicUserInfoDto> publicUserInfos = publicDiagramService.searchUsersByPublicDiagrams(searchRequestDto,
+        Page<PublicUserInfoDto> publicUserInfos = publicDiagramService.searchUsersByPublicDiagrams(authUser.userId(), searchRequestDto,
                 pageable);
         return ResponseEntity.ok(publicUserInfos);
     }

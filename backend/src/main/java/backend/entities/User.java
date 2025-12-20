@@ -75,6 +75,14 @@ public class User {
     private long totalStars = 0;
 
     @Builder.Default
+    @Column(nullable = false)
+    private int followersCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int followingCount = 0;
+
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserDiagram> userDiagrams = new HashSet<>();
 

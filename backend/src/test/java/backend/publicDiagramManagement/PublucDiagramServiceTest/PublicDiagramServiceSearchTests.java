@@ -143,7 +143,7 @@ class PublicDiagramServiceSearchTests {
         dto.setSearchPrompt("search");
         dto.setHashtags(List.of("tag1"));
 
-        Page<PublicUserInfoDto> result = service.searchUsersByPublicDiagrams(dto, pageable);
+        Page<PublicUserInfoDto> result = service.searchUsersByPublicDiagrams(user.getId(), dto, pageable);
 
         assertEquals(1, result.getTotalElements());
         PublicUserInfoDto dtoResult = result.getContent().get(0);
@@ -171,7 +171,7 @@ class PublicDiagramServiceSearchTests {
         dto.setSearchPrompt("  "); // blank
         dto.setHashtags(List.of()); // empty list
 
-        Page<PublicUserInfoDto> result = service.searchUsersByPublicDiagrams(dto, pageable);
+        Page<PublicUserInfoDto> result = service.searchUsersByPublicDiagrams(user.getId(), dto, pageable);
 
         assertEquals(1, result.getTotalElements());
         PublicUserInfoDto dtoResult = result.getContent().get(0);

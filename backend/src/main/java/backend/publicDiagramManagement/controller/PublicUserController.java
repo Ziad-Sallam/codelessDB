@@ -55,4 +55,22 @@ public class PublicUserController {
         Page<PublicDiagramInfoDto> staredDiagrams = publicUserService.getStaredPublicDiagrams(userName, pageable);
         return ResponseEntity.ok(staredDiagrams);
     }
+
+    @PostMapping("/follow/{userName}")
+    public ResponseEntity<?> followUser(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable @NonNull String userName) {
+
+        publicUserService.followUser(authUser.userId(), userName);
+        return ResponseEntity.ok( userName + " is followed successfully :)");
+    }
+
+    @DeleteMapping("/unfollow/{userName}")
+    public ResponseEntity<?> unfollowUser(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable @NonNull String userName) {
+
+        publicUserService.unfollowUser(authUser.userId(), userName);
+        return ResponseEntity.ok( userName + " is unfollowed successfully :)");
+    }
 }

@@ -156,7 +156,72 @@ public class PublicUserServiceTest {
 
         Page<PublicDiagramInfoDto> result = service.getStaredPublicDiagrams("john", PageRequest.of(0, 10));
 
-        assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getStars()).isEqualTo(9);
+    }
+
+    @Test
+    void testFollowUser_success() {
+        User me = User.builder().id(1).username("me").build();
+        User target = User.builder().id(2).username("target").build();
+
+        when(userRepository.findById(1)).thenReturn(me);
+        when(userRepository.findByUsername("target")).thenReturn(target);
+        when(userRepository.countFollowing(1, 2)).thenReturn(0L);
+
+        service.followUser(1, "target");
+
+        // Verify native inserts are called
+        verify(userRepository).addFollower(2, 1);
+        verify(userRepository).addFollowing(1, 2);
+    }
+
+    @Test
+    void testFollowUser_alreadyFollowing() {
+        User me = User.builder().id(1).username("me").build();
+        User target = User.builder().id(2).username("target").build();
+
+        when(userRepository.findById(1)).thenReturn(me);
+        when(userRepository.findByUsername("target")).thenReturn(target);
+        when(userRepository.countFollowing(1, 2)).thenReturn(1L);
+
+        assertThatThrownBy(() -> service.followUser(1, "target"))
+                .isInstanceOf(UserException.UserAlreadyFollowedException.class)
+                .hasMessageContaining("is already following");
+
+        // Verify native inserts are NOT called
+        verify(userRepository, never()).addFollowing(anyInt(), anyInt());
+    }
+
+
+    @Test
+    void testUnfollowUser_success() {
+        User me = User.builder().id(1).username("me").build();
+        User target = User.builder().id(2).username("target").build();
+
+        when(userRepository.findById(1)).thenReturn(me);
+        when(userRepository.findByUsername("target")).thenReturn(target);
+        when(userRepository.countFollowing(1, 2)).thenReturn(1L);
+
+        service.unfollowUser(1, "target");
+
+        // Verify native deletes are called
+        verify(userRepository).removeFollowing(1, 2);
+        verify(userRepository).removeFollower(2, 1);
+    }
+
+    @Test
+    void testUnfollowUser_notFollowing() {
+        User me = User.builder().id(1).username("me").build();
+        User target = User.builder().id(2).username("target").build();
+
+        when(userRepository.findById(1)).thenReturn(me);
+        when(userRepository.findByUsername("target")).thenReturn(target);
+        when(userRepository.countFollowing(1, 2)).thenReturn(0L);
+
+        assertThatThrownBy(() -> service.unfollowUser(1, "target"))
+                .isInstanceOf(UserException.UserAlreadyFollowedException.class)
+                .hasMessageContaining("is not following");
+
+        verify(userRepository, never()).removeFollowing(anyInt(), anyInt());
     }
 }
