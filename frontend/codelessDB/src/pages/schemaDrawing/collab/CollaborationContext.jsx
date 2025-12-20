@@ -86,7 +86,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		ydocRef.current = doc;
 
 		const provider = new WebsocketProvider(
-			`ws://localhost:8080/ws/collab`,
+			`ws://localhost:1234/${roomId}`,
 			roomId,
 			doc,
 			{

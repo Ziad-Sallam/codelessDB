@@ -94,24 +94,24 @@ const SchemaContent = () => {
     [screenToFlowPosition, updateCursor]
   );
 
-  const loadDigram = async () => {
-    try {
-      const response = await fetchDiagram(roomId);
-      console.log(response);
-      updateSchemaName(response.diagramName);
-      setIsReadOnly(response.role === "READER" ? true : false);
-      loadCompositeYjsData(response.snapshot);
-    } catch (err) {
-      showError(err.message);
-    }
-  };
+  // const loadDigram = async () => {
+  //   try {
+  //     const response = await fetchDiagram(roomId);
+  //     console.log(response);
+  //     updateSchemaName(response.diagramName);
+  //     setIsReadOnly(response.role === "READER" ? true : false);
+  //     loadCompositeYjsData(response.snapshot);
+  //   } catch (err) {
+  //     showError(err.message);
+  //   }
+  // };
 
-  useEffect(() => {
-    loadDigram();
-    // if (ydoc && roomId) {
-    // }
-  }, []);
-  // }, [ydoc, roomId]);
+  // useEffect(() => {
+  //   loadDigram();
+  //   // if (ydoc && roomId) {
+  //   // }
+  // }, []);
+  // // }, [ydoc, roomId]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
