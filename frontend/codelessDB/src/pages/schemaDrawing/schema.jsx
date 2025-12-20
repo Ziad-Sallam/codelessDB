@@ -101,7 +101,6 @@ const SchemaContent = () => {
       updateSchemaName(response.diagramName);
       setIsReadOnly(response.role === "READER" ? true : false);
       loadCompositeYjsData(response.snapshot);
-
     } catch (err) {
       showError(err.message);
     }

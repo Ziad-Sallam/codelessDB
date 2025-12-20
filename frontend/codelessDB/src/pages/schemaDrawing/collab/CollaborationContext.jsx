@@ -12,6 +12,7 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { UndoManager } from "yjs";
 import { useAuth } from "../../../components/AuthProvider";
+import { get } from "lodash";
 
 const CollaborationContext = createContext(null);
 
@@ -30,6 +31,33 @@ const base64ToBytes = (base64) => {
 		return new Uint8Array(0);
 	}
 };
+
+function hslToHex(h, s, l) {
+  s /= 100;
+  l /= 100;
+
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n =>
+    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+
+  return (
+    "#" +
+    [f(0), f(8), f(4)]
+      .map(x => Math.round(255 * x).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+function getReadableRandomHex() {
+  const h = Math.floor(Math.random() * 360);
+  const s = 65 + Math.random() * 20;
+  const l = 45 + Math.random() * 10;
+
+  return hslToHex(h, s, l);
+}
+
+
 
 // ----------------- Provider -----------------
 export const CollaborationProvider = ({ roomId, children }) => {
@@ -83,25 +111,35 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const localUser = {
 			name: user.username,
 			picture: user.picture,
-			color: "#" + Math.floor(Math.random() * 16777215).toString(16),
+			color: getReadableRandomHex(),
 		};
 
+		// Set local user state
 		awareness.setLocalStateField("user", localUser);
 
 		const handleAwarenessChange = () => {
 			const states = awareness.getStates();
 			const newCursors = [];
-			const newUsers = [];
+			
+			// Use a Map to deduplicate users by their unique DB ID (user.id)
+			// instead of just listing every socket client.
+			const uniqueUsersMap = new Map();
 
 			states.forEach((state, clientId) => {
 				if (!state.user) return;
 
-				newUsers.push({
-					id: clientId,
-					...state.user,
-					isMe: clientId === awareness.clientID,
-				});
+				// 1. Handle Connected Users (Prevent Duplicates)
+				if (!uniqueUsersMap.has(state.user.name)) {
+					uniqueUsersMap.set(state.user.name, {
+						clientId: clientId, // Store the primary client ID
+						...state.user,
+						// Check if this user is the current user based on ID, not just ClientID
+						isMe: state.user.name === user.username, 
+					});
+				}
 
+				// 2. Handle Cursors (Cursors remain per-client/tab)
+				// We only show cursors from OTHERS (clientId !== awareness.clientID)
 				if (state.cursor && clientId !== awareness.clientID) {
 					newCursors.push({
 						id: clientId,
@@ -112,7 +150,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 				}
 			});
 
-			setConnectedUsers(newUsers);
+			setConnectedUsers(Array.from(uniqueUsersMap.values()));
 			setCursors(newCursors);
 		};
 
@@ -131,13 +169,26 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		edgesMap.observe(syncObserver);
 		metaMap.observe(syncObserver);
 
+		// ----------------- Cleanup -----------------
+		// Helper to force clean disconnect
+		const handleBeforeUnload = () => {
+			awareness.setLocalState(null);
+			provider.disconnect();
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+
 		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+			
+			// Explicitly nullify local state so other clients remove this user immediately
 			awareness.setLocalState(null);
 			awareness.off("change", handleAwarenessChange);
+			
 			provider.destroy();
 			doc.destroy();
 		};
-	}, []);
+	}, [roomId, user]); 
 
 	// ----------------- Snapshot Loader -----------------
 	const loadCompositeYjsData = useCallback((snapshotBase64) => {
