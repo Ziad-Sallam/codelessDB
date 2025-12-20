@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.user.PublicUserDto;
+import backend.publicDiagramManagement.dto.user.PublicUserFollowDto;
 import backend.publicDiagramManagement.service.PublicUserService;
 import backend.security.AuthUser;
 import lombok.NonNull;
@@ -78,5 +79,27 @@ public class PublicUserController {
 
         publicUserService.unfollowUser(authUser.userId(), userName);
         return ResponseEntity.ok( userName + " is unfollowed successfully :)");
+    }
+
+    @GetMapping("/followers/{userName}")
+    public ResponseEntity<?> getFollowers (
+            @PathVariable @NonNull String userName,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<PublicUserFollowDto> followers = publicUserService.getFollowersByUsername(userName, pageable);
+        return ResponseEntity.ok(followers);
+    }
+
+    @GetMapping("/followings/{userName}")
+    public ResponseEntity<?> getFollowings (
+            @PathVariable @NonNull String userName,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<PublicUserFollowDto> followings = publicUserService.getFollowingsByUsername(userName, pageable);
+        return ResponseEntity.ok(followings);
     }
 }

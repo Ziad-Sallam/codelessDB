@@ -85,3 +85,36 @@ export async function unfollowUser(userName) {
   return await response.text();
 }
 
+export async function fetchFollowers(userName, pageNumber = 0, pageSize = 10) {
+  const response = await fetch(`${API_URL}/publicUsers/followers/${userName}?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to fetch followers");
+  }
+
+  return await response.json();
+}
+
+export async function fetchFollowings(userName, pageNumber = 0, pageSize = 10) {
+  const response = await fetch(`${API_URL}/publicUsers/followings/${userName}?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to fetch followings");
+  }
+
+  return await response.json();
+}

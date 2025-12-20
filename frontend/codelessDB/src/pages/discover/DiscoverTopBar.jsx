@@ -1,13 +1,19 @@
-import { useState, useEffect } from "react";
 import {
-  AppBar, Toolbar, Avatar,
-  Typography, Paper, InputBase, Box, Link,
+    AppBar,
+    Avatar,
+    Box,
+    InputBase,
+    Link,
+    Paper,
+    Toolbar,
+    Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 
 import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
-import { getInitials } from "../diagrams/Contributors.jsx";
 import { useAuth } from "../../components/AuthProvider.jsx";
+import { getInitials } from "../diagrams/Contributors.jsx";
 
 
 export default function DiscoverTopBar(props) {

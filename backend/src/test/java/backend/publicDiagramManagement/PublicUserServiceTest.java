@@ -18,6 +18,7 @@ import backend.entities.User;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.user.PublicUserDto;
+import backend.publicDiagramManagement.dto.user.PublicUserFollowDto;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.publicDiagramManagement.service.PublicUserService;
 import backend.user.Role;
@@ -223,5 +224,122 @@ public class PublicUserServiceTest {
                 .hasMessageContaining("is not following");
 
         verify(userRepository, never()).removeFollowing(anyInt(), anyInt());
+    }
+    @Test
+    void testGetFollowersByUsername_success() {
+        User target = User.builder().id(1).username("john").build();
+        User follower = User.builder().id(2).username("follower").build();
+        Object[] row = new Object[]{follower, 5L, 10L, 100L};
+        Page<Object[]> page = new PageImpl<Object[]>(List.<Object[]>of(row));
+
+        when(userRepository.findByUsername("john")).thenReturn(target);
+        when(userRepository.findFollowersWithStats(eq(1), any())).thenReturn(page);
+
+        Page<PublicUserFollowDto> result = service.getFollowersByUsername("john", PageRequest.of(0, 10));
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getUsername()).isEqualTo("follower");
+    }
+
+    @Test
+    void testGetFollowersByUsername_userNotFound() {
+        when(userRepository.findByUsername("missing")).thenReturn(null);
+
+        assertThatThrownBy(() -> service.getFollowersByUsername("missing", PageRequest.of(0, 10)))
+                .isInstanceOf(UserException.UserNotFoundException.class);
+    }
+
+    @Test
+    void testGetFollowersByUsername_emptyResults() {
+        User target = User.builder().id(1).username("john").build();
+        Page<Object[]> page = new PageImpl<Object[]>(List.of());
+
+        when(userRepository.findByUsername("john")).thenReturn(target);
+        when(userRepository.findFollowersWithStats(eq(1), any())).thenReturn(page);
+
+        Page<PublicUserFollowDto> result = service.getFollowersByUsername("john", PageRequest.of(0, 10));
+
+        assertThat(result.getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void testGetFollowingsByUsername_success() {
+        User target = User.builder().id(1).username("john").build();
+        User followed = User.builder().id(2).username("followed").build();
+        Object[] row = new Object[]{followed, 3L, 8L, 50L};
+        Page<Object[]> page = new PageImpl<Object[]>(List.<Object[]>of(row));
+
+        when(userRepository.findByUsername("john")).thenReturn(target);
+        when(userRepository.findFollowingWithStats(eq(1), any())).thenReturn(page);
+
+        Page<PublicUserFollowDto> result = service.getFollowingsByUsername("john", PageRequest.of(0, 10));
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getUsername()).isEqualTo("followed");
+    }
+
+    @Test
+    void testGetFollowingsByUsername_userNotFound() {
+        when(userRepository.findByUsername("missing")).thenReturn(null);
+
+        assertThatThrownBy(() -> service.getFollowingsByUsername("missing", PageRequest.of(0, 10)))
+                .isInstanceOf(UserException.UserNotFoundException.class);
+    }
+
+    @Test
+    void testGetFollowingsByUsername_emptyResults() {
+        User target = User.builder().id(1).username("john").build();
+        Page<Object[]> page = new PageImpl<Object[]>(List.of());
+
+        when(userRepository.findByUsername("john")).thenReturn(target);
+        when(userRepository.findFollowingWithStats(eq(1), any())).thenReturn(page);
+
+        Page<PublicUserFollowDto> result = service.getFollowingsByUsername("john", PageRequest.of(0, 10));
+
+        assertThat(result.getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void testGetFollowers_success() {
+        User follower = User.builder().id(2).username("follower").build();
+        Object[] row = new Object[]{follower, 5L, 10L, 100L};
+        Page<Object[]> page = new PageImpl<Object[]>(List.<Object[]>of(row));
+
+        when(userRepository.findFollowersWithStats(eq(1), any())).thenReturn(page);
+
+        Page<PublicUserFollowDto> result = service.getFollowers(1, PageRequest.of(0, 10));
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getUsername()).isEqualTo("follower");
+        assertThat(result.getContent().get(0).getPublicCount()).isEqualTo(5L);
+    }
+
+    @Test
+    void testGetFollowings_success() {
+        User followed = User.builder().id(2).username("followed").build();
+        Object[] row = new Object[]{followed, 3L, 8L, 50L};
+        Page<Object[]> page = new PageImpl<Object[]>(List.<Object[]>of(row));
+
+        when(userRepository.findFollowingWithStats(eq(1), any())).thenReturn(page);
+
+        Page<PublicUserFollowDto> result = service.getFollowings(1, PageRequest.of(0, 10));
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getUsername()).isEqualTo("followed");
+        assertThat(result.getContent().get(0).getTotalStars()).isEqualTo(8L);
+    }
+
+    @Test
+    void testGetFollowers_nullStats() {
+        User follower = User.builder().id(2).username("follower").build();
+        Object[] row = new Object[]{follower, null, null, null};
+        Page<Object[]> page = new PageImpl<Object[]>(List.<Object[]>of(row));
+
+        when(userRepository.findFollowersWithStats(eq(1), any())).thenReturn(page);
+
+        Page<PublicUserFollowDto> result = service.getFollowers(1, PageRequest.of(0, 10));
+
+        assertThat(result.getContent().get(0).getPublicCount()).isEqualTo(0L);
+        assertThat(result.getContent().get(0).getTotalStars()).isEqualTo(0L);
     }
 }

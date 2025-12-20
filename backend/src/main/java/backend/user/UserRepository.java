@@ -77,4 +77,28 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Transactional
     @Query(value = "DELETE FROM user_followers WHERE user_id = :userId AND follower_id = :followerId", nativeQuery = true)
     void removeFollower(@Param("userId") int userId, @Param("followerId") int followerId);
+
+    @Query(value = """
+            SELECT
+                u,
+                (SELECT COUNT(pd.id) FROM PublicDiagram pd JOIN pd.diagram d JOIN d.userDiagrams ud WHERE ud.user = u AND ud.role = backend.user.Role.OWNER),
+                u.totalStars,
+                (SELECT COALESCE(SUM(pd.views + pd.forks * 2 + pd.stars * 3), 0) FROM PublicDiagram pd JOIN pd.diagram d JOIN d.userDiagrams ud WHERE ud.user = u AND ud.role = backend.user.Role.OWNER)
+            FROM User target
+            JOIN target.followers u
+            WHERE target.id = :userId
+            """)
+    Page<Object[]> findFollowersWithStats(@Param("userId") int userId, Pageable pageable);
+
+    @Query(value = """
+            SELECT
+                u,
+                (SELECT COUNT(pd.id) FROM PublicDiagram pd JOIN pd.diagram d JOIN d.userDiagrams ud WHERE ud.user = u AND ud.role = backend.user.Role.OWNER),
+                u.totalStars,
+                (SELECT COALESCE(SUM(pd.views + pd.forks * 2 + pd.stars * 3), 0) FROM PublicDiagram pd JOIN pd.diagram d JOIN d.userDiagrams ud WHERE ud.user = u AND ud.role = backend.user.Role.OWNER)
+            FROM User target
+            JOIN target.following u
+            WHERE target.id = :userId
+            """)
+    Page<Object[]> findFollowingWithStats(@Param("userId") int userId, Pageable pageable);
 }

@@ -10,6 +10,7 @@ import backend.entities.User;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.user.PublicUserDto;
+import backend.publicDiagramManagement.dto.user.PublicUserFollowDto;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
@@ -50,6 +51,7 @@ public class PublicUserService {
 
         Long publicCount = diagramRepository.countPublicDiagramsByOwner(user.getId());
         Long totalStars = user.getTotalStars();
+        long starredCount = publicDiagramRepository.countStaredPublicDiagramsByUser(userName);
 
         boolean isFollowed = false;
         if (currentUserId != null) {
@@ -65,6 +67,7 @@ public class PublicUserService {
                 .url(user.getProfileWebsiteUrl())
                 .publicCount(publicCount == null ? 0 : publicCount)
                 .totalStars(totalStars == null ? 0 : totalStars)
+                .starredCount(starredCount)
                 .createdAt(user.getCreatedAt())
                 .isFollowed(isFollowed)
                 .followersCount(user.getFollowersCount())
@@ -128,5 +131,43 @@ public class PublicUserService {
         userToFollow.setFollowersCount(Math.max(0, userToFollow.getFollowersCount() - 1));
         userRepository.save(user);
         userRepository.save(userToFollow);
+    }
+
+    public Page<PublicUserFollowDto> getFollowersByUsername(String userName, Pageable pageable) {
+        User user = findUserByUsernameOrThrew(userName);
+        return getFollowers(user.getId(), pageable);
+    }
+
+    public Page<PublicUserFollowDto> getFollowingsByUsername(String userName, Pageable pageable) {
+        User user = findUserByUsernameOrThrew(userName);
+        return getFollowings(user.getId(), pageable);
+    }
+
+    public Page<PublicUserFollowDto> getFollowers(int userId, Pageable pageable) {
+        Page<Object[]> raw = userRepository.findFollowersWithStats(userId, pageable);
+
+        return raw.map(row -> {
+            User user = (User) row[0];
+
+            Long publicCount = row[1] == null ? 0L : ((Number) row[1]).longValue();
+            Long totalStars = row[2] == null ? 0L : ((Number) row[2]).longValue();
+            Long score = row[3] == null ? 0L : ((Number) row[3]).longValue();
+
+            return PublicUserFollowDto.toDto(user, publicCount, totalStars, score);
+        });
+    }
+
+    public Page<PublicUserFollowDto> getFollowings(int userId, Pageable pageable) {
+        Page<Object[]> raw = userRepository.findFollowingWithStats(userId, pageable);
+
+        return raw.map(row -> {
+            User user = (User) row[0];
+
+            Long publicCount = row[1] == null ? 0L : ((Number) row[1]).longValue();
+            Long totalStars = row[2] == null ? 0L : ((Number) row[2]).longValue();
+            Long score = row[3] == null ? 0L : ((Number) row[3]).longValue();
+
+            return PublicUserFollowDto.toDto(user, publicCount, totalStars, score);
+        });
     }
 }
