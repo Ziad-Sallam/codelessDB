@@ -53,7 +53,7 @@ public class UserController {
 	}
 
 	@PostMapping("/signup/send-otp/{email}")
-	public ResponseEntity<?> sendOtp(@PathVariable String email, @RequestParam(required = false) String username) {
+	public ResponseEntity<?> sendOtp(@PathVariable String email, @RequestParam String username) {
 		String otp = userService.sendOtpEmail(email, username);
 		return ResponseEntity.ok(otp);
 	}
