@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -17,7 +16,6 @@ import backend.collab.exceptions.CollabException.CollaboratorsCapacityException;
 import backend.collab.snapshot.SnapshotService;
 import backend.user.Role;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 interface IRoom extends Closeable {
@@ -42,7 +40,7 @@ public class Room implements IRoom {
 	 * Maximum number of updates done before taking
 	 * a snapshot and saving it in the DB
 	 */
-	private static final int SNAPSHOT_THRESHOLD = 1;
+	private static final int SNAPSHOT_THRESHOLD = 300;
 
 	private final String diagramId;
 	

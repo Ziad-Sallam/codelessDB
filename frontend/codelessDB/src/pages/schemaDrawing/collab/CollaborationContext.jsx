@@ -191,15 +191,22 @@ export const CollaborationProvider = ({ roomId, children }) => {
 	}, [roomId, user]); 
 
 	// ----------------- Snapshot Loader -----------------
-	const loadCompositeYjsData = useCallback((snapshotBase64) => {
+	const loadCompositeYjsData = useCallback((snapshotData) => {
 		const ydoc = ydocRef.current;
 		if (!ydoc) return;
 
 		ydoc.transact(() => {
 			// 1. Try applying the Snapshot (Database)
-			if (snapshotBase64) {
+			if (snapshotData) {
 				try {
-					const snapshotBytes = base64ToBytes(snapshotBase64);
+					let snapshotBytes;
+					if (snapshotData instanceof ArrayBuffer || snapshotData instanceof Uint8Array) {
+						console.log("snapshotData is ArrayBuffer || Uint8array");
+						snapshotBytes = new Uint8Array(snapshotData);
+					} else {
+						snapshotBytes = base64ToBytes(snapshotData);
+					}
+
 					if (snapshotBytes.byteLength > 0) {
 						Y.applyUpdate(ydoc, snapshotBytes);
 						console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);

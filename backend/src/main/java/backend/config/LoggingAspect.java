@@ -20,6 +20,7 @@ public class LoggingAspect {
       || execution(* backend.user.UserController.*(..))
       || execution(* backend.userDiagramManagement.controller.UserDiagramController.*(..))
       || execution(* backend.SQLGeneration.controller.SchemaController.*(..))
+      || execution(* backend.collab.snapshot.SnapshotService.*(..))
       """;
       // || execution(* backend.collab..*(..))
       // || execution(* backend.userDiagramManagement.service.UserDiagramService.*(..))

@@ -17,7 +17,6 @@ import backend.entities.joins.UserDiagramId;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
-import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
