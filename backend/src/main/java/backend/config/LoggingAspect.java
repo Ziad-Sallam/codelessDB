@@ -20,7 +20,8 @@ public class LoggingAspect {
             execution(* backend.user.UserController.*(..)) ||
             execution(* backend.userDiagramManagement.controller.UserDiagramController.*(..)) ||
             execution(* backend.userDiagramManagement.service.UserDiagramService.*(..)) ||
-            execution(* backend.SQLGeneration.controller.SchemaController.*(..))
+            execution(* backend.SQLGeneration.controller.SchemaController.*(..)) ||
+            execution(* backend.publicDiagramManagement.controller.publicDiagramController.*(..)) ||
          """;
 
    // Log method entry

@@ -27,7 +27,6 @@ const FINAL_DATE = (() => {
 
 export default function TopBar(props) {
 	const { showError } = useNotification();
-
 	const { onSearchResults, pageSize = 10, page, loadDiagrams } = props;
 	const navigate = useNavigate();
 
@@ -35,7 +34,7 @@ export default function TopBar(props) {
 	const [userImage, setUserImage] = useState("");
 	const [filterAnchor, setFilterAnchor] = useState(null);
 
-	const [search, setSearch] = useState(null);
+	const [search, setSearch] = useState(""); // initialize as empty string
 	const [dateFrom, setDateFrom] = useState(null);
 	const [dateTo, setDateTo] = useState(null);
 
@@ -49,9 +48,8 @@ export default function TopBar(props) {
 	}, [user]);
 
 	useEffect(() => {
-		if (search !== null || (dateFrom !== null && dateTo !== null)) {
+		if (search !== "" || (dateFrom !== null && dateTo !== null)) {
 			handleSearch(page);
-
 		} else {
 			loadDiagrams(page);
 		}
@@ -59,14 +57,8 @@ export default function TopBar(props) {
 
 	const handleSearch = async (idx) => {
 		try {
-			if (search === "") {
-				const resp = await searchDiagrams(idx, pageSize, null, dateFrom, dateTo);
-				onSearchResults && onSearchResults(resp);
-			} else {
-				const resp = await searchDiagrams(idx, pageSize, search, dateFrom, dateTo);
-				onSearchResults && onSearchResults(resp);
-			}
-
+			const resp = await searchDiagrams(idx, pageSize, search || null, dateFrom, dateTo);
+			onSearchResults && onSearchResults(resp);
 		} catch (error) {
 			showError(error);
 		}
@@ -84,14 +76,11 @@ export default function TopBar(props) {
 		setDateFrom(null);
 		setDateTo(null);
 		closeFilter();
-
 		await handleSearch(0);
 	};
 
 	const handleKeyPress = (e) => {
-		if (e.key === "Enter") {
-			handleSearch(0);
-		}
+		if (e.key === "Enter") handleSearch(0);
 	};
 
 	return (
@@ -104,18 +93,19 @@ export default function TopBar(props) {
 				bgcolor: "background.light",
 			}}
 		>
-			<Toolbar sx={{ display: "flex", justifyContent: "space-between", py: 1 }}>
+			<Toolbar sx={{ display: "flex", justifyContent: "space-between", py: 1, gap: { xs: 1, sm: 2 } }}>
 				{/* CENTER — search bar */}
 				<Paper
 					elevation={2}
 					sx={{
 						display: "flex",
 						alignItems: "center",
-						px: 2,
+						px: { xs: 1, sm: 2 },
 						py: 0.8,
 						borderRadius: 7,
 						flex: 1,
-						maxWidth: 650,
+						minWidth: "200px",
+						maxWidth: { xs: "100%", sm: 650 },
 						bgcolor: "background.paper",
 						transition: "box-shadow 0.2s ease, transform 0.2s ease",
 						"&:hover": {
@@ -125,18 +115,18 @@ export default function TopBar(props) {
 					}}
 				>
 					<InputBase
-						value={search || ""}
+						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 						onKeyPress={handleKeyPress}
-						placeholder="Search diagrams..."
-						sx={{ flex: 1, fontSize: 15, paddingLeft: 2 }}
+						placeholder="Search..."
+						sx={{ flex: 1, fontSize: { xs: 13, sm: 15 }, paddingLeft: { xs: 1, sm: 2 } }}
 					/>
 
 					<SearchIcon
 						sx={{
-							mr: 1.4,
+							mr: { xs: 0.5, sm: 1.4 },
 							color: "text.secondary",
-							fontSize: 22,
+							fontSize: { xs: 18, sm: 22 },
 							cursor: "pointer",
 						}}
 						onClick={() => handleSearch(0)}
@@ -147,15 +137,15 @@ export default function TopBar(props) {
 					</IconButton>
 				</Paper>
 
-				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, minWidth: "fit-content" }}>
 					<Link href="/profile" style={{ textDecoration: "none" }}>
 						<Typography
 							variant="body2"
 							sx={{
 								width: "auto",
-								fontSize: 23,
-								marginRight: 2,
-								display: { sm: "block" },
+								fontSize: { xs: 12, sm: 16, md: 23 },
+								marginRight: { xs: 1, sm: 2 },
+								display: { xs: "none", sm: "block" },
 								cursor: "pointer",
 								fontWeight: 540,
 								color: "background.dark",
@@ -170,9 +160,12 @@ export default function TopBar(props) {
 						src={userImage || undefined}
 						alt={username}
 						sx={{
+							width: { xs: 32, sm: 40 },
+							height: { xs: 32, sm: 40 },
 							bgcolor: userImage ? undefined : "primary.main",
 							cursor: "pointer",
 							transition: "0.2s",
+							fontSize: { xs: 12, sm: 16 },
 							"&:hover": {
 								transform: "scale(1.07)",
 								boxShadow: 3,
@@ -184,7 +177,6 @@ export default function TopBar(props) {
 				</Box>
 			</Toolbar>
 
-
 			<Popover
 				open={Boolean(filterAnchor)}
 				anchorEl={filterAnchor}
@@ -192,7 +184,7 @@ export default function TopBar(props) {
 				anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
 				transformOrigin={{ vertical: "top", horizontal: "right" }}
 			>
-				<Box sx={{ p: 2, width: 300, gap: 10 }}>
+				<Box sx={{ p: { xs: 1.5, sm: 2 }, width: { xs: 280, sm: 300 }, gap: 10 }}>
 					{/* Header with title + X button */}
 					<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
 						<Typography variant="subtitle1">Filter diagrams</Typography>
@@ -228,7 +220,6 @@ export default function TopBar(props) {
 					</Stack>
 				</Box>
 			</Popover>
-
 		</AppBar>
 	);
 }

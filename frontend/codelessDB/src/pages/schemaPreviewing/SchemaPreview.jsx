@@ -158,9 +158,6 @@ export default function SchemaPreview() {
             {schemaData.name || "Untitled Schema"}
           </Typography>
         </Box>
-        <Typography variant="caption" color="text.secondary" noWrap display="block">
-          {schemaData.shortDescription || "No description"}
-        </Typography>
       </Box>
 
       <Box sx={{ flexGrow: 1 }} />
@@ -235,9 +232,7 @@ export default function SchemaPreview() {
           <Container maxWidth="xl">
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4 }}>
 
-              {/* Left Column - Main Content */}
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                {/* Schema Diagram Thumbnail */}
                 <Card variant="outlined" sx={{ mb: 4, overflow: 'hidden' }}>
                   <Box sx={{ position: 'relative', paddingTop: '56.25%', bgcolor: 'action.hover' }}>
                     {schemaData.thumbnail ? (
@@ -258,7 +253,6 @@ export default function SchemaPreview() {
                   </Box>
                 </Card>
 
-                {/* Tabs */}
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs value={activeTab} onChange={handleTabChange} aria-label="schema tabs">
                     <Tab icon={<BookOpenIcon fontSize="small" />} iconPosition="start" label="Detailed Description" />
@@ -279,7 +273,6 @@ export default function SchemaPreview() {
                 </Box>
 
                 <Box sx={{ mt: 3 }}>
-                  {/* README Tab */}
                   {activeTab === 0 && (
                     <Card variant="outlined">
                       <CardContent>
@@ -295,7 +288,6 @@ export default function SchemaPreview() {
                     </Card>
                   )}
 
-                  {/* DDL Tab */}
                   {activeTab === 1 && (
                     <Card variant="outlined">
                       <CardHeader
@@ -331,14 +323,12 @@ export default function SchemaPreview() {
                     </Card>
                   )}
 
-                  {/* Queries Tab */}
                   {activeTab === 2 && (
                     <QueriesSection queries={schemaData.cannedQueries} />
                   )}
                 </Box>
               </Box>
 
-              {/* Right Sidebar */}
               <Box sx={{ width: { lg: 320 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <AboutSection
                   shortDescription={schemaData.shortDescription || "No description provided"}
@@ -357,17 +347,6 @@ export default function SchemaPreview() {
                 {schemaData.contributors && schemaData.contributors.length > 0 && (
                   <ContributorsSection collaborators={schemaData.contributors} />
                 )}
-
-                {/* <Card variant="outlined" sx={{ bgcolor: 'primary.50', borderColor: 'primary.200' }}>
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      This is a preview. Clone this schema to edit it in your workspace.
-                    </Typography>
-                    <Button variant="contained" fullWidth onClick={handleClone}>
-                      Clone Schema
-                    </Button>
-                  </CardContent>
-                </Card> */}
               </Box>
 
             </Box>

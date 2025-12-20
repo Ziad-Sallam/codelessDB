@@ -32,8 +32,8 @@
 }
 
 .diagram-card {
-	height: auto;
 	width: 350px;
+	height: 100%;
 	overflow: visible;
 
 	border-radius: 20px !important;
@@ -120,15 +120,8 @@
 /* Prevent More button from fading/moving with hover */
 .always-visible-icon {
 	opacity: 1 !important;
-	position: relative;
-	left: 280px;
-	transform: translateY(-75px);
-	/* transition: none !important; */
-}
-
-.diagram-card:hover .always-visible-icon {
-	opacity: 1 !important;
-	/* transform: none !important; */
+	transition: none !important;
+	padding: 4px !important;
 }
 
 

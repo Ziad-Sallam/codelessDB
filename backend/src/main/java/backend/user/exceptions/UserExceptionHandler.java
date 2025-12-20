@@ -19,6 +19,7 @@ import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import io.jsonwebtoken.ExpiredJwtException;
 
 @ControllerAdvice
+@org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
 public class UserExceptionHandler {
 
    private ResponseEntity<ErrorResponse> build(HttpStatus status, String message) {
@@ -47,7 +48,7 @@ public class UserExceptionHandler {
 
    @ExceptionHandler(BadCredentialsException.class)
    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
-      return build(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+      return build(HttpStatus.UNAUTHORIZED, "Wrong password");
    }
 
    @ExceptionHandler(AccessDeniedException.class)
@@ -74,6 +75,18 @@ public class UserExceptionHandler {
             .findFirst()
             .orElse("Validation error");
       return build(HttpStatus.BAD_REQUEST, msg);
+   }
+
+   @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+   public ResponseEntity<ErrorResponse> handleMissingParams(
+         org.springframework.web.bind.MissingServletRequestParameterException ex) {
+      return build(HttpStatus.BAD_REQUEST, "Missing parameter: " + ex.getParameterName());
+   }
+
+   @ExceptionHandler(org.springframework.web.bind.ServletRequestBindingException.class)
+   public ResponseEntity<ErrorResponse> handleBindingException(
+         org.springframework.web.bind.ServletRequestBindingException ex) {
+      return build(HttpStatus.BAD_REQUEST, ex.getMessage());
    }
 
    @ExceptionHandler(IllegalArgumentException.class)
@@ -103,7 +116,8 @@ public class UserExceptionHandler {
 
    @ExceptionHandler(Exception.class)
    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
-      // ex.printStackTrace();
-      return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+       ex.printStackTrace();
+       String msg = ex.getMessage() != null ? ex.getMessage() : "Internal Server Error";
+      return build(HttpStatus.INTERNAL_SERVER_ERROR, msg);
    }
 }
