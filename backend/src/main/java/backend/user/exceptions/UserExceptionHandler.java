@@ -47,7 +47,7 @@ public class UserExceptionHandler {
 
    @ExceptionHandler(BadCredentialsException.class)
    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
-      return build(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+      return build(HttpStatus.UNAUTHORIZED, "Wrong password");
    }
 
    @ExceptionHandler(AccessDeniedException.class)
@@ -103,7 +103,8 @@ public class UserExceptionHandler {
 
    @ExceptionHandler(Exception.class)
    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
-      // ex.printStackTrace();
-      return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+       ex.printStackTrace();
+       String msg = ex.getMessage() != null ? ex.getMessage() : "Internal Server Error";
+      return build(HttpStatus.INTERNAL_SERVER_ERROR, msg);
    }
 }
