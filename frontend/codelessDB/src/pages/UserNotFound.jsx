@@ -14,17 +14,17 @@ export default function UserNotFound() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        background: "linear-gradient(135deg, #0b3d91 0%, #082043 100%)",
       }}
     >
       <Container maxWidth="sm">
         <Box
           sx={{
             textAlign: "center",
-            bgcolor: "background.paper",
+            bgcolor: "white",
             borderRadius: 4,
             p: 6,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
           }}
         >
 
@@ -32,7 +32,7 @@ export default function UserNotFound() {
             variant="h4"
             fontWeight="bold"
             gutterBottom
-            sx={{ mb: 2 }}
+            sx={{ color: "primary.main", mb: 2 }}
           >
             User Not Found
           </Typography>
@@ -42,7 +42,7 @@ export default function UserNotFound() {
             color="text.secondary"
             sx={{ mb: 4, maxWidth: 420, mx: "auto" }}
           >
-            We couldn’t find a user with this username.  
+            We couldn’t find a user with this username.
             It may have been removed or the link is incorrect.
           </Typography>
 
@@ -64,10 +64,12 @@ export default function UserNotFound() {
                 py: 1.5,
                 borderRadius: 2,
                 textTransform: "none",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #0b3d91 0%, #4C84FF 100%)",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)",
+                  boxShadow: "0 8px 25px rgba(11, 61, 145, 0.4)",
+                  transform: "translateY(-2px)",
                 },
+                transition: "all 0.2s ease-in-out",
               }}
             >
               {user == null ? "Login" : "Go to your Diagrams"}
@@ -83,6 +85,14 @@ export default function UserNotFound() {
                 py: 1.5,
                 borderRadius: 2,
                 textTransform: "none",
+                borderColor: "primary.main",
+                color: "primary.main",
+                "&:hover": {
+                  borderColor: "primary.dark",
+                  bgcolor: "rgba(11, 61, 145, 0.04)",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.2s ease-in-out",
               }}
             >
               Go Back

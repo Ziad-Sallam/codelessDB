@@ -14,18 +14,18 @@ export default function NotFound() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: "background.default",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        bgcolor: "background.light",
+        background: "linear-gradient(135deg, #0b3d91 0%, #082043 100%)",
       }}
     >
       <Container maxWidth="sm">
         <Box
           sx={{
             textAlign: "center",
-            bgcolor: "background.paper",
+            bgcolor: "white",
             borderRadius: 4,
             p: 6,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
           }}
         >
           <Typography
@@ -33,7 +33,7 @@ export default function NotFound() {
             sx={{
               fontSize: { xs: "6rem", md: "8rem" },
               fontWeight: 900,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              background: "linear-gradient(135deg, #0b3d91 0%, #4C84FF 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               mb: 2,
@@ -46,7 +46,7 @@ export default function NotFound() {
             variant="h4"
             fontWeight="bold"
             gutterBottom
-            sx={{ color: "text.primary", mb: 2 }}
+            sx={{ color: "primary.main", mb: 2 }}
           >
             Page Not Found
           </Typography>
@@ -72,10 +72,12 @@ export default function NotFound() {
                 borderRadius: 2,
                 textTransform: "none",
                 fontSize: "1rem",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #0b3d91 0%, #4C84FF 100%)",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)",
+                  boxShadow: "0 8px 25px rgba(11, 61, 145, 0.4)",
+                  transform: "translateY(-2px)",
                 },
+                transition: "all 0.2s ease-in-out",
               }}
             >
               {user == null ? "Login" : "Go to your Diagrams"}
