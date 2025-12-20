@@ -19,6 +19,7 @@ import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
 import io.jsonwebtoken.ExpiredJwtException;
 
 @ControllerAdvice
+@org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
 public class UserExceptionHandler {
 
    private ResponseEntity<ErrorResponse> build(HttpStatus status, String message) {
@@ -74,6 +75,18 @@ public class UserExceptionHandler {
             .findFirst()
             .orElse("Validation error");
       return build(HttpStatus.BAD_REQUEST, msg);
+   }
+
+   @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+   public ResponseEntity<ErrorResponse> handleMissingParams(
+         org.springframework.web.bind.MissingServletRequestParameterException ex) {
+      return build(HttpStatus.BAD_REQUEST, "Missing parameter: " + ex.getParameterName());
+   }
+
+   @ExceptionHandler(org.springframework.web.bind.ServletRequestBindingException.class)
+   public ResponseEntity<ErrorResponse> handleBindingException(
+         org.springframework.web.bind.ServletRequestBindingException ex) {
+      return build(HttpStatus.BAD_REQUEST, ex.getMessage());
    }
 
    @ExceptionHandler(IllegalArgumentException.class)
