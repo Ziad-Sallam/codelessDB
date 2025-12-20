@@ -1,17 +1,15 @@
 package backend.publicDiagramManagement;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -65,11 +63,11 @@ public class PublicUserServiceTest {
                 .picture("pic")
                 .profileWebsiteUrl("url")
                 .publicProfile("publicName")
+                .totalStars(10L)
                 .build();
 
         when(userRepository.findByUsername("john")).thenReturn(u);
         when(diagramRepository.countPublicDiagramsByOwner(1)).thenReturn(3L);
-        when(diagramRepository.sumStarsOfPublicDiagramsByOwner(1)).thenReturn(10L);
 
         PublicUserDto dto = service.getDesignerProfile("john");
 

@@ -34,7 +34,7 @@ public class PublicUserService {
             throw new UserException.UserNotFoundException("No user found with username " + userName);
 
         Long publicCount = diagramRepository.countPublicDiagramsByOwner(user.getId());
-        Long totalStars = diagramRepository.sumStarsOfPublicDiagramsByOwner(user.getId());
+        Long totalStars = user.getTotalStars();
 
         return PublicUserDto.builder()
                 .name(user.getPublicProfile())
