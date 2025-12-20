@@ -1,18 +1,24 @@
 package backend.publicDiagramManagement.controller;
 
-import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
-import backend.publicDiagramManagement.dto.user.PublicUserDto;
-import backend.publicDiagramManagement.service.PublicUserService;
-import backend.security.AuthUser;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
+import backend.publicDiagramManagement.dto.user.PublicUserDto;
+import backend.publicDiagramManagement.service.PublicUserService;
+import backend.security.AuthUser;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/publicUsers")
@@ -26,7 +32,7 @@ public class PublicUserController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable @NonNull String userName) {
 
-        PublicUserDto publicUserDto = publicUserService.getDesignerProfile(userName);
+        PublicUserDto publicUserDto = publicUserService.getDesignerProfile(authUser != null ? authUser.userId() : null, userName);
 
         return ResponseEntity.ok(publicUserDto);
     }

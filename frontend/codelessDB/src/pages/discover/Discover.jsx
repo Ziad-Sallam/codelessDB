@@ -102,10 +102,36 @@ export default function Discover() {
       }
       
       setFeaturedUsers((prev) =>
-        prev.map((u) =>
-          u.id === user.id ? { ...u, isFollowed: !u.isFollowed } : u
-        )
+        prev.map((u) => {
+          if (u.id === user.id) {
+            return {
+              ...u,
+              isFollowed: !u.isFollowed,
+              followersCount: user.isFollowed
+                ? Math.max(0, (u.followersCount || 0) - 1)
+                : (u.followersCount || 0) + 1,
+            };
+          }
+          if (currentUser && (u.username === currentUser.username || u.id === currentUser.id)) {
+            return {
+              ...u,
+              followingCount: user.isFollowed
+                ? Math.max(0, (u.followingCount || 0) - 1)
+                : (u.followingCount || 0) + 1,
+            };
+          }
+          return u;
+        })
       );
+
+      if (currentUser) {
+        setCurrentUser((prev) => ({
+          ...prev,
+          followingCount: user.isFollowed
+            ? Math.max(0, (prev.followingCount || 0) - 1)
+            : (prev.followingCount || 0) + 1,
+        }));
+      }
     } catch (err) {
       console.error(err);
       showError(err.message || "Action failed");

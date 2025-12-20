@@ -42,7 +42,7 @@ public class PublicUserService {
         return user;
     }
 
-    public PublicUserDto getDesignerProfile(String userName) {
+    public PublicUserDto getDesignerProfile(Integer currentUserId, String userName) {
 
         User user = userRepository.findByUsername(userName);
         if (user == null)
@@ -51,16 +51,24 @@ public class PublicUserService {
         Long publicCount = diagramRepository.countPublicDiagramsByOwner(user.getId());
         Long totalStars = user.getTotalStars();
 
+        boolean isFollowed = false;
+        if (currentUserId != null) {
+            isFollowed = userRepository.countFollowing(currentUserId, user.getId()) > 0;
+        }
+
         return PublicUserDto.builder()
-                .name(user.getPublicProfile())
+                .name(user.getPublicProfile() != null && !user.getPublicProfile().isBlank() ? user.getPublicProfile() : user.getUsername())
                 .username(user.getUsername())
                 .bio(user.getBio())
                 .picture(user.getPicture())
                 .email(user.getEmail())
                 .url(user.getProfileWebsiteUrl())
-                .publicCount(publicCount)
-                .totalStars(totalStars)
+                .publicCount(publicCount == null ? 0 : publicCount)
+                .totalStars(totalStars == null ? 0 : totalStars)
                 .createdAt(user.getCreatedAt())
+                .isFollowed(isFollowed)
+                .followersCount(user.getFollowersCount())
+                .followingCount(user.getFollowingCount())
                 .build();
     }
 

@@ -69,7 +69,7 @@ public class PublicUserServiceTest {
         when(userRepository.findByUsername("john")).thenReturn(u);
         when(diagramRepository.countPublicDiagramsByOwner(1)).thenReturn(3L);
 
-        PublicUserDto dto = service.getDesignerProfile("john");
+        PublicUserDto dto = service.getDesignerProfile(null, "john");
 
         assertThat(dto.getUsername()).isEqualTo("john");
         assertThat(dto.getPublicCount()).isEqualTo(3L);
@@ -83,7 +83,7 @@ public class PublicUserServiceTest {
     void testGetDesignerProfile_userNotFound() {
         when(userRepository.findByUsername("missing")).thenReturn(null);
 
-        assertThatThrownBy(() -> service.getDesignerProfile("missing"))
+        assertThatThrownBy(() -> service.getDesignerProfile(null, "missing"))
                 .isInstanceOf(UserException.UserNotFoundException.class);
     }
 

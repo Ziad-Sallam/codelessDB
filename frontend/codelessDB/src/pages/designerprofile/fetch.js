@@ -50,3 +50,38 @@ export async function fetchStarredDiagrams(userName, pageNumber = 0, pageSize = 
 
   return await response.json();
 }
+
+export async function followUser(userName) {
+  const response = await fetch(`${API_URL}/publicUsers/follow/${userName}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to follow user");
+  }
+
+  return await response.text();
+}
+
+export async function unfollowUser(userName) {
+  const response = await fetch(`${API_URL}/publicUsers/unfollow/${userName}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to unfollow user");
+  }
+
+  return await response.text();
+}
+
