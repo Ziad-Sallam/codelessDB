@@ -57,16 +57,6 @@ const executeQuery = async (request: QueryRequest): Promise<QueryResponse> => {
   }
 };
 
-const request: QueryRequest = {
-  databaseId: 1,
-  content: 'SELECT * FROM my_table'
-};
-
-executeQuery(request).then(response => {
-  console.log(response);
-});
-
-
 
 const QueryRunner: React.FC = () => {
   const [databaseId, setDatabaseId] = useState<string>('');
@@ -213,10 +203,10 @@ const QueryRunner: React.FC = () => {
   };
 
 const RECONNECT_COMMANDS = [
-  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/communicate" -OutFile ".\\communicate.exe"`,
-  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/create-container" -OutFile ".\\create_container.exe"`,
-  `.\\create_container.exe "http://${API_BASE_URL}" ${databaseId}`,
-  `.\\communicate.exe "ws://${API_BASE_URL}" ${databaseId}`
+  `Invoke-WebRequest -Uri "${API_BASE_URL}/agent/communicate" -OutFile ".\\communicate.exe"`,
+  `Invoke-WebRequest -Uri "${API_BASE_URL}/agent/create-container" -OutFile ".\\create_container.exe"`,
+  `.\\create_container.exe "${API_BASE_URL}" ${databaseId}`,
+  `.\\communicate.exe "${API_BASE_URL.replace("http://", "ws://")}/agent-ws" ${databaseId}`
 ];
 
 

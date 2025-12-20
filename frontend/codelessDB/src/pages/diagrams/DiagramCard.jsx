@@ -1,4 +1,5 @@
 import {
+	Alert,
 	Avatar,
 	Box,
 	Button,
@@ -43,6 +44,24 @@ import { deleteDiagram, renameDiagram, shareDiagram, unpublishDiagram } from "./
 
 import { useNotification } from "../../components/NotificationContext";
 
+// Card-level error handling
+const CardErrorHandler = {
+	validateInput: (value, fieldName) => {
+		if (!value?.toString().trim()) {
+			throw new Error(`${fieldName} cannot be empty`);
+		}
+		return value.trim();
+	},
+	handleActionError: (action, error) => {
+		console.error(`[Card Action: ${action}]`, {
+			message: error?.message,
+			status: error?.response?.status,
+			timestamp: new Date().toISOString(),
+		});
+		return error?.message || `Failed to ${action}. Please try again.`;
+	},
+};
+
 function getInitials(name) {
 	if (!name) return "";
 	const parts = name.trim().split(/\s+/);
@@ -76,26 +95,30 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 
 	const [menuAnchor, setMenuAnchor] = useState(null);
 	const [contributorsAnchor, setContributorsAnchor] = useState(null);
-	const [localContributors, setLocalContributors] = useState(d.contributors || []);
+	const [localContributors, setLocalContributors] = useState(d.contributorDtos || d.contributors || []);
 
 	useEffect(() => {
-		setLocalContributors(d.contributors || []);
-	}, [d.contributors]);
+		setLocalContributors(d.contributorDtos || d.contributors || []);
+	}, [d.contributorDtos, d.contributors]);
 
 	const [renameOpen, setRenameOpen] = useState(false);
 	const [newName, setNewName] = useState("");
 	const [renameLoading, setRenameLoading] = useState(false);
+	const [renameError, setRenameError] = useState(null);
 
 	const [shareOpen, setShareOpen] = useState(false);
 	const [shareUsername, setShareUsername] = useState("");
 	const [shareRole, setShareRole] = useState("READER");
 	const [shareLoading, setShareLoading] = useState(false);
+	const [shareError, setShareError] = useState(null);
 
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
+	const [deleteError, setDeleteError] = useState(null);
 
 	const [unpublishOpen, setUnpublishOpen] = useState(false);
 	const [unpublishLoading, setUnpublishLoading] = useState(false);
+	const [unpublishError, setUnpublishError] = useState(null);
 
 	const userRole = d?.role || "READER";
 	const isOwner = userRole === "OWNER";
@@ -117,17 +140,22 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 	}
 
 	async function handleRenameSubmit() {
-		if (!newName.trim()) return;
-		setRenameLoading(true);
+		setRenameError(null);
 		try {
-			const res = await renameDiagram(d.diagramId, newName);
-			const updated = res?.diagram || { ...d, name: newName };
+			if (!newName.trim()) {
+				throw new Error("Name cannot be empty");
+			}
+			setRenameLoading(true);
+			const res = await renameDiagram(d.diagramId, newName.trim());
+			const updated = res?.diagram || { ...d, name: newName.trim() };
 			setRenameOpen(false);
 			if (onUpdate) onUpdate(updated);
-			showSuccess("Diagram renamed successfully");
+			showSuccess?.("Diagram renamed successfully");
 
 		} catch (err) {
-			showError(err.message || "Failed to rename diagram");
+			const errMsg = CardErrorHandler.handleActionError("rename", err);
+			setRenameError(errMsg);
+			showError?.(errMsg);
 
 		} finally {
 			setRenameLoading(false);
@@ -141,26 +169,35 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 	}
 
 	async function handleShareSubmit() {
-		if (!shareUsername.trim()) return;
-		setShareLoading(true);
+		setShareError(null);
 		try {
-			const response = await shareDiagram(d.diagramId, shareUsername, shareRole);
+			if (!shareUsername.trim()) {
+				throw new Error("Username cannot be empty");
+			}
+			setShareLoading(true);
+			const response = await shareDiagram(d.diagramId, shareUsername.trim(), shareRole);
 			const newContributor = {
-				name: shareUsername,
-				image: response?.picture || "",
+				name: shareUsername.trim(),
+				picture: response?.picture || response?.contributor?.picture || "",
 				role: shareRole,
 			};
 
 			const updatedContributors = [...localContributors, newContributor];
 			setLocalContributors(updatedContributors);
-			const updatedDiagram = { ...d, contributors: updatedContributors };
+			const updatedDiagram = { 
+				...d, 
+				contributors: updatedContributors,
+				contributorDtos: updatedContributors 
+			};
 
 			if (onUpdate) onUpdate(updatedDiagram);
 			setShareOpen(false);
-			showSuccess(`Shared with ${shareUsername}`);
+			showSuccess?.(`Shared with ${shareUsername.trim()}`);
 
 		} catch (err) {
-			showError(err || "Failed to share diagram");
+			const errMsg = CardErrorHandler.handleActionError("share", err);
+			setShareError(errMsg);
+			showError?.(errMsg);
 
 		} finally {
 			setShareLoading(false);
@@ -169,22 +206,26 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 
 	function handleDeleteClick() {
 		if (isPublic) {
-			showError("Cannot delete a public diagram. Please unpublish it first.");
+			showError?.("Cannot delete a public diagram. Please unpublish it first.");
 			return;
 		}
+		setDeleteError(null);
 		setDeleteOpen(true);
 	}
 
 	async function handleDeleteConfirm() {
-		setDeleteLoading(true);
+		setDeleteError(null);
 		try {
+			setDeleteLoading(true);
 			await deleteDiagram(d.diagramId);
 			setDeleteOpen(false);
 			if (onDelete) onDelete(d);
-			showSuccess("Diagram deleted successfully");
+			showSuccess?.("Diagram deleted successfully");
 
 		} catch (err) {
-			showError(err.message || "Failed to delete diagram");
+			const errMsg = CardErrorHandler.handleActionError("delete", err);
+			setDeleteError(errMsg);
+			showError?.(errMsg);
 
 		} finally {
 			setDeleteLoading(false);
@@ -192,19 +233,23 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 	}
 
 	function handleUnpublishClick() {
+		setUnpublishError(null);
 		setUnpublishOpen(true);
 	}
 
 	async function handleUnpublishConfirm() {
-		setUnpublishLoading(true);
+		setUnpublishError(null);
 		try {
+			setUnpublishLoading(true);
 			const resp = await unpublishDiagram(d.diagramId);
 			const updatedDiagram = { ...d, public: false };
 			if (onUpdate) onUpdate(updatedDiagram);
 			setUnpublishOpen(false);
-			showSuccess(resp);
+			showSuccess?.(resp || "Diagram unpublished successfully");
 		} catch (err) {
-			showError(err.message || "Failed to unpublish diagram");
+			const errMsg = CardErrorHandler.handleActionError("unpublish", err);
+			setUnpublishError(errMsg);
+			showError?.(errMsg);
 		} finally {
 			setUnpublishLoading(false);
 		}
@@ -235,7 +280,7 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 
 	return (
 		<>
-			<Card className="diagram-card" onClick={handleCardClick} sx={{ position: "relative" }}>
+			<Card className="diagram-card" onClick={handleCardClick}>
 				{d.thumbnail ? (
 					<CardMedia
 						component="img"
@@ -335,40 +380,44 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 					</MenuList>
 				</Popover>
 
-				<CardContent className="card-content">
-					<Box className="content-row" sx={{ alignItems: "flex-start" }}>
-						<Box className="text-section" sx={{ pr: 1 }}>
-							<Typography variant="h6" noWrap>
-								{d?.name}
-							</Typography>
-
-							<Typography variant="subtitle2" color="text.secondary" display="block">
-								Created: {d.createdAt}
-							</Typography>
-
-							<Typography variant="subtitle2" color="text.secondary" display="block">
-								Modified:{" "}
-								{d.lastModified}
-							</Typography>
-						</Box>
+				<CardContent className="card-content" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", px: 2, py: 2 }}>
+					{/* Title and options button row */}
+					<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1, mb: 1 }}>
+						<Typography variant="h6" sx={{ flex: 1, wordBreak: "break-word", minWidth: 0 }}>
+							{d?.name}
+						</Typography>
+						<IconButton
+							aria-label="more"
+							onClick={openMenu}
+							className="always-visible-icon"
+							size="small"
+							sx={{ flexShrink: 0 }}
+						>
+							<MoreVertIcon fontSize="small" />
+						</IconButton>
 					</Box>
 
-					<IconButton
-						aria-label="more"
-						onClick={openMenu}
-						className="always-visible-icon"
-					>
-						<MoreVertIcon />
-					</IconButton>
+					{/* Metadata */}
+					<Box sx={{ mb: 2 }}>
+						<Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: "0.75rem" }}>
+							Created: {d.createdAt}
+						</Typography>
+						<Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: "0.75rem" }}>
+							Modified: {d.lastModified}
+						</Typography>
+					</Box>
 
+					{/* Role and Public chips + Contributors */}
 					<Box
 						sx={{
 							display: "flex",
 							justifyContent: "space-between",
 							alignItems: "center",
+							gap: 1,
+							flexWrap: "wrap",
 						}}
 					>
-						<Box sx={{ display: "flex", gap: 1 }}>
+						<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
 							<Chip
 								icon={roleConfig.icon}
 								label={roleConfig.label}
@@ -376,8 +425,8 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 								color={roleConfig.color}
 								sx={{
 									fontWeight: 600,
-									fontSize: 12,
-									height: 28,
+									fontSize: 11,
+									height: 26,
 								}}
 							/>
 							{isPublic && (
@@ -388,8 +437,8 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 									color="success"
 									sx={{
 										fontWeight: 600,
-										fontSize: 12,
-										height: 28,
+										fontSize: 11,
+										height: 26,
 									}}
 								/>
 							)}
@@ -401,45 +450,52 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 								display: "flex",
 								alignItems: "center",
 								cursor: "pointer",
+								justifyContent: "flex-end",
 							}}
 							onClick={handleContributorsClick}
 						>
-							{localContributors.slice(0, 6).map((c, i) => (
-								<Box key={i} sx={{ zIndex: localContributors.length - i }}>
-									<Tooltip title={c.name}>
+							{localContributors && localContributors.length > 0 ? (
+								<>
+									{localContributors.slice(0, 3).map((c, i) => (
+										<Box key={i} sx={{ zIndex: localContributors.length - i }}>
+											<Tooltip title={c.name || "Contributor"}>
+												<Avatar
+													src={c.picture || undefined}
+													alt={c.name || "Contributor"}
+													sx={{
+														width: 28,
+														height: 28,
+														fontSize: 11,
+														border: "2px solid white",
+														boxShadow: 1,
+														ml: i === 0 ? 0 : -1,
+														bgcolor: c.picture ? undefined : "primary.main",
+														color: c.picture ? undefined : "white",
+													}}
+												>
+													{!c.picture && getInitials(c.name)}
+												</Avatar>
+											</Tooltip>
+										</Box>
+									))}
+
+									{localContributors.length > 3 && (
 										<Avatar
-											src={c.picture || undefined}
-											alt={c.name}
 											sx={{
-												width: 32,
-												height: 32,
-												fontSize: 12,
+												width: 28,
+												height: 28,
+												fontSize: 10,
+												ml: -1,
 												border: "2px solid white",
-												boxShadow: 1,
-												ml: i === 0 ? 0 : -1.2,
-												bgcolor: c.picture ? undefined : "primary.main",
-												color: c.picture ? undefined : "white",
+												bgcolor: "grey.400",
+												color: "white",
 											}}
 										>
-											{!c.picture && getInitials(c.name)}
+											+{localContributors.length - 3}
 										</Avatar>
-									</Tooltip>
-								</Box>
-							))}
-
-							{localContributors.length > 6 && (
-								<Avatar
-									sx={{
-										width: 32,
-										height: 32,
-										fontSize: 12,
-										ml: -1.2,
-										border: "2px solid white",
-									}}
-								>
-									+{localContributors.length - 6}
-								</Avatar>
-							)}
+									)}
+								</>
+							) : null}
 						</Box>
 					</Box>
 				</CardContent>
@@ -450,15 +506,19 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 					contributors={localContributors}
 					setOuterContributors={setLocalContributors}
 					currentUserRole={userRole}
-					currentUserId={d.currentUserId}
+					currentUserName={d.currentUserName}
 					diagramId={d.diagramId}
-					getInitials={getInitials}
 				/>
 			</Card>
 
 			<Dialog open={renameOpen} onClose={() => setRenameOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>Rename Diagram</DialogTitle>
 				<DialogContent>
+					{renameError && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{renameError}
+						</Alert>
+					)}
 					<TextField
 						autoFocus
 						margin="dense"
@@ -467,11 +527,7 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 						variant="outlined"
 						value={newName}
 						onChange={(e) => setNewName(e.target.value)}
-						onKeyPress={(e) => {
-							if (e.key === "Enter" && !renameLoading && newName.trim()) {
-								handleRenameSubmit();
-							}
-						}}
+						error={renameError !== null}
 					/>
 				</DialogContent>
 				<DialogActions>
@@ -491,6 +547,11 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			<Dialog open={shareOpen} onClose={() => setShareOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>Share Diagram</DialogTitle>
 				<DialogContent>
+					{shareError && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{shareError}
+						</Alert>
+					)}
 					<TextField
 						autoFocus
 						margin="dense"
@@ -499,12 +560,12 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 						variant="outlined"
 						value={shareUsername}
 						onChange={(e) => setShareUsername(e.target.value)}
+						error={shareError !== null}
 						sx={{ mb: 2, mt: 1 }}
 					/>
 					<FormControl fullWidth variant="outlined">
-						<InputLabel id="role-label">Role</InputLabel>
+						<InputLabel>Role</InputLabel>
 						<Select
-							labelId="role-label"
 							value={shareRole}
 							onChange={(e) => setShareRole(e.target.value)}
 							label="Role"
@@ -531,6 +592,11 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			<Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>Delete Diagram</DialogTitle>
 				<DialogContent>
+					{deleteError && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{deleteError}
+						</Alert>
+					)}
 					<Typography>
 						Are you sure you want to delete "{d?.name}"? This action cannot be undone.
 					</Typography>
@@ -553,6 +619,11 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 			<Dialog open={unpublishOpen} onClose={() => setUnpublishOpen(false)} maxWidth="sm" fullWidth>
 				<DialogTitle>Unpublish Diagram</DialogTitle>
 				<DialogContent>
+					{unpublishError && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{unpublishError}
+						</Alert>
+					)}
 					<Typography>
 						Are you sure you want to unpublish "{d?.name}"? This will remove it from the public gallery.
 					</Typography>

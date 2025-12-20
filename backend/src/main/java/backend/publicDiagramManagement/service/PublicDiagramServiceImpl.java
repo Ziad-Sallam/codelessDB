@@ -228,6 +228,9 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         starRepository.save(star);
 
         publicDiagramRepository.incrementStar(publicDiagram.getId());
+
+        // Update owner's total stars
+        updateOwnerTotalStars(diagramId, 1);
     }
 
     @Override
@@ -248,6 +251,23 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         starRepository.deleteById(id);
 
         publicDiagramRepository.decrementStar(publicDiagram.getId());
+
+        // Update owner's total stars
+        updateOwnerTotalStars(diagramId, -1);
+    }
+
+    private void updateOwnerTotalStars(UUID diagramId, int delta) {
+        List<UserDiagram> contributors = userDiagramRepository.findByDiagram_Id(diagramId);
+        User owner = contributors.stream()
+                .filter(ud -> ud.getRole() == Role.OWNER)
+                .map(UserDiagram::getUser)
+                .findFirst()
+                .orElse(null);
+
+        if (owner != null) {
+            owner.setTotalStars(owner.getTotalStars() + delta);
+            userRepository.save(owner);
+        }
     }
 
     @Override
@@ -327,13 +347,15 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         userDiagramService.checkOwner(userDiagram, "unpublish");
 
         UUID publicDiagramId = publicDiagram.getId();
+        viewsRepository.deleteByIdPublicDiagramId(publicDiagramId);
+        starRepository.deleteByIdPublicDiagramId(publicDiagramId);
+        forkRepository.deleteByOriginalDiagramId(publicDiagramId);
 
-        // Set to null first to break the relationship
         diagram.setPublicDiagram(null);
-        diagramRepository.saveAndFlush(diagram);
+        diagramRepository.save(diagram);
 
-        // Delete by ID to avoid loading the entire entity graph with potential zero
-        // dates
+        publicDiagram.setDiagram(null);
+
         publicDiagramRepository.deleteById(publicDiagramId);
     }
 }

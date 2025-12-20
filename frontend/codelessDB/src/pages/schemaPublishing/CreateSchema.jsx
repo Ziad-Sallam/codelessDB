@@ -1,34 +1,33 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Card,
-  CardContent,
-  CardHeader,
-  Typography,
-  Button,
-  TextField,
-  LinearProgress,
-  Stack,
-  Paper
-} from "@mui/material";
-import {
-  Visibility as EyeIcon,
-  Storage as DatabaseIcon,
-  CheckCircle as CheckCircleIcon,
-  RadioButtonUnchecked as CircleIcon,
-  Info as InfoIcon
+    CheckCircle as CheckCircleIcon,
+    RadioButtonUnchecked as CircleIcon,
+    Storage as DatabaseIcon,
+    Visibility as EyeIcon,
+    Info as InfoIcon
 } from "@mui/icons-material";
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    CardHeader,
+    Container,
+    LinearProgress,
+    Stack,
+    TextField,
+    Typography
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import LeftPanel from "../../components/LeftPanel";
-import SimpleTopBar from "../../components/SimpleTopBar";
 import { useNotification } from "../../components/NotificationContext";
-import { fetchToBePublished, publishSchema } from "./fetch";
+import SimpleTopBar from "../../components/SimpleTopBar";
 import { fetchHashtags } from "../discover/fetch.js";
+import { fetchToBePublished, publishSchema } from "./fetch";
 
+import HashtagInput from "../../components/HashtagInput.jsx";
 import DiagramSelector from "./create/DiagramSelector";
-import HashtagInput from "../../components/HashtagInput.jsx"
 import { MarkdownEditor } from "./create/MarkdownEditor";
 import { QueryBuilder } from "./create/QueryBuilder";
 
@@ -149,19 +148,16 @@ export default function CreateSchema() {
 
     setIsSaving(true);
 
-    try {
-      const resp = await publishSchema(selectedDiagram.diagramId, shortDescription, description, selectedHashtags, queries);
-      showSuccess(resp);
-      setTimeout(() => {
-        setIsSaving(false);
-        navigate("/discover", { state: null });
-      }, 1500);
-    } catch (err) {
-      showError && showError(err?.message || String(err));
-      console.log(err);
-    } finally {
-      setIsSaving(false);
-    }
+    publishSchema(selectedDiagram.diagramId, shortDescription, description, selectedHashtags, queries)
+      .then((resp) => {
+        showSuccess(resp);
+      })
+      .catch((err) => {
+        showError && showError(err?.message || String(err));
+        console.log(err);
+      });
+
+    navigate("/discover", { state: null });
   };
 
   const handlePreview = () => {

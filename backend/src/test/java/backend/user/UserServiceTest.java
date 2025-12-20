@@ -17,6 +17,9 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private org.springframework.mail.javamail.JavaMailSender mailSender;
+
     @InjectMocks
     private UserService userService;
 
@@ -52,6 +55,16 @@ class UserServiceTest {
     void createUser_missingUsername() {
         UserDto dto = new UserDto();
         dto.setEmail("test@mail.com");
+        dto.setRawPassword("123");
+
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
+    }
+
+    @Test
+    void createUser_emptyUsername() {
+        UserDto dto = new UserDto();
+        dto.setEmail("test@mail.com");
+        dto.setUsername("   ");
         dto.setRawPassword("123");
 
         assertThrows(IllegalArgumentException.class, () -> userService.createUser(dto));
@@ -210,5 +223,57 @@ class UserServiceTest {
     void deleteUser_success() {
         assertDoesNotThrow(() -> userService.deleteUser(10));
         verify(userRepository, times(1)).deleteById(10);
+    }
+
+    @Test
+    void sendOtpEmail_success_explicitUsername() {
+        // Arrange
+        String email = "test@mail.com";
+        String explicitUsername = "CustomUser";
+
+        jakarta.mail.internet.MimeMessage mimeMessage = mock(jakarta.mail.internet.MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        // Act
+        String result = userService.sendOtpEmail(email, explicitUsername);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(5, result.length());
+        assertTrue(result.matches("\\d+")); // Verify it's digits
+
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void sendOtpEmail_success_implicitUsername() {
+        // Arrange
+        String email = "test@mail.com";
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername("DbUser");
+
+        when(userRepository.findByEmail(email)).thenReturn(user);
+
+        jakarta.mail.internet.MimeMessage mimeMessage = mock(jakarta.mail.internet.MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        // Act
+        String result = userService.sendOtpEmail(email, null);
+
+        // Assert
+        assertNotNull(result);
+
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void sendOtpEmail_failure() {
+        // Arrange
+        String email = "test@mail.com";
+        when(mailSender.createMimeMessage()).thenThrow(new RuntimeException("Mail server down"));
+
+        // Act & Assert
+        assertThrows(OtpSendFailedException.class, () -> userService.sendOtpEmail(email, "user"));
     }
 }

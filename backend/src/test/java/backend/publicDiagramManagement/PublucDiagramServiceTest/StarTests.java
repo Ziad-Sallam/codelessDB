@@ -1,25 +1,25 @@
 package backend.publicDiagramManagement.PublucDiagramServiceTest;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import backend.entities.Diagram;
+import backend.entities.User;
+import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
@@ -27,7 +27,9 @@ import backend.publicDiagramManagement.repository.PublicDiagramRepository;
 import backend.publicDiagramManagement.repository.StarRepository;
 import backend.publicDiagramManagement.service.PublicDiagramServiceImpl;
 import backend.user.Role;
+import backend.user.UserRepository;
 import backend.userDiagramManagement.dto.ContributorDto;
+import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +41,10 @@ public class StarTests {
     private PublicDiagramRepository publicDiagramRepository;
     @Mock
     private StarRepository starRepository;
+    @Mock
+    private UserDiagramRepository userDiagramRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private PublicDiagramServiceImpl service;
@@ -79,6 +85,10 @@ public class StarTests {
         // star does not exist yet
         when(starRepository.existsById(any())).thenReturn(false);
 
+        User owner = User.builder().id(10).totalStars(5).build();
+        UserDiagram ownerUd = UserDiagram.builder().user(owner).role(Role.OWNER).build();
+        when(userDiagramRepository.findByDiagram_Id(diagramId)).thenReturn(List.of(ownerUd));
+
         service.starPublicDiagram(5, diagramId);
 
         // record created
@@ -86,6 +96,10 @@ public class StarTests {
 
         // star count incremented
         verify(publicDiagramRepository).incrementStar(diagramId);
+        
+        // owner stats updated
+        verify(userRepository).save(owner);
+        assertEquals(6, owner.getTotalStars());
     }
 
     /*
@@ -121,10 +135,18 @@ public class StarTests {
 
         when(starRepository.existsById(any())).thenReturn(true);
 
+        User owner = User.builder().id(10).totalStars(5).build();
+        UserDiagram ownerUd = UserDiagram.builder().user(owner).role(Role.OWNER).build();
+        when(userDiagramRepository.findByDiagram_Id(diagramId)).thenReturn(List.of(ownerUd));
+
         service.unstarPublicDiagram(4, diagramId);
 
         verify(starRepository).deleteById(any());
         verify(publicDiagramRepository).decrementStar(diagramId);
+        
+        // owner stats updated
+        verify(userRepository).save(owner);
+        assertEquals(4, owner.getTotalStars());
     }
 
     /*

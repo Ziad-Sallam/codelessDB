@@ -19,13 +19,4 @@ public interface DiagramRepository extends JpaRepository<Diagram, UUID> {
             """)
     Long countPublicDiagramsByOwner(@Param("userId") int userId);
 
-    @Query("""
-            SELECT COALESCE(SUM(pd.stars), 0)
-            FROM PublicDiagram pd
-            JOIN pd.diagram d
-            JOIN d.userDiagrams ud
-            WHERE ud.user.id = :userId
-              AND ud.role = backend.user.Role.OWNER
-            """)
-    Long sumStarsOfPublicDiagramsByOwner(@Param("userId") int userId);
 }

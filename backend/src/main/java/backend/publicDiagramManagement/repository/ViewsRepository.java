@@ -1,16 +1,17 @@
 package backend.publicDiagramManagement.repository;
 
-import backend.entities.joins.UserDiagramId;
-import backend.entities.publicDiagramEntities.DiagramView;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
+import backend.entities.joins.PublicDiagramUserId;
+import backend.entities.publicDiagramEntities.DiagramView;
 
 @Repository
-public interface ViewsRepository extends JpaRepository<DiagramView, UserDiagramId> {
+public interface ViewsRepository extends JpaRepository<DiagramView, PublicDiagramUserId> {
 
     @Modifying
     @Query(value = """
@@ -18,4 +19,8 @@ public interface ViewsRepository extends JpaRepository<DiagramView, UserDiagramI
                VALUES (:userId, :diagramId)
             """, nativeQuery = true)
     int insertIfNotExists(int userId, UUID diagramId);
+
+    @Modifying
+    @Query("DELETE FROM DiagramView v WHERE v.id.publicDiagramId = :publicDiagramId")
+    void deleteByIdPublicDiagramId(UUID publicDiagramId);
 }
