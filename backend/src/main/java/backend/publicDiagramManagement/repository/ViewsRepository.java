@@ -20,5 +20,7 @@ public interface ViewsRepository extends JpaRepository<DiagramView, PublicDiagra
             """, nativeQuery = true)
     int insertIfNotExists(int userId, UUID diagramId);
 
+    @Modifying
+    @Query("DELETE FROM DiagramView v WHERE v.id.publicDiagramId = :publicDiagramId")
     void deleteByIdPublicDiagramId(UUID publicDiagramId);
 }
