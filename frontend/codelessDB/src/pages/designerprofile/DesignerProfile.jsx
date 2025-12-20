@@ -29,6 +29,8 @@ import LeftPanel from "../../components/LeftPanel";
 import SimpleTopBar from "../../components/SimpleTopBar";
 import { fetchDesignerProfile, fetchPublicDiagrams, fetchStarredDiagrams } from "./fetch";
 import { useNotification } from "../../components/NotificationContext";
+import { getInitials } from "../diagrams/Contributors.jsx";
+import UserNotFound from "../UserNotFound.jsx";
 
 export default function DesignerProfile() {
   const navigate = useNavigate();
@@ -57,7 +59,7 @@ export default function DesignerProfile() {
       })
       .catch((err) => {
         console.error(err);
-        showError("Failed to load designer profile");
+        // showError("Failed to load designer profile");
       })
       .finally(() => {
         setIsLoadingProfile(false);
@@ -78,7 +80,7 @@ export default function DesignerProfile() {
       })
       .catch((err) => {
         console.error(err);
-        showError("Failed to load diagrams");
+        // showError("Failed to load diagrams");
       })
       .finally(() => {
         setIsLoadingDiagrams(false);
@@ -111,12 +113,7 @@ export default function DesignerProfile() {
 
   if (!profile) {
     return (
-      <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
-        <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
-        <Box sx={{ flexGrow: 1, p: 4, textAlign: 'center' }}>
-          <Typography variant="h5">User not found</Typography>
-        </Box>
-      </Box>
+      <UserNotFound />
     );
   }
 
@@ -137,9 +134,21 @@ export default function DesignerProfile() {
                   <Card variant="outlined" sx={{ textAlign: 'center', p: 3 }}>
                     <Avatar
                       src={profile.picture}
-                      alt={profile.name}
-                      sx={{ width: 128, height: 128, mx: 'auto', mb: 2, border: 4, borderColor: 'background.paper', boxShadow: 2 }}
-                    />
+                      alt={profile.username}
+                      sx={{
+                        width: 128,
+                        height: 128,
+                        fontSize: 64,
+                        mx: 'auto',
+                        mb: 2,
+                        border: 4,
+                        boxShadow: 2,
+                        bgcolor: profile.picture ? undefined : "primary.main"
+                      }
+                      }
+                    >
+                      {(!profile.picture || profile.picture.trim() === "") && getInitials(profile.username)}
+                    </Avatar>
                     <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                       {profile.name || profile.username}
                     </Typography>
