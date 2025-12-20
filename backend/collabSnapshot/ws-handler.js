@@ -10,26 +10,51 @@ const wsReadyStateOpen = 1
 const wsReadyStateClosing = 2
 const wsReadyStateClosed = 3
 
-// Standard Yjs Message Types
 const messageSync = 0
 const messageAwareness = 1
 
 /**
+ * Sets up the Awareness Broadcast logic.
+ * This should be called ONCE per Room (not per connection).
+ * * @param {Y.Doc} doc - The Yjs document
+ * @param {Set<WebSocket>} conns - The set of all active connections for this room
+ */
+export const setupAwarenessBroadcasting = (doc, conns) => {
+    if (doc.awareness) {
+        doc.awareness.on('update', ({ added, updated, removed }, origin) => {
+            const changedClients = added.concat(updated).concat(removed)
+            const encoder = encoding.createEncoder()
+            encoding.writeVarUint(encoder, messageAwareness)
+            encoding.writeVarUint8Array(
+                encoder, 
+                awarenessProtocol.encodeAwarenessUpdate(doc.awareness, changedClients)
+            )
+            const buff = encoding.toUint8Array(encoder)
+
+            conns.forEach((conn) => {
+                // Broadcast to everyone EXCEPT the origin of the update
+                if (conn !== origin && (conn.readyState === wsReadyStateOpen || conn.readyState === wsReadyStateConnecting)) {
+                    send(conn, buff)
+                }
+            })
+        })
+    }
+}
+
+/**
  * Connects a WebSocket to a specific Yjs Doc.
- * @param {WebSocket} conn 
- * @param {Y.Doc} doc 
  */
 export const setupWSConnection = (conn, doc) => {
   conn.binaryType = 'arraybuffer'
   
-  // 1. Send SyncStep1 (Ask client for their state)
+  // 1. Send SyncStep1
   const encoder = encoding.createEncoder()
   encoding.writeVarUint(encoder, messageSync)
   syncProtocol.writeSyncStep1(encoder, doc)
   send(conn, encoding.toUint8Array(encoder))
 
-  // 2. Send Awareness states
-  const awareness = doc.awareness // Assuming you attached awareness to doc if needed
+  // 2. Send Awareness states (Initial State)
+  const awareness = doc.awareness
   if (awareness) {
     const awarenessStates = awareness.getStates()
     if (awarenessStates.size > 0) {
@@ -57,6 +82,7 @@ export const setupWSConnection = (conn, doc) => {
           break
         case messageAwareness: {
           if (doc.awareness) {
+            // Apply the update. 'conn' is passed as the 'origin' so we can filter it out in the broadcast loop above.
             awarenessProtocol.applyAwarenessUpdate(doc.awareness, decoding.readVarUint8Array(decoder), conn)
           }
           break
@@ -75,10 +101,8 @@ export const setupWSConnection = (conn, doc) => {
     }
   })
 
-  // 5. Subscribe to document updates (broadcast to this client)
+  // 5. Sync Protocol Update Handler
   const updateHandler = (update, origin) => {
-    // Ignore updates originating from this same connection to prevent loops
-    // (In standard Yjs server, we often rely on origin checks, but basic broadcasting works too)
     const encoder = encoding.createEncoder()
     encoding.writeVarUint(encoder, messageSync)
     syncProtocol.writeUpdate(encoder, update)
@@ -87,7 +111,6 @@ export const setupWSConnection = (conn, doc) => {
 
   doc.on('update', updateHandler)
 
-  // Cleanup when connection closes
   conn.on('close', () => {
     doc.off('update', updateHandler)
   })
