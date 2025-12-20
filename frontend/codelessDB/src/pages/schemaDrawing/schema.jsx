@@ -35,6 +35,7 @@ import {
   CollaborationProvider,
   useCollaboration,
 } from "./collab/CollaborationContext.jsx";
+import ShareWindow from "../../components/ShareWindow.jsx";
 
 function uint8ArrayToBase64(bytes) {
   let binary = '';
@@ -74,6 +75,7 @@ const SchemaContent = () => {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const [shareOpen,setShareOpen] = useState(false);
 
   const { screenToFlowPosition } = useReactFlow();
 
@@ -258,6 +260,10 @@ const SchemaContent = () => {
     }
   };
 
+  function handleShareClick() {
+		setShareOpen(true);
+	}
+
   return (
     <div className="drawing-container" onMouseMove={onMouseMove}>
       {isSqlPanelOpen && (
@@ -266,6 +272,8 @@ const SchemaContent = () => {
           onClose={() => setIsSqlPanelOpen(false)}
         />
       )}
+
+      
 
       <input
         className="schema-name"
@@ -276,6 +284,10 @@ const SchemaContent = () => {
       />
       <div className="active-users">
         <ActiveUsers />
+        <button className="add-user" onClick={handleShareClick}>+</button>
+      </div>
+      <div className="share-window">
+        <ShareWindow diagramId={roomId} shareOpen={shareOpen} setShareOpen={setShareOpen}/>
       </div>
       <div >
         <button className="save-btn" onClick={onSaveDiagram}>Save</button>
