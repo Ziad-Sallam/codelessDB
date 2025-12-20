@@ -327,13 +327,15 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         userDiagramService.checkOwner(userDiagram, "unpublish");
 
         UUID publicDiagramId = publicDiagram.getId();
+        viewsRepository.deleteByIdPublicDiagramId(publicDiagramId);
+        starRepository.deleteByIdPublicDiagramId(publicDiagramId);
+        forkRepository.deleteByOriginalDiagramId(publicDiagramId);
 
-        // Set to null first to break the relationship
         diagram.setPublicDiagram(null);
-        diagramRepository.saveAndFlush(diagram);
+        diagramRepository.save(diagram);
 
-        // Delete by ID to avoid loading the entire entity graph with potential zero
-        // dates
+        publicDiagram.setDiagram(null);
+
         publicDiagramRepository.deleteById(publicDiagramId);
     }
 }

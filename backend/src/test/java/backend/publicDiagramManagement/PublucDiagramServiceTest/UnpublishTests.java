@@ -5,14 +5,10 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import backend.entities.Diagram;
 import backend.entities.User;
@@ -20,6 +16,9 @@ import backend.entities.joins.UserDiagram;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.publicDiagramManagement.exceptions.PublicDiagramException;
 import backend.publicDiagramManagement.repository.PublicDiagramRepository;
+import backend.publicDiagramManagement.repository.StarRepository;
+import backend.publicDiagramManagement.repository.ForkRepository;
+import backend.publicDiagramManagement.repository.ViewsRepository;
 import backend.publicDiagramManagement.service.PublicDiagramServiceImpl;
 import backend.user.Role;
 import backend.userDiagramManagement.repository.DiagramRepository;
@@ -32,6 +31,11 @@ class UnpublishTests {
     private DiagramRepository diagramRepository;
     private PublicDiagramRepository publicDiagramRepository;
     private UserDiagramService userDiagramService;
+
+    private ViewsRepository viewsRepository;
+    private StarRepository starRepository;
+    private ForkRepository forkRepository;
+
     private PublicDiagramServiceImpl service;
 
     private final int USER_ID = 1;
@@ -44,19 +48,31 @@ class UnpublishTests {
 
     @BeforeEach
     void setup() {
+        // Mock all dependencies
         userDiagramRepository = mock(UserDiagramRepository.class);
         diagramRepository = mock(DiagramRepository.class);
         publicDiagramRepository = mock(PublicDiagramRepository.class);
         userDiagramService = mock(UserDiagramService.class);
+
+        viewsRepository = mock(ViewsRepository.class);
+        starRepository = mock(StarRepository.class);
+        forkRepository = mock(ForkRepository.class);
 
         service = new PublicDiagramServiceImpl(
                 userDiagramRepository,
                 diagramRepository,
                 publicDiagramRepository,
                 userDiagramService,
-                null, null, null,
-                null, null, null, null);
+                null,  // HashtagService
+                null,  // ViewsService
+                viewsRepository,
+                forkRepository,
+                starRepository,
+                null,  // UserService
+                null   // UserRepository
+        );
 
+        // Setup test entities
         owner = new User();
         owner.setId(USER_ID);
 
@@ -84,18 +100,21 @@ class UnpublishTests {
         when(userDiagramService.getUserDiagramOrThrow(USER_ID, DIAGRAM_ID))
                 .thenReturn(ownerLink);
 
-        // delete() should be called
-        // mock deleteById instead of delete
-        doNothing().when(publicDiagramRepository).deleteById(publicDiagram.getId());
+        doNothing().when(viewsRepository).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        doNothing().when(starRepository).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        doNothing().when(forkRepository).deleteByOriginalDiagramId(DIAGRAM_ID);
+        doNothing().when(publicDiagramRepository).deleteById(DIAGRAM_ID);
 
         service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID);
 
-        // verify deleteById called once
-        verify(publicDiagramRepository, times(1)).deleteById(publicDiagram.getId());
+        // Verify all deletes called
+        verify(viewsRepository, times(1)).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        verify(starRepository, times(1)).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        verify(forkRepository, times(1)).deleteByOriginalDiagramId(DIAGRAM_ID);
+        verify(publicDiagramRepository, times(1)).deleteById(DIAGRAM_ID);
 
-        // diagram no longer has public entry
+        // Diagram should no longer reference the public diagram
         assertNull(diagram.getPublicDiagram());
-
     }
 
     // -------------------------------------------------------------
@@ -145,9 +164,13 @@ class UnpublishTests {
         when(userDiagramService.getUserDiagramOrThrow(USER_ID, DIAGRAM_ID))
                 .thenReturn(ownerLink);
 
+        doNothing().when(viewsRepository).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        doNothing().when(starRepository).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        doNothing().when(forkRepository).deleteByOriginalDiagramId(DIAGRAM_ID);
+        doNothing().when(publicDiagramRepository).deleteById(DIAGRAM_ID);
+
         service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID);
 
-        // Verify deleteById called with correct ID
         verify(publicDiagramRepository, times(1))
                 .deleteById(publicDiagram.getId());
     }
@@ -159,6 +182,11 @@ class UnpublishTests {
     void unpublish_clearsPublicDiagramField() {
         when(userDiagramService.getUserDiagramOrThrow(USER_ID, DIAGRAM_ID))
                 .thenReturn(ownerLink);
+
+        doNothing().when(viewsRepository).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        doNothing().when(starRepository).deleteByIdPublicDiagramId(DIAGRAM_ID);
+        doNothing().when(forkRepository).deleteByOriginalDiagramId(DIAGRAM_ID);
+        doNothing().when(publicDiagramRepository).deleteById(DIAGRAM_ID);
 
         service.unPublishPublicDiagram(USER_ID, DIAGRAM_ID);
 

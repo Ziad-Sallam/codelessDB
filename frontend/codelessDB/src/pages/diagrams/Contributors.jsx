@@ -78,18 +78,17 @@ export default function Contributors({
 	const [changingRoleName, setChangingRoleName] = useState(null);
 	const [deletingName, setDeletingName] = useState(null);
 
+	// Confirmation Dialog State
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleteLoading, setDeleteLoading] = useState(false);
+	const [contributorToDelete, setContributorToDelete] = useState(null);
+
 	useEffect(() => {
 		setLocalContributors(Array.isArray(contributors) ? contributors : []);
 	}, [contributors]);
 
 	const isOwner = currentUserRole === "OWNER";
 
-	/**
-	 * Change role handler (uses username as unique identifier)
-	 * - optimistic update
-	 * - calls shareDiagram(diagramId, username, role) (backend)
-	 * - rolls back on error
-	 */
 	async function handleRoleChange(username, newRole) {
 		const target = localContributors.find((c) => String(c.name) === String(username));
 		if (!target) return;
@@ -144,9 +143,9 @@ export default function Contributors({
 	}
 
 	/**
-	 * Delete contributor by username
+	 * Opens the delete confirmation dialog
 	 */
-	async function handleDelete(username) {
+	function handleDeleteClick(username) {
 		const target = localContributors.find((c) => String(c.name) === String(username));
 		if (!target) return;
 
@@ -154,30 +153,57 @@ export default function Contributors({
 			showWarning("Cannot remove an owner.");
 			return;
 		}
-		
+
 		if (String(username) === String(currentUserName)) {
 			showWarning("Cannot remove yourself.");
 			return;
 		}
 
-		if (!window.confirm(`Remove ${target.name} from contributors?`)) return;
+		setContributorToDelete(username);
+		setDeleteDialogOpen(true);
+	}
 
+	/**
+	 * Confirms deletion and calls API
+	 */
+	async function handleDeleteConfirm() {
+		if (!contributorToDelete) return;
+		
+		const username = contributorToDelete;
+		setDeleteLoading(true);
 		setDeletingName(username);
+
 		try {
-			const response = await shareDiagram(diagramId, username, null, true)
+			await shareDiagram(diagramId, username, null, true);
 			setLocalContributors((prev) => prev.filter((c) => String(c.name) !== String(username)));
-			setOuterContributors((prev) => prev.filter((c) => String(c.name) !== String(username)))
+			setOuterContributors((prev) => prev.filter((c) => String(c.name) !== String(username)));
+			
+			setDeleteDialogOpen(false);
 			showSuccess(`Contributor ${username} is removed`);
 
 		} catch (err) {
-			showError(err)
-
+			showError(err);
 		} finally {
+			setDeleteLoading(false);
 			setDeletingName(null);
+
 		}
 	}
 
+	function handleCloseDeleteDialog() {
+		if (deleteLoading) return; // prevent closing while loading
+		setDeleteDialogOpen(false);
+		setContributorToDelete(null);
+	}
+
 	return (
+		<div
+			onClick={(e) => e.stopPropagation()}
+			onMouseDown={(e) => e.stopPropagation()}
+			style={{ display: "none" }} // Ensure it doesn't affect layout
+		>
+		{/* Use a portal-friendly container interaction blocker */}
+			<style>{``}</style>
 		<Dialog
 			open={Boolean(open)}
 			onClose={onClose}
@@ -252,7 +278,7 @@ export default function Contributors({
 												<span>
 													<IconButton
 														edge="end"
-														onClick={() => handleDelete(contributor.name)}
+														onClick={() => handleDeleteClick(contributor.name)}
 														disabled={!canDelete || deletingName === contributor.name}
 														aria-label={`delete-${contributor.name}`}
 														sx={{ color: canDelete ? "error.main" : "action.disabled" }}
@@ -278,10 +304,6 @@ export default function Contributors({
 									</Avatar>
 								</ListItemAvatar>
 
-								{/*
-                  IMPORTANT: disableTypography to avoid ListItemText auto-wrapping primary/secondary inside <p>.
-                  We render our own Typography/Box nodes to avoid invalid nesting (Select renders div/fieldset).
-                */}
 								<ListItemText
 									disableTypography
 									primary={
@@ -360,6 +382,35 @@ export default function Contributors({
 				</Button>
 			</DialogActions>
 		</Dialog>
+
+		{/* Delete Confirmation Dialog */}
+		<Dialog
+			open={deleteDialogOpen}
+			onClose={handleCloseDeleteDialog}
+			maxWidth="sm"
+			fullWidth
+		>
+			<DialogTitle>Remove Contributor</DialogTitle>
+			<DialogContent>
+				<Typography>
+					Remove <strong>{contributorToDelete}</strong> from contributors?
+				</Typography>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={handleCloseDeleteDialog} disabled={deleteLoading}>
+					Cancel
+				</Button>
+				<Button
+					onClick={handleDeleteConfirm}
+					variant="contained"
+					color="error"
+					disabled={deleteLoading}
+				>
+					{deleteLoading ? <CircularProgress size={20} /> : "Remove"}
+				</Button>
+			</DialogActions>
+		</Dialog>
+		</div>
 	);
 }
 
