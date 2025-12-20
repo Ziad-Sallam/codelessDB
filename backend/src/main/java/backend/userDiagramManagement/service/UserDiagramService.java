@@ -287,8 +287,11 @@ public class UserDiagramService implements IUserDiagramService {
     public void updateDDL(UUID diagramId, String ddl) {
         Diagram diagram = getDiagramOrThrow(diagramId);
 
+        if (ddl == null) {
+            throw new DiagramException.InvalidDiagramDataException("DDL cannot be null");
+        }
+
         diagram.setDdl(ddl);
         diagramRepository.save(diagram);
     }
-
 }

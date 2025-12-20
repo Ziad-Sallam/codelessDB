@@ -88,7 +88,6 @@ export default function SchemaPreview() {
       try {
         const data = await getPublicDiagram(id);
         setSchemaData(data);
-        console.log(data);
         setIsStarred(data.stared || false);
       } catch (err) {
         showError(err.message);
