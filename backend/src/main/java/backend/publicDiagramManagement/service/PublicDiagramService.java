@@ -33,7 +33,7 @@ public interface PublicDiagramService {
 
     Page<PublicDiagramInfoDto> searchPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable);
 
-    Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable);
+    Page<PublicUserInfoDto> searchUsersByPublicDiagrams(int userId, SearchRequestDto searchRequestDto, Pageable pageable);
 
     void unPublishPublicDiagram(int userId, @NonNull UUID diagramId);
 }

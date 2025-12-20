@@ -1,46 +1,53 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Card,
-  CardContent,
-  Avatar,
-  Typography,
-  Tabs,
-  Tab,
-  Chip,
-  Stack,
-  Divider,
-  CircularProgress,
-} from "@mui/material";
-import {
-  Star as StarIcon,
-  CallSplit as ForkIcon,
-  LocationOn as MapPinIcon,
-  Link as LinkIcon,
+  Description as BookOpenIcon,
   CalendarToday as CalendarIcon,
   Storage as DatabaseIcon,
-  Description as BookOpenIcon,
+  CallSplit as ForkIcon,
+  Link as LinkIcon,
+  Star as StarIcon,
   EmojiEvents as TrophyIcon,
+  PersonAdd as UserPlusIcon,
+  Group as UsersIcon,
 } from "@mui/icons-material";
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Container,
+  Divider,
+  Stack,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import LeftPanel from "../../components/LeftPanel";
+import { useNotification } from "../../components/NotificationContext";
 import SimpleTopBar from "../../components/SimpleTopBar";
+import { validateToken } from "../auth/fetch";
 import {
   fetchDesignerProfile,
   fetchPublicDiagrams,
   fetchStarredDiagrams,
+  followUser,
+  unfollowUser,
 } from "./fetch";
-import { useNotification } from "../../components/NotificationContext";
+
 
 export default function DesignerProfile() {
   const navigate = useNavigate();
   const { username } = useParams();
   const [leftNav, setLeftNav] = useState("public");
   const [activeTab, setActiveTab] = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const { showError } = useNotification();
+  const { showError, showSuccess } = useNotification();
 
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -53,10 +60,14 @@ export default function DesignerProfile() {
   useEffect(() => {
     if (!username) return;
     setIsLoadingProfile(true);
-    fetchDesignerProfile(username)
-      .then((data) => {
-        setProfile(data);
-        console.log(data);
+
+    Promise.all([
+      fetchDesignerProfile(username),
+      validateToken().catch(() => null)
+    ])
+      .then(([profileData, userData]) => {
+        setProfile(profileData);
+        setCurrentUser(userData);
       })
       .catch((err) => {
         console.error(err);
@@ -94,6 +105,33 @@ export default function DesignerProfile() {
 
   const handleSchemaClick = (diagramId) => {
     navigate(`/schema/preview/${diagramId}`);
+  };
+
+  const handleFollowToggle = async () => {
+    if (!currentUser) {
+      showError("Please log in to follow creators");
+      return;
+    }
+
+    try {
+      if (profile.isFollowed) {
+        await unfollowUser(profile.username);
+        showSuccess(`Unfollowed ${profile.name || profile.username}`);
+      } else {
+        await followUser(profile.username);
+        showSuccess(`Followed ${profile.name || profile.username}`);
+      }
+
+      setProfile((prev) => ({
+        ...prev,
+        isFollowed: !prev.isFollowed,
+        followersCount: prev.isFollowed
+          ? Math.max(0, (prev.followersCount || 0) - 1)
+          : (prev.followersCount || 0) + 1,
+      }));
+    } catch (err) {
+      showError(err.message || "Action failed");
+    }
   };
 
   const formatDate = (dateString) => {
@@ -283,7 +321,50 @@ export default function DesignerProfile() {
                             Schemas
                           </Typography>
                         </Box>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            bgcolor: "action.hover",
+                            borderRadius: 2,
+                          }}
+                        >
+                          <UsersIcon sx={{ color: "info.main", mb: 0.5 }} />
+                          <Typography variant="h6" fontWeight="bold">
+                            {profile.followersCount || 0}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Followers
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            bgcolor: "action.hover",
+                            borderRadius: 2,
+                          }}
+                        >
+                          <UsersIcon sx={{ color: "secondary.main", mb: 0.5 }} />
+                          <Typography variant="h6" fontWeight="bold">
+                            {profile.followingCount || 0}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Following
+                          </Typography>
+                        </Box>
                       </Box>
+
+                      {currentUser?.username !== profile.username && (
+                        <Button
+                          fullWidth
+                          variant={profile.isFollowed ? "contained" : "outlined"}
+                          color={profile.isFollowed ? "secondary" : "primary"}
+                          onClick={handleFollowToggle}
+                          sx={{ mt: 3, borderRadius: 2, py: 1 }}
+                          startIcon={profile.isFollowed ? <UsersIcon /> : <UserPlusIcon />}
+                        >
+                          {profile.isFollowed ? "Unfollow" : "Follow"}
+                        </Button>
+                      )}
                     </Card>
                   </Box>
                 </Box>
