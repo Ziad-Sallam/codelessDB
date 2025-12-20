@@ -33,7 +33,7 @@ export default function ShareWindow({diagramId,shareOpen,setShareOpen}){
 					showSuccess(`Shared with ${shareUsername}`);
 				
 				} catch (err) {
-					showError(err || "Failed to share diagram");
+					showError(err.message);
 				
 				} finally {
 					setShareLoading(false);
