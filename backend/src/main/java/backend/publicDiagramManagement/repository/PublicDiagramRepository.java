@@ -1,6 +1,8 @@
 package backend.publicDiagramManagement.repository;
 
-import backend.entities.publicDiagramEntities.PublicDiagram;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,8 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
+import backend.entities.publicDiagramEntities.PublicDiagram;
 
 @Repository
 public interface PublicDiagramRepository extends JpaRepository<PublicDiagram, UUID> {
@@ -100,4 +101,13 @@ public interface PublicDiagramRepository extends JpaRepository<PublicDiagram, UU
             @Param("username") String username,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT COUNT(pd)
+        FROM PublicDiagram pd
+        JOIN pd.starsEntities se
+        JOIN User u ON u.id = se.id.userId
+        WHERE u.username = :username
+    """)
+    long countStaredPublicDiagramsByUser(@Param("username") String username);
 }

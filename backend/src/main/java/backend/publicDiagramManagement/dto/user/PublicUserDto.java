@@ -30,4 +30,5 @@ public class PublicUserDto {
     private boolean isFollowed;
     private int followersCount;
     private int followingCount;
+    private long starredCount;
 }
