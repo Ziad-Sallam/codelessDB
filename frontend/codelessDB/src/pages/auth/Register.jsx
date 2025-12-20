@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
-import "./Register.css";
-import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
-import { TbLockPassword } from "react-icons/tb";
-import { IoIosMail } from "react-icons/io";
+import { useEffect, useState } from "react";
+import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { IoIosMail } from "react-icons/io";
+import { TbLockPassword } from "react-icons/tb";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../components/AuthProvider.jsx";
 import {
-  validateSignup,
-  sendOtp,
   completeSignup,
-  requestPasswordReset,
-  updatePassword,
-  redirectToGoogleAuth,
   parseApiError,
+  redirectToGoogleAuth,
+  requestPasswordReset,
+  sendOtp,
+  updatePassword,
+  validateSignup,
   validateToken,
 } from "./fetch.js";
-import { useAuth } from "../../components/AuthProvider.jsx";
+import "./Register.css";
 
 // Step constants
 const STEPS = {
@@ -29,6 +29,7 @@ const STEPS = {
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   // Current step
@@ -39,6 +40,9 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  
+  // Store the password passed from login key to return it
+  const [preservedPassword] = useState(location.state?.password || "");
 
   // OTP
   const [otpInput, setOtpInput] = useState(["", "", "", "", ""]);
@@ -92,6 +96,10 @@ const Register = () => {
 
       if (flow === "forgot") {
         setStep(STEPS.FORGOT_PASSWORD);
+        const emailParam = searchParams.get("email");
+        if (emailParam) {
+          setEmail(emailParam);
+        }
       } else if (flow === "reset") {
         const storedToken = localStorage.getItem("token_for_reset");
         const storedEmail = localStorage.getItem("email");
@@ -325,7 +333,7 @@ const Register = () => {
 
   // Cancel and go back to login
   const handleCancel = () => {
-    navigate("/login");
+    navigate("/login", { state: { email, password: preservedPassword } });
   };
 
   // Render content based on current step
@@ -529,7 +537,7 @@ const Register = () => {
             </button>
 
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/login", { state: { email, password: preservedPassword } })}
               className="submit"
               style={{ backgroundColor: "#6c757d", marginTop: "10px" }}
             >
