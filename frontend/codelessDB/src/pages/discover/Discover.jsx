@@ -34,7 +34,6 @@ export default function Discover() {
   const { showSuccess, showError } = useNotification();
 
   const [leftNav, setLeftNav] = useState("all");
-  const [showFilters, setShowFilters] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [publicDiagrams, setPublicDiagrams] = useState([]);
   const [page, setPage] = useState(1);
@@ -196,27 +195,18 @@ export default function Discover() {
                   Filter by Tags
                 </Typography>
               </Box>
-              {/* <Button
-                  size="small"
-                  onClick={() => setShowFilters(!showFilters)}
-                  startIcon={!showFilters && <FilterIcon />}
-                >
-                  {showFilters ? "Hide Filters" : "Show Filters"}
-                </Button> */}
               <Button variant="contained" sx={{ marginLeft: "auto", mr: 2 }} onClick={handlePublishDiagram}>
                 Publish Diagram
               </Button>
             </Box>
 
-            {showFilters && (
-              <CardContent>
-                <HashtagInput
-                  hashtags={hashtags}
-                  selectedHashtags={selectedHashtags}
-                  onSelect={setSelectedHashtags}
-                />
-              </CardContent>
-            )}
+            <CardContent>
+              <HashtagInput
+                hashtags={hashtags}
+                selectedHashtags={selectedHashtags}
+                onSelect={setSelectedHashtags}
+              />
+            </CardContent>
           </Box>
 
           <Divider sx={{ mb: 2 }} />
@@ -225,35 +215,6 @@ export default function Discover() {
             <Box sx={{ mb: 2 }}>
               <UserCarousel users={featuredUsers} onFollowToggle={handleFollowToggle} currentUser={currentUser} />
             </Box>
-
-            {/* Filters */}
-            {/* <Box >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TrendingUpIcon color="primary" fontSize="small" />
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    Filter by Tags
-                  </Typography>
-                </Box>
-                <Button
-                  size="small"
-                  onClick={() => setShowFilters(!showFilters)}
-                  startIcon={!showFilters && <FilterIcon />}
-                >
-                  {showFilters ? "Hide Filters" : "Show Filters"}
-                </Button>
-              </Box>
-
-              {showFilters && (
-                <CardContent>
-                  <HashtagInput
-                    hashtags={hashtags}
-                    selectedHashtags={selectedHashtags}
-                    onSelect={setSelectedHashtags}
-                  />
-                </CardContent>
-              )}
-            </Box> */}
 
             <Divider sx={{ mb: 2 }} />
 

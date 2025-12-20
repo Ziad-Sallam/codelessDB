@@ -9,7 +9,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   useReactFlow,
-  
+
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { nodeTypes, edgeTypes } from "./index";
@@ -26,6 +26,7 @@ import {
 } from "./fetch.js";
 import { useNotification } from "../../components/NotificationContext";
 import { uploadToCloudinary } from "../../components/uploadImage.js";
+import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
 
 // 1. IMPORT HTML-TO-IMAGE
 import { toPng } from 'html-to-image';
@@ -33,7 +34,7 @@ import { toPng } from 'html-to-image';
 export default function Schema() {
   const { showSuccess, showError, showWarning } = useNotification();
   const { id } = useParams();
-
+  const [diagramExistFlag, setDiagramExistFlag] = useState(false);
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
@@ -52,8 +53,10 @@ export default function Schema() {
       setEdges(content.edges || []);
       setSchemaName(response.name);
       setIsReadOnly(response.role == "READER" ? true : false);
+      setDiagramExistFlag(true);
     } catch (err) {
-      showError && showError(err?.message || String(err));
+      // showError && showError(err?.message || String(err));
+      setDiagramExistFlag(false);
     }
   };
 
@@ -62,7 +65,7 @@ export default function Schema() {
   }, []);
 
   const takeSnapshot = async () => {
-    
+
     const viewport = document.querySelector('.react-flow__viewport');
 
     await reactFlowInstance.fitView({ padding: 50 });
@@ -167,7 +170,7 @@ export default function Schema() {
 
     try {
       await updateDiagram(id, payload);
-      await takeSnapshot(); 
+      await takeSnapshot();
       showSuccess("Diagram saved successfully!");
     } catch (err) {
       showError(err.message);
@@ -196,6 +199,10 @@ export default function Schema() {
     }
 
   };
+
+  if (!diagramExistFlag) {
+    return <DiagramNotFound />;
+  }
 
   return (
     <div className="drawing-container">

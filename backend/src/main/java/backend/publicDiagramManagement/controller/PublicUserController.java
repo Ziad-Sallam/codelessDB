@@ -16,6 +16,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.user.PublicUserDto;
 import backend.publicDiagramManagement.dto.user.PublicUserFollowDto;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import backend.publicDiagramManagement.dto.PageResponse;
+import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
+import backend.publicDiagramManagement.dto.user.PublicUserDto;
 import backend.publicDiagramManagement.service.PublicUserService;
 import backend.security.AuthUser;
 import lombok.NonNull;
@@ -48,7 +55,7 @@ public class PublicUserController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicDiagramInfoDto> publicUserDto = publicUserService.getPublicDiagrams(userName, pageable);
 
-        return ResponseEntity.ok(publicUserDto);
+        return ResponseEntity.ok(new PageResponse<>(publicUserDto));
     }
 
     @GetMapping("/staredDiagrams/{userName}")
@@ -60,7 +67,7 @@ public class PublicUserController {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicDiagramInfoDto> staredDiagrams = publicUserService.getStaredPublicDiagrams(userName, pageable);
-        return ResponseEntity.ok(staredDiagrams);
+        return ResponseEntity.ok(new PageResponse<>(staredDiagrams));
     }
 
     @PostMapping("/follow/{userName}")

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import backend.publicDiagramManagement.dto.PageResponse;
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
@@ -55,7 +56,7 @@ public class PublicDiagramController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<ToBePublishedDiagramDto> toBePublishedDiagrams = publicDiagramService
                 .getToBePublishedDiagrams(authUser.userId(), pageable);
-        return ResponseEntity.ok(toBePublishedDiagrams);
+        return ResponseEntity.ok(new PageResponse<>(toBePublishedDiagrams));
     }
 
     @GetMapping("/view/{diagramId}")
@@ -103,7 +104,7 @@ public class PublicDiagramController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicDiagramInfoDto> forkedDiagrams = publicDiagramService.getForkedPublicDiagrams(authUser.userId(),
                 pageable);
-        return ResponseEntity.ok(forkedDiagrams);
+        return ResponseEntity.ok(new PageResponse<>(forkedDiagrams));
     }
 
     @PostMapping("/staredDiagrams")
@@ -115,7 +116,7 @@ public class PublicDiagramController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicDiagramInfoDto> staredDiagrams = publicDiagramService.getStaredPublicDiagrams(authUser.userId(),
                 pageable);
-        return ResponseEntity.ok(staredDiagrams);
+        return ResponseEntity.ok(new PageResponse<>(staredDiagrams));
     }
 
     @PostMapping("/searchDiagrams")
@@ -128,7 +129,7 @@ public class PublicDiagramController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicDiagramInfoDto> publicDiagramsInfos = publicDiagramService.searchPublicDiagrams(searchRequestDto,
                 pageable);
-        return ResponseEntity.ok(publicDiagramsInfos);
+        return ResponseEntity.ok(new PageResponse<>(publicDiagramsInfos));
     }
 
     @PostMapping("/searchUsers")
@@ -141,7 +142,7 @@ public class PublicDiagramController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicUserInfoDto> publicUserInfos = publicDiagramService.searchUsersByPublicDiagrams(authUser.userId(), searchRequestDto,
                 pageable);
-        return ResponseEntity.ok(publicUserInfos);
+        return ResponseEntity.ok(new PageResponse<>(publicUserInfos));
     }
 
     @GetMapping("/hashtags")

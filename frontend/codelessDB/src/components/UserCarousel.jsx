@@ -19,7 +19,10 @@ import {
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { getInitials } from "../pages/diagrams/Contributors.jsx";
+
 const UserCarousel = ({ users, title = "Featured Designers", onFollowToggle, currentUser }) => {
+
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
@@ -142,9 +145,10 @@ const UserCarousel = ({ users, title = "Featured Designers", onFollowToggle, cur
                   boxShadow: 2,
                   mt: -4,
                   mb: 1.5,
+                  bgcolor: user.picture ? undefined : "primary.main"
                 }}
               >
-                {user.name.charAt(0)}
+                {(!user.picture || user.picture.trim() === "") && getInitials(user.username)}
               </Avatar>
 
               <CardContent
