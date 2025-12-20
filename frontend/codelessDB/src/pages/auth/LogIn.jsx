@@ -86,9 +86,9 @@ const LogIn = () => {
 
     } catch (err) {
       if (err.response?.status === 401) {
-        setError("Wrong password");
+        setError("Oops! That login didn’t work.\nCheck your password and try again.");
       } else if (err.response?.status === 404) {
-        setError("User not found");
+        setError("Oops! Email not found.\nPlease check the email or sign up.");
       } else {
         setError(parseApiError(err));
       }
@@ -161,7 +161,7 @@ const LogIn = () => {
                 {loading ? "Please wait..." : "Log In"}
               </button>
 
-              {error && <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>{error}</p>}
+              {error && <p style={{ color: "red", textAlign: "center", marginTop: "10px", whiteSpace: "pre-line" }}>{error}</p>}
 
               <div className="divider">
                 <span>OR</span>
