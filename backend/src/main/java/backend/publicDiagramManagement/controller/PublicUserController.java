@@ -13,16 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
-import backend.publicDiagramManagement.dto.user.PublicUserDto;
-import backend.publicDiagramManagement.dto.user.PublicUserFollowDto;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import backend.publicDiagramManagement.dto.PageResponse;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.user.PublicUserDto;
+import backend.publicDiagramManagement.dto.user.PublicUserFollowDto;
 import backend.publicDiagramManagement.service.PublicUserService;
 import backend.security.AuthUser;
 import lombok.NonNull;
@@ -96,7 +90,7 @@ public class PublicUserController {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicUserFollowDto> followers = publicUserService.getFollowersByUsername(userName, pageable);
-        return ResponseEntity.ok(followers);
+        return ResponseEntity.ok(new PageResponse<>(followers));
     }
 
     @GetMapping("/followings/{userName}")
@@ -107,6 +101,6 @@ public class PublicUserController {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<PublicUserFollowDto> followings = publicUserService.getFollowingsByUsername(userName, pageable);
-        return ResponseEntity.ok(followings);
+        return ResponseEntity.ok(new PageResponse<>(followings));
     }
 }
