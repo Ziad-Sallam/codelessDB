@@ -1,9 +1,9 @@
 import { Box, Typography, Button, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Home as HomeIcon, ArrowBack as ArrowBackIcon } from "@mui/icons-material";
-import { useAuth } from "../components/AuthProvider.jsx";
+import { useAuth } from "../../components/AuthProvider.jsx";
 
-export default function UserNotFound() {
+export default function PageNotFound() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -14,6 +14,7 @@ export default function UserNotFound() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        bgcolor: "background.light",
         background: "linear-gradient(135deg, #0b3d91 0%, #082043 100%)",
       }}
     >
@@ -27,33 +28,25 @@ export default function UserNotFound() {
             boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
           }}
         >
-
           <Typography
             variant="h4"
             fontWeight="bold"
             gutterBottom
             sx={{ color: "primary.main", mb: 2 }}
           >
-            User Not Found
+            Page Not Found
           </Typography>
 
           <Typography
             variant="body1"
             color="text.secondary"
-            sx={{ mb: 4, maxWidth: 420, mx: "auto" }}
+            sx={{ mb: 4, maxWidth: 400, mx: "auto" }}
           >
-            We couldn’t find a user with this username.
-            It may have been removed or the link is incorrect.
+            Oops! The page you're looking for doesn't exist. It might have been
+            moved or deleted.
           </Typography>
 
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          <Box sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap" }}>
             <Button
               variant="contained"
               size="large"
@@ -64,6 +57,7 @@ export default function UserNotFound() {
                 py: 1.5,
                 borderRadius: 2,
                 textTransform: "none",
+                fontSize: "1rem",
                 background: "linear-gradient(135deg, #0b3d91 0%, #4C84FF 100%)",
                 "&:hover": {
                   boxShadow: "0 8px 25px rgba(11, 61, 145, 0.4)",
@@ -85,14 +79,13 @@ export default function UserNotFound() {
                 py: 1.5,
                 borderRadius: 2,
                 textTransform: "none",
+                fontSize: "1rem",
                 borderColor: "primary.main",
                 color: "primary.main",
                 "&:hover": {
                   borderColor: "primary.dark",
-                  bgcolor: "rgba(11, 61, 145, 0.04)",
-                  transform: "translateY(-2px)",
+                  bgcolor: "action.hover",
                 },
-                transition: "all 0.2s ease-in-out",
               }}
             >
               Go Back

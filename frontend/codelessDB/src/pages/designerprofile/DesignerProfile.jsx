@@ -30,7 +30,7 @@ import SimpleTopBar from "../../components/SimpleTopBar";
 import { fetchDesignerProfile, fetchPublicDiagrams, fetchStarredDiagrams } from "./fetch";
 import { useNotification } from "../../components/NotificationContext";
 import { getInitials } from "../diagrams/Contributors.jsx";
-import UserNotFound from "../UserNotFound.jsx";
+import UserNotFound from "../notFound/UserNotFound.jsx";
 
 export default function DesignerProfile() {
   const navigate = useNavigate();

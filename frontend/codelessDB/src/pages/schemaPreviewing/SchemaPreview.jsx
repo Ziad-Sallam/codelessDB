@@ -90,7 +90,7 @@ export default function SchemaPreview() {
         setSchemaData(data);
         setIsStarred(data.stared || false);
       } catch (err) {
-        showError(err.message);
+        // showError(err.message);
       } finally {
         setLoading(false);
       }
@@ -208,15 +208,20 @@ export default function SchemaPreview() {
         <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
           <SimpleTopBar title="Preview" />
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4 }}>
-            <Card sx={{ maxWidth: 400, textAlign: 'center', p: 4 }}>
+            <Card sx={{ maxWidth: 600, textAlign: 'center', p: 4 }}>
               <DatabaseIcon sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
               <Typography variant="h6" gutterBottom>No Schema to Preview</Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
                 Select a schema from the Discover page or create a new one.
-              </Typography>
-              <Button variant="contained" onClick={() => navigate("/schema/create")}>
-                Create Schema
-              </Button>
+              </Typography >
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2 }}>
+                <Button variant="contained" onClick={() => navigate("/discover")}>
+                  Discover Schemas
+                </Button>
+                <Button variant="contained" onClick={() => navigate("/schema/create")}>
+                  Create Schema
+                </Button>
+              </Box>
             </Card>
           </Box>
         </Box>
@@ -357,17 +362,6 @@ export default function SchemaPreview() {
                 {schemaData.contributors && schemaData.contributors.length > 0 && (
                   <ContributorsSection collaborators={schemaData.contributors} />
                 )}
-
-                {/* <Card variant="outlined" sx={{ bgcolor: 'primary.50', borderColor: 'primary.200' }}>
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      This is a preview. Clone this schema to edit it in your workspace.
-                    </Typography>
-                    <Button variant="contained" fullWidth onClick={handleClone}>
-                      Clone Schema
-                    </Button>
-                  </CardContent>
-                </Card> */}
               </Box>
 
             </Box>

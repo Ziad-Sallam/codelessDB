@@ -13,7 +13,7 @@ import Discover from './pages/discover/Discover.jsx';
 import SchemaPreview from './pages/schemaPreviewing/SchemaPreview.jsx';
 import CreateSchema from './pages/schemaPublishing/CreateSchema.jsx';
 import DesignerProfile from './pages/designerprofile/DesignerProfile.jsx';
-import NotFound from './pages/NotFound.jsx';
+import PageNotFound from './pages/notFound/PageNotFound.jsx';
 
 
 export const routes = [
@@ -134,7 +134,7 @@ export const routes = [
   {
     path: "/*",
     element: (
-      <NotFound />
+      <PageNotFound />
     ),
   },
 ];
