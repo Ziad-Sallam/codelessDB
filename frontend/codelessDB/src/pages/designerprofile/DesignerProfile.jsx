@@ -353,21 +353,18 @@ export default function DesignerProfile() {
                         </Box>
                       </Box>
 
-                      <Button
-                        fullWidth
-                        variant={profile.isFollowed ? "contained" : "outlined"}
-                        color={profile.isFollowed ? "secondary" : "primary"}
-                        onClick={handleFollowToggle}
-                        disabled={currentUser?.username === profile.username}
-                        sx={{ mt: 3, borderRadius: 2, py: 1 }}
-                        startIcon={profile.isFollowed ? <UsersIcon /> : <UserPlusIcon />}
-                      >
-                        {currentUser?.username === profile.username
-                          ? "This is You"
-                          : profile.isFollowed
-                          ? "Unfollow"
-                          : "Follow"}
-                      </Button>
+                      {currentUser?.username !== profile.username && (
+                        <Button
+                          fullWidth
+                          variant={profile.isFollowed ? "contained" : "outlined"}
+                          color={profile.isFollowed ? "secondary" : "primary"}
+                          onClick={handleFollowToggle}
+                          sx={{ mt: 3, borderRadius: 2, py: 1 }}
+                          startIcon={profile.isFollowed ? <UsersIcon /> : <UserPlusIcon />}
+                        >
+                          {profile.isFollowed ? "Unfollow" : "Follow"}
+                        </Button>
+                      )}
                     </Card>
                   </Box>
                 </Box>
