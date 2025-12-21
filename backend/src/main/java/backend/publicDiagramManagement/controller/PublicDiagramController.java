@@ -47,6 +47,15 @@ public class PublicDiagramController {
         return ResponseEntity.ok("Diagram published successfully :)");
     }
 
+    @org.springframework.web.bind.annotation.PutMapping("/update")
+    public ResponseEntity<?> updateDiagram(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody PublishDiagramRequestDto publicDiagramDto) {
+
+        publicDiagramService.updatePublicDiagram(authUser.userId(), publicDiagramDto);
+        return ResponseEntity.ok("Diagram details updated successfully :)");
+    }
+
     @GetMapping("/getToBePublished")
     public ResponseEntity<?> getToBePublishDiagramsByUserId(
             @AuthenticationPrincipal AuthUser authUser,

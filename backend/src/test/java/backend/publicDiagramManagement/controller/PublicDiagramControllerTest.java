@@ -89,6 +89,23 @@ class PublicDiagramControllerTest {
     }
 
     @Test
+  void updateDiagram_success() throws Exception {
+    PublishDiagramRequestDto requestDto = new PublishDiagramRequestDto();
+    requestDto.setDiagramId(UUID.randomUUID());
+    requestDto.setShortDescription("Update");
+
+    doNothing().when(publicDiagramService).updatePublicDiagram(eq(1), any(PublishDiagramRequestDto.class));
+
+    mockMvc.perform(put("/publicDiagrams/update")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(requestDto)))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Diagram details updated successfully :)"));
+
+    verify(publicDiagramService).updatePublicDiagram(eq(1), any(PublishDiagramRequestDto.class));
+  }
+
+    @Test
     void getToBePublishDiagramsByUserId() throws Exception {
         Page<ToBePublishedDiagramDto> page = new PageImpl<>(List.of());
         when(publicDiagramService.getToBePublishedDiagrams(anyInt(), any())).thenReturn(page);
