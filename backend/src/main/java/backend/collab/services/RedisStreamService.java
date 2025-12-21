@@ -6,6 +6,8 @@ import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 interface RedisDAO {
 
 	void addUpdate(String diagramId, byte[] update);
@@ -14,6 +16,7 @@ interface RedisDAO {
 }
 
 @Service
+@Slf4j
 public class RedisStreamService implements RedisDAO {
 
 	@Autowired
@@ -27,6 +30,16 @@ public class RedisStreamService implements RedisDAO {
 
 	@Override
 	public void addUpdate(String diagramId, byte[] update) {
+		if ((update[0] == 0 && update[1] == 2)) {
+			update = Arrays.copyOfRange(update, 2, update.length);
+			System.out.println("------------------");
+			System.out.println(Arrays.toString(update));
+			System.out.println("------------------");
+		
+		} else {
+			log.warn("Update should not be stored: {}", update);
+			return;
+		}
 		String key = streamKey(diagramId);
 		
 		Map<String, byte[]> map = Map.of("update", update);

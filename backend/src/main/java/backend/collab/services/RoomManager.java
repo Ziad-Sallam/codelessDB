@@ -72,7 +72,7 @@ class RoomManagerImpl implements RoomManager {
 		
 		// Cursor positions don't need to be stored
 		if (!cursorUpdate) {
-			log.info("Storing update {} for diagramId {}", HexFormat.of().formatHex(data), diagramId);
+			// log.info("Storing update {} for diagramId {}", (data), diagramId);
 			redisService.addUpdate(diagramId, data);
 			// snapshotService.takeSnapshot(diagramId);
 		}
