@@ -24,7 +24,6 @@ public class SecurityConfig {
     @Autowired
     private GoogleSuccessHandler googleSuccessHandler;
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
