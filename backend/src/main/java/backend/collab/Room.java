@@ -115,7 +115,7 @@ public class Room implements IRoom {
 		if (!cursorUpdate) {
 			this.updateCounter.increment();
 			if (updateCounter.sum() >= SNAPSHOT_THRESHOLD) {
-				takeSnapshot();
+				// takeSnapshot();
 				updateCounter.reset();
 			}
 		}
