@@ -10,8 +10,10 @@ export async function fetchDesignerProfile(userName) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to fetch designer profile");
+    const errorData = await response.json();
+    const error = new Error(errorData.message || "Failed to fetch designer profile");
+    error.status = response.status;
+    throw error;
   }
 
   return await response.json();

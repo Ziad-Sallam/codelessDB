@@ -30,6 +30,8 @@ import LeftPanel from "../../components/LeftPanel";
 import { useNotification } from "../../components/NotificationContext";
 import SimpleTopBar from "../../components/SimpleTopBar";
 import { validateToken } from "../auth/fetch";
+import { getInitials } from "../diagrams/Contributors.jsx";
+import UserNotFound from "../notFound/UserNotFound.jsx";
 import {
   fetchDesignerProfile,
   fetchFollowers,
@@ -61,15 +63,11 @@ export default function DesignerProfile() {
   const [socialUsers, setSocialUsers] = useState([]);
   const [socialTotal, setSocialTotal] = useState(0);
 
-  useEffect(() => {
+  const loadProfileData = () => {
     if (!username) return;
     setIsLoadingProfile(true);
-    setProfile(null);
-    setDiagrams([]);
-    setSocialUsers([]);
-    setActiveTab(0);
-    window.scrollTo(0, 0);
-
+    // Note: We don't reset everything here to avoid flicker if it's a silent refresh
+    
     Promise.all([
       fetchDesignerProfile(username),
       validateToken().catch(() => null)
@@ -80,20 +78,22 @@ export default function DesignerProfile() {
       })
       .catch((err) => {
         console.error(err);
-        showError("Failed to load designer profile");
+        if (err.status !== 404) {
+          showError("Failed to load designer profile");
+        }
       })
       .finally(() => {
         setIsLoadingProfile(false);
       });
-  }, [username]);
+  };
 
-  useEffect(() => {
+  const loadTabData = (tabIndex = activeTab, silent = false) => {
     if (!username) return;
 
-    if (activeTab === 0 || activeTab === 1) {
-      setIsLoadingDiagrams(true);
+    if (tabIndex === 0 || tabIndex === 1) {
+      if (!silent) setIsLoadingDiagrams(true);
       const fetchFn =
-        activeTab === 0 ? fetchPublicDiagrams : fetchStarredDiagrams;
+        tabIndex === 0 ? fetchPublicDiagrams : fetchStarredDiagrams;
 
       fetchFn(username, 0, 50)
         .then((data) => {
@@ -102,14 +102,14 @@ export default function DesignerProfile() {
         })
         .catch((err) => {
           console.error(err);
-          showError("Failed to load diagrams");
+          if (!silent) showError("Failed to load diagrams");
         })
         .finally(() => {
-          setIsLoadingDiagrams(false);
+          if (!silent) setIsLoadingDiagrams(false);
         });
     } else {
-      setIsLoadingSocial(true);
-      const fetchFn = activeTab === 2 ? fetchFollowers : fetchFollowings;
+      if (!silent) setIsLoadingSocial(true);
+      const fetchFn = tabIndex === 2 ? fetchFollowers : fetchFollowings;
 
       fetchFn(username, 0, 50)
         .then((data) => {
@@ -118,12 +118,26 @@ export default function DesignerProfile() {
         })
         .catch((err) => {
           console.error(err);
-          showError("Failed to load users");
+          if (!silent) showError("Failed to load users");
         })
         .finally(() => {
-          setIsLoadingSocial(false);
+          if (!silent) setIsLoadingSocial(false);
         });
     }
+  };
+
+  useEffect(() => {
+    if (!username) return;
+    setProfile(null);
+    setDiagrams([]);
+    setSocialUsers([]);
+    setActiveTab(0);
+    window.scrollTo(0, 0);
+    loadProfileData();
+  }, [username]);
+
+  useEffect(() => {
+    loadTabData();
   }, [username, activeTab]);
 
   const handleTabChange = (event, newValue) => {
@@ -158,6 +172,9 @@ export default function DesignerProfile() {
           ? Math.max(0, (prev.followersCount || 0) - 1)
           : (prev.followersCount || 0) + 1,
       }));
+
+      // Silent refresh to ensure data consistency
+      loadTabData(activeTab, true);
     } catch (err) {
       showError(err.message || "Action failed");
     }
@@ -172,6 +189,26 @@ export default function DesignerProfile() {
     });
   };
 
+  if (isLoadingProfile) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          minHeight: "100vh",
+          bgcolor: "background.default",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!profile) {
+    return <UserNotFound />;
+  }
+
   return (
     <Box
       sx={{
@@ -182,30 +219,14 @@ export default function DesignerProfile() {
     >
       <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
 
-      {isLoadingProfile ? (
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : !profile ? (
-        <Box sx={{ flexGrow: 1, p: 4, textAlign: "center" }}>
-          <Typography variant="h5">User not found</Typography>
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
           <SimpleTopBar title="Designer Profile" />
 
           <Box sx={{ flexGrow: 1, overflowY: "auto", p: 4 }}>
@@ -231,8 +252,12 @@ export default function DesignerProfile() {
                           border: 4,
                           borderColor: "background.paper",
                           boxShadow: 2,
+                          bgcolor: profile.picture ? undefined : "primary.main",
+                          fontSize: "3.5rem",
                         }}
-                      />
+                    >
+                      {(!profile.picture || profile.picture.trim() === "") && getInitials(profile.username)}
+                    </Avatar>
                       <Typography variant="h4" fontWeight="800" gutterBottom sx={{ color: "text.primary" }}>
                         {profile.name || profile.username}
                       </Typography>
@@ -331,7 +356,7 @@ export default function DesignerProfile() {
                           }}
                         >
                           <StarIcon sx={{ color: "warning.main", mb: 0.5, fontSize: "1.5rem" }} />
-                          <Typography variant="h6" fontWeight="800">
+                          <Typography variant="h6" ht="800"fontWeig>
                             {profile.totalStars || 0}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", fontWeight: 800, letterSpacing: 1, fontSize: "0.6rem" }}>
@@ -682,10 +707,12 @@ export default function DesignerProfile() {
                                       border: "3px solid",
                                       borderColor: "divider",
                                       boxShadow: 2,
-                                      flexShrink: 0
+                                      flexShrink: 0,
+                                      bgcolor: user.picture ? undefined : "primary.main",
+                                      fontSize: "2rem",
                                     }}
                                   >
-                                    {user.name?.[0]}
+                                    {(!user.picture || user.picture.trim() === "") && getInitials(user.username)}
                                   </Avatar>
 
                                   <Box sx={{ minWidth: 0 }}>
@@ -798,8 +825,7 @@ export default function DesignerProfile() {
               </Box>
             </Container>
           </Box>
-        </Box>
-      )}
+      </Box>
     </Box>
   );
 }
