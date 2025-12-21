@@ -1,31 +1,24 @@
 import json
-import os
-import threading
-import time
-import mysql.connector
-from mysql.connector import Error, OperationalError, InterfaceError
-import websocket
-import docker
 import sys
+import time
+import threading
+import platform
+import shutil
+import subprocess
+import base64
 import datetime
 import decimal
 import uuid
-import base64
+
+import requests
+import websocket
+import docker
+import mysql
+import mysql.connector
+
 from collections.abc import Iterable
 from docker.errors import DockerException, NotFound
-from pathlib import Path
-import docker
-import time
-import json
-import mysql
-import requests
-import shutil
-import sys
-import platform
-import subprocess
-import os
-import socket
-import mysql.connector
+from mysql.connector import Error, OperationalError, InterfaceError
 
 
 # -----------------------------
@@ -222,10 +215,7 @@ def execute_sql(cursor, query, params=None):
         if cursor.description is not None:
             rows = cursor.fetchall()
             columns = [desc[0] for desc in cursor.description]
-            safe_rows = [
-                [mysql_value_to_json(col) for col in row]
-                for row in rows
-            ]
+            safe_rows = [[mysql_value_to_json(col) for col in row] for row in rows]
             return {
                 "success": True,
                 "type": "SELECT",
@@ -272,6 +262,7 @@ def connect_to_mysql(host=None, port=None, user=None, password=None, database=No
         except Error as e:
             print(f"MySQL connection failed: {e}. Retrying in {backoff}s")
             time.sleep(backoff)
+
 
 def ensure_container_running(container_name=None):
     container_name = container_name or data["databaseName"]
@@ -356,6 +347,7 @@ def parse_stomp_message(frame: str):
 
     return {"command": command, "headers": headers, "body": body, "json": body_json}
 
+
 def on_open(ws):
     """Handle WebSocket opening."""
     global ws_global
@@ -392,15 +384,15 @@ def on_message(ws, message):
             content = message_data["json"]
             if not content:
                 return
-        print("Parsed message content:", content["content"])    
+        print("Parsed message content:", content["content"])
         try:
             result = execute_sql(cursor_global, content["content"])
             result["correlationId"] = content["correlationId"]
-                
-            payload = json.dumps(result) 
+
+            payload = json.dumps(result)
             print("Payload to send:", payload)
             ws.send(stomp_send("/app/response", payload))
-            if result["type"] != "SELECT":
+            if result["type"] != "SELECT" and connection_global is not None:
                 connection_global.commit()
 
         except (OperationalError, InterfaceError) as e:
@@ -409,21 +401,33 @@ def on_message(ws, message):
             try:
                 result = execute_sql(cursor_global, content["content"])
                 result["correlationId"] = content["correlationId"]
-                    
-                payload = json.dumps(result) 
+
+                payload = json.dumps(result)
                 print("Payload to send:", payload)
                 ws.send(stomp_send("/app/response", payload))
                 if result["type"] != "SELECT":
-                    connection.commit()
-                
+                    connection_global.commit()
+
             except Exception as e2:
                 print("Failed to execute SQL after reconnect:", e2)
-                payload = json.dumps({"result": "Failed to execute SQL after reconnect: " + str(e2), "correlationId": content["correlationId"]})
+                payload = json.dumps(
+                    {
+                        "result": "Failed to execute SQL after reconnect: " + str(e2),
+                        "correlationId": content["correlationId"],
+                    }
+                )
                 ws.send(stomp_send("/app/response", payload))
         except Exception as e:
             print("SQL Error:", e)
-            payload = json.dumps({"success": False, "message": str(e), "correlationId": content["correlationId"]})
+            payload = json.dumps(
+                {
+                    "success": False,
+                    "message": str(e),
+                    "correlationId": content["correlationId"],
+                }
+            )
             ws.send(stomp_send("/app/response", payload))
+
 
 def start_websocket():
     """Start WebSocket connection with retry logic."""
@@ -436,7 +440,7 @@ def start_websocket():
                 on_open=on_open,
                 on_message=on_message,
                 on_error=on_error,
-                on_close=on_close
+                on_close=on_close,
             )
             ws.run_forever(ping_interval=25, ping_timeout=20)
         except Exception as e:
@@ -444,6 +448,7 @@ def start_websocket():
         print(f"Reconnecting WebSocket in {backoff} seconds...")
         time.sleep(backoff)
         backoff = min(backoff * 2, 5)
+
 
 def input_loop():
     """Handle user input."""
@@ -475,4 +480,5 @@ if __name__ == "__main__":
         cursor_global = connection_global.cursor()
     host_port_global = host_port
     data = db
+    threading.Thread(target=input_loop, daemon=True).start()
     start_websocket()
