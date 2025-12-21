@@ -21,6 +21,8 @@ import { useAuth } from "../../components/AuthProvider.jsx";
 import { uploadToCloudinary } from "../../uploadToCloudinary.js";
 import { updateUserField, resetPassword } from "./userFetch.js";
 
+import { getInitials } from "../diagrams/Contributors.jsx";
+
 import "./UserProfile.css";
 
 export default function UserProfile() {
@@ -216,8 +218,6 @@ export default function UserProfile() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [anchorEl]);
 
-  const getInitials = () => profileData.username ? profileData.username.slice(0, 2).toUpperCase() : "U";
-
   const ProfileField = ({ label, field, icon: Icon, type = "text", editable = true, multiline = false, rows = 1, ...textFieldProps }) => {
     const isEditing = !!editMode[field];
     const value = profileData[field];
@@ -305,7 +305,7 @@ export default function UserProfile() {
               <CardContent className="profile-header-content">
                 <Box className="profile-header-inner">
                   <Box className="profile-avatar-container">
-                    <Avatar src={profileData.picture} className="profile-avatar">{!profileData.picture && getInitials()}</Avatar>
+                    <Avatar src={profileData.picture} className="profile-avatar">{!profileData.picture && getInitials(profileData.username)}</Avatar>
 
                     <input ref={fileInputRef} accept="image/*" style={{ display: "none" }} type="file" onChange={handleFileSelect} />
                     <IconButton onClick={handleCameraClick} className="camera-button" size="small">
@@ -332,8 +332,8 @@ export default function UserProfile() {
                 <ProfileField label="Username" field="username" icon={PersonIcon} editable={false} />
                 <ProfileField label="Email" field="email" icon={EmailIcon} type="email" editable={false} />
                 <ProfileField label="Bio" field="bio" icon={PersonIcon} editable={true} multiline rows={4} type="text" inputProps={{ maxLength: 300 }} />
-                <ProfileField label="Public Profile Name" field="publicProfile" icon={PersonIcon} editable={true} rows={1} inputProps={{ maxLength: 100 }} />
-                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" />
+                <ProfileField label="Public Profile Name" field="publicProfile" icon={PersonIcon} editable={true} rows={1} inputProps={{ maxLength: 50 }} />
+                <ProfileField label="Website URL" field="profileWebsiteUrl" icon={LanguageIcon} editable={true} type="url" multiline rows={2} inputProps={{ maxLength: 500 }} />
                 <PasswordField />
               </CardContent>
             </Card>
