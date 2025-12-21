@@ -59,10 +59,7 @@ public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 			return;
 		}
 
-		byte[] data = new byte[payload.remaining()];
-		payload.get(data);
-
-		roomManager.sendUpdate(diagramId, data, session.getId(), role);
+		roomManager.sendUpdate(diagramId, payload.array(), session.getId(), role);
 	}
 
 }

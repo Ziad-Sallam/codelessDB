@@ -74,7 +74,6 @@ const SchemaContent = () => {
 	const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
 	const [generatedSql, setGeneratedSql] = useState("");
 	const [isReadOnly, setIsReadOnly] = useState(false);
-	const [isSaving, setIsSaving] = useState(false);
 	const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
 	const { screenToFlowPosition } = useReactFlow();

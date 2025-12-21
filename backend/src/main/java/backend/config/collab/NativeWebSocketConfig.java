@@ -16,13 +16,13 @@ public class NativeWebSocketConfig implements WebSocketConfigurer {
 	private CollabWebSocketHandler collabWebSocketHandler;
 
 	@Autowired
-	private PathVariableInterceptor pathVariableInterceptor;
+	private CollabInterceptor pathVariableInterceptor;
 
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		// Register your low-level handler at a distinct endpoint
-		registry .addHandler(collabWebSocketHandler, "/ws/collab/*")
-					.setAllowedOrigins("*")
-					.addInterceptors(pathVariableInterceptor);
+		registry.addHandler(collabWebSocketHandler, "/ws/collab/*")
+				.setAllowedOrigins("*")
+				.addInterceptors(pathVariableInterceptor);
 	}
 }
