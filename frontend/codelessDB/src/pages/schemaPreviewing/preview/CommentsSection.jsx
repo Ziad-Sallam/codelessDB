@@ -25,8 +25,11 @@ import {
     ThumbUpOutlined as ThumbUpOutlinedIcon,
     ThumbDown as ThumbDownIcon,
     ThumbDownOutlined as ThumbDownOutlinedIcon,
+    ExpandMore as ExpandMoreIcon,
+    ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
 import { useNotification } from "../../../components/NotificationContext";
+import { useAuth } from "../../../components/AuthProvider";
 import { getComments, addComment, updateComment, deleteComment, reactToComment } from "../fetch";
 
 function timeAgo(dateString) {
@@ -74,6 +77,29 @@ const CommentItem = ({
     timeAgo
 }) => {
     const isEditing = editingComment && editingComment.id === comment.id;
+    const [showReplies, setShowReplies] = useState(false);
+
+    const renderAvatar = (user, size = 32) => {
+        const hasPicture = user.userPicture && user.userPicture !== "";
+        return (
+            <Avatar
+                alt={user.username}
+                src={hasPicture ? user.userPicture : null}
+                sx={{
+                    width: size,
+                    height: size,
+                    bgcolor: hasPicture ? "transparent" : "#0d47a1",
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: size * 0.5,
+                    border: "2px solid white",
+                    boxShadow: "0 0 0 1px #e0e0e0"
+                }}
+            >
+                {!hasPicture && user.username ? user.username.charAt(0).toUpperCase() : null}
+            </Avatar>
+        );
+    };
 
     return (
         <Box sx={{ ml: depth > 0 ? { xs: 2, sm: 4 } : 0, mt: 1 }}>
@@ -92,7 +118,7 @@ const CommentItem = ({
                 sx={{ px: 0, py: 0.5 }}
             >
                 <ListItemAvatar sx={{ minWidth: 40 }}>
-                    <Avatar alt={comment.username} src={comment.userPicture} sx={{ width: 32, height: 32 }} />
+                    {renderAvatar(comment, 32)}
                 </ListItemAvatar>
                 <Box sx={{ width: "100%", pr: comment.owner && !isEditing ? 4 : 0 }}>
                     {isEditing ? (
@@ -123,7 +149,12 @@ const CommentItem = ({
                                     {timeAgo(comment.createdAt)} {comment.edited && "(edited)"}
                                 </Typography>
                             </Box>
-                            <Typography variant="body1" color="text.primary" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                            <Typography variant="body1" color="text.primary" sx={{
+                                whiteSpace: "pre-wrap",
+                                lineHeight: 1.6,
+                                overflowWrap: "break-word",
+                                wordBreak: "break-word"
+                            }}>
                                 {comment.content}
                             </Typography>
                             <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -179,26 +210,46 @@ const CommentItem = ({
             </ListItem>
 
             {comment.replies && comment.replies.length > 0 && (
-                <Box sx={{ borderLeft: '2px solid', borderColor: 'divider', ml: 1.5, pl: 1, mt: 0.5 }}>
-                    {comment.replies.map(reply => (
-                        <CommentItem
-                            key={reply.id}
-                            comment={reply}
-                            depth={depth + 1}
-                            editingComment={editingComment}
-                            setEditingComment={setEditingComment}
-                            handleUpdateComment={handleUpdateComment}
-                            replyingTo={replyingTo}
-                            setReplyingTo={setReplyingTo}
-                            replyContent={replyContent}
-                            setReplyContent={setReplyContent}
-                            handleAddComment={handleAddComment}
-                            handleMenuOpen={handleMenuOpen}
-                            handleReaction={handleReaction}
-                            submitting={submitting}
-                            timeAgo={timeAgo}
-                        />
-                    ))}
+                <Box sx={{ ml: 4, mt: 0.5 }}>
+                    <Button
+                        size="small"
+                        startIcon={showReplies ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        onClick={() => setShowReplies(!showReplies)}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            color: 'primary.main',
+                            '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' },
+                            p: 0,
+                            mb: showReplies ? 1 : 0
+                        }}
+                    >
+                        {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
+                    </Button>
+
+                    {showReplies && (
+                        <Box sx={{ borderLeft: '2px solid', borderColor: 'divider', pl: 1 }}>
+                            {comment.replies.map(reply => (
+                                <CommentItem
+                                    key={reply.id}
+                                    comment={reply}
+                                    depth={depth + 1}
+                                    editingComment={editingComment}
+                                    setEditingComment={setEditingComment}
+                                    handleUpdateComment={handleUpdateComment}
+                                    replyingTo={replyingTo}
+                                    setReplyingTo={setReplyingTo}
+                                    replyContent={replyContent}
+                                    setReplyContent={setReplyContent}
+                                    handleAddComment={handleAddComment}
+                                    handleMenuOpen={handleMenuOpen}
+                                    handleReaction={handleReaction}
+                                    submitting={submitting}
+                                    timeAgo={timeAgo}
+                                />
+                            ))}
+                        </Box>
+                    )}
                 </Box>
             )}
         </Box>
@@ -206,6 +257,7 @@ const CommentItem = ({
 };
 
 export function CommentsSection({ diagramId }) {
+    const { user } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -357,7 +409,25 @@ export function CommentsSection({ diagramId }) {
 
             <Paper elevation={0} variant="outlined" sx={{ p: 2, mb: 4, bgcolor: "background.paper" }}>
                 <Box sx={{ display: "flex", gap: 2 }}>
-                    <Avatar />
+                    {user ? (
+                        <Avatar
+                            alt={user.username}
+                            src={user.picture && user.picture !== "" ? user.picture : null}
+                            sx={{
+                                width: 40,
+                                height: 40,
+                                bgcolor: user.picture && user.picture !== "" ? "transparent" : "#0d47a1",
+                                color: "white",
+                                fontWeight: "bold",
+                                border: "2px solid white",
+                                boxShadow: "0 0 0 1px #e0e0e0"
+                            }}
+                        >
+                            {!(user.picture && user.picture !== "") && user.username ? user.username.charAt(0).toUpperCase() : null}
+                        </Avatar>
+                    ) : (
+                        <Avatar sx={{ width: 40, height: 40 }} />
+                    )}
                     <Box sx={{ flexGrow: 1 }}>
                         <TextField
                             fullWidth
