@@ -56,7 +56,7 @@ app.post("/snapshot/:diagramId", async (req, res) => {
 	let appliedCount = 0;
 
 	for (const [id, fields] of records) {
-		// let appliedThisRecord = false;
+		let appliedThisRecord = false;
 
 		for (let i = 0; i < fields.length; i += 2) {
 			const key = fields[i].toString();
@@ -76,29 +76,23 @@ app.post("/snapshot/:diagramId", async (req, res) => {
 				if (messageType === 0) { // Sync Protocol
 					const syncMessageType = decoding.readVarUint(decoder);
 
-					console.log(`[${id}] Sync Msg Type: ${syncMessageType}`);
-
 					// 0: SyncStep1, 1: SyncStep2, 2: Update
 					if (syncMessageType === 0) {
 						// SyncStep1: Just a request for state, contains state vector. Ignore.
-						console.log(`[${id}] Ignoring SyncStep1`);
 						continue;
 					
 					} else if (syncMessageType === 1 || syncMessageType === 2) {
 						// SyncStep2 or Update: Contains document update
 						const update = decoding.readVarUint8Array(decoder);
-						console.log(`[${id}] Applying Update (Type ${syncMessageType}), size: ${update.length}`);
 						Y.applyUpdate(doc, update);
 						appliedThisRecord = true;
 						appliedCount++;
 					}
 
 				} else if (messageType === 1) { // Awareness Protocol
-					console.log(`[${id}] Ignoring Awareness Msg`);
 					continue;
 
 				} else {
-					console.log(`[${id}] Unknown Msg Type: ${messageType}. Applying raw fallack.`);
 					// Fallback: Try applying as raw update if it doesn't look like protocol
 					try {
 						Y.applyUpdate(doc, buffer);
