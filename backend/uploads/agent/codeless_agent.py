@@ -9,6 +9,7 @@ import base64
 import datetime
 import decimal
 import uuid
+import signal
 
 import requests
 import websocket
@@ -20,6 +21,38 @@ from collections.abc import Iterable
 from docker.errors import DockerException, NotFound
 from mysql.connector import Error, OperationalError, InterfaceError
 
+MAX_RETRIES = 5
+retries = 0
+ws_global = None
+connection_global = None
+
+shutdown_event = threading.Event()
+
+def handle_shutdown(signum, frame):
+    print("\nShutting down...")
+    shutdown_event.set()
+
+    global ws_global
+    if ws_global:
+        try:
+            ws_global.close()   
+        except Exception:
+            pass
+    if cursor_global:
+        try:
+            cursor_global.close()
+        except Exception:
+            pass
+
+    if connection_global:
+        try:
+            connection_global.close()
+        except Exception:
+            pass
+
+
+signal.signal(signal.SIGINT, handle_shutdown)
+signal.signal(signal.SIGTERM, handle_shutdown)
 
 # -----------------------------
 # Container Creation Logic
@@ -242,10 +275,10 @@ def connect_to_mysql(host=None, port=None, user=None, password=None, database=No
     port = port or host_port_global
     user = user or "root"
     password = password or data["password"]
-    database = database or data["databaseName"]
+    database = database or data.get("databaseName")
 
     backoff = 5
-    while True:
+    while not shutdown_event.is_set():
         ensure_container_running()
         try:
             connection = mysql.connector.connect(
@@ -365,8 +398,12 @@ def on_error(ws, error):
 
 def on_close(ws, close_status_code, close_msg):
     """Handle WebSocket closure."""
-    global ws_global
+    global ws_global, connection_global, cursor_global
     ws_global = None
+    if connection_global is not None:
+        connection_global.close()
+    if cursor_global is not None:
+        cursor_global.close()
     print("### WebSocket closed ###", close_status_code, close_msg)
 
 
@@ -430,38 +467,43 @@ def on_message(ws, message):
 
 
 def start_websocket():
-    """Start WebSocket connection with retry logic."""
     backoff = 1
-    while True:
+    global ws_global
+
+    while not shutdown_event.is_set():
         try:
             print("Connecting to backend:", data["wsUrl"])
-            ws = websocket.WebSocketApp(
+            ws_global = websocket.WebSocketApp(
                 data["wsUrl"],
                 on_open=on_open,
                 on_message=on_message,
                 on_error=on_error,
                 on_close=on_close,
             )
-            ws.run_forever(ping_interval=25, ping_timeout=20)
+
+            ws_global.run_forever(
+                ping_interval=25,
+                ping_timeout=20,
+            )
+
         except Exception as e:
             print("WebSocket exception:", e)
+
+        if shutdown_event.is_set():
+            break
+        global retries
+        retries += 1
+        if retries >= MAX_RETRIES:
+            print("Max retries reached. Exiting.")
+            handle_shutdown(None, None)
+            break
+
         print(f"Reconnecting WebSocket in {backoff} seconds...")
         time.sleep(backoff)
         backoff = min(backoff * 2, 5)
 
+    print("WebSocket loop exited")
 
-def input_loop():
-    """Handle user input."""
-    global ws_global
-    while True:
-        text = input()
-        if ws_global:
-            try:
-                ws_global.send(json.dumps({"client_msg": text}))
-            except:
-                print("Failed to send message (WebSocket disconnected)")
-        else:
-            print("WebSocket not connected. Waiting...")
 
 
 if __name__ == "__main__":
@@ -472,7 +514,7 @@ if __name__ == "__main__":
     container, db, host_port, connection, cursor = create_mysql_container(
         argv[1], int(argv[2])
     )
-    global ws_global, connection_global, cursor_global, host_port_global
+    global cursor_global, host_port_global
     ws_global = None
     connection_global = connection
     cursor_global = cursor
@@ -480,5 +522,4 @@ if __name__ == "__main__":
         cursor_global = connection_global.cursor()
     host_port_global = host_port
     data = db
-    threading.Thread(target=input_loop, daemon=True).start()
     start_websocket()
