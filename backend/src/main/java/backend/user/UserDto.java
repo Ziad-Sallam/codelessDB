@@ -26,6 +26,8 @@ public class UserDto {
 	private String profileWebsiteUrl;
 	private int aiQuotaRemaining;
 	private LocalDateTime aiQuotaResetDate;
+    private int followersCount;
+    private int followingCount;
 
 	public UserDto(User user) {
 		this.username = user.getUsername();
@@ -38,5 +40,7 @@ public class UserDto {
 		this.profileWebsiteUrl = user.getProfileWebsiteUrl();
 		this.aiQuotaRemaining = user.getAiQuotaRemaining();
 		this.aiQuotaResetDate = user.getAiQuotaResetDate();
+        this.followersCount = user.getFollowersCount();
+        this.followingCount = user.getFollowingCount();
 	}
 }
