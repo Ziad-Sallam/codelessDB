@@ -67,11 +67,8 @@ app.post("/snapshot/:diagramId", async (req, res) => {
 			try {
 				const buffer = new Uint8Array(value);
 
-				// If the buffer is empty, skip
 				if (buffer.length === 0) continue;
 
-				// Try to decode as y-protocol message
-				// Ref: https://github.com/yjs/y-protocols/blob/master/PROTOCOL.md
 				const decoder = decoding.createDecoder(buffer);
 				const messageType = decoding.readVarUint(decoder);
 
@@ -86,18 +83,18 @@ app.post("/snapshot/:diagramId", async (req, res) => {
 						// SyncStep1: Just a request for state, contains state vector. Ignore.
 						console.log(`[${id}] Ignoring SyncStep1`);
 						continue;
+					
 					} else if (syncMessageType === 1 || syncMessageType === 2) {
 						// SyncStep2 or Update: Contains document update
 						const update = decoding.readVarUint8Array(decoder);
 						console.log(`[${id}] Applying Update (Type ${syncMessageType}), size: ${update.length}`);
 						Y.applyUpdate(doc, update);
-						// appliedThisRecord = true;
+						appliedThisRecord = true;
 						appliedCount++;
 					}
 
 				} else if (messageType === 1) { // Awareness Protocol
 					console.log(`[${id}] Ignoring Awareness Msg`);
-					// Ignore awareness updates for snapshotting
 					continue;
 
 				} else {
@@ -105,7 +102,7 @@ app.post("/snapshot/:diagramId", async (req, res) => {
 					// Fallback: Try applying as raw update if it doesn't look like protocol
 					try {
 						Y.applyUpdate(doc, buffer);
-						// appliedThisRecord = true;
+						appliedThisRecord = true;
 						appliedCount++;
 					} catch (subErr) {
 						console.error(`[${id.toString()}] Update failed:`, err.message);
@@ -116,7 +113,7 @@ app.post("/snapshot/:diagramId", async (req, res) => {
 				// If protocol parsing fials, try raw update as last resort before failing
 				try {
 					Y.applyUpdate(doc, new Uint8Array(value));
-					// appliedThisRecord = true;
+					appliedThisRecord = true;
 					appliedCount++;
 				} catch (subErr) {
 					console.error(`[${id.toString()}] Update failed:`, err.message);
@@ -124,45 +121,21 @@ app.post("/snapshot/:diagramId", async (req, res) => {
 			}
 		}
 
-		appliedRecordIds.push(id);
-		// if (appliedThisRecord) {
-		// }
+		if (appliedThisRecord) {
+			appliedRecordIds.push(id);
+		}
 	}
 
 	console.log(`Applied ${appliedCount} updates`);
 
-	// Debug: Check what's actually in the doc
-	const nodes = doc.getMap("nodes").toJSON();
-	const edges = doc.getMap("edges").toJSON();
-	const meta = doc.getMap("meta").toJSON();
-
-	console.log("Server Doc State - Nodes count:", Object.keys(nodes).length);
-	console.log("Server Doc State - Edges count:", Object.keys(edges).length);
-	console.log("Server Doc State - Meta:", JSON.stringify(meta));
-
-	// Check for pending updates (Data Loss Vector)
-	if (doc.store.pendingStructs) {
-		console.log("!!! PENDING STRUCTS FOUND !!!");
-		console.log("Missing:", JSON.stringify(doc.store.pendingStructs.missing));
-		// console.log("Pending:", doc.store.pendingStructs);
-	}
-	if (doc.store.pendingStack && doc.store.pendingStack.length > 0) {
-		console.log("!!! PENDING STACK FOUND !!! Length:", doc.store.pendingStack.length);
-	}
-
-	if (Object.keys(nodes).length > 0) {
-		console.log("Sample Node:", Object.values(nodes)[0]);
-	}
-
-	// Encode merged snapshot
 	const mergedSnapshot = Y.encodeStateAsUpdate(doc);
 	console.log(`Merged snapshot size: ${mergedSnapshot.length} bytes`);
 
 	// Delete only successfully applied records
-	// if (appliedRecordIds.length > 0) {
-	// 	await redis.xdel(redisKey, [...appliedRecordIds]);
-	// 	console.log(`Deleted ${appliedRecordIds.length} Redis records`);
-	// }
+	if (appliedRecordIds.length > 0) {
+		await redis.xdel(redisKey, [...appliedRecordIds]);
+		console.log(`Deleted ${appliedRecordIds.length} Redis records`);
+	}
 
 	res.set("Content-Type", "application/octet-stream");
 	console.log(`--- Snapshot Success: ${diagramId} ---`);
