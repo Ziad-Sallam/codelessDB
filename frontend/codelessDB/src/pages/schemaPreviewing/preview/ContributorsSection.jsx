@@ -7,6 +7,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
+import { getInitials } from "../../diagrams/Contributors.jsx"
+
 const getRoleIcon = (role) => {
   switch (role.toUpperCase()) {
     case "OWNER":
@@ -74,10 +76,20 @@ export const ContributorsSection = ({ collaborators, compact = false }) => {
                   <Avatar
                     src={collaborator.picture}
                     alt={collaborator.name}
-                    sx={{ width: 32, height: 32, cursor: 'pointer' }}
+                    sx={{
+                      bgcolor: collaborator.picture ? undefined : "primary.main",
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      "&:hover": {
+                        transform: "scale(1.07)",
+                        boxShadow: 3,
+                      },
+                      width: 40,
+                      height: 40
+                    }}
                     onClick={() => handleContributorClick(collaborator)}
                   >
-                    {collaborator.name.substring(0, 2).toUpperCase()}
+                    {(!collaborator.picture || collaborator.picture.trim() === "") && getInitials(collaborator.name)}
                   </Avatar>
                 </Tooltip>
                 <Box sx={{ minWidth: 0, flex: 1 }}>

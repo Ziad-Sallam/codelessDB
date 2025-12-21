@@ -19,16 +19,18 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class CannedQueriesDiagrams {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private int id;
-
+    
     @Column(nullable = false, columnDefinition = "TEXT")
+    @EqualsAndHashCode.Include
     private String query;
-
+    
     @Column(nullable = false, columnDefinition = "TEXT")
+    @EqualsAndHashCode.Include
     private String description;
-
+    
     @Column(nullable = false, length = 100)
+    @EqualsAndHashCode.Include
     private String name;
 
     @Column(nullable = false, updatable = false)

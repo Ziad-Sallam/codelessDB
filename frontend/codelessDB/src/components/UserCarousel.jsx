@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -20,6 +20,8 @@ import {
   Person as PersonIcon,
   Star as StarIcon,
 } from "@mui/icons-material";
+
+import { getInitials } from "../pages/diagrams/Contributors.jsx";
 
 const UserCarousel = ({ users, title = "Featured Designers" }) => {
   const navigate = useNavigate();
@@ -144,9 +146,10 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   boxShadow: 2,
                   mt: -4,
                   mb: 1.5,
+                  bgcolor: user.picture ? undefined : "primary.main"
                 }}
               >
-                {user.name.charAt(0)}
+                {(!user.picture || user.picture.trim() === "") && getInitials(user.username)}
               </Avatar>
 
               <CardContent

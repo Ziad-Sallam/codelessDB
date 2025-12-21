@@ -308,7 +308,7 @@ export default function CreateSchema() {
                 </Card>
 
                 {/* DDL Display */}
-                {/* {selectedDiagram && (
+                {selectedDiagram && (
                   <Card variant="outlined">
                     <CardHeader
                       title={<Typography variant="h6">Database DDL</Typography>}
@@ -322,7 +322,7 @@ export default function CreateSchema() {
                       </Paper>
                     </CardContent>
                   </Card>
-                )} */}
+                )}
 
                 {/* Predefined Queries */}
                 <Card variant="outlined">

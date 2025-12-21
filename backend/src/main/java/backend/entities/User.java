@@ -78,9 +78,11 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserDiagram> userDiagrams = new HashSet<>();
 
+    @Column(length = 500)
+    @Size(max = 500)
     private String profileWebsiteUrl;
 
-    @Column(length = 300)
+    @Column(length = 50)
     private String publicProfile;
 
     @CreationTimestamp
