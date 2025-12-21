@@ -84,8 +84,8 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const metaMap = doc.getMap("meta");
 
 		ydocRef.current = doc;
-		console.log("Empty doc: ")
-		console.log(Y.encodeStateAsUpdate(doc));
+		// console.log("Empty doc: ")
+		// console.log(Y.encodeStateAsUpdate(doc));
 
 		const provider = new WebsocketProvider(
 			`ws://localhost:8080/ws/collab`,
