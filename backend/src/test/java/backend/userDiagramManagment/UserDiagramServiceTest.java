@@ -29,6 +29,7 @@ import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.entities.joins.UserDiagramId;
+import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
