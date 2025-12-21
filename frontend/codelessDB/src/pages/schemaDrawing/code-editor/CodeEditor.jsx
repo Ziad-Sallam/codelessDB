@@ -2,15 +2,17 @@ import { useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import { optimizeSQLWithGemini } from "./optimize.js";
+import { updateDDL } from "./optimize.js";
 import ConfirmationModal from '../../../components/ConfirmationModal/ConfirmationModal.jsx';
 import { useAuth } from '../../../components/AuthProvider.jsx';
+import { useNotification } from '../../../components/NotificationContext';
 import './CodeEditor.css';
 import { useNavigate } from "react-router-dom";
 import { parse } from "sql-parser-cst";
 
 const MAX_AI_QUOTA = parseInt(import.meta.env.VITE_MAX_AI_QUOTA) || 5;
 
-function CodeEditor({ initialCode, onClose }) {
+function CodeEditor({ initialCode, onClose, diagramId }) {
   const removeUseStatements = (sql) => {
     const statements = sql
       .split(";")
@@ -25,10 +27,12 @@ function CodeEditor({ initialCode, onClose }) {
   const [activeTab, setActiveTab] = useState('generated'); // 'generated' or 'optimized'
   const [optimizationSummary, setOptimizationSummary] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [optimizationError, setOptimizationError] = useState('');
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  const { showSuccess, showError } = useNotification();
   const { user, updateUserQuota } = useAuth();
   const aiQuota = user?.aiQuotaRemaining ?? MAX_AI_QUOTA;
   const navigate = useNavigate();
@@ -83,6 +87,20 @@ function CodeEditor({ initialCode, onClose }) {
       setOptimizationError(err.message?.includes('quota') ? err.message : 'Failed to optimize SQL.');
     } finally {
       setIsOptimizing(false);
+    }
+  };
+
+  const handleUpdateDDL = async () => {
+    if (!diagramId) return;
+    setIsSaving(true);
+    try {
+      const currentCode = getCurrentCode();
+      const resp = await updateDDL(diagramId, currentCode);
+      showSuccess(resp);
+    } catch (err) {
+      showError(err.message || "Failed to save DDL");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -166,13 +184,24 @@ function CodeEditor({ initialCode, onClose }) {
 
         {/* Footer */}
         <div className="editor-footer">
-          <button 
-            className="editor-btn" 
+          <button
+            className="editor-btn"
             onClick={handleAction}
             disabled={!!error}
           >
             Create Database
           </button>
+
+          {diagramId && (
+            <button
+              className="editor-btn save-ddl-btn"
+              onClick={handleUpdateDDL}
+              disabled={isSaving || !!error}
+              style={{ marginLeft: '10px', backgroundColor: '#4b5563' }}
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </button>
+          )}
         </div>
       </div>
 

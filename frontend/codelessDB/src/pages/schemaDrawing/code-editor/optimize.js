@@ -32,3 +32,17 @@ export async function optimizeSQLWithGemini(originalSQL) {
   
   return data;
 }
+
+
+export async function updateDDL(id, ddl) {
+  const response = await fetch(`${API_URL}/diagrams/update-ddl/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+    body: JSON.stringify({ ddl }),
+  });
+
+  return handleResponse(response);
+}

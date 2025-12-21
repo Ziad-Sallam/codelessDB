@@ -210,6 +210,7 @@ export default function Schema() {
         <CodeEditor
           initialCode={generatedSql}
           onClose={() => setIsSqlPanelOpen(false)}
+          diagramId={id}
         />
       )}
       <div className="header">
