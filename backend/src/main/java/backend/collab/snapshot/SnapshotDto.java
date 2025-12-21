@@ -7,8 +7,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class SnapshotDto {
-	private byte[] snapshot;
-
 	private String diagramName;	
 	
 	private Role role;

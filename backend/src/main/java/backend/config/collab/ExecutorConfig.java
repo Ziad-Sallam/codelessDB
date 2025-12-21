@@ -13,7 +13,7 @@ public class ExecutorConfig {
     @Bean(name = "collabWriter")
     public ExecutorService collabWriter() {
         return new ThreadPoolExecutor(
-                2,              // core threads
+                2,          // core threads
                 8,          // max threads
                 60, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(5000), // queue capacity

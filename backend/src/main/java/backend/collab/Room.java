@@ -6,7 +6,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
@@ -47,7 +48,7 @@ public class Room implements IRoom {
 	/* Thread-safe Set to store the active WebSocket sessions */
 	private final Set<WebSocketSession> sessions;
 	
-	private final LongAdder updateCounter;
+	private final AtomicInteger updateCounter;
 	
 	private final SnapshotService snapshotService;
 
@@ -55,7 +56,7 @@ public class Room implements IRoom {
 	public Room(String diagramId, SnapshotService snapshotService) {
 		this.diagramId = diagramId;
 		this.sessions = Collections.synchronizedSet(new HashSet<>());
-		this.updateCounter = new LongAdder();
+		this.updateCounter = new AtomicInteger();
 		
 		this.snapshotService = snapshotService;
 	}
@@ -83,8 +84,7 @@ public class Room implements IRoom {
 	 */
 	@Override
 	public boolean removeSession(WebSocketSession session) {
-		boolean exist = sessions.remove(session);
-		return exist;
+		return sessions.remove(session);
 	}
 
 	/**
@@ -104,37 +104,37 @@ public class Room implements IRoom {
 			log.warn("No sessions found for diagramId: {}", diagramId);
 			return;
 		}
-
-		if (role == Role.READER) {
+		
+		final boolean cursorUpdate = (update[0] == 1);
+		
+		if (!cursorUpdate && role == Role.READER) {
 			log.warn("Readers cannot send updates");
 			return;
 		}
-
-		final boolean cursorUpdate = (update[0] == 1);
-
+		
 		if (!cursorUpdate) {
-			this.updateCounter.increment();
-			if (updateCounter.sum() >= SNAPSHOT_THRESHOLD) {
-				// takeSnapshot();
-				updateCounter.reset();
+			this.updateCounter.incrementAndGet();
+			if (updateCounter.get() >= SNAPSHOT_THRESHOLD) {
+				takeSnapshot();
+				updateCounter.set(0);
 			}
 		}
 
-		sendUpdatesToUsers(update, senderId);
+		broadcast(update, senderId);
 	}
 
-	private void sendUpdatesToUsers(byte[] update, String senderId) {
+	private void broadcast(byte[] update, String senderId) {
 		BinaryMessage message = new BinaryMessage(update);
 
 		// Stream and send to the targeted room sessions
-		this.sessions.parallelStream().forEach(session -> {
+		this.sessions.stream().forEach(session -> {
 			if (session.isOpen() && !session.getId().equals(senderId)) {
 				try {
 					session.sendMessage(message);
 
 				} catch (IOException e) {
 					log.error("Error sending message to session {} in diagram {}:\n {}",
-							session.getId(), diagramId, e.getMessage());
+								session.getId(), diagramId, e.getMessage());
 				}
 			}
 		});
@@ -154,7 +154,7 @@ public class Room implements IRoom {
 		});
 
 		this.sessions.clear();
-		this.updateCounter.reset();
+		this.updateCounter.set(0);
 	}
 
 	@Override

@@ -10,8 +10,8 @@ import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
-import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriComponentsBuilder; // New import for query parsing
+import org.springframework.web.util.UriTemplate;
 
 import backend.entities.joins.UserDiagram;
 import backend.security.AuthUser;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class PathVariableInterceptor implements HandshakeInterceptor {
+public class CollabInterceptor implements HandshakeInterceptor {
 
 	private static final UriTemplate URI_TEMPLATE = new UriTemplate("/ws/collab/{diagramId}");
 
@@ -54,13 +54,12 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 
 		// TOKEN EXTRACTION (FROM QUERY PARAMETER)
 		String token = UriComponentsBuilder.fromUri(request.getURI())
-													  .build()
-													  .getQueryParams()
-													  .getFirst("token");
+				.build()
+				.getQueryParams()
+				.getFirst("token");
 
-		// log.info("Extracted token from query parameter: {}", token == null ? "No" : "Yes");
 
-		// AUTHENTICATION & AUTHORIZATION 
+		// AUTHENTICATION & AUTHORIZATION
 		try {
 			AuthUser authUser = jwtExtractor.authenticate(token, false);
 
@@ -72,15 +71,13 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 
 			attributes.put("userId", authUser.userId());
 			attributes.put("username", authUser.username());
-			
+
 			UUID diagramId = UUID.fromString(diagramIdStr);
-			
+
 			// AUTHORIZATION (Check diagram access)
 			UserDiagram userDiagram = diagramService.getUserDiagramOrThrow(authUser.userId(), diagramId);
 			Role role = userDiagram.getRole();
 			attributes.put("role", role);
-
-			// log.info("Handshake successful. Diagram ID: {} | User: {}", diagramIdStr, authUser.username());
 
 			return true;
 
@@ -108,7 +105,6 @@ public class PathVariableInterceptor implements HandshakeInterceptor {
 			WebSocketHandler wsHandler,
 			Exception exception) {
 
-		// log.info("Handshake Established");
-		// Optional: Perform cleanup or logging after the handshake
+		log.info("Handshake Established");
 	}
 }

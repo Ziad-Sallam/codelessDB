@@ -1,6 +1,5 @@
 package backend.collab.services;
 
-import org.springframework.data.redis.connection.DataType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -11,7 +10,6 @@ import backend.user.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,9 +70,7 @@ class RoomManagerImpl implements RoomManager {
 		
 		// Cursor positions don't need to be stored
 		if (!cursorUpdate) {
-			// log.info("Storing update {} for diagramId {}", (data), diagramId);
 			redisService.addUpdate(diagramId, data);
-			// snapshotService.takeSnapshot(diagramId);
 		}
 		
 		room.doUpdate(data, senderId, role);

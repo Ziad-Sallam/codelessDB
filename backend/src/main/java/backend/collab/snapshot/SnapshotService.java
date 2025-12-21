@@ -13,11 +13,9 @@ import backend.user.Role;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class SnapshotService {
 
 	private final DiagramRepository diagramRepository;
@@ -28,15 +26,17 @@ public class SnapshotService {
 
 	private final UpdateWriter updateWriter;
 
+	private final ConcurrentHashMap<String, Lock> snapshotLocks = new ConcurrentHashMap<>();
+
 	public SnapshotDto getDiagramMetadata(int userId, UUID diagramId) {
 		userDiagramService.getUserOrThrow(userId);
 		Role role = userDiagramService
-				.getUserDiagramOrThrow(userId, diagramId)
-				.getRole();
+						.getUserDiagramOrThrow(userId, diagramId)
+						.getRole();
 
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
-		// Return DTO with null snapshot data, only metadata
-		return new SnapshotDto(null, diagram.getName(), role);
+		
+		return new SnapshotDto(diagram.getName(), role);
 	}
 
 	public byte[] getDiagramSnapshot(int userId, UUID diagramId) {
@@ -44,7 +44,6 @@ public class SnapshotService {
 		// Access check
 		userDiagramService.getUserDiagramOrThrow(userId, diagramId);
 
-		// takeSnapshotThread(diagramId.toString());
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
 		return diagram.getContent();
 	}
@@ -52,8 +51,6 @@ public class SnapshotService {
 	public void takeSnapshot(String diagramId) {
 		updateWriter.submitWriteTask(() -> takeSnapshotThread(diagramId));
 	}
-
-	private final ConcurrentHashMap<String, Lock> snapshotLocks = new ConcurrentHashMap<>();
 
 	public void takeSnapshotThread(String diagramId) {
 		Lock lock = snapshotLocks.computeIfAbsent(diagramId, k -> new ReentrantLock());
@@ -64,12 +61,12 @@ public class SnapshotService {
 			// send a request to a Node.js worker node
 			// to take a snapshot from redis updates and deletes them
 			byte[] snapshot = snapshotClient.snapshot(diagramId, diagram.getContent());
-			log.info("Snapshot taken {}", snapshot);
 
 			if (snapshot != null && snapshot.length > 0) {
 				diagram.setContent(snapshot);
 				diagramRepository.save(diagram);
 			}
+
 		} finally {
 			lock.unlock();
 		}
