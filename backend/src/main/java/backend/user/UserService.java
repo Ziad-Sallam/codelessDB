@@ -1,11 +1,12 @@
 package backend.user;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,12 +28,13 @@ public class UserService {
 
 	private final JavaMailSender mailSender;
 
+	private final PasswordEncoder passwordEncoder;
+
 	@org.springframework.beans.factory.annotation.Value("${frontend.url}")
 	private String frontendUrl;
 
 	private String encodePassword(String rawPassword) {
-		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-		return encoder.encode(rawPassword);
+		return passwordEncoder.encode(rawPassword);
 	}
 
 	@Transactional
@@ -88,7 +90,7 @@ public class UserService {
 			throw new UserNotFoundException("User not found");
 		}
 
-		if (!new BCryptPasswordEncoder().matches(rawPassword, user.getPassword())) {
+		if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
 			throw new BadCredentialsException("Invalid credentials, Password mismatch");
 		}
 
@@ -228,7 +230,7 @@ public class UserService {
 	 */
 	private void resetAiQuotaIfNeeded(User user) {
 
-		if (user.getAiQuotaResetDate() == null || !user.getAiQuotaResetDate().equals(LocalDateTime.now())) {
+		if (user.getAiQuotaResetDate() == null || !user.getAiQuotaResetDate().toLocalDate().isEqual(LocalDate.now())) {
 			user.setAiQuotaRemaining(5);
 			user.setAiQuotaResetDate(LocalDateTime.now());
 			userRepository.save(user);
