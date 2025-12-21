@@ -18,12 +18,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import backend.databaseManagement.CreateDatabaseDTO;
-import backend.databaseManagement.CreateServerDTO;
 import backend.databaseManagement.DatabaseManagementController;
 import backend.databaseManagement.DatabaseManagementService;
-import backend.databaseManagement.InitiateDatabaseDTO;
-import backend.databaseManagement.SendDatabasesDTO;
+import backend.databaseManagement.dto.CreateDatabaseDTO;
+import backend.databaseManagement.dto.CreateServerDTO;
+import backend.databaseManagement.dto.InitiateDatabaseDTO;
+import backend.databaseManagement.dto.SendDatabasesDTO;
 import backend.security.AuthUser;
 
 class DatabaseManagementControllerTest {

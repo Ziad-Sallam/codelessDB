@@ -6,6 +6,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import backend.agent.WebSocketHandler.OnlineUserTracker;
+import backend.databaseManagement.dto.CreateDatabaseDTO;
+import backend.databaseManagement.dto.CreateServerDTO;
+import backend.databaseManagement.dto.InitiateDatabaseDTO;
+import backend.databaseManagement.dto.SendDatabasesDTO;
 import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
@@ -128,7 +132,6 @@ public class DatabaseManagementService {
 
         InitiateDatabaseDTO dto = new InitiateDatabaseDTO();
         dto.setDatabaseName(database.getName());
-        dto.setPassword(database.getPassword());
         dto.setDdl(database.getDdl());
         dto.setContainerId(id);
         dto.setWsUrl("ws://localhost:8080/agent-ws");
@@ -165,6 +168,13 @@ public class DatabaseManagementService {
         }
 
         return ans;
+    }
+
+    public boolean checkDatabasePassword(int databaseId, String password) {
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+
+        return database.getPassword().equals(password);
     }
 
 }

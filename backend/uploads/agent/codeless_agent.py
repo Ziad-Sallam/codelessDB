@@ -25,6 +25,7 @@ MAX_RETRIES = 5
 retries = 0
 ws_global = None
 connection_global = None
+password = None
 
 shutdown_event = threading.Event()
 
@@ -126,7 +127,6 @@ def create_mysql_container(url: str, database_id: int):
     db = get_database_info(url, database_id)
     container_name = db["databaseName"]
     volume_name = f"{container_name}_data"
-    password = db["password"]
     image = "mysql:8.0"
     volFound = True
     containerFound = True
@@ -139,6 +139,7 @@ def create_mysql_container(url: str, database_id: int):
 
     def create_container():
         print("Creating MySQL container...")
+        global password
         return client.containers.run(
             image=image,
             name=container_name,
@@ -297,7 +298,7 @@ def connect_to_mysql(host=None, port=None, user=None, password=None, database=No
         except Error as e:
             print(f"MySQL connection failed: {e}. Retrying in {backoff}s")
             time.sleep(backoff)
-
+    return None, None
 
 def ensure_container_running(container_name=None):
     container_name = container_name or data["databaseName"]
@@ -444,9 +445,8 @@ def on_message(ws, message):
                 payload = json.dumps(result)
                 print("Payload to send:", payload)
                 ws.send(stomp_send("/app/response", payload))
-                if result["type"] != "SELECT":
-                    connection_global.commit()
-
+                if result["type"] != "SELECT" and connection_global is not None:
+                    connection_global.commit() 
             except Exception as e2:
                 print("Failed to execute SQL after reconnect:", e2)
                 payload = json.dumps(
@@ -506,11 +506,42 @@ def start_websocket():
 
     print("WebSocket loop exited")
 
+# -----------------------------
+# Check Password
+# -----------------------------
+import requests
+
+def check_database_password(id: int, url: str) -> bool:
+    pass_ = input("Enter database password: ")
+    payload = {
+        "databaseId": id,
+        "password": pass_
+    }
+    try:
+        req = requests.get(
+            f"{url}/database/check-database-password",
+            json=payload,  # send as JSON body
+            headers={"Content-Type": "application/json"},
+        )
+
+        if req.status_code != 200:
+            print("Failed to verify password with backend.")
+            return False
+        resp = req.json()
+        global password
+        password = pass_
+        return resp  
+    except requests.RequestException as e:
+        print(f"Request failed: {e}")
+        return False
 
 if __name__ == "__main__":
     argv = sys.argv
     if len(argv) < 3:
         print("Usage: python codeless_agent.py <url> <database_id>")
+        sys.exit(1)
+    if not check_database_password(int(argv[2]), argv[1]):
+        print("Incorrect password. Exiting.")
         sys.exit(1)
     container, db, host_port, connection, cursor = create_mysql_container(
         argv[1], int(argv[2])

@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import backend.databaseManagement.dto.CreateDatabaseDTO;
+import backend.databaseManagement.dto.CreateServerDTO;
+import backend.databaseManagement.dto.InitiateDatabaseDTO;
+import backend.databaseManagement.dto.PasswordRequest;
+import backend.databaseManagement.dto.SendDatabasesDTO;
 import backend.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +35,13 @@ public class DatabaseManagementController {
                 authUser.userId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDatabase);
+    }
+
+    @GetMapping("/check-database-password")
+    public ResponseEntity<Boolean> checkDatabasePassword(
+            @RequestBody PasswordRequest passwordRequest) {
+        return ResponseEntity.ok(
+                databaseManagementService.checkDatabasePassword(passwordRequest.getDatabaseId(), passwordRequest.getPassword()));
     }
 
     @GetMapping("/get-user-databases")

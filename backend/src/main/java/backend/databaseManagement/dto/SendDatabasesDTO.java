@@ -1,6 +1,8 @@
-package backend.databaseManagement;
+package backend.databaseManagement.dto;
 
 import java.util.*;
+
+import backend.databaseManagement.Database;
 import lombok.*;
 
 @Data

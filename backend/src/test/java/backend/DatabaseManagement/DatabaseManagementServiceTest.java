@@ -21,13 +21,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import backend.agent.WebSocketHandler.OnlineUserTracker;
-import backend.databaseManagement.CreateDatabaseDTO;
-import backend.databaseManagement.CreateServerDTO;
 import backend.databaseManagement.DatabaseManagementService;
-import backend.databaseManagement.InitiateDatabaseDTO;
-import backend.databaseManagement.SendDatabasesDTO;
 import backend.databaseManagement.ServerRepository;
 import backend.databaseManagement.UserDatabaseRepository;
+import backend.databaseManagement.dto.CreateDatabaseDTO;
+import backend.databaseManagement.dto.CreateServerDTO;
+import backend.databaseManagement.dto.InitiateDatabaseDTO;
+import backend.databaseManagement.dto.SendDatabasesDTO;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
 import backend.entities.Server;
 import backend.entities.User;
@@ -276,7 +276,6 @@ class DatabaseManagementServiceTest {
 
         InitiateDatabaseDTO dto = service.initiateDatabase(10);
         assertEquals("InitDB", dto.getDatabaseName());
-        assertEquals("pwd", dto.getPassword());
         assertEquals("CREATE TABLE test2(id INT)", dto.getDdl());
         assertEquals(10, dto.getContainerId());
         assertEquals("ws://localhost:8080/agent-ws", dto.getWsUrl());

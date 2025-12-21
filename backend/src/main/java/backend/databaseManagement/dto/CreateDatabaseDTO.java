@@ -1,4 +1,4 @@
-package backend.databaseManagement;
+package backend.databaseManagement.dto;
 
 import lombok.*;
 

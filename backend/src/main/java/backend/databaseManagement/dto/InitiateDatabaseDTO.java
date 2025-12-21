@@ -1,4 +1,4 @@
-package backend.databaseManagement;
+package backend.databaseManagement.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +13,6 @@ import lombok.Setter;
 @Setter
 public class InitiateDatabaseDTO {
     private String databaseName;
-    private String password;
     private String ddl;
     private String wsUrl;
     private String containerName;
