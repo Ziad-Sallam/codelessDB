@@ -94,8 +94,8 @@ function CodeEditor({ initialCode, onClose, diagramId }) {
     if (!diagramId) return;
     setIsSaving(true);
     try {
-      const currentCode = getCurrentCode();
-      const resp = await updateDDL(diagramId, currentCode);
+      const ddl = await getCurrentCode();
+      const resp = await updateDDL(diagramId, ddl);
       showSuccess(resp);
     } catch (err) {
       showError(err.message || "Failed to save DDL");

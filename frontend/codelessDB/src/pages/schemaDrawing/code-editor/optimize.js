@@ -41,7 +41,7 @@ export async function updateDDL(id, ddl) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${localStorage.getItem("authToken")}`,
     },
-    body: JSON.stringify({ ddl }),
+    body: ddl,
   });
 
   return handleResponse(response);
