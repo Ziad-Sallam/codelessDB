@@ -56,6 +56,8 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const metaMap = doc.getMap("meta");
 
 		ydocRef.current = doc;
+		console.log("Empty doc: ")
+		console.log(Y.encodeStateAsUpdate(doc));
 
 		const provider = new WebsocketProvider(
 			`ws://localhost:8080/ws/collab`,
@@ -132,6 +134,10 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		metaMap.observe(syncObserver);
 
 		return () => {
+			const arr = Y.encodeStateAsUpdate(doc);
+			// console.log("Snap: ", arr);
+			console.log("Snap: ", Array.from(new Uint8Array(arr), x => x > 127 ? x - 256 : x));
+
 			awareness.setLocalState(null);
 			awareness.off("change", handleAwarenessChange);
 			provider.destroy();
@@ -140,26 +146,18 @@ export const CollaborationProvider = ({ roomId, children }) => {
 	}, []);
 
 	// ----------------- Snapshot Loader -----------------
-	const loadCompositeYjsData = useCallback((snapshotData) => {
+	// snapshotBytes is Uint8Array
+	const applySnapshot = useCallback((snapshotBytes) => {
 		const ydoc = ydocRef.current;
 		if (!ydoc) return;
 
 		ydoc.transact(() => {
-			// 1. Try applying the Snapshot (Database)
-			if (snapshotData) {
-				try {
-					let snapshotBytes;
-					if (snapshotData instanceof ArrayBuffer || snapshotData instanceof Uint8Array) {
-						console.log("snapshotData is ArrayBuffer || Uint8array");
-						snapshotBytes = new Uint8Array(snapshotData);
-					} else {
-						snapshotBytes = base64ToBytes(snapshotData);
-					}
 
-					if (snapshotBytes.byteLength > 0) {
-						Y.applyUpdate(ydoc, snapshotBytes);
-						console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);
-					}
+			if (snapshotBytes && snapshotBytes.byteLength > 0) {
+				try {
+					Y.applyUpdate(ydoc, snapshotBytes);
+					console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);
+				
 				} catch (err) {
 					console.error("❌ CRITICAL: Database Snapshot is corrupt!", err);
 				}
@@ -295,7 +293,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 				addNodeYjs,
 				addEdgeYjs,
 				updateSchemaName,
-				loadCompositeYjsData,
+				applySnapshot,
 				undo,
 				redo,
 			}}
