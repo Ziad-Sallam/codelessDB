@@ -1,13 +1,34 @@
 package backend.userDiagramManagment;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import backend.entities.Diagram;
 import backend.entities.User;
 import backend.entities.joins.UserDiagram;
 import backend.entities.joins.UserDiagramId;
+import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
-import backend.userDiagramManagement.dto.*;
+import backend.userDiagramManagement.dto.DiagramDto;
+import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
@@ -17,17 +38,6 @@ import backend.userDiagramManagement.exceptions.DiagramException;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.repository.UserDiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.data.domain.*;
-
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 class UserDiagramServiceTest {
 
@@ -234,9 +244,6 @@ class UserDiagramServiceTest {
         assertEquals("john", dto.getContributorDtos().get(0).getName());
     }
 
-    // ------------------------------------------------------------
-    // SHARE DIAGRAM
-    // ------------------------------------------------------------
     @Test
     void shareDiagram_success() {
         User target = new User();
@@ -294,5 +301,241 @@ class UserDiagramServiceTest {
 
         assertThrows(DiagramException.InvalidDiagramDataException.class,
                 () -> service.shareDiagram(1, diagram.getId(), req));
+    }
+
+    // ------------------------------------------------------------
+    // SHARE DIAGRAM (UPDATES & DELETIONS)
+    // ------------------------------------------------------------
+    @Test
+    void shareDiagram_updateExistingRole_success() {
+        User target = new User();
+        target.setId(2);
+        target.setUsername("mike");
+
+        UserDiagram existingLink = UserDiagram.builder()
+                .UUID(new UserDiagramId(2, diagram.getId()))
+                .user(target)
+                .diagram(diagram)
+                .role(Role.READER)
+                .build();
+
+        DiagramShareRequestDto req = new DiagramShareRequestDto();
+        req.setToUserName("mike");
+        req.setRole(Role.WRITER);
+        req.setDelete(false);
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+        when(userRepository.findByUsername("mike")).thenReturn(target);
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(2, diagram.getId()))
+                .thenReturn(Optional.of(existingLink));
+
+        DiagramShareResponseDto res = service.shareDiagram(1, diagram.getId(), req);
+
+        assertEquals("Diagram role updated successfully", res.getMessage());
+        assertEquals(Role.WRITER, existingLink.getRole());
+        verify(userDiagramRepository).save(existingLink);
+    }
+
+    @Test
+    void shareDiagram_deleteRole_success() {
+        User target = new User();
+        target.setId(2);
+        target.setUsername("mike");
+
+        UserDiagram existingLink = UserDiagram.builder()
+                .UUID(new UserDiagramId(2, diagram.getId()))
+                .user(target)
+                .diagram(diagram)
+                .role(Role.WRITER)
+                .build();
+
+        DiagramShareRequestDto req = new DiagramShareRequestDto();
+        req.setToUserName("mike");
+        req.setDelete(true);
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+        when(userRepository.findByUsername("mike")).thenReturn(target);
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(2, diagram.getId()))
+                .thenReturn(Optional.of(existingLink));
+
+        DiagramShareResponseDto res = service.shareDiagram(1, diagram.getId(), req);
+
+        assertEquals("Diagram role deleted successfully", res.getMessage());
+        verify(userDiagramRepository).delete(existingLink);
+    }
+
+    @Test
+    void shareDiagram_deleteRole_userHasNoPermission_throws() {
+        User target = new User();
+        target.setId(2);
+        target.setUsername("mike");
+
+        DiagramShareRequestDto req = new DiagramShareRequestDto();
+        req.setToUserName("mike");
+        req.setDelete(true);
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+        when(userRepository.findByUsername("mike")).thenReturn(target);
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(2, diagram.getId()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(DiagramException.InvalidDiagramDataException.class,
+                () -> service.shareDiagram(1, diagram.getId(), req));
+    }
+
+    @Test
+    void shareDiagram_deleteRole_isOwner_throws() {
+        User target = new User();
+        target.setId(2);
+        target.setUsername("mike");
+
+        UserDiagram targetLink = UserDiagram.builder()
+                .UUID(new UserDiagramId(2, diagram.getId()))
+                .user(target)
+                .diagram(diagram)
+                .role(Role.OWNER)
+                .build();
+
+        DiagramShareRequestDto req = new DiagramShareRequestDto();
+        req.setToUserName("mike");
+        req.setDelete(true);
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+        when(userRepository.findByUsername("mike")).thenReturn(target);
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(2, diagram.getId()))
+                .thenReturn(Optional.of(targetLink));
+
+        assertThrows(DiagramException.InvalidDiagramDataException.class,
+                () -> service.shareDiagram(1, diagram.getId(), req));
+    }
+
+    @Test
+    void shareDiagram_shareWithRoleOwner_throws() {
+        DiagramShareRequestDto req = new DiagramShareRequestDto();
+        req.setToUserName("mike");
+        req.setRole(Role.OWNER);
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+
+        assertThrows(DiagramException.InvalidDiagramDataException.class,
+                () -> service.shareDiagram(1, diagram.getId(), req));
+    }
+
+    @Test
+    void shareDiagram_targetUserNotFound_throws() {
+        DiagramShareRequestDto req = new DiagramShareRequestDto();
+        req.setToUserName("nonexistent");
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+        when(userRepository.findByUsername("nonexistent")).thenReturn(null);
+
+        assertThrows(UserException.UserNotFoundException.class,
+                () -> service.shareDiagram(1, diagram.getId(), req));
+    }
+
+    @Test
+    void deleteDiagram_publicDiagram_throws() {
+        diagram.setPublicDiagram(new PublicDiagram());
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+
+        assertThrows(DiagramException.PermissionDeniedException.class,
+                () -> service.deleteDiagram(1, diagram.getId()));
+    }
+
+    @Test
+    void deleteDiagram_ownerLeaves_assignsToAnother() {
+        User mike = new User();
+        mike.setId(2);
+        UserDiagram mikeLink = UserDiagram.builder()
+                .UUID(new UserDiagramId(2, diagram.getId()))
+                .user(mike)
+                .diagram(diagram)
+                .role(Role.WRITER)
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+        when(userDiagramRepository.findFirstByDiagram_Id(diagram.getId())).thenReturn(mikeLink);
+        when(userDiagramRepository.existsByDiagram_Id(diagram.getId())).thenReturn(true);
+
+        service.deleteDiagram(1, diagram.getId());
+
+        verify(userDiagramRepository).delete(ownerLink);
+        assertEquals(Role.OWNER, mikeLink.getRole());
+        verify(userDiagramRepository).save(mikeLink);
+    }
+
+    @Test
+    void updateDiagram_updateThumbnail_success() {
+        DiagramUpdateRequestDto request = new DiagramUpdateRequestDto();
+        request.setThumbnail("new_thumbnail.png");
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+        when(diagramRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateDiagram(1, request, diagram.getId());
+
+        assertEquals("new_thumbnail.png", diagram.getThumbnail());
+    }
+
+    @Test
+    void updateDiagram_diagramNotFound_throws() {
+        when(userRepository.findById(1)).thenReturn(user);
+        when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.empty());
+
+        assertThrows(DiagramException.DiagramNotFoundException.class,
+                () -> service.updateDiagram(1, new DiagramUpdateRequestDto(), diagram.getId()));
+    }
+
+    @Test
+    void checkOwner_notOwner_throws() {
+        ownerLink.setRole(Role.WRITER);
+        assertThrows(DiagramException.PermissionDeniedException.class,
+                () -> service.checkOwner(ownerLink, "any action"));
+    }
+
+    @Test
+    void getUserDiagramOrThrow_success() {
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.of(ownerLink));
+
+        UserDiagram result = service.getUserDiagramOrThrow(1, diagram.getId());
+
+        assertNotNull(result);
+        assertEquals(ownerLink, result);
+    }
+
+    @Test
+    void getUserDiagramOrThrow_notFound_throws() {
+        when(userDiagramRepository.findByUser_IdAndDiagram_Id(1, diagram.getId()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(DiagramException.PermissionDeniedException.class,
+                () -> service.getUserDiagramOrThrow(1, diagram.getId()));
     }
 }
