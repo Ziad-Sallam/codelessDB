@@ -22,22 +22,6 @@ public class RedisStreamService {
 	}
 
 	public void addUpdate(String diagramId, byte[] update) {
-		// byte[] trimmed;
-		// if (update[0] == 0 && (update[1] == 1 || update[1] == 2)) {
-		// 	trimmed = Arrays.copyOfRange(update, 2, update.length);
-		// 	System.out.println("------------------");
-		// 	System.out.println(Arrays.toString(
-		// 	IntStream.range(0, trimmed.length)
-		// 				.map(i -> Byte.toUnsignedInt(trimmed[i]))
-		// 				.toArray()
-		// 	));
-		// 	System.out.println("------------------");
-
-		// } else {
-		// 	log.warn("Update should not be stored: {}", update);
-		// 	return;
-		// }
-
 		String key = streamKey(diagramId);
 
 		Map<String, byte[]> map = Map.of("update", update);

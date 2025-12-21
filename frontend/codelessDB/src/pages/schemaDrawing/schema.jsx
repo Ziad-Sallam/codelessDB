@@ -96,15 +96,15 @@ const SchemaContent = () => {
 
 	const loadDigram = async () => {
 		try {
-			// 1. Fetch Metadata (JSON)
+			// 1. Fetch Snapshot (Binary)
+			const snapshotBuffer = await fetchDiagramSnapshot(roomId);
+			applySnapshot(new Uint8Array(snapshotBuffer));
+			
+			// 2. Fetch Metadata (JSON)
 			const meta = await fetchDiagramMetadata(roomId);
 
 			updateSchemaName(meta.diagramName);
 			setIsReadOnly(meta.role === "READER");
-
-			// 2. Fetch Snapshot (Binary)
-			const snapshotBuffer = await fetchDiagramSnapshot(roomId);
-			applySnapshot(new Uint8Array(snapshotBuffer));
 
 		} catch (err) {
 			showError(err.message);
@@ -209,38 +209,6 @@ const SchemaContent = () => {
 		addNodeYjs(newNode);
 	};
 
-	const onSaveDiagram = async () => {
-		if (!roomId) {
-			showError("Diagram ID is missing. Cannot save.");
-			return;
-		}
-
-		setIsSaving(true);
-
-		const thumbnailPNG = await takeSnapshot();
-
-		const thumbnailURL = await uploadToCloudinary(thumbnailPNG, roomId);
-
-		const binaryState = Y.encodeStateAsUpdate(ydoc);
-		const base64State = uint8ArrayToBase64(binaryState);
-
-		const payload = {
-			diagramName: schemaName,
-			state: base64State,
-			picture: thumbnailURL,
-		};
-
-		try {
-			await updateDiagram(roomId, payload);
-			await takeSnapshot();
-			showSuccess("Diagram saved successfully!");
-		} catch (err) {
-			showError(err.message);
-		} finally {
-			setIsSaving(false);
-		}
-	};
-
 	const onGenerateSQL = async () => {
 		const validation = validateSchema(nodes);
 
@@ -279,9 +247,6 @@ const SchemaContent = () => {
 			/>
 			<div className="active-users">
 				<ActiveUsers />
-			</div>
-			<div >
-				<button className="save-btn" onClick={onSaveDiagram}>Save</button>
 			</div>
 
 			<div className="drawing-canva">
@@ -363,7 +328,7 @@ export default function Schema() {
 	const { roomId } = useParams();
 	return (
 		<ReactFlowProvider>
-			<CollaborationProvider roomId={roomId}>
+			<CollaborationProvider roomId={roomId} key={roomId}>
 				<SchemaContent />
 			</CollaborationProvider>
 		</ReactFlowProvider>
