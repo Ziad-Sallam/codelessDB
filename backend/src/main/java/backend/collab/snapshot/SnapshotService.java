@@ -1,6 +1,9 @@
 package backend.collab.snapshot;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.stereotype.Service;
 
@@ -41,7 +44,7 @@ public class SnapshotService {
 		// Access check
 		userDiagramService.getUserDiagramOrThrow(userId, diagramId);
 
-		takeSnapshotThread(diagramId.toString());
+		// takeSnapshotThread(diagramId.toString());
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
 		return diagram.getContent();
 	}
@@ -50,11 +53,10 @@ public class SnapshotService {
 		updateWriter.submitWriteTask(() -> takeSnapshotThread(diagramId));
 	}
 
-	private final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.locks.Lock> snapshotLocks = new java.util.concurrent.ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Lock> snapshotLocks = new ConcurrentHashMap<>();
 
 	private void takeSnapshotThread(String diagramId) {
-		java.util.concurrent.locks.Lock lock = snapshotLocks.computeIfAbsent(diagramId,
-				k -> new java.util.concurrent.locks.ReentrantLock());
+		Lock lock = snapshotLocks.computeIfAbsent(diagramId, k -> new ReentrantLock());
 		lock.lock();
 		try {
 			Diagram diagram = userDiagramService.getDiagramOrThrow(UUID.fromString(diagramId));

@@ -1,94 +1,100 @@
 import express from "express";
-import * as Y from "yjs";
 import Redis from "ioredis";
+import * as Y from "yjs";
 
 const app = express();
-const redis = new Redis(); // defaults to localhost:6379
+const redis = new Redis();
 
-// Increase limit to 50mb if your diagrams get complex
-app.use(express.raw({ type: "application/octet-stream", limit: "5mb" }));
+app.use(express.raw({
+	type: "application/octet-stream",
+	limit: "10mb"
+}));
 
-/**
- * Endpoint to merge Redis stream updates into a base snapshot
- * POST /snapshot/:diagramId
- * Body: Raw Binary (Uint8Array) of the current base snapshot
- */
-app.post("/snapshot/:diagramId", async (request, response) => {
-	const { diagramId } = request.params;
-	const diagramContent = request.body; // Buffer from express.raw
+app.post("/snapshot/:diagramId", async (req, res) => {
+	const { diagramId } = req.params;
 	const redisKey = `stream:${diagramId}`;
 
 	console.log(`\n--- Snapshot Start: ${diagramId} ---`);
 
 	const doc = new Y.Doc();
 
-	// 1. Load the Base State
-	// We wrap this in a try-catch because if the base is corrupted, 
-	// applying subsequent updates will result in a broken state.
-	if (Buffer.isBuffer(diagramContent) && diagramContent.length > 0) {
+	// Always normalize body
+	const baseBuffer =
+		Buffer.isBuffer(req.body) && req.body.length > 0
+			? req.body
+			: null;
+
+	// Load base snapshot (optional)
+	if (baseBuffer) {
 		try {
-			Y.applyUpdate(doc, new Uint8Array(diagramContent));
-			console.log(`Base state loaded: ${diagramContent.length} bytes`);
+			Y.applyUpdate(doc, new Uint8Array(baseBuffer));
+			console.log(`Base snapshot loaded (${baseBuffer.length} bytes)`);
 		} catch (err) {
-			console.error(`CRITICAL: Base snapshot corrupted for ${diagramId}.`, err.message);
-			return response.status(400).send("Base state corrupted");
+			console.error("Base snapshot corrupted:", err.message);
+			return res.status(400).send("Base snapshot corrupted");
 		}
 	} else {
-		console.log("No base state provided, creating fresh doc.");
+		console.log("No base snapshot provided (new diagram or empty state)");
 	}
 
-	// 2. Fetch updates from Redis Stream
-	// We use xrangeBuffer to ensure we get raw bytes, not UTF-8 strings
+	// Read Redis updates
 	const records = await redis.xrangeBuffer(redisKey, "-", "+");
 
-	if ((!records || records.length === 0) && (!diagramContent || diagramContent.length === 0)) {
-		console.log("Nothing to process.");
-		return response.status(204).send();
+	if (!records || records.length === 0) {
+		console.log("No Redis updates found");
+
+		// Return snapshot of current doc (empty or base-only)
+		const snapshot = Y.encodeStateAsUpdate(doc);
+		res.set("Content-Type", "application/octet-stream");
+		return res.send(Buffer.from(snapshot));
 	}
 
-	console.log(`Applying ${records.length} updates from Redis...`);
+	console.log(`Applying ${records.length} Redis updates`);
 
+	const appliedRecordIds = [];
 	let appliedCount = 0;
+
 	for (const [id, fields] of records) {
-		// Redis streams store data as [key, value, key2, value2...]
+		let appliedThisRecord = false;
+
 		for (let i = 0; i < fields.length; i += 2) {
 			const key = fields[i].toString();
-			const value = fields[i + 1]; // This is a Buffer
+			const value = fields[i + 1];
 
-			if (key === "update") {
-				try {
-					Y.applyUpdate(doc, new Uint8Array(value));
-					appliedCount++;
-				} catch (err) {
-					// This is where your "Unexpected end of array" usually happens.
-					// Logging the ID helps you find the bad record in Redis.
-					console.error(`[Record ${id.toString()}] Update failed:`, err.message);
-				}
+			if (key !== "update") continue;
+
+			try {
+				Y.applyUpdate(doc, new Uint8Array(value));
+				appliedThisRecord = true;
+				appliedCount++;
+			} catch (err) {
+				console.error(`[${id.toString()}] Update failed:`, err.message);
 			}
+		}
+
+		if (appliedThisRecord) {
+			appliedRecordIds.push(id);
 		}
 	}
 
-	// 3. Encode the new merged state
-	const mergedSnapshot = Y.encodeStateAsUpdate(doc);
-	console.log(`New snapshot size: ${mergedSnapshot.length} bytes`);
+	console.log(`Applied ${appliedCount} updates`);
 
-	// 4. Cleanup Redis 
-	// ONLY delete the records we successfully read to prevent data loss
-	if (records.length > 0) {
-		const recordIds = records.map(r => r[0]);
-		await redis.xdel(redisKey, ...recordIds);
-		console.log(`Deleted ${recordIds.length} processed records from Redis.`);
+	// Encode merged snapshot
+	const mergedSnapshot = Y.encodeStateAsUpdate(doc);
+	console.log(`Merged snapshot size: ${mergedSnapshot.length} bytes`);
+
+	// Delete only successfully applied records
+	if (appliedRecordIds.length > 0) {
+		await redis.xdel(redisKey, ...appliedRecordIds);
+		console.log(`Deleted ${appliedRecordIds.length} Redis records`);
 	}
 
-	// 5. Send binary response
-	response.set("Content-Type", "application/octet-stream");
+	res.set("Content-Type", "application/octet-stream");
 	console.log(`--- Snapshot Success: ${diagramId} ---`);
 
-	// We convert the Uint8Array to a Node Buffer for Express response
-	response.send(Buffer.from(mergedSnapshot));
+	res.send(Buffer.from(mergedSnapshot));
 });
 
-const PORT = 3001;
-app.listen(PORT, () => {
-	console.log(`Yjs worker running on http://localhost:${PORT}`);
+app.listen(3001, () => {
+	console.log("Yjs snapshot worker running on http://localhost:3001");
 });
