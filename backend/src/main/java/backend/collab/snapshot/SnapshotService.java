@@ -55,7 +55,7 @@ public class SnapshotService {
 
 	private final ConcurrentHashMap<String, Lock> snapshotLocks = new ConcurrentHashMap<>();
 
-	private void takeSnapshotThread(String diagramId) {
+	public void takeSnapshotThread(String diagramId) {
 		Lock lock = snapshotLocks.computeIfAbsent(diagramId, k -> new ReentrantLock());
 		lock.lock();
 		try {
