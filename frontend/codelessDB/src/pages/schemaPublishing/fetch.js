@@ -40,3 +40,27 @@ export async function publishSchema(diagramId, shortDescription, detailedDescrip
 
 	return response.text();
 }
+
+export async function updatePublicSchema(diagramId, shortDescription, detailedDescription, hashTags, cannedQueries) {
+	const response = await fetch(`${API_URL}/publicDiagrams/update`, {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+		},
+		body: JSON.stringify({
+			diagramId,
+			shortDescription,
+			detailedDescription,
+			hashTags,
+			cannedQueries,
+		}),
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message);
+	}
+
+	return response.text();
+}
