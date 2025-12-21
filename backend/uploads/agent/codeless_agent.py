@@ -28,6 +28,7 @@ connection_global = None
 
 shutdown_event = threading.Event()
 
+
 def handle_shutdown(signum, frame):
     print("\nShutting down...")
     shutdown_event.set()
@@ -35,7 +36,7 @@ def handle_shutdown(signum, frame):
     global ws_global
     if ws_global:
         try:
-            ws_global.close()   
+            ws_global.close()
         except Exception:
             pass
     if cursor_global:
@@ -53,6 +54,7 @@ def handle_shutdown(signum, frame):
 
 signal.signal(signal.SIGINT, handle_shutdown)
 signal.signal(signal.SIGTERM, handle_shutdown)
+
 
 # -----------------------------
 # Container Creation Logic
@@ -503,7 +505,6 @@ def start_websocket():
         backoff = min(backoff * 2, 5)
 
     print("WebSocket loop exited")
-
 
 
 if __name__ == "__main__":
