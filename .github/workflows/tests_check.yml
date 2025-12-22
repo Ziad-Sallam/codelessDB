@@ -10,6 +10,7 @@ permissions:
   contents: read
   checks: write
   pull-requests: write
+  security-events: write
 
 concurrency:
   group: java-tests-${{ github.ref }}
@@ -73,12 +74,77 @@ jobs:
             echo "coverage_num=0" >> $GITHUB_OUTPUT
           fi
 
-      - name: Upload test reports
+      - name: Determine Failure Reason
         if: always()
-        uses: actions/upload-artifact@v4
+        id: failure-reason
+        run: |
+          BUILD_OUTCOME="${{ steps.maven-build.outcome }}"
+          FAILURES="${{ steps.test-results.outputs.failures }}"
+          ERRORS="${{ steps.test-results.outputs.errors }}"
+          COVERAGE_NUM="${{ steps.coverage.outputs.coverage_num }}"
+          
+          if [ "$BUILD_OUTCOME" = "success" ]; then
+            echo "reason=none" >> $GITHUB_OUTPUT
+            echo "failed=false" >> $GITHUB_OUTPUT
+          elif [ "$FAILURES" != "0" ] || [ "$ERRORS" != "0" ]; then
+            echo "reason=tests_failed" >> $GITHUB_OUTPUT
+            echo "failed=true" >> $GITHUB_OUTPUT
+          elif [ "$COVERAGE_NUM" -lt 60 ] && [ "$COVERAGE_NUM" != "0" ]; then
+            echo "reason=coverage_too_low" >> $GITHUB_OUTPUT
+            echo "failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "reason=build_error" >> $GITHUB_OUTPUT
+            echo "failed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment Test Summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
         with:
-          name: surefire-reports
-          path: backend/target/surefire-reports
+          script: |
+            const total = '${{ steps.test-results.outputs.total }}';
+            const failures = '${{ steps.test-results.outputs.failures }}';
+            const errors = '${{ steps.test-results.outputs.errors }}';
+            const skipped = '${{ steps.test-results.outputs.skipped }}';
+            const coverage = '${{ steps.coverage.outputs.coverage }}';
+            const coverageNum = parseInt('${{ steps.coverage.outputs.coverage_num }}');
+            const failureReason = '${{ steps.failure-reason.outputs.reason }}';
+            const hasFailed = '${{ steps.failure-reason.outputs.failed }}' === 'true';
+            const passed = total - failures - errors - skipped;
+            const runId = context.runId;
+            const repoUrl = context.payload.repository.html_url;
+
+            const status = hasFailed ? '❌' : '✅';
+            const buildStatus = hasFailed ? '**Failed**' : '**Passed**';
+
+            let coverageStatus = '';
+            if (failureReason === 'coverage_too_low') {
+              coverageStatus = `${coverage} ❌ **Below Minimum Threshold**`;
+            } else if (coverageNum >= 98 {
+              coverageStatus = `${coverage} ✅ **Excellent**`;
+            } else if (coverageNum >= 95) {
+              coverageStatus = `${coverage} ✅ **Good**`;
+            } else if (coverageNum >= 90) {
+              coverageStatus = `${coverage} ⚠️ **Acceptable**`;
+            } else if (coverage !== 'N/A') {
+              coverageStatus = `${coverage} ⚠️ **Below Recommended**`;
+            } else {
+              coverageStatus = 'N/A';
+            }
+
+            let failureDetails = '';
+            if (failureReason === 'tests_failed') {
+              failureDetails = `\n### ⚠️ Build Failure Analysis\n**Failure Type:** Test Failures\n**Details:** ${failures} test(s) failed. Fix before merge.\n`;
+            } else if (failureReason === 'coverage_too_low') {
+              failureDetails = `\n### ⚠️ Build Failure Analysis\n**Failure Type:** Insufficient Coverage\n**Details:** Coverage is ${coverage}, below required 60%.\n`;
+            } else if (failureReason === 'build_error') {
+              failureDetails = `\n### ⚠️ Build Failure Analysis\n**Failure Type:** Build Error\n**Details:** Check build logs for errors.\n`;
+            }
+
+            const resourcesSection = `\n### 📋 Resources\n| Resource | Link |\n|----------|------|\n| 📊 Coverage Report | [Download](${repoUrl}/actions/runs/${runId}#artifacts) |\n| 📝 Test Report | [View Tests](${repoUrl}/actions/runs/${runId}) |\n| 🔍 Full Logs | [View Logs](${repoUrl}/actions/runs/${runId}) |\n`;
+
+            const body = `## ${status} CI Build Report      ### Build Summary
+
 
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
@@ -89,13 +155,6 @@ jobs:
           reporter: java-junit
           fail-on-error: true
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: backend/target/site/jacoco/jacoco.xml
 
       - name: Upload coverage to Codecov
         if: always()
@@ -105,41 +164,22 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/target/site/jacoco/
+
+      - name: Upload build artifacts
+        if: steps.maven-build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: backend/target/*.jar
+
       - name: Final Build Status Check
         if: steps.maven-build.outcome != 'success'
         run: |
-          echo "::error::Build failed - see test reports and coverage above"
+          echo "::error::Build failed - see details in PR comment and logs"
           exit 1
-
-      - name: Comment Test Summary on PR
-        if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: '## 🧪 Test Summary'
-          message: |
-            **Total Tests:** ${{ steps.test-results.outputs.total }}
-            **Failures:** ${{ steps.test-results.outputs.failures }}
-            **Errors:** ${{ steps.test-results.outputs.errors }}
-            **Skipped:** ${{ steps.test-results.outputs.skipped }}
-            **Code Coverage:** ${{ steps.coverage.outputs.coverage }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
-      - name: Publish Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Maven Tests
-          path: 'backend/target/surefire-reports/TEST-*.xml'
-          reporter: java-junit
-          fail-on-error: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish Coverage Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Maven Coverage
-          path: 'backend/target/site/jacoco/jacoco.xml'
-          reporter: cobertura    # Important: Jacoco XML can be read as Cobertura format
-          fail-on-error: false
-          token: ${{ secrets.GITHUB_TOKEN }}
