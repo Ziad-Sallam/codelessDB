@@ -96,61 +96,61 @@ jobs:
             echo "failed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Comment Test Summary on PR
+      - name: Show Test Summary in GitHub Actions
         if: github.event_name == 'pull_request' || github.event_name == 'push'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const total = '${{ steps.test-results.outputs.total }}';
-            const failures = '${{ steps.test-results.outputs.failures }}';
-            const errors = '${{ steps.test-results.outputs.errors }}';
-            const skipped = '${{ steps.test-results.outputs.skipped }}';
-            const coverage = '${{ steps.coverage.outputs.coverage }}';
-            const coverageNum = parseInt('${{ steps.coverage.outputs.coverage_num }}');
-            const failureReason = '${{ steps.failure-reason.outputs.reason }}';
-            const hasFailed = '${{ steps.failure-reason.outputs.failed }}' === 'true';
-            const passed = total - failures - errors - skipped;
-            const runId = context.runId;
-            const repoUrl = context.payload.repository.html_url;
+        run: |
+          TOTAL=${{ steps.test-results.outputs.total }}
+          FAILURES=${{ steps.test-results.outputs.failures }}
+          ERRORS=${{ steps.test-results.outputs.errors }}
+          SKIPPED=${{ steps.test-results.outputs.skipped }}
+          COVERAGE=${{ steps.coverage.outputs.coverage }}
+          COVERAGE_NUM=${{ steps.coverage.outputs.coverage_num }}
+          FAILURE_REASON=${{ steps.failure-reason.outputs.reason }}
+          HAS_FAILED=${{ steps.failure-reason.outputs.failed }}
 
-            const status = hasFailed ? '❌' : '✅';
-            const buildStatus = hasFailed ? '**Failed**' : '**Passed**';
+          PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
+          STATUS="✅"
+          if [ "$HAS_FAILED" = "true" ]; then
+            STATUS="❌"
+          fi
 
-            let coverageStatus = '';
-            if (failureReason === 'coverage_too_low') {
-              coverageStatus = `${coverage} ❌ **Below Minimum Threshold**`;
-            } else if (coverageNum >= 98 {
-              coverageStatus = `${coverage} ✅ **Excellent**`;
-            } else if (coverageNum >= 95) {
-              coverageStatus = `${coverage} ✅ **Good**`;
-            } else if (coverageNum >= 90) {
-              coverageStatus = `${coverage} ⚠️ **Acceptable**`;
-            } else if (coverage !== 'N/A') {
-              coverageStatus = `${coverage} ⚠️ **Below Recommended**`;
-            } else {
-              coverageStatus = 'N/A';
-            }
+          # Determine coverage status
+          if [ "$FAILURE_REASON" = "coverage_too_low" ]; then
+            COVERAGE_STATUS="$COVERAGE ❌ **Below Minimum Threshold**"
+          elif [ "$COVERAGE_NUM" -ge 98 ]; then
+            COVERAGE_STATUS="$COVERAGE ✅ **Excellent**"
+          elif [ "$COVERAGE_NUM" -ge 95 ]; then
+            COVERAGE_STATUS="$COVERAGE ✅ **Good**"
+          elif [ "$COVERAGE_NUM" -ge 90 ]; then
+            COVERAGE_STATUS="$COVERAGE ⚠️ **Acceptable**"
+          elif [ "$COVERAGE" != "N/A" ]; then
+            COVERAGE_STATUS="$COVERAGE ⚠️ **Below Recommended**"
+          else
+            COVERAGE_STATUS="N/A"
+          fi
 
-            let failureDetails = '';
-            if (failureReason === 'tests_failed') {
-              failureDetails = `\n### ⚠️ Build Failure Analysis\n**Failure Type:** Test Failures\n**Details:** ${failures} test(s) failed. Fix before merge.\n`;
-            } else if (failureReason === 'coverage_too_low') {
-              failureDetails = `\n### ⚠️ Build Failure Analysis\n**Failure Type:** Insufficient Coverage\n**Details:** Coverage is ${coverage}, below required 60%.\n`;
-            } else if (failureReason === 'build_error') {
-              failureDetails = `\n### ⚠️ Build Failure Analysis\n**Failure Type:** Build Error\n**Details:** Check build logs for errors.\n`;
-            }
+          # Build failure details
+          FAILURE_DETAILS=""
+          if [ "$FAILURE_REASON" = "tests_failed" ]; then
+            FAILURE_DETAILS="\n### ⚠️ Build Failure Analysis\n**Failure Type:** Test Failures\n**Details:** $FAILURES test(s) failed. Fix before merge.\n"
+          elif [ "$FAILURE_REASON" = "coverage_too_low" ]; then
+            FAILURE_DETAILS="\n### ⚠️ Build Failure Analysis\n**Failure Type:** Insufficient Coverage\n**Details:** Coverage is $COVERAGE, below required 60%.\n"
+          elif [ "$FAILURE_REASON" = "build_error" ]; then
+            FAILURE_DETAILS="\n### ⚠️ Build Failure Analysis\n**Failure Type:** Build Error\n**Details:** Check build logs for errors.\n"
+          fi
 
-            const resourcesSection = `\n### 📋 Resources\n| Resource | Link |\n|----------|------|\n| 📊 Coverage Report | [Download](${repoUrl}/actions/runs/${runId}#artifacts) |\n| 📝 Test Report | [View Tests](${repoUrl}/actions/runs/${runId}) |\n| 🔍 Full Logs | [View Logs](${repoUrl}/actions/runs/${runId}) |\n`;
-
-            const body = `## ${status} CI Build Report      ### Build Summary
-            | Metric | Value |
-            |--------|-------|
-            | Total Tests       | ${total}                  |
-            | Passed Tests      | ${passed}                 |
-            | Failed Tests      | ${failures}               |
-            | Errors            | ${errors}                 |
-            | Skipped           | ${skipped}                |
-            | Coverage          | ${coverageStatus}         |
+          # Write summary to GitHub Actions job summary
+          echo "## $STATUS CI Build Report" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Tests       | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Passed Tests      | $PASSED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed Tests      | $FAILURES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors            | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped           | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage          | $COVERAGE_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo -e "$FAILURE_DETAILS" >> $GITHUB_STEP_SUMMARY
 
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
