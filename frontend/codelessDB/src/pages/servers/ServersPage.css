@@ -1,0 +1,138 @@
+.servers-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.servers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+}
+
+.servers-title {
+    font-size: 32px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    margin: 0 0 8px 0 !important;
+}
+
+.servers-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.servers-selection-card {
+    margin-bottom: 24px;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.databases-section {
+    margin-top: 24px;
+}
+
+.databases-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.database-card {
+    background: white !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    padding: 20px 24px !important;
+    box-shadow: none !important;
+    transition: box-shadow 0.2s !important;
+    position: relative;
+    cursor: pointer;
+}
+
+.database-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    transform: none !important;
+}
+
+.database-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.database-name {
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    font-size: 16px !important;
+    margin: 0 !important;
+}
+
+.database-info {
+    margin-top: 0;
+}
+
+.database-server-name {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.database-ddl {
+    margin-top: 16px;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    border-left: none;
+}
+
+.ddl-preview {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 0;
+    overflow-x: auto;
+}
+
+.ddl-preview code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.6;
+}
+
+.ddl-preview pre {
+    margin: 0;
+    font-family: inherit;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f6f8fb;
+}
+
+@media (max-width: 768px) {
+    .servers-container {
+        padding: 16px;
+    }
+
+    .databases-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .servers-header-inner {
+        flex-direction: column;
+        text-align: center;
+    }
+}

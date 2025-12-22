@@ -16,15 +16,13 @@ public class LoggingAspect {
 
    // logged files only
    private static final String LOG_FILES = """
-      execution(* backend.user.UserService.*(..))
-      || execution(* backend.user.UserController.*(..))
-      || execution(* backend.userDiagramManagement.controller.UserDiagramController.*(..))
-      || execution(* backend.SQLGeneration.controller.SchemaController.*(..))
-      || execution(* backend.collab.snapshot.SnapshotService.*(..))
-      """;
-      // || execution(* backend.collab..*(..))
-      // || execution(* backend.userDiagramManagement.service.UserDiagramService.*(..))
-      // || execution(* backend.config..*(..))
+            execution(* backend.user.UserService.*(..)) ||
+            execution(* backend.user.UserController.*(..)) ||
+            execution(* backend.userDiagramManagement.controller.UserDiagramController.*(..)) ||
+            execution(* backend.userDiagramManagement.service.UserDiagramService.*(..)) ||
+            execution(* backend.SQLGeneration.controller.SchemaController.*(..)) ||
+            execution(* backend.publicDiagramManagement.controller.publicDiagramController.*(..)) ||
+         """;
 
    // Log method entry
    @Before(LOG_FILES)

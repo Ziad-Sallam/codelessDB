@@ -12,7 +12,7 @@
 .profile-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 0px 16px;
+  padding: 0px 24px; /* increased left/right padding */
 }
 
 .loading-container {
@@ -197,125 +197,79 @@
 }
 
 /* Responsive Design */
-
-/* Tablet (768px - 1024px) */
 @media (max-width: 1024px) {
   .profile-container {
     max-width: 100%;
-    padding: 24px 16px;
+    padding: 24px 24px;
   }
-
   .profile-header-content {
     padding: 24px !important;
   }
-
   .profile-info-content {
     padding: 24px !important;
   }
 }
 
-/* Mobile (max-width: 768px) */
 @media (max-width: 768px) {
   .profile-container {
-    padding: 16px 12px;
+    padding: 16px 16px;
   }
-
   .profile-header-inner {
     flex-direction: column;
     text-align: center;
     gap: 16px;
   }
-
   .profile-header-content {
     padding: 20px !important;
   }
-
   .profile-avatar {
     width: 100px !important;
     height: 100px !important;
     font-size: 40px !important;
   }
-
   .profile-username {
     font-size: 1.75rem !important;
   }
-
   .profile-info-content {
     padding: 20px !important;
   }
-
   .profile-field-edit {
     flex-direction: column;
     gap: 8px;
   }
-
   .save-button,
   .cancel-button {
     width: 100% !important;
   }
-
   .password-buttons {
     flex-direction: column;
   }
-
-  .password-buttons .save-button,
-  .password-buttons .cancel-button {
-    width: 100% !important;
-  }
 }
 
-/* Small Mobile (max-width: 480px) */
 @media (max-width: 480px) {
   .profile-container {
-    padding: 12px 8px;
+    padding: 12px 12px;
   }
-
   .profile-header-content {
     padding: 16px !important;
   }
-
   .profile-avatar {
     width: 90px !important;
     height: 90px !important;
     font-size: 36px !important;
   }
-
   .profile-username {
     font-size: 1.5rem !important;
   }
-
-  .profile-id,
-  .profile-member-since {
-    font-size: 0.875rem !important;
-  }
-
   .profile-info-content {
     padding: 16px !important;
-  }
-
-  .profile-field-header {
-    margin-bottom: 8px;
-  }
-
-  .profile-field {
-    margin-bottom: 20px;
-  }
-
-  .password-edit-container {
-    padding: 12px;
   }
 }
 
 /* Animation */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .profile-header-card,
@@ -325,55 +279,24 @@
 
 /* Print Styles */
 @media print {
-  .camera-button,
-  .edit-button,
-  .save-button,
-  .cancel-button {
-    display: none !important;
-  }
-
-  .profile-header-card {
-    background: #667eea !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+  .camera-button, .edit-button, .save-button, .cancel-button { display: none !important; }
+  .profile-header-card { background: #667eea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
 /* Logout Button */
 .logout-button {
   height: fit-content;
   align-self: end;
-  color: white; /* text color */
-  border: 1px solid red; /* red border */
-  background-color: red; /* solid red background, optional if you want */
+  color: white;
+  border: 1px solid red;
+  background-color: red;
   text-transform: none;
   font-weight: 500;
-  padding: 8px 24px; /* adjust padding as needed */
+  padding: 8px 24px;
   transition: background-color 0.3s, border-color 0.3s;
-  
 }
 
 .logout-button:hover {
-  border-color: darkred; /* darker red on hover */
-  background-color: darkred; /* darker red on hover */
-}
-
-/* Responsive adjustments for logout button */
-@media (max-width: 768px) {
-  .profile-header-inner {
-    flex-direction: column;
-    text-align: center;
-    gap: 16px;
-  }
-
-  .logout-button {
-    width: 100%;
-    margin-top: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .logout-button {
-    font-size: 0.875rem !important;
-    padding: 8px 16px !important;
-  }
+  border-color: darkred;
+  background-color: darkred;
 }

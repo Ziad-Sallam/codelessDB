@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
-import "./Register.css";
-import { FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
-import { TbLockPassword } from "react-icons/tb";
-import { IoIosMail } from "react-icons/io";
+import { useEffect, useState } from "react";
+import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { IoIosMail } from "react-icons/io";
+import { TbLockPassword } from "react-icons/tb";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../components/AuthProvider.jsx";
 import {
-  validateSignup,
-  sendOtp,
   completeSignup,
-  requestPasswordReset,
-  updatePassword,
-  redirectToGoogleAuth,
   parseApiError,
+  redirectToGoogleAuth,
+  requestPasswordReset,
+  sendOtp,
+  updatePassword,
+  validateSignup,
   validateToken,
 } from "./fetch.js";
-import { useAuth } from "../../components/AuthProvider.jsx";
+import "./Register.css";
 
 // Step constants
 const STEPS = {
@@ -29,6 +29,7 @@ const STEPS = {
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   // Current step
@@ -39,10 +40,14 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  
+  // Store the password passed from login key to return it
+  const [preservedPassword] = useState(location.state?.password || "");
 
   // OTP
   const [otpInput, setOtpInput] = useState(["", "", "", "", ""]);
   const [sentOtp, setSentOtp] = useState("");
+  const [otpTime, setOtpTime] = useState(null);
   const [otpTimer, setOtpTimer] = useState(60);
   const [canResendOtp, setCanResendOtp] = useState(false);
 
@@ -89,9 +94,32 @@ const Register = () => {
       }
 
       const flow = searchParams.get("flow");
+      const otpParam = searchParams.get("otp");
+      const emailParam = searchParams.get("email");
+
+      if (otpParam && emailParam) {
+        setEmail(emailParam);
+        const digits = otpParam.split("").slice(0, 5);
+        const newOtp = ["", "", "", "", ""];
+        digits.forEach((d, i) => (newOtp[i] = d));
+        setOtpInput(newOtp);
+        setSentOtp(otpParam);
+        setOtpTime(Date.now());
+
+        if (flow === "otp") {
+          setStep(STEPS.SIGNUP_OTP);
+        } else if (flow === "forgot") {
+          setStep(STEPS.FORGOT_OTP);
+        }
+        return;
+      }
 
       if (flow === "forgot") {
         setStep(STEPS.FORGOT_PASSWORD);
+        const emailParam = searchParams.get("email");
+        if (emailParam) {
+          setEmail(emailParam);
+        }
       } else if (flow === "reset") {
         const storedToken = localStorage.getItem("token_for_reset");
         const storedEmail = localStorage.getItem("email");
@@ -116,8 +144,30 @@ const Register = () => {
       }
     }
     handleOAuthCallback();
-
   }, [navigate, searchParams, setUser]);
+
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").trim();
+    if (!/^\d+$/.test(pastedData)) return;
+
+    const digits = pastedData.split("").slice(0, 5);
+    const newOtp = [...otpInput];
+
+    digits.forEach((digit, index) => {
+      newOtp[index] = digit;
+    });
+
+    setOtpInput(newOtp);
+
+
+    const focusIndex = Math.min(digits.length, 4);
+    const inputs = document.querySelectorAll(".otp-container input");
+    if (inputs[focusIndex]) {
+      inputs[focusIndex].focus();
+    }
+  };
 
   // OTP Timer
   useEffect(() => {
@@ -154,10 +204,26 @@ const Register = () => {
     return c.length && c.upper && c.lower && c.number && c.symbol;
   }
 
+  // Username validation - check if contains only alphanumeric and underscores
+  function isValidUsername(value) {
+    // Returns true if username contains only letters, numbers, and underscores
+    return /^[a-zA-Z0-9_]+$/.test(value);
+  }
+
   // Step 1: Submit signup form
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!username || !username.trim()) {
+      setError("Username is required.");
+      return;
+    }
+
+    if (!isValidUsername(username)) {
+      setError("Username can only contain letters, numbers, and underscores (no spaces or special characters).");
+      return;
+    }
 
     if (!checkStrength(password)) {
       setError("Password is weak.");
@@ -173,8 +239,9 @@ const Register = () => {
 
     try {
       await validateSignup(email, username);
-      const otp = await sendOtp(email);
+      const otp = await sendOtp(email, username);
       setSentOtp(otp);
+      setOtpTime(Date.now());
       setOtpTimer(60);
       setCanResendOtp(false);
       setStep(STEPS.SIGNUP_OTP);
@@ -191,6 +258,12 @@ const Register = () => {
 
     if (entered != sentOtp) {
       setError("Invalid OTP. Try again.");
+      return;
+    }
+
+    // Check expiration (5 minutes = 300000 ms)
+    if (Date.now() - otpTime > 5 * 60 * 1000) {
+      setError("OTP has expired. Please request a new one.");
       return;
     }
 
@@ -225,6 +298,7 @@ const Register = () => {
 
       const otp = await sendOtp(email);
       setSentOtp(otp);
+      setOtpTime(Date.now());
       setOtpTimer(60);
       setCanResendOtp(false);
       setStep(STEPS.FORGOT_OTP);
@@ -241,6 +315,12 @@ const Register = () => {
 
     if (entered != sentOtp) {
       setError("Invalid OTP. Try again.");
+      return;
+    }
+
+    // Check expiration (5 minutes = 300000 ms)
+    if (Date.now() - otpTime > 5 * 60 * 1000) {
+      setError("OTP has expired. Please request a new one.");
       return;
     }
 
@@ -294,13 +374,15 @@ const Register = () => {
 
   // Resend OTP
   const handleResendOtp = async () => {
-    if (!canResendOtp) return;
+    if (!canResendOtp || loading) return;
 
     setLoading(true);
 
     try {
-      const otp = await sendOtp(email);
+      const user = step === STEPS.SIGNUP_OTP ? username : null;
+      const otp = await sendOtp(email, user);
       setSentOtp(otp);
+      setOtpTime(Date.now());
       setOtpTimer(60);
       setCanResendOtp(false);
       setError("");
@@ -314,7 +396,7 @@ const Register = () => {
 
   // Cancel and go back to login
   const handleCancel = () => {
-    navigate("/login");
+    navigate("/login", { state: { email, password: preservedPassword } });
   };
 
   // Render content based on current step
@@ -456,6 +538,7 @@ const Register = () => {
                       e.target.previousSibling?.focus();
                     }
                   }}
+                  onPaste={handlePaste}
                 />
               ))}
             </div>
@@ -480,12 +563,12 @@ const Register = () => {
                 <span
                   onClick={handleResendOtp}
                   style={{
-                    color: canResendOtp ? "black" : "gray",
-                    cursor: canResendOtp ? "pointer" : "default",
-                    textDecoration: canResendOtp ? "underline" : "none",
+                    color: canResendOtp && !loading ? "black" : "gray",
+                    cursor: canResendOtp && !loading ? "pointer" : "default",
+                    textDecoration: canResendOtp && !loading ? "underline" : "none",
                   }}
                 >
-                  {canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`}
+                  {loading ? "Sending..." : (canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`)}
                 </span>
               </p>
             </div>
@@ -518,7 +601,7 @@ const Register = () => {
             </button>
 
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/login", { state: { email, password: preservedPassword } })}
               className="submit"
               style={{ backgroundColor: "#6c757d", marginTop: "10px" }}
             >
@@ -556,6 +639,7 @@ const Register = () => {
                       e.target.previousSibling?.focus();
                     }
                   }}
+                  onPaste={handlePaste}
                 />
               ))}
             </div>
@@ -580,12 +664,12 @@ const Register = () => {
                 <span
                   onClick={handleResendOtp}
                   style={{
-                    color: canResendOtp ? "black" : "gray",
-                    cursor: canResendOtp ? "pointer" : "default",
-                    textDecoration: canResendOtp ? "underline" : "none",
+                    color: canResendOtp && !loading ? "black" : "gray",
+                    cursor: canResendOtp && !loading ? "pointer" : "default",
+                    textDecoration: canResendOtp && !loading ? "underline" : "none",
                   }}
                 >
-                  {canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`}
+                  {loading ? "Sending..." : (canResendOtp ? "Resend OTP" : `Resend in ${otpTimer}s`)}
                 </span>
               </p>
             </div>

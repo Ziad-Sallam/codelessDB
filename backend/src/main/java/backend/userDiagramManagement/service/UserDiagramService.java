@@ -1,6 +1,6 @@
 package backend.userDiagramManagement.service;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +17,8 @@ import backend.entities.joins.UserDiagramId;
 import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException;
+import backend.userDiagramManagement.dto.ContributorDto;
+import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
@@ -31,6 +33,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class UserDiagramService implements IUserDiagramService {
+    private static final LocalDateTime MIN_DATE = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
+    private static final LocalDateTime MAX_DATE = LocalDateTime.of(2100, 12, 31, 23, 59, 59);
 
     private final DiagramRepository diagramRepository;
     private final UserRepository userRepository;
@@ -56,25 +60,21 @@ public class UserDiagramService implements IUserDiagramService {
                         "User does not have permission for diagram " + diagramId));
     }
 
-    private List<DiagramInfoDto.Contributor> getContributors(UUID diagramId) {
+    public List<ContributorDto> getContributors(UUID diagramId) {
         return userDiagramRepository.findByDiagram_Id(diagramId)
                 .stream()
-                .map(ud -> new DiagramInfoDto.Contributor(
+                .map(ud -> new ContributorDto(
                         ud.getUser().getUsername(),
                         ud.getUser().getPicture(),
                         ud.getRole()))
                 .toList();
     }
 
-    private void checkOwner(UserDiagram userDiagram, String action) {
+    public void checkOwner(UserDiagram userDiagram, String action) {
         if (userDiagram.getRole() != Role.OWNER) {
             throw new DiagramException.PermissionDeniedException(
                     "Only the owner can " + action + ", user's role is " + userDiagram.getRole());
         }
-    }
-
-    private Date parseDateOrDefault(String dateStr, String defaultDate) {
-        return dateStr != null ? Date.valueOf(dateStr) : Date.valueOf(defaultDate);
     }
 
     @Override
@@ -86,7 +86,8 @@ public class UserDiagramService implements IUserDiagramService {
                 .map(ud -> DiagramInfoDto.toDto(
                         ud.getDiagram(),
                         ud.getRole(),
-                        getContributors(ud.getDiagram().getId())));
+                        getContributors(ud.getDiagram().getId()),
+                        ud.getDiagram().getPublicDiagram() != null));
     }
 
     @Override
@@ -103,14 +104,14 @@ public class UserDiagramService implements IUserDiagramService {
                 .build();
 
         userDiagramRepository.save(join);
-        return DiagramInfoDto.toDto(diagram, Role.OWNER, getContributors(diagram.getId()));
+        return DiagramInfoDto.toDto(diagram, Role.OWNER, getContributors(diagram.getId()), false);
     }
 
     @Transactional
-	public Date updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
-		getUserOrThrow(userId);
-		Diagram diagram = getDiagramOrThrow(diagramId);
-		UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
+    public LocalDateTime updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
+        getUserOrThrow(userId);
+        Diagram diagram = getDiagramOrThrow(diagramId);
+        UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
 
 		if (userDiagram.getRole() == Role.READER) {
 			throw new DiagramException.PermissionDeniedException("Only the owner can update this diagram");
@@ -138,6 +139,10 @@ public class UserDiagramService implements IUserDiagramService {
         userDiagramRepository.delete(userDiagram);
 
         if (userDiagram.getRole() == Role.OWNER) {
+            if (userDiagram.getDiagram().getPublicDiagram() != null)
+                throw new DiagramException.PermissionDeniedException(
+                        "Can't delete public diagram, Unpublished it first");
+
             UserDiagram anyOne = userDiagramRepository.findFirstByDiagram_Id(diagramId);
 
             if (anyOne != null) {
@@ -156,12 +161,32 @@ public class UserDiagramService implements IUserDiagramService {
 
     @Override
     @Transactional
-    public Page<DiagramInfoDto> searchDiagrams(int userId, DiagramSearchRequestDto request, Pageable pageable) {
+    public DiagramDto searchDiagramById(int userId, UUID diagramId) {
+        getUserOrThrow(userId);
+        Diagram diagram = getDiagramOrThrow(diagramId);
+        UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
+        return DiagramDto.toDto(diagram, userDiagram.getRole());
+    }
+
+    @Override
+    @Transactional
+    public Page<DiagramInfoDto> searchDiagrams(int userId,
+            DiagramSearchRequestDto request,
+            Pageable pageable) {
+
         getUserOrThrow(userId);
 
-        String nameFilter = request.getName() != null ? request.getName() : "";
-        Date startDate = parseDateOrDefault(request.getStart(), "1970-01-01");
-        Date endDate = parseDateOrDefault(request.getEnd(), "2100-12-31");
+        String nameFilter = Optional
+                .ofNullable(request.getName())
+                .orElse("");
+
+        LocalDateTime startDate = Optional
+                .ofNullable(request.getStart())
+                .orElse(MIN_DATE);
+
+        LocalDateTime endDate = Optional
+                .ofNullable(request.getEnd())
+                .orElse(MAX_DATE);
 
         return userDiagramRepository
                 .findAllByUser_IdAndDiagram_NameContainingIgnoreCaseAndDiagram_CreatedAtBetween(
@@ -170,8 +195,11 @@ public class UserDiagramService implements IUserDiagramService {
                         startDate,
                         endDate,
                         pageable)
-                .map(ud -> DiagramInfoDto.toDto(ud.getDiagram(), ud.getRole(),
-                        getContributors(ud.getDiagram().getId())));
+                .map(ud -> DiagramInfoDto.toDto(
+                        ud.getDiagram(),
+                        ud.getRole(),
+                        getContributors(ud.getDiagram().getId()),
+                        ud.getDiagram().getPublicDiagram() != null));
     }
 
     @Override
@@ -251,5 +279,18 @@ public class UserDiagramService implements IUserDiagramService {
                 targetUser.getUsername(),
                 request.getRole(),
                 targetUser.getPicture());
+    }
+
+    @Override
+    @Transactional
+    public void updateDDL(UUID diagramId, String ddl) {
+        Diagram diagram = getDiagramOrThrow(diagramId);
+
+        if (ddl == null) {
+            throw new DiagramException.InvalidDiagramDataException("DDL cannot be null");
+        }
+
+        diagram.setDdl(ddl);
+        diagramRepository.save(diagram);
     }
 }

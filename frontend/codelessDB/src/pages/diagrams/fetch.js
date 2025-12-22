@@ -35,7 +35,7 @@ export async function fetchDiagrams(pageNumber = 0, pageSize = 12, { search, dat
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
-		
+
 	});
 
 	if (!response.ok) {
@@ -52,7 +52,7 @@ export async function getUserInfo() {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
-		
+
 	});
 
 	if (!response.ok) {
@@ -72,7 +72,7 @@ export async function createDiagram() {
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify({ thumbnail }),
-		
+
 	});
 
 	if (!response.ok) {
@@ -91,7 +91,7 @@ export async function renameDiagram(diagramId, newName) {
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify(body),
-		
+
 	});
 
 	if (!response.ok) {
@@ -102,7 +102,7 @@ export async function renameDiagram(diagramId, newName) {
 }
 
 export async function searchDiagrams(pageNumber = 0, pageSize = 12,
-												 name = null, start = "1970-01-01", end = "2100-12-31") {
+	name = null, start = "1970-01-01", end = "2100-12-31") {
 	const params = new URLSearchParams();
 	params.append("pageNumber", pageNumber);
 	params.append("pageSize", pageSize);
@@ -116,7 +116,7 @@ export async function searchDiagrams(pageNumber = 0, pageSize = 12,
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify(body),
-		
+
 	});
 
 	if (!response.ok) {
@@ -135,7 +135,7 @@ export async function shareDiagram(diagramId, toUserName, role, deleteUser = fal
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
 		body: JSON.stringify(body),
-		
+
 	});
 
 
@@ -150,7 +150,7 @@ export async function deleteDiagram(diagramId) {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 		},
-		
+
 	});
 
 	if (!response.ok) {
@@ -158,4 +158,22 @@ export async function deleteDiagram(diagramId) {
 	}
 
 	return true;
+}
+
+export async function unpublishDiagram(diagramId) {
+	const response = await fetch(`${API_URL}/publicDiagrams/unpublish/${diagramId}`, {
+		method: "DELETE",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+		},
+
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message || "Failed to unpublish diagram");
+	}
+
+	return response.text();
 }

@@ -1,6 +1,6 @@
 package backend.userDiagramManagement.controller;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -22,7 +22,7 @@ import backend.security.AuthUser;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.delete.DiagramDeleteResponseDto;
-// import backend.userDiagramManagement.dto.create.DiagramCreateResponseDto;
+import backend.publicDiagramManagement.dto.PageResponse;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
@@ -43,7 +43,7 @@ public class UserDiagramController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<Page<DiagramInfoDto>> getDiagramsByUserId(
+    public ResponseEntity<?> getDiagramsByUserId(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "10") int pageSize) {
@@ -51,7 +51,7 @@ public class UserDiagramController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<DiagramInfoDto> result = userDiagramService.getDiagramsByUserId(id(authUser), pageable);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(new PageResponse<>(result));
     }
 
     @PostMapping("/create")
@@ -70,7 +70,7 @@ public class UserDiagramController {
             @PathVariable UUID id,
             @RequestBody DiagramUpdateRequestDto request) {
 
-        Date updateDate = userDiagramService.updateDiagram(id(authUser), request, id);
+        LocalDateTime updateDate = userDiagramService.updateDiagram(id(authUser), request, id);
 
         return ResponseEntity.ok(new DiagramUpdateResponseDto(
                 "Diagram updated successfully",
@@ -91,7 +91,7 @@ public class UserDiagramController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<Page<DiagramInfoDto>> searchDiagrams(
+    public ResponseEntity<?> searchDiagrams(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam int pageNumber,
             @RequestParam int pageSize,
@@ -100,7 +100,7 @@ public class UserDiagramController {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<DiagramInfoDto> result = userDiagramService.searchDiagrams(id(authUser), request, pageable);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(new PageResponse<>(result));
     }
 
     @PutMapping("/share/{id}")
@@ -111,5 +111,16 @@ public class UserDiagramController {
 
         DiagramShareResponseDto response = userDiagramService.shareDiagram(id(authUser), id, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/update-ddl/{id}")
+    public ResponseEntity<String> updateDDL(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable UUID id,
+            @RequestBody String ddl) {
+
+        userDiagramService.updateDDL(id, ddl);
+
+        return ResponseEntity.ok("DDL updated successfully");
     }
 }

@@ -61,7 +61,7 @@ export const convertToJSON = (schemaName ,nodes) => {
 
       // 2. Return the Attribute Object
       return {
-        name: col.name,
+        name: col.name.replaceAll(" ","_"),
         // Match the strict dataType object structure: { name, length, precision, scale }
         dataType: {
           name: col.dataType,
@@ -80,14 +80,14 @@ export const convertToJSON = (schemaName ,nodes) => {
 
     // 3. Return the Entity Object
     return {
-      name: node.data.tableName,
+      name: node.data.tableName.replaceAll(" ","_"),
       attributes: attributes,
     };
   });
 
   // Return the final root object
   return {
-    schemaName:schemaName  ,
+    schemaName:schemaName.replaceAll(" ","_")  ,
     entities
    };
 };

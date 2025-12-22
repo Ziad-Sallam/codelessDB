@@ -13,13 +13,13 @@ public class UserException {
 			super(message);
 		}
 	}
-	
+
 	public static class InvalidEmailException extends RuntimeException {
 		public InvalidEmailException(String message) {
 			super(message);
 		}
 	}
-	
+
 	public static class UsernameAlreadyExistsException extends RuntimeException {
 		public UsernameAlreadyExistsException(String message) {
 			super(message);
@@ -31,9 +31,27 @@ public class UserException {
 			super(message);
 		}
 	}
-	
+
 	public static class OtpSendFailedException extends RuntimeException {
 		public OtpSendFailedException(String message) {
+			super(message);
+		}
+	}
+
+	public static class QuotaExceededException extends RuntimeException {
+		public QuotaExceededException(String message) {
+			super(message);
+		}
+	}
+
+	public static class UserAlreadyFollowedException extends RuntimeException {
+		public UserAlreadyFollowedException(String message) {
+			super(message);
+		}
+	}
+
+	public static class UserCantFollowHimselfException extends RuntimeException {
+		public UserCantFollowHimselfException(String message) {
 			super(message);
 		}
 	}

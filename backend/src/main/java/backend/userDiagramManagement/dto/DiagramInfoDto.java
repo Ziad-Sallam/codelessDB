@@ -1,15 +1,17 @@
 package backend.userDiagramManagement.dto;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import backend.entities.Diagram;
 import backend.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -19,14 +21,20 @@ public class DiagramInfoDto {
     private UUID diagramId;
     private String name;
     private String thumbnail;
-    private Date createdAt;
-    private Date lastModified;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastModified;
+
     private Role role;
-    private List<Contributor> contributors;
+    private List<ContributorDto> contributorDtos;
 
-    public record Contributor(String name, String picture, Role role) {}
+    private boolean isPublic;
 
-    public static DiagramInfoDto toDto(Diagram diagram, Role role, List<Contributor> contributors) {
+    public static DiagramInfoDto toDto(Diagram diagram, Role role, List<ContributorDto> contributorDtos,
+            boolean isPublic) {
         return DiagramInfoDto
                 .builder()
                 .role(role)
@@ -35,7 +43,8 @@ public class DiagramInfoDto {
                 .thumbnail(diagram.getThumbnail())
                 .createdAt(diagram.getCreatedAt())
                 .lastModified(diagram.getLastModified())
-                .contributors(contributors)
+                .contributorDtos(contributorDtos)
+                .isPublic(isPublic)
                 .build();
     }
 }

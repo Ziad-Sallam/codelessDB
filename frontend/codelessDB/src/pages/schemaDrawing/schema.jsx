@@ -26,6 +26,7 @@ import { validateSchema } from "./generate/CheckCorrectness";
 import { convertToJSON } from "./generate/JsonConverter";
 import { edgeTypes, nodeTypes } from "./index";
 import "./Schema.css";
+import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
 
 // 1. IMPORT HTML-TO-IMAGE
 import { toPng } from "html-to-image";
@@ -96,9 +97,11 @@ const SchemaContent = () => {
 
 			updateSchemaName(meta.diagramName);
 			setIsReadOnly(meta.role === "READER");
-
+			setDiagramExistFlag(true);
+			
 		} catch (err) {
 			showError(err.message);
+			setDiagramExistFlag(false);
 		}
 	};
 
@@ -223,6 +226,9 @@ const SchemaContent = () => {
   function handleShareClick() {
 		setShareOpen(true);
 	}
+  if (!diagramExistFlag) {
+    return <DiagramNotFound />;
+  }
 
   return (
     <div className="drawing-container" onMouseMove={onMouseMove}>
@@ -230,6 +236,7 @@ const SchemaContent = () => {
         <CodeEditor
           initialCode={generatedSql}
           onClose={() => setIsSqlPanelOpen(false)}
+          diagramId={id}
         />
       )}
 
@@ -322,6 +329,7 @@ const SchemaContent = () => {
 		</div>
 	);
 };
+
 
 export default function Schema() {
 	const { roomId } = useParams();

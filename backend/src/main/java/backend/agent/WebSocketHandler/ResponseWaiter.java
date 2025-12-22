@@ -1,14 +1,14 @@
 package backend.agent.WebSocketHandler;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
 @Component
 public class ResponseWaiter {
 
-    private final ConcurrentHashMap<String, CompletableFuture<ClientResponseDTO>> waiters =
-            new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<ClientResponseDTO>> waiters = new ConcurrentHashMap<>();
 
     public CompletableFuture<ClientResponseDTO> createWaiter(String correlationId) {
         CompletableFuture<ClientResponseDTO> future = new CompletableFuture<>();
@@ -23,4 +23,3 @@ public class ResponseWaiter {
         }
     }
 }
-

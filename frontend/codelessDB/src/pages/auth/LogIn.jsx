@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./LogIn.css";
 
-import { FaUser } from "react-icons/fa";
-import { TbLockPassword } from "react-icons/tb";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { TbLockPassword } from "react-icons/tb";
 
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { login, redirectToGoogleAuth, parseApiError, validateToken } from "./fetch.js";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../components/AuthProvider.jsx";
+import { login, parseApiError, redirectToGoogleAuth, validateToken } from "./fetch.js";
 
 const LogIn = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const location = useLocation();
+  const [email, setEmail] = useState(location.state?.email || "");
+  const [password, setPassword] = useState(location.state?.password || "");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
@@ -86,8 +86,15 @@ const LogIn = () => {
       const userData = await validateToken();
       setUser(userData);
       navigate("/diagrams", { replace: true });
+
     } catch (err) {
-      setError(parseApiError(err));
+      if (err.response?.status === 401) {
+        setError("Oops! That login didn’t work.\nCheck your password and try again.");
+      } else if (err.response?.status === 404) {
+        setError("Oops! Email not found.\nPlease check the email or sign up.");
+      } else {
+        setError(parseApiError(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -95,7 +102,9 @@ const LogIn = () => {
 
   const handleForgotPassword = () => {
     // Navigate to register page with forgot password flow
-    navigate("/register?flow=forgot");
+    navigate(`/register?flow=forgot&email=${encodeURIComponent(email)}`, {
+      state: { email, password }
+    });
   };
 
   return (
@@ -155,7 +164,7 @@ const LogIn = () => {
                 {loading ? "Please wait..." : "Log In"}
               </button>
 
-              {error && <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>{error}</p>}
+              {error && <p style={{ color: "red", textAlign: "center", marginTop: "10px", whiteSpace: "pre-line" }}>{error}</p>}
 
               <div className="divider">
                 <span>OR</span>
