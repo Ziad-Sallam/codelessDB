@@ -7,10 +7,9 @@ on:
     branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
 
 permissions:
-  contents: write
+  contents: read
   checks: write
   pull-requests: write
-  security-events: write
 
 concurrency:
   group: java-tests-${{ github.ref }}
@@ -36,51 +35,54 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build and run tests with coverage
+      # Run Tests & Generate Jacoco XML
+      # -Dstyle.color=always ensures logs are readable
+      # --fail-at-end allows all tests to run before failing
+      - name: Build and Test
         id: maven-build
         run: mvn -B clean verify --fail-at-end -Dstyle.color=always
         continue-on-error: true
 
-      # Extract test results logic
-      - name: Extract Test Results
+      # ------------------------------------------------------------------------
+      # 1. PARSE METRICS (Bash)
+      # ------------------------------------------------------------------------
+      - name: Extract Metrics
         if: always()
-        id: test-results
+        id: metrics
         run: |
+          # Default values
+          TOTAL=0; FAILURES=0; ERRORS=0; SKIPPED=0; PASSED=0; COVERAGE_NUM=0
+
+          # Extract Test Counts from Surefire XMLs
           if [ -d "target/surefire-reports" ]; then
-            TOTAL=$(grep -h "tests=" target/surefire-reports/TEST-*.xml | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s || 0}')
-            FAILURES=$(grep -h "failures=" target/surefire-reports/TEST-*.xml | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s || 0}')
-            ERRORS=$(grep -h "errors=" target/surefire-reports/TEST-*.xml | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s || 0}')
-            SKIPPED=$(grep -h "skipped=" target/surefire-reports/TEST-*.xml | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s || 0}')
+            TOTAL=$(grep -h "tests=" target/surefire-reports/TEST-*.xml | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            FAILURES=$(grep -h "failures=" target/surefire-reports/TEST-*.xml | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            ERRORS=$(grep -h "errors=" target/surefire-reports/TEST-*.xml | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            SKIPPED=$(grep -h "skipped=" target/surefire-reports/TEST-*.xml | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            
+            # Math for Passed tests
             PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
-          else
-            TOTAL=0; FAILURES=0; ERRORS=0; SKIPPED=0; PASSED=0
           fi
+
+          # Extract Coverage % from JaCoCo HTML (for the summary line)
+          if [ -f "target/site/jacoco/index.html" ]; then
+             COVERAGE_Line=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1)
+             COVERAGE_NUM=$(echo "$COVERAGE_Line" | grep -oP '\d+')
+          fi
+
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
           echo "passed=$PASSED" >> $GITHUB_OUTPUT
           echo "failures=$FAILURES" >> $GITHUB_OUTPUT
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
           echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
-          # ... (previous steps: checkout, jdk, maven build) ...
+          echo "coverage_num=$COVERAGE_NUM" >> $GITHUB_OUTPUT
 
-      # Extract test results
-
-      # Extract overall coverage %
-      - name: Extract Overall Coverage
-        if: always()
-        id: coverage
-        run: |
-          if [ -f "target/site/jacoco/index.html" ]; then
-            COVERAGE=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1 || echo "0%")
-            COVERAGE_NUM=$(echo "$COVERAGE" | grep -oP '\d+' || echo "0")
-          else
-            COVERAGE="0%"
-            COVERAGE_NUM=0
-          fi
-          echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
-          echo "coverage_num=$COVERAGE_NUM" >> "$GITHUB_OUTPUT"
-
-      # THIS STEP PROVIDES THE PER-FOLDER BREAKDOWN
-      - name: Publish Folder Coverage to PR
+      # ------------------------------------------------------------------------
+      # 2. REPORTING (Comments & Checks)
+      # ------------------------------------------------------------------------
+      
+      # A. Detailed Package-Level Coverage Table
+      - name: PR Comment - Package Coverage
         if: github.event_name == 'pull_request'
         uses: madrapps/jacoco-report@v1.7.1
         with:
@@ -88,28 +90,28 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 60
           min-coverage-changed-files: 60
-          title: "📂 Coverage Report (Package Breakdown)"
+          title: "📂 Coverage Breakdown"
           update-comment: true
 
-      # Add the High-Level Test Summary as a separate comment or log
-      - name: Comment Test Summary on PR
+      # B. High-Level Test Summary Table
+      - name: PR Comment - Test Summary
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const summary = `
-            ### 📝 Test Results Summary
-            | Metric | Status |
+            ### ✅ Test Execution Summary
+            | Metric | Count |
             | :--- | :--- |
-            | **Total Tests** | ${{ steps.test-results.outputs.total }} |
-            | **✅ Passed** | ${{ steps.test-results.outputs.passed }} |
-            | **❌ Failed** | ${{ steps.test-results.outputs.failures }} |
-            | **⚠️ Errors** | ${{ steps.test-results.outputs.errors }} |
-            | **⏭️ Skipped** | ${{ steps.test-results.outputs.skipped }} |
-            | **📊 Total Coverage** | **${{ steps.coverage.outputs.coverage }}** |
+            | **Total Tests** | ${{ steps.metrics.outputs.total }} |
+            | **Passed** | 🟢 ${{ steps.metrics.outputs.passed }} |
+            | **Failed** | 🔴 ${{ steps.metrics.outputs.failures }} |
+            | **Errors** | ⚠️ ${{ steps.metrics.outputs.errors }} |
+            | **Skipped** | ⚪ ${{ steps.metrics.outputs.skipped }} |
+            | **Overall Coverage** | **${{ steps.metrics.outputs.coverage_num }}%** |
             
-            *Detailed folder-level breakdown can be found in the "Coverage Report" comment above.*
+            _See the "Coverage Breakdown" comment for folder-level details._
             `;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -118,48 +120,8 @@ jobs:
               body: summary
             });
 
-      # ... (rest of your file: test-reporter, artifacts, and failure logic) ...
-
-      # Extract overall coverage % for the custom summary
-
-      # This action now creates the detailed package-by-package table
-      - name: Publish Package-Level Coverage Report
-        if: github.event_name == 'pull_request'
-        uses: madrapps/jacoco-report@v1.7.1
-        with:
-          paths: backend/target/site/jacoco/jacoco.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage-overall: 60
-          min-coverage-changed-files: 60
-          title: "📂 Detailed Package Coverage"
-          update-comment: true # Keeps the PR clean by updating the same comment
-
-      # Custom summary comment for high-level test stats
-      - name: Comment Test Summary on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const summary = `
-            ### 🚀 Test Execution Summary
-            | Metric | Value |
-            | :--- | :--- |
-            | **Total Tests** | ${{ steps.test-results.outputs.total }} |
-            | **✅ Passed** | ${{ steps.test-results.outputs.passed }} |
-            | **❌ Failed** | ${{ steps.test-results.outputs.failures }} |
-            | **⚠️ Errors** | ${{ steps.test-results.outputs.errors }} |
-            | **⏭️ Skipped** | ${{ steps.test-results.outputs.skipped }} |
-            | **📊 Overall Coverage** | ${{ steps.coverage.outputs.coverage }} |
-            `;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
-            });
-
-      - name: Publish Test Report (Checks Tab)
+      # C. Populate GitHub "Checks" Tab
+      - name: Publish Test Report to Checks
         uses: dorny/test-reporter@v1
         if: always()
         with:
@@ -169,21 +131,40 @@ jobs:
           fail-on-error: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload build artifacts
+      # ------------------------------------------------------------------------
+      # 3. ARTIFACTS & FAILURE GATES
+      # ------------------------------------------------------------------------
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
         if: steps.maven-build.outcome == 'success'
         with:
-          name: package
+          name: spring-boot-app
           path: backend/target/*.jar
 
-      - name: Fail if Build or Coverage Failed
+      - name: Verify Quality Gate
         if: always()
         shell: bash
         run: |
-          FAILURES="${{ steps.test-results.outputs.failures }}"
-          ERRORS="${{ steps.test-results.outputs.errors }}"
-          COVERAGE_NUM="${{ steps.coverage.outputs.coverage_num }}"
-          if [[ "$FAILURES" -gt 0 || "$ERRORS" -gt 0 || "$COVERAGE_NUM" -lt 60 ]]; then
-            echo "::error::Build failed: Tests ($FAILURES failures, $ERRORS errors) or Coverage ($COVERAGE_NUM%) below threshold."
-            exit 1
+          FAILURES=${{ steps.metrics.outputs.failures }}
+          ERRORS=${{ steps.metrics.outputs.errors }}
+          COVERAGE=${{ steps.metrics.outputs.coverage_num }}
+
+          # Check 1: Did the Maven build actually succeed?
+          if [ "${{ steps.maven-build.outcome }}" != "success" ]; then
+             echo "::error::Maven Build Failed"
+             exit 1
           fi
+
+          # Check 2: Are there test failures?
+          if [[ "$FAILURES" -gt 0 || "$ERRORS" -gt 0 ]]; then
+             echo "::error::Tests failed: $FAILURES failures, $ERRORS errors."
+             exit 1
+          fi
+
+          # Check 3: Is coverage acceptable?
+          if [[ "$COVERAGE" -lt 60 ]]; then
+             echo "::error::Code Coverage ($COVERAGE%) is below the 60% threshold."
+             exit 1
+          fi
+          
+          echo "✅ Build, Tests, and Quality Gate Passed!"
