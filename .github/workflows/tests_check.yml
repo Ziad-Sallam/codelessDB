@@ -164,3 +164,4 @@ jobs:
           if [[ "$FAILURES" -gt 0 || "$ERRORS" -gt 0 || "$COVERAGE_NUM" -lt 60 ]]; then
             echo "::error::Build failed due to test failures or insufficient coverage (<60%)"
             exit 1
+          fi
