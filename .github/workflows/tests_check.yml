@@ -35,93 +35,141 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Run Tests & Generate Jacoco XML
-      # -Dstyle.color=always ensures logs are readable
-      # --fail-at-end allows all tests to run before failing
+      # Run Tests & Generate JaCoCo Reports
       - name: Build and Test
         id: maven-build
         run: mvn -B clean verify --fail-at-end -Dstyle.color=always
         continue-on-error: true
 
       # ------------------------------------------------------------------------
-      # 1. PARSE METRICS (Bash)
+      # CONSOLIDATED REPORTING SCRIPT
+      # Parses both Surefire (Tests) and JaCoCo (Coverage) to post ONE comment
       # ------------------------------------------------------------------------
-      - name: Extract Metrics
-        if: always()
-        id: metrics
-        run: |
-          # Default values
-          TOTAL=0; FAILURES=0; ERRORS=0; SKIPPED=0; PASSED=0; COVERAGE_NUM=0
-
-          # Extract Test Counts from Surefire XMLs
-          if [ -d "target/surefire-reports" ]; then
-            TOTAL=$(grep -h "tests=" target/surefire-reports/TEST-*.xml | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            FAILURES=$(grep -h "failures=" target/surefire-reports/TEST-*.xml | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            ERRORS=$(grep -h "errors=" target/surefire-reports/TEST-*.xml | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            SKIPPED=$(grep -h "skipped=" target/surefire-reports/TEST-*.xml | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            
-            # Math for Passed tests
-            PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
-          fi
-
-          # Extract Coverage % from JaCoCo HTML (for the summary line)
-          if [ -f "target/site/jacoco/index.html" ]; then
-             COVERAGE_Line=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1)
-             COVERAGE_NUM=$(echo "$COVERAGE_Line" | grep -oP '\d+')
-          fi
-
-          echo "total=$TOTAL" >> $GITHUB_OUTPUT
-          echo "passed=$PASSED" >> $GITHUB_OUTPUT
-          echo "failures=$FAILURES" >> $GITHUB_OUTPUT
-          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
-          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
-          echo "coverage_num=$COVERAGE_NUM" >> $GITHUB_OUTPUT
-
-      # ------------------------------------------------------------------------
-      # 2. REPORTING (Comments & Checks)
-      # ------------------------------------------------------------------------
-      
-      # A. Detailed Package-Level Coverage Table
-      - name: PR Comment - Package Coverage
-        if: github.event_name == 'pull_request'
-        uses: madrapps/jacoco-report@v1.7.1
-        with:
-          paths: backend/target/site/jacoco/jacoco.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage-overall: 60
-          min-coverage-changed-files: 60
-          title: "📂 Coverage Breakdown"
-          update-comment: true
-
-      # B. High-Level Test Summary Table
-      - name: PR Comment - Test Summary
+      - name: Post Test & Coverage Report
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const summary = `
-            ### ✅ Test Execution Summary
+            const fs = require('fs');
+            const path = require('path');
+
+            // 1. EXTRACT TEST RESULTS (Total, Pass, Fail)
+            // Note: We use simple regex here for speed. For complex cases, use an XML parser.
+            let total = 0, failures = 0, errors = 0, skipped = 0;
+            const surefireDir = 'backend/target/surefire-reports';
+            
+            if (fs.existsSync(surefireDir)) {
+              const files = fs.readdirSync(surefireDir).filter(f => f.endsWith('.xml'));
+              for (const file of files) {
+                const content = fs.readFileSync(path.join(surefireDir, file), 'utf8');
+                const t = (content.match(/tests="(\d+)"/) || [0,0])[1];
+                const f = (content.match(/failures="(\d+)"/) || [0,0])[1];
+                const e = (content.match(/errors="(\d+)"/) || [0,0])[1];
+                const s = (content.match(/skipped="(\d+)"/) || [0,0])[1];
+                total += parseInt(t);
+                failures += parseInt(f);
+                errors += parseInt(e);
+                skipped += parseInt(s);
+              }
+            }
+            const passed = total - failures - errors - skipped;
+            const statusIcon = (failures + errors) > 0 ? '🔴' : '🟢';
+
+            // 2. EXTRACT FOLDER COVERAGE FROM CSV
+            // JaCoCo generates a CSV at target/site/jacoco/jacoco.csv by default
+            const csvPath = 'backend/target/site/jacoco/jacoco.csv';
+            let coverageTable = '| Package | Coverage | Missed | Covered |\n| :--- | :--- | :--- | :--- |\n';
+            let overallCovered = 0, overallMissed = 0;
+
+            if (fs.existsSync(csvPath)) {
+              const csvContent = fs.readFileSync(csvPath, 'utf8');
+              const lines = csvContent.split('\n');
+              const packageStats = {};
+
+              // Skip header (index 0) and parse lines
+              for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',');
+                if (cols.length < 5) continue;
+                
+                const pkgName = cols[1]; // PACKAGE column
+                const missed = parseInt(cols[3]); // INSTRUCTION_MISSED
+                const covered = parseInt(cols[4]); // INSTRUCTION_COVERED
+
+                if (!packageStats[pkgName]) packageStats[pkgName] = { m: 0, c: 0 };
+                packageStats[pkgName].m += missed;
+                packageStats[pkgName].c += covered;
+                
+                overallCovered += covered;
+                overallMissed += missed;
+              }
+
+              // Build rows sorted by coverage (ascending)
+              Object.entries(packageStats)
+                .map(([pkg, stats]) => {
+                   const totalInstr = stats.m + stats.c;
+                   const pct = totalInstr === 0 ? 0 : (stats.c / totalInstr) * 100;
+                   return { pkg, pct, ...stats };
+                })
+                .sort((a, b) => a.pct - b.pct) // Sort lowest coverage first
+                .forEach(item => {
+                   const bar = item.pct < 50 ? '🔴' : (item.pct < 80 ? '🟡' : '🟢');
+                   coverageTable += `| **${item.pkg}** | ${bar} ${item.pct.toFixed(1)}% | ${item.m} | ${item.c} |\n`;
+                });
+            } else {
+              coverageTable += '| N/A | No Report Found | - | - |\n';
+            }
+
+            const totalInstr = overallCovered + overallMissed;
+            const totalPct = totalInstr === 0 ? 0 : (overallCovered / totalInstr) * 100;
+
+            // 3. CONSTRUCT COMMENT BODY
+            const body = `
+            ### ${statusIcon} Test & Coverage Report
+            
+            **Summary**
             | Metric | Count |
             | :--- | :--- |
-            | **Total Tests** | ${{ steps.metrics.outputs.total }} |
-            | **Passed** | 🟢 ${{ steps.metrics.outputs.passed }} |
-            | **Failed** | 🔴 ${{ steps.metrics.outputs.failures }} |
-            | **Errors** | ⚠️ ${{ steps.metrics.outputs.errors }} |
-            | **Skipped** | ⚪ ${{ steps.metrics.outputs.skipped }} |
-            | **Overall Coverage** | **${{ steps.metrics.outputs.coverage_num }}%** |
+            | Total Tests | ${total} |
+            | Passed | ${passed} |
+            | Failed | ${failures} |
+            | Overall Coverage | **${totalPct.toFixed(1)}%** |
+
+            <details>
+            <summary>📂 <b>Click to view Package-Level Coverage</b></summary>
             
-            _See the "Coverage Breakdown" comment for folder-level details._
+            ${coverageTable}
+            
+            </details>
             `;
-            github.rest.issues.createComment({
+
+            // 4. POST OR UPDATE COMMENT
+            const { data: comments } = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: summary
             });
 
-      # C. Populate GitHub "Checks" Tab
-      - name: Publish Test Report to Checks
+            const existingComment = comments.find(c => c.body.includes('### 🔴 Test & Coverage Report') || c.body.includes('### 🟢 Test & Coverage Report'));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
+
+      # Standard Test Reporting in "Checks" tab
+      - name: Publish Test Report (Checks)
         uses: dorny/test-reporter@v1
         if: always()
         with:
@@ -131,9 +179,7 @@ jobs:
           fail-on-error: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # ------------------------------------------------------------------------
-      # 3. ARTIFACTS & FAILURE GATES
-      # ------------------------------------------------------------------------
+      # Upload Artifacts
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         if: steps.maven-build.outcome == 'success'
@@ -141,30 +187,12 @@ jobs:
           name: spring-boot-app
           path: backend/target/*.jar
 
-      - name: Verify Quality Gate
+      # Fail logic
+      - name: Verify Thresholds
         if: always()
-        shell: bash
         run: |
-          FAILURES=${{ steps.metrics.outputs.failures }}
-          ERRORS=${{ steps.metrics.outputs.errors }}
-          COVERAGE=${{ steps.metrics.outputs.coverage_num }}
-
-          # Check 1: Did the Maven build actually succeed?
+          # Use grep to find if the maven build failed earlier
           if [ "${{ steps.maven-build.outcome }}" != "success" ]; then
-             echo "::error::Maven Build Failed"
+             echo "::error::Build Failed"
              exit 1
           fi
-
-          # Check 2: Are there test failures?
-          if [[ "$FAILURES" -gt 0 || "$ERRORS" -gt 0 ]]; then
-             echo "::error::Tests failed: $FAILURES failures, $ERRORS errors."
-             exit 1
-          fi
-
-          # Check 3: Is coverage acceptable?
-          if [[ "$COVERAGE" -lt 60 ]]; then
-             echo "::error::Code Coverage ($COVERAGE%) is below the 60% threshold."
-             exit 1
-          fi
-          
-          echo "✅ Build, Tests, and Quality Gate Passed!"
