@@ -120,27 +120,16 @@ jobs:
           echo "| Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
           echo "| Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
           echo "| Coverage | $COVERAGE_STATUS |" >> $GITHUB_STEP_SUMMARY
-          echo "### HTML Coverage Report" >> $GITHUB_STEP_SUMMARY
-          echo "[View Coverage Report](../artifacts/coverage-report/index.html)" >> $GITHUB_STEP_SUMMARY
-
       # Publish test report
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Testss
           path: backend/target/surefire-reports/TEST-*.xml
           reporter: java-junit
           fail-on-error: false
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Upload HTML coverage report as artifact
-      - name: Upload HTML Coverage Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report
-          path: backend/target/site/jacoco/
 
       # Upload XML coverage to Codecov for inline PR reporting
       - name: Upload coverage to Codecov
