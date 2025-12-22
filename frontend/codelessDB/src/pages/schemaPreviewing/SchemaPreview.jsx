@@ -30,7 +30,8 @@ import {
   Description as BookOpenIcon,
   Code as CodeIcon,
   Storage as DatabaseIcon,
-  ListAlt as FileTextIcon
+  ListAlt as FileTextIcon,
+  Comment as CommentIcon
 } from "@mui/icons-material";
 
 import LeftPanel from "../../components/LeftPanel";
@@ -47,6 +48,7 @@ import { MarkdownRenderer } from "./preview/MarkdownRenderer";
 import { ContributorsSection } from "./preview/ContributorsSection";
 import { AboutSection } from "./preview/AboutSection";
 import { QueriesSection } from "./preview/QueriesSection";
+import { CommentsSection } from "./preview/CommentsSection";
 
 
 export default function SchemaPreview() {
@@ -258,10 +260,11 @@ export default function SchemaPreview() {
 
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs value={activeTab} onChange={handleTabChange} aria-label="schema tabs">
-                    <Tab icon={<BookOpenIcon fontSize="small" />} iconPosition="start" label="Detailed Description" />
-                    <Tab icon={<CodeIcon fontSize="small" />} iconPosition="start" label="DDL" />
+                    <Tab value={0} icon={<BookOpenIcon fontSize="small" />} iconPosition="start" label="Detailed Description" />
+                    <Tab value={1} icon={<CodeIcon fontSize="small" />} iconPosition="start" label="DDL" />
                     {schemaData.cannedQueries?.length > 0 && (
                       <Tab
+                        value={2}
                         icon={<FileTextIcon fontSize="small" />}
                         iconPosition="start"
                         label={
@@ -275,7 +278,7 @@ export default function SchemaPreview() {
                   </Tabs>
                 </Box>
 
-                <Box sx={{ mt: 3 }}>
+                <Box sx={{ mt: 3, mb: 6 }}>
                   {activeTab === 0 && (
                     <Card variant="outlined">
                       <CardContent>
@@ -330,6 +333,11 @@ export default function SchemaPreview() {
                     <QueriesSection queries={schemaData.cannedQueries} />
                   )}
                 </Box>
+
+                {/* Comments Section moved here to match tab width */}
+                <Box sx={{ mt: 6, pt: 4, borderTop: 1, borderColor: 'divider' }}>
+                  <CommentsSection diagramId={schemaData.diagramId} />
+                </Box>
               </Box>
 
               <Box sx={{ width: { lg: 320 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -351,7 +359,6 @@ export default function SchemaPreview() {
                   <ContributorsSection collaborators={schemaData.contributors} />
                 )}
               </Box>
-
             </Box>
           </Container>
         </Box>
