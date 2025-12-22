@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Comment Test Summary on PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
         uses: actions/github-script@v7
         with:
           script: |
