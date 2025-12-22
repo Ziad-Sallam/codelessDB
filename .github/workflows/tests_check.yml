@@ -64,8 +64,8 @@ jobs:
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
           echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
 
-      # Extract coverage
-      - name: Extract Coverage
+      # Extract overall coverage from Jacoco HTML
+      - name: Extract Overall Coverage
         if: always()
         id: coverage
         run: |
@@ -80,44 +80,57 @@ jobs:
           echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
           echo "coverage_num=$COVERAGE_NUM" >> "$GITHUB_OUTPUT"
 
-
-      # Show GitHub Actions summary
-      - name: Comment Test & Coverage on PR
+      # Comment Test & Coverage Summary on PR
+      - name: Comment Test & Coverage Summary on PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const summary = `
-            | Metric | Value |
-            |--------|-------|
-            | Total Tests | ${{ steps.test-results.outputs.total }} |
-            | Passed | $(( ${{ steps.test-results.outputs.total }} - ${{ steps.test-results.outputs.failures }} - ${{ steps.test-results.outputs.errors }} - ${{ steps.test-results.outputs.skipped }} )) |
-            | Failed | ${{ steps.test-results.outputs.failures }} |
-            | Errors | ${{ steps.test-results.outputs.errors }} |
-            | Skipped | ${{ steps.test-results.outputs.skipped }} |
-            | Coverage | ${{ steps.coverage.outputs.coverage }} |
-            `;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
-            });
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+            TOTAL="${{ steps.test-results.outputs.total }}"
+            FAILURES="${{ steps.test-results.outputs.failures }}"
+            ERRORS="${{ steps.test-results.outputs.errors }}"
+            SKIPPED="${{ steps.test-results.outputs.skipped }}"
+            COVERAGE="${{ steps.coverage.outputs.coverage }}"
+        run: |
+          PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
 
+          # Initialize Markdown
+          echo "## CI Test & Coverage Summary" > pr_summary.md
+          echo "" >> pr_summary.md
+          echo "| Metric | Value |" >> pr_summary.md
+          echo "|--------|-------|" >> pr_summary.md
+          echo "| Total Tests | $TOTAL |" >> pr_summary.md
+          echo "| Passed | $PASSED |" >> pr_summary.md
+          echo "| Failed | $FAILURES |" >> pr_summary.md
+          echo "| Errors | $ERRORS |" >> pr_summary.md
+          echo "| Skipped | $SKIPPED |" >> pr_summary.md
+          echo "| Overall Coverage | $COVERAGE |" >> pr_summary.md
+          echo "" >> pr_summary.md
 
-      # Publish coverage as independent PR check
-      - name: Publish Coverage Report
-        if: always()
-        uses: madrapps/jacoco-report@v1.6.1
-        with:
-          paths: backend/target/site/jacoco/jacoco.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: Maves Tests – Coverage
-          update-comment: false
-          min-coverage-overall: 60
-          min-coverage-changed-files: 60
+          # Add package coverage if Jacoco XML exists
+          if [ -f backend/target/site/jacoco/jacoco.xml ]; then
+            echo "### Coverage per Package" >> pr_summary.md
+            echo "| Package | Line Coverage | Branch Coverage |" >> pr_summary.md
+            echo "|---------|---------------|----------------|" >> pr_summary.md
 
+            for pkg in $(xmllint --xpath "//*[local-name()='package']/@name" backend/target/site/jacoco/jacoco.xml 2>/dev/null | sed 's/name="\([^"]*\)"/\1\n/g'); do
+              LINE=$(xmllint --xpath "string(//*[local-name()='package'][@name='$pkg']/@line-rate)" backend/target/site/jacoco/jacoco.xml)
+              BRANCH=$(xmllint --xpath "string(//*[local-name()='package'][@name='$pkg']/@branch-rate)" backend/target/site/jacoco/jacoco.xml)
+              LINE_P=$(awk "BEGIN {printf \"%.0f\", $LINE*100}")
+              BRANCH_P=$(awk "BEGIN {printf \"%.0f\", $BRANCH*100}")
+              echo "| $pkg | $LINE_P% | $BRANCH_P% |" >> pr_summary.md
+            done
+          else
+            echo "No Jacoco coverage report found." >> pr_summary.md
+          fi
+
+          # Show in Actions log
+          cat pr_summary.md
+
+          # Post comment to PR
+          gh pr comment $PR_NUMBER --body "$(cat pr_summary.md)"
+
+      # Publish test report (optional)
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
         if: always()
@@ -135,30 +148,6 @@ jobs:
         with:
           name: package
           path: backend/target/*.jar
-      
-      - name: Extract & Comment Package Coverage
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          echo "| Package | Line Coverage | Branch Coverage |" > coverage_packages.md
-          echo "|---------|---------------|----------------|" >> coverage_packages.md
-
-          for pkg in $(xmllint --xpath "//package/@name" backend/target/site/jacoco/jacoco.xml 2>/dev/null | sed 's/name="\([^"]*\)"/\1\n/g'); do
-            LINE=$(xmllint --xpath "string(//package[@name='$pkg']/@line-rate)" backend/target/site/jacoco/jacoco.xml)
-            BRANCH=$(xmllint --xpath "string(//package[@name='$pkg']/@branch-rate)" backend/target/site/jacoco/jacoco.xml)
-            LINE_P=$(awk "BEGIN {printf \"%.0f\", $LINE*100}")
-            BRANCH_P=$(awk "BEGIN {printf \"%.0f\", $BRANCH*100}")
-            echo "| $pkg | $LINE_P% | $BRANCH_P% |" >> coverage_packages.md
-          done
-
-          cat coverage_packages.md
-
-          # Post comment to PR
-          gh pr comment $PR_NUMBER --body "$(cat coverage_packages.md)"
-
-
 
       # Fail workflow if build/tests fail or coverage < 60%
       - name: Fail if Build or Coverage Failed
@@ -166,16 +155,12 @@ jobs:
         shell: bash
         run: |
           set -e
-
           FAILURES="${{ steps.test-results.outputs.failures }}"
           ERRORS="${{ steps.test-results.outputs.errors }}"
           COVERAGE_NUM="${{ steps.coverage.outputs.coverage_num }}"
-
           echo "Failures: $FAILURES"
           echo "Errors: $ERRORS"
           echo "Coverage: $COVERAGE_NUM%"
-
           if [[ "$FAILURES" -gt 0 || "$ERRORS" -gt 0 || "$COVERAGE_NUM" -lt 60 ]]; then
             echo "::error::Build failed due to test failures or insufficient coverage (<60%)"
             exit 1
-          fi
