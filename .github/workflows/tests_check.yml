@@ -69,15 +69,17 @@ jobs:
         if: always()
         id: coverage
         run: |
-          if [ -f "backend/target/site/jacoco/index.html" ]; then
-            COVERAGE=$(grep -oP 'Total.*?(\d+)%' backend/target/site/jacoco/index.html | grep -oP '\d+%' | head -1)
-            COVERAGE_NUM=$(echo $COVERAGE | grep -oP '\d+')
+          if [ -f "target/site/jacoco/index.html" ]; then
+            COVERAGE=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1)
+            COVERAGE_NUM=$(echo "$COVERAGE" | grep -oP '\d+')
           else
             COVERAGE="N/A"
             COVERAGE_NUM=0
           fi
-          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
-          echo "coverage_num=$COVERAGE_NUM" >> $GITHUB_OUTPUT
+
+          echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
+          echo "coverage_num=$COVERAGE_NUM" >> "$GITHUB_OUTPUT"
+
 
       # Show GitHub Actions summary
       - name: Show Test & Coverage Summary
@@ -161,11 +163,19 @@ jobs:
       # Fail workflow if build/tests fail or coverage < 60%
       - name: Fail if Build or Coverage Failed
         if: always()
+        shell: bash
         run: |
-          FAILURES=${{ steps.test-results.outputs.failures }}
-          ERRORS=${{ steps.test-results.outputs.errors }}
-          COVERAGE_NUM=${{ steps.coverage.outputs.coverage_num }}
+          set -e
 
-          if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ] || [ "$COVERAGE_NUM" -lt 60 ]; then
+          FAILURES="${{ steps.test-results.outputs.failures }}"
+          ERRORS="${{ steps.test-results.outputs.errors }}"
+          COVERAGE_NUM="${{ steps.coverage.outputs.coverage_num }}"
+
+          echo "Failures: $FAILURES"
+          echo "Errors: $ERRORS"
+          echo "Coverage: $COVERAGE_NUM%"
+
+          if [[ "$FAILURES" -gt 0 || "$ERRORS" -gt 0 || "$COVERAGE_NUM" -lt 60 ]]; then
             echo "::error::Build failed due to test failures or insufficient coverage (<60%)"
             exit 1
+          fi
