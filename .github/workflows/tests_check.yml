@@ -35,17 +35,17 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Run Tests & Generate JaCoCo Reports
+      # Run Tests & Generate JaCoCo CSV/XML
       - name: Build and Test
         id: maven-build
         run: mvn -B clean verify --fail-at-end -Dstyle.color=always
         continue-on-error: true
 
       # ------------------------------------------------------------------------
-      # CONSOLIDATED REPORTING SCRIPT
-      # Parses both Surefire (Tests) and JaCoCo (Coverage) to post ONE comment
+      # ADVANCED REPORTING SCRIPT
+      # Creates a nested Package -> File structure
       # ------------------------------------------------------------------------
-      - name: Post Test & Coverage Report
+      - name: Post Advanced Test & Coverage Report
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
@@ -54,11 +54,12 @@ jobs:
             const fs = require('fs');
             const path = require('path');
 
-            // 1. EXTRACT TEST RESULTS (Total, Pass, Fail)
-            // Note: We use simple regex here for speed. For complex cases, use an XML parser.
-            let total = 0, failures = 0, errors = 0, skipped = 0;
+            // --- CONFIGURATION ---
             const surefireDir = 'backend/target/surefire-reports';
+            const jacocoCsvPath = 'backend/target/site/jacoco/jacoco.csv';
             
+            // --- 1. PARSE TEST RESULTS (Surefire XMLs) ---
+            let total = 0, failures = 0, errors = 0, skipped = 0;
             if (fs.existsSync(surefireDir)) {
               const files = fs.readdirSync(surefireDir).filter(f => f.endsWith('.xml'));
               for (const file of files) {
@@ -76,85 +77,107 @@ jobs:
             const passed = total - failures - errors - skipped;
             const statusIcon = (failures + errors) > 0 ? '🔴' : '🟢';
 
-            // 2. EXTRACT FOLDER COVERAGE FROM CSV
-            // JaCoCo generates a CSV at target/site/jacoco/jacoco.csv by default
-            const csvPath = 'backend/target/site/jacoco/jacoco.csv';
-            let coverageTable = '| Package | Coverage | Missed | Covered |\n| :--- | :--- | :--- | :--- |\n';
+            // --- 2. PARSE COVERAGE (JaCoCo CSV) & GROUP BY PACKAGE ---
+            let coverageHtml = '';
             let overallCovered = 0, overallMissed = 0;
 
-            if (fs.existsSync(csvPath)) {
-              const csvContent = fs.readFileSync(csvPath, 'utf8');
+            if (fs.existsSync(jacocoCsvPath)) {
+              const csvContent = fs.readFileSync(jacocoCsvPath, 'utf8');
               const lines = csvContent.split('\n');
-              const packageStats = {};
+              const packages = {}; // Map: packageName -> { missed, covered, classes: [] }
 
-              // Skip header (index 0) and parse lines
+              // CSV Header: GROUP, PACKAGE, CLASS, INSTRUCTION_MISSED, INSTRUCTION_COVERED...
               for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(',');
                 if (cols.length < 5) continue;
                 
-                const pkgName = cols[1]; // PACKAGE column
-                const missed = parseInt(cols[3]); // INSTRUCTION_MISSED
-                const covered = parseInt(cols[4]); // INSTRUCTION_COVERED
-
-                if (!packageStats[pkgName]) packageStats[pkgName] = { m: 0, c: 0 };
-                packageStats[pkgName].m += missed;
-                packageStats[pkgName].c += covered;
+                const pkgName = cols[1];
+                const className = cols[2];
+                const missed = parseInt(cols[3]); 
+                const covered = parseInt(cols[4]);
                 
+                if (!packages[pkgName]) {
+                  packages[pkgName] = { m: 0, c: 0, classes: [] };
+                }
+                
+                // Add to package totals
+                packages[pkgName].m += missed;
+                packages[pkgName].c += covered;
+                
+                // Add class data
+                const totalInst = missed + covered;
+                const pct = totalInst === 0 ? 0 : (covered / totalInst) * 100;
+                packages[pkgName].classes.push({ name: className, pct: pct, m: missed, c: covered });
+                
+                // Add to global totals
                 overallCovered += covered;
                 overallMissed += missed;
               }
 
-              // Build rows sorted by coverage (ascending)
-              Object.entries(packageStats)
-                .map(([pkg, stats]) => {
-                   const totalInstr = stats.m + stats.c;
-                   const pct = totalInstr === 0 ? 0 : (stats.c / totalInstr) * 100;
-                   return { pkg, pct, ...stats };
-                })
-                .sort((a, b) => a.pct - b.pct) // Sort lowest coverage first
-                .forEach(item => {
-                   const bar = item.pct < 50 ? '🔴' : (item.pct < 80 ? '🟡' : '🟢');
-                   coverageTable += `| **${item.pkg}** | ${bar} ${item.pct.toFixed(1)}% | ${item.m} | ${item.c} |\n`;
-                });
+              // Build HTML Hierarchy
+              // Iterate over packages sorted by coverage (ascending)
+              const sortedPackages = Object.entries(packages).sort((a, b) => {
+                 const pctA = (a[1].c / (a[1].c + a[1].m));
+                 const pctB = (b[1].c / (b[1].c + b[1].m));
+                 return pctA - pctB; 
+              });
+
+              for (const [pkgName, data] of sortedPackages) {
+                 const pkgTotal = data.m + data.c;
+                 const pkgPct = pkgTotal === 0 ? 0 : (data.c / pkgTotal) * 100;
+                 const pkgIcon = pkgPct < 50 ? '🔴' : (pkgPct < 80 ? '🟡' : '🟢');
+                 
+                 // Start Package Details
+                 coverageHtml += `<details><summary><b>${pkgIcon} ${pkgName}</b> (${pkgPct.toFixed(1)}%)</summary>\n`;
+                 coverageHtml += `<blockquote>\n<table>\n`;
+                 coverageHtml += `<thead><tr><th>Class</th><th>Coverage</th><th>Missed</th><th>Covered</th></tr></thead>\n<tbody>\n`;
+                 
+                 // List Files inside Package
+                 data.classes.sort((a,b) => a.pct - b.pct).forEach(cls => {
+                    const fileIcon = cls.pct < 50 ? '🔴' : (cls.pct < 80 ? '🟡' : '🟢');
+                    coverageHtml += `<tr><td>${fileIcon} ${cls.name}</td><td>${cls.pct.toFixed(1)}%</td><td>${cls.m}</td><td>${cls.c}</td></tr>\n`;
+                 });
+
+                 coverageHtml += `</tbody>\n</table>\n</blockquote>\n</details>\n`;
+              }
             } else {
-              coverageTable += '| N/A | No Report Found | - | - |\n';
+              coverageHtml = '<p>No coverage report found.</p>';
             }
 
-            const totalInstr = overallCovered + overallMissed;
-            const totalPct = totalInstr === 0 ? 0 : (overallCovered / totalInstr) * 100;
+            const grandTotal = overallCovered + overallMissed;
+            const grandPct = grandTotal === 0 ? 0 : (overallCovered / grandTotal) * 100;
 
-            // 3. CONSTRUCT COMMENT BODY
+            // --- 3. BUILD FINAL COMMENT ---
             const body = `
             ### ${statusIcon} Test & Coverage Report
             
-            **Summary**
             | Metric | Count |
             | :--- | :--- |
-            | Total Tests | ${total} |
-            | Passed | ${passed} |
-            | Failed | ${failures} |
-            | Overall Coverage | **${totalPct.toFixed(1)}%** |
+            | **Total Tests** | ${total} |
+            | **Passed** | 🟢 ${passed} |
+            | **Failed** | 🔴 ${failures} |
+            | **Overall Coverage** | **${grandPct.toFixed(1)}%** |
 
-            <details>
-            <summary>📂 <b>Click to view Package-Level Coverage</b></summary>
+            ---
+            ### 📂 Package Breakdown
+            _Click on a package to view class-level coverage._
             
-            ${coverageTable}
-            
-            </details>
+            ${coverageHtml}
             `;
 
-            // 4. POST OR UPDATE COMMENT
+            // --- 4. POST COMMENT ---
             const { data: comments } = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
 
-            const existingComment = comments.find(c => c.body.includes('### 🔴 Test & Coverage Report') || c.body.includes('### 🟢 Test & Coverage Report'));
+            // Find existing bot comment to update instead of spamming
+            const botComment = comments.find(c => c.body.includes('Test & Coverage Report'));
 
-            if (existingComment) {
+            if (botComment) {
               await github.rest.issues.updateComment({
-                comment_id: existingComment.id,
+                comment_id: botComment.id,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: body
@@ -168,7 +191,7 @@ jobs:
               });
             }
 
-      # Standard Test Reporting in "Checks" tab
+      # Standard Checks
       - name: Publish Test Report (Checks)
         uses: dorny/test-reporter@v1
         if: always()
@@ -187,12 +210,11 @@ jobs:
           name: spring-boot-app
           path: backend/target/*.jar
 
-      # Fail logic
-      - name: Verify Thresholds
+      # Fail Build if necessary
+      - name: Verify Quality Gate
         if: always()
         run: |
-          # Use grep to find if the maven build failed earlier
           if [ "${{ steps.maven-build.outcome }}" != "success" ]; then
-             echo "::error::Build Failed"
+             echo "::error::Maven Build Failed"
              exit 1
           fi
