@@ -6,13 +6,11 @@ on:
       - main
       - milestone1
       - milestone3
-
   pull_request:
     branches:
       - main
       - milestone1
       - milestone3
-
 concurrency:
   group: java-tests-${{ github.ref }}
   cancel-in-progress: true

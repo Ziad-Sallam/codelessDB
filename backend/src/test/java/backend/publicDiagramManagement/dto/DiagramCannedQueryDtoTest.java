@@ -36,7 +36,7 @@ class DiagramCannedQueryDtoTest {
 
     @Test
     void testAllArgsConstructorAndBuilder() {
-        DiagramCannedQueryDto dto = new DiagramCannedQueryDto("Name", "Desc", "SQL");
+        DiagramCannedQueryDto dto = new DiagramCannedQueryDto("Name", "Desc", "SQL",1);
         assertEquals("Name", dto.getName());
 
         DiagramCannedQueryDto builderDto = DiagramCannedQueryDto.builder()
@@ -52,9 +52,9 @@ class DiagramCannedQueryDtoTest {
 
     @Test
     void testEqualsAndHashCode() {
-        DiagramCannedQueryDto dto1 = new DiagramCannedQueryDto("A", "B", "C");
-        DiagramCannedQueryDto dto2 = new DiagramCannedQueryDto("A", "B", "C");
-        DiagramCannedQueryDto dto3 = new DiagramCannedQueryDto("X", "Y", "Z");
+        DiagramCannedQueryDto dto1 = new DiagramCannedQueryDto("A", "B", "C",1);
+        DiagramCannedQueryDto dto2 = new DiagramCannedQueryDto("A", "B", "C",1);
+        DiagramCannedQueryDto dto3 = new DiagramCannedQueryDto("X", "Y", "Z",1);
 
         assertEquals(dto1, dto2);
         assertNotEquals(dto1, dto3);
@@ -67,7 +67,7 @@ class DiagramCannedQueryDtoTest {
 
     @Test
     void testToString() {
-        DiagramCannedQueryDto dto = new DiagramCannedQueryDto("A", "B", "C");
+        DiagramCannedQueryDto dto = new DiagramCannedQueryDto("A", "B", "C",1);
         String str = dto.toString();
         assertTrue(str.contains("name=A"));
         assertTrue(str.contains("description=B"));
