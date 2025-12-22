@@ -41,8 +41,6 @@ jobs:
         run: mvn -B clean verify --fail-at-end -Dstyle.color=always
         continue-on-error: true
 
-# ... (Steps: Checkout, JDK, Maven Build) ...
-
       # ------------------------------------------------------------------------
       # ADVANCED REPORTING SCRIPT (With Tests, Changed Files, and Hierarchy)
       # ------------------------------------------------------------------------
@@ -118,6 +116,10 @@ jobs:
 
             const grandPct = (overallCovered + overallMissed) === 0 ? 0 : (overallCovered / (overallCovered + overallMissed)) * 100;
 
+            // EXPORT COVERAGE FOR LATER VALIDATION STEP
+            core.exportVariable('ACTUAL_COVERAGE', grandPct.toFixed(1));
+            core.exportVariable('TEST_FAILURES', (failures + errors));
+
             // --- 4. CONSTRUCT HTML FOR PACKAGE BREAKDOWN ---
             let packageBreakdownHtml = '';
             Object.entries(packageData).sort((a, b) => (a[1].c/(a[1].c+a[1].m)) - (b[1].c/(b[1].c+b[1].m))).forEach(([pkg, data]) => {
@@ -158,32 +160,50 @@ jobs:
               owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
             });
             const botComment = comments.find(c => c.body.includes('Test & Coverage Report'));
-            const params = { owner: context.repo.owner, repo: context.repo.repo, body };
             if (botComment) {
-              await github.rest.issues.updateComment({ ...params, comment_id: botComment.id });
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: botComment.id, body });
             } else {
-              await github.rest.issues.createComment({ ...params, issue_number: context.issue.number });
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
             }
 
-      # Standard Checks
-      - name: Publish Test Report (Checks)
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Maven Tests
-          path: backend/target/surefire-reports/TEST-*.xml
-          reporter: java-junit
-          fail-on-error: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # ------------------------------------------------------------------------
+      # 7. QUALITY GATE & JAR VALIDATION
+      # ------------------------------------------------------------------------
+      - name: Validate Build and Coverage
+        shell: bash
+        run: |
+          echo "Checking Quality Gates..."
+          
+          # 1. JAR Validation
+          JAR_COUNT=$(find target -name "*.jar" -type f | wc -l)
+          if [ "$JAR_COUNT" -eq 0 ]; then
+            echo "::error::Validation Failed: No JAR file was generated in the target folder."
+            exit 1
+          else
+            echo "✅ JAR file generated successfully."
+          fi
 
-      # Upload Artifacts
+          # 2. Test Failure Check
+          if [ "$TEST_FAILURES" -gt 0 ]; then
+            echo "::error::Quality Gate Failed: $TEST_FAILURES tests failed/errored."
+            exit 1
+          fi
+
+          # 3. Coverage Threshold (60%)
+          THRESHOLD=60
+          # Using bc for float comparison if needed, or simple integer check
+          if (( $(echo "$ACTUAL_COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "::error::Quality Gate Failed: Coverage is $ACTUAL_COVERAGE%, which is below the required $THRESHOLD%."
+            exit 1
+          else
+            echo "✅ Coverage Gate Passed ($ACTUAL_COVERAGE%)."
+          fi
+
       - name: Upload JAR
         uses: actions/upload-artifact@v4
-        if: steps.maven-build.outcome == 'success'
         with:
           name: spring-boot-app
           path: backend/target/*.jar
-
       # Fail Build if necessary
       - name: Verify Quality Gate
         if: always()
