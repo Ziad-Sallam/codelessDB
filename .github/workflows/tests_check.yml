@@ -40,7 +40,7 @@ jobs:
 
       - name: Build and run tests with coverage
         id: maven-build
-        run: mvn -B clean test jacoco:report --fail-at-end -Dstyle.color=always
+        run: mvn -B clean verify --fail-at-end -Dstyle.color=always
         continue-on-error: true
 
       - name: Extract Test Results
