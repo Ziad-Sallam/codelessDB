@@ -82,45 +82,29 @@ jobs:
 
 
       # Show GitHub Actions summary
-      - name: Show Test & Coverage Summary
-        if: always()
-        run: |
-          TOTAL=${{ steps.test-results.outputs.total }}
-          FAILURES=${{ steps.test-results.outputs.failures }}
-          ERRORS=${{ steps.test-results.outputs.errors }}
-          SKIPPED=${{ steps.test-results.outputs.skipped }}
-          COVERAGE=${{ steps.coverage.outputs.coverage }}
-          COVERAGE_NUM=${{ steps.coverage.outputs.coverage_num }}
+      - name: Comment Test & Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const summary = `
+            | Metric | Value |
+            |--------|-------|
+            | Total Tests | ${{ steps.test-results.outputs.total }} |
+            | Passed | $(( ${{ steps.test-results.outputs.total }} - ${{ steps.test-results.outputs.failures }} - ${{ steps.test-results.outputs.errors }} - ${{ steps.test-results.outputs.skipped }} )) |
+            | Failed | ${{ steps.test-results.outputs.failures }} |
+            | Errors | ${{ steps.test-results.outputs.errors }} |
+            | Skipped | ${{ steps.test-results.outputs.skipped }} |
+            | Coverage | ${{ steps.coverage.outputs.coverage }} |
+            `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
 
-          PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
-          STATUS="✅"
-          if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ] || [ "$COVERAGE_NUM" -lt 60 ]; then
-            STATUS="❌"
-          fi
-
-          # Coverage status
-          if [ "$COVERAGE_NUM" -ge 90 ]; then
-            COVERAGE_STATUS="$COVERAGE ✅ Excellent"
-          elif [ "$COVERAGE_NUM" -ge 80 ]; then
-            COVERAGE_STATUS="$COVERAGE ✅ Good"
-          elif [ "$COVERAGE_NUM" -ge 70 ]; then
-            COVERAGE_STATUS="$COVERAGE ⚠️ Acceptable"
-          elif [ "$COVERAGE_NUM" -ge 60 ]; then
-            COVERAGE_STATUS="$COVERAGE ⚠️ Below Recommended"
-          else
-            COVERAGE_STATUS="$COVERAGE ❌ Below Minimum Threshold"
-          fi
-
-          echo "## $STATUS CI Build Report" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Total Tests | $TOTAL |" >> $GITHUB_STEP_SUMMARY
-          echo "| Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
-          echo "| Failed | $FAILURES |" >> $GITHUB_STEP_SUMMARY
-          echo "| Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
-          echo "| Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
-          echo "| Coverage | $COVERAGE_STATUS |" >> $GITHUB_STEP_SUMMARY
-      # Publish test report
 
       # Publish coverage as independent PR check
       - name: Publish Coverage Report
@@ -129,7 +113,7 @@ jobs:
         with:
           paths: backend/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: Maves Testss – Coverage
+          title: Maves Tests – Coverage
           update-comment: false
           min-coverage-overall: 60
           min-coverage-changed-files: 60
@@ -138,7 +122,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Testss
+          name: Maven Tests
           path: backend/target/surefire-reports/TEST-*.xml
           reporter: java-junit
           fail-on-error: false
