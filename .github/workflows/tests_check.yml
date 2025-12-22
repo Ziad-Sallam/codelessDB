@@ -2,9 +2,9 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ main, milestone1, milestone3 ]
+    branches: [ main, milestone1, milestone3 , SCRUM-202-Enhance-Github-Actions]
   pull_request:
-    branches: [ main, milestone1, milestone3 ]
+    branches: [ main, milestone1, milestone3 , SCRUM-202-Enhance-Github-Actions]
 
 concurrency:
   group: java-tests-${{ github.ref }}
