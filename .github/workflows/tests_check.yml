@@ -121,6 +121,19 @@ jobs:
           echo "| Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
           echo "| Coverage | $COVERAGE_STATUS |" >> $GITHUB_STEP_SUMMARY
       # Publish test report
+
+      # Publish coverage as independent PR check
+      - name: Publish Coverage Report
+        if: always()
+        uses: madrapps/jacoco-report@v1.6.1
+        with:
+          paths: backend/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Maves Testss – Coverage
+          update-comment: false
+          min-coverage-overall: 60
+          min-coverage-changed-files: 60
+
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
         if: always()
@@ -130,16 +143,6 @@ jobs:
           reporter: java-junit
           fail-on-error: false
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Upload XML coverage to Codecov for inline PR reporting
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          files: backend/target/site/jacoco/jacoco.xml
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-          verbose: true
 
       # Upload build artifacts
       - name: Upload build artifacts
