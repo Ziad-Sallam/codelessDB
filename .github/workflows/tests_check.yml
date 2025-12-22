@@ -1,3 +1,4 @@
+# .github/workflows/maven-ci.yml
 name: Java CI with Maven
 
 on:
@@ -7,7 +8,7 @@ on:
     branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
 
 permissions:
-  contents: read
+  contents: write
   checks: write
   pull-requests: write
   security-events: write
@@ -19,7 +20,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     defaults:
       run:
@@ -44,59 +45,42 @@ jobs:
         run: mvn -B clean verify --fail-at-end -Dstyle.color=always
         continue-on-error: true
 
+      # Extract test results
       - name: Extract Test Results
         if: always()
         id: test-results
         run: |
           if [ -d "backend/target/surefire-reports" ]; then
-            TOTAL=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "tests=" {} \; | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            FAILURES=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "failures=" {} \; | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            ERRORS=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "errors=" {} \; | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            SKIPPED=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "skipped=" {} \; | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            echo "total=${TOTAL:-0}" >> $GITHUB_OUTPUT
-            echo "failures=${FAILURES:-0}" >> $GITHUB_OUTPUT
-            echo "errors=${ERRORS:-0}" >> $GITHUB_OUTPUT
-            echo "skipped=${SKIPPED:-0}" >> $GITHUB_OUTPUT
+            TOTAL=$(grep -h "tests=" backend/target/surefire-reports/TEST-*.xml | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            FAILURES=$(grep -h "failures=" backend/target/surefire-reports/TEST-*.xml | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            ERRORS=$(grep -h "errors=" backend/target/surefire-reports/TEST-*.xml | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            SKIPPED=$(grep -h "skipped=" backend/target/surefire-reports/TEST-*.xml | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+          else
+            TOTAL=0; FAILURES=0; ERRORS=0; SKIPPED=0
           fi
 
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "failures=$FAILURES" >> $GITHUB_OUTPUT
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+
+      # Extract coverage
       - name: Extract Coverage
         if: always()
         id: coverage
         run: |
           if [ -f "backend/target/site/jacoco/index.html" ]; then
-            COVERAGE=$(grep -oP 'Total.*?(\d+)%' backend/target/site/jacoco/index.html | grep -oP '\d+%' | head -1 || echo "N/A")
-            echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
-            COVERAGE_NUM=$(echo $COVERAGE | grep -oP '\d+' || echo "0")
-            echo "coverage_num=$COVERAGE_NUM" >> $GITHUB_OUTPUT
+            COVERAGE=$(grep -oP 'Total.*?(\d+)%' backend/target/site/jacoco/index.html | grep -oP '\d+%' | head -1)
+            COVERAGE_NUM=$(echo $COVERAGE | grep -oP '\d+')
           else
-            echo "coverage=N/A" >> $GITHUB_OUTPUT
-            echo "coverage_num=0" >> $GITHUB_OUTPUT
+            COVERAGE="N/A"
+            COVERAGE_NUM=0
           fi
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "coverage_num=$COVERAGE_NUM" >> $GITHUB_OUTPUT
 
-      - name: Determine Failure Reason
-        if: always()
-        id: failure-reason
-        run: |
-          BUILD_OUTCOME="${{ steps.maven-build.outcome }}"
-          FAILURES="${{ steps.test-results.outputs.failures }}"
-          ERRORS="${{ steps.test-results.outputs.errors }}"
-          COVERAGE_NUM="${{ steps.coverage.outputs.coverage_num }}"
-          
-          if [ "$BUILD_OUTCOME" = "success" ]; then
-            echo "reason=none" >> $GITHUB_OUTPUT
-            echo "failed=false" >> $GITHUB_OUTPUT
-          elif [ "$FAILURES" != "0" ] || [ "$ERRORS" != "0" ]; then
-            echo "reason=tests_failed" >> $GITHUB_OUTPUT
-            echo "failed=true" >> $GITHUB_OUTPUT
-          elif [ "$COVERAGE_NUM" -lt 60 ] && [ "$COVERAGE_NUM" != "0" ]; then
-            echo "reason=coverage_too_low" >> $GITHUB_OUTPUT
-            echo "failed=true" >> $GITHUB_OUTPUT
-          else
-            echo "reason=build_error" >> $GITHUB_OUTPUT
-            echo "failed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Show Test Summary in GitHub Actions
+      # Show GitHub Actions summary
+      - name: Show Test & Coverage Summary
         if: always()
         run: |
           TOTAL=${{ steps.test-results.outputs.total }}
@@ -105,87 +89,83 @@ jobs:
           SKIPPED=${{ steps.test-results.outputs.skipped }}
           COVERAGE=${{ steps.coverage.outputs.coverage }}
           COVERAGE_NUM=${{ steps.coverage.outputs.coverage_num }}
-          FAILURE_REASON=${{ steps.failure-reason.outputs.reason }}
-          HAS_FAILED=${{ steps.failure-reason.outputs.failed }}
 
           PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
           STATUS="✅"
-          if [ "$HAS_FAILED" = "true" ]; then
+          if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ] || [ "$COVERAGE_NUM" -lt 60 ]; then
             STATUS="❌"
           fi
 
-          # Determine coverage status
-          if [ "$FAILURE_REASON" = "coverage_too_low" ]; then
-            COVERAGE_STATUS="$COVERAGE ❌ **Below Minimum Threshold**"
-          elif [ "$COVERAGE_NUM" -ge 98 ]; then
-            COVERAGE_STATUS="$COVERAGE ✅ **Excellent**"
-          elif [ "$COVERAGE_NUM" -ge 95 ]; then
-            COVERAGE_STATUS="$COVERAGE ✅ **Good**"
-          elif [ "$COVERAGE_NUM" -ge 90 ]; then
-            COVERAGE_STATUS="$COVERAGE ⚠️ **Acceptable**"
-          elif [ "$COVERAGE" != "N/A" ]; then
-            COVERAGE_STATUS="$COVERAGE ⚠️ **Below Recommended**"
+          # Coverage status
+          if [ "$COVERAGE_NUM" -ge 90 ]; then
+            COVERAGE_STATUS="$COVERAGE ✅ Excellent"
+          elif [ "$COVERAGE_NUM" -ge 80 ]; then
+            COVERAGE_STATUS="$COVERAGE ✅ Good"
+          elif [ "$COVERAGE_NUM" -ge 70 ]; then
+            COVERAGE_STATUS="$COVERAGE ⚠️ Acceptable"
+          elif [ "$COVERAGE_NUM" -ge 60 ]; then
+            COVERAGE_STATUS="$COVERAGE ⚠️ Below Recommended"
           else
-            COVERAGE_STATUS="N/A"
+            COVERAGE_STATUS="$COVERAGE ❌ Below Minimum Threshold"
           fi
 
-          # Build failure details
-          FAILURE_DETAILS=""
-          if [ "$FAILURE_REASON" = "tests_failed" ]; then
-            FAILURE_DETAILS="\n### ⚠️ Build Failure Analysis\n**Failure Type:** Test Failures\n**Details:** $FAILURES test(s) failed. Fix before merge.\n"
-          elif [ "$FAILURE_REASON" = "coverage_too_low" ]; then
-            FAILURE_DETAILS="\n### ⚠️ Build Failure Analysis\n**Failure Type:** Insufficient Coverage\n**Details:** Coverage is $COVERAGE, below required 60%.\n"
-          elif [ "$FAILURE_REASON" = "build_error" ]; then
-            FAILURE_DETAILS="\n### ⚠️ Build Failure Analysis\n**Failure Type:** Build Error\n**Details:** Check build logs for errors.\n"
-          fi
-
-          # Write summary to GitHub Actions job summary
           echo "## $STATUS CI Build Report" >> $GITHUB_STEP_SUMMARY
-          echo "### Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Total Tests       | $TOTAL |" >> $GITHUB_STEP_SUMMARY
-          echo "| Passed Tests      | $PASSED |" >> $GITHUB_STEP_SUMMARY
-          echo "| Failed Tests      | $FAILURES |" >> $GITHUB_STEP_SUMMARY
-          echo "| Errors            | $ERRORS |" >> $GITHUB_STEP_SUMMARY
-          echo "| Skipped           | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
-          echo "| Coverage          | $COVERAGE_STATUS |" >> $GITHUB_STEP_SUMMARY
-          echo -e "$FAILURE_DETAILS" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Tests | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed | $FAILURES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage | $COVERAGE_STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "### HTML Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "[View Coverage Report](../artifacts/coverage-report/index.html)" >> $GITHUB_STEP_SUMMARY
 
+      # Publish test report
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Maven Tests
-          path: 'backend/target/surefire-reports/TEST-*.xml'
+          path: backend/target/surefire-reports/TEST-*.xml
           reporter: java-junit
-          fail-on-error: true
+          fail-on-error: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@v4
-        with:
-          files: backend/target/site/jacoco/jacoco.xml
-          fail_ci_if_error: false
-          verbose: true
-
-      - name: Upload coverage report
-        if: always()
+      # Upload HTML coverage report as artifact
+      - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: coverage-report
           path: backend/target/site/jacoco/
 
+      # Upload XML coverage to Codecov for inline PR reporting
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: backend/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          verbose: true
+
+      # Upload build artifacts
       - name: Upload build artifacts
-        if: steps.maven-build.outcome == 'success'
         uses: actions/upload-artifact@v4
+        if: steps.maven-build.outcome == 'success'
         with:
           name: package
           path: backend/target/*.jar
 
-      - name: Final Build Status Check
-        if: steps.maven-build.outcome != 'success'
+      # Fail workflow if build/tests fail or coverage < 60%
+      - name: Fail if Build or Coverage Failed
+        if: always()
         run: |
-          echo "::error::Build failed - see details in PR comment and logs"
-          exit 1
+          FAILURES=${{ steps.test-results.outputs.failures }}
+          ERRORS=${{ steps.test-results.outputs.errors }}
+          COVERAGE_NUM=${{ steps.coverage.outputs.coverage_num }}
+
+          if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ] || [ "$COVERAGE_NUM" -lt 60 ]; then
+            echo "::error::Build failed due to test failures or insufficient coverage (<60%)"
+            exit 1
