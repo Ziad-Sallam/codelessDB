@@ -60,21 +60,67 @@ jobs:
           echo "failures=$FAILURES" >> $GITHUB_OUTPUT
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
           echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          # ... (previous steps: checkout, jdk, maven build) ...
 
-      # Extract overall coverage % for the custom summary
-      - name: Extract Coverage
+      # Extract test results
+
+      # Extract overall coverage %
+      - name: Extract Overall Coverage
         if: always()
         id: coverage
         run: |
           if [ -f "target/site/jacoco/index.html" ]; then
-            COVERAGE=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1)
-            COVERAGE_NUM=$(echo "$COVERAGE" | grep -oP '\d+')
+            COVERAGE=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1 || echo "0%")
+            COVERAGE_NUM=$(echo "$COVERAGE" | grep -oP '\d+' || echo "0")
           else
             COVERAGE="0%"
             COVERAGE_NUM=0
           fi
           echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
           echo "coverage_num=$COVERAGE_NUM" >> "$GITHUB_OUTPUT"
+
+      # THIS STEP PROVIDES THE PER-FOLDER BREAKDOWN
+      - name: Publish Folder Coverage to PR
+        if: github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: backend/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 60
+          min-coverage-changed-files: 60
+          title: "📂 Coverage Report (Package Breakdown)"
+          update-comment: true
+
+      # Add the High-Level Test Summary as a separate comment or log
+      - name: Comment Test Summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const summary = `
+            ### 📝 Test Results Summary
+            | Metric | Status |
+            | :--- | :--- |
+            | **Total Tests** | ${{ steps.test-results.outputs.total }} |
+            | **✅ Passed** | ${{ steps.test-results.outputs.passed }} |
+            | **❌ Failed** | ${{ steps.test-results.outputs.failures }} |
+            | **⚠️ Errors** | ${{ steps.test-results.outputs.errors }} |
+            | **⏭️ Skipped** | ${{ steps.test-results.outputs.skipped }} |
+            | **📊 Total Coverage** | **${{ steps.coverage.outputs.coverage }}** |
+            
+            *Detailed folder-level breakdown can be found in the "Coverage Report" comment above.*
+            `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      # ... (rest of your file: test-reporter, artifacts, and failure logic) ...
+
+      # Extract overall coverage % for the custom summary
 
       # This action now creates the detailed package-by-package table
       - name: Publish Package-Level Coverage Report
