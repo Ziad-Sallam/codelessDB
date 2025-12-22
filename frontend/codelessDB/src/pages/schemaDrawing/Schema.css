@@ -13,7 +13,7 @@
   margin: 10px;
   height: 40px;
   width: 300px;
-   background: #ffffffa2;
+  background: #ffffffa2;
   border: none;
   border-radius: 4px;
   color: black;
@@ -178,4 +178,38 @@
   background: #1e293b;
   transform: translateY(-2px);
   box-shadow: 0 6px 10px rgba(15, 23, 42, 0.25);
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-family: 'Inter', sans-serif;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #e2e8f0;
+  border-bottom-color: #3b82f6;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

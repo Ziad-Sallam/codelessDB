@@ -1,6 +1,5 @@
 package backend.publicDiagramManagement.service;
 
-
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
@@ -16,6 +15,8 @@ import java.util.UUID;
 public interface PublicDiagramService {
 
     void publishDiagram(int userId, PublishDiagramRequestDto publishDiagramDto);
+
+    void updatePublicDiagram(int userId, PublishDiagramRequestDto dto);
 
     PublicDiagramDto viewPublicDiagram(int userId, UUID diagramId);
 

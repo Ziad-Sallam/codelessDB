@@ -43,6 +43,7 @@ import Contributors from "./Contributors.jsx";
 import { deleteDiagram, renameDiagram, shareDiagram, unpublishDiagram } from "./fetch.js";
 
 import { useNotification } from "../../components/NotificationContext";
+import EditPublicDetailsModal from "./modals/EditPublicDetailsModal";
 
 // Card-level error handling
 const CardErrorHandler = {
@@ -120,6 +121,8 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 	const [unpublishLoading, setUnpublishLoading] = useState(false);
 	const [unpublishError, setUnpublishError] = useState(null);
 
+	const [editOpen, setEditOpen] = useState(false);
+
 	const userRole = d?.role || "READER";
 	const isOwner = userRole === "OWNER";
 	const isPublic = d?.public || false;
@@ -184,10 +187,10 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 
 			const updatedContributors = [...localContributors, newContributor];
 			setLocalContributors(updatedContributors);
-			const updatedDiagram = { 
-				...d, 
+			const updatedDiagram = {
+				...d,
 				contributors: updatedContributors,
-				contributorDtos: updatedContributors 
+				contributorDtos: updatedContributors
 			};
 
 			if (onUpdate) onUpdate(updatedDiagram);
@@ -347,6 +350,21 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 									<PublicOffIcon fontSize="small" />
 								</ListItemIcon>
 								<ListItemText>Unpublish</ListItemText>
+							</MenuItem>
+						)}
+
+						{isOwner && isPublic && (
+							<MenuItem
+								onClick={(e) => {
+									e.stopPropagation();
+									closeMenu();
+									setEditOpen(true);
+								}}
+							>
+								<ListItemIcon>
+									<EditIcon fontSize="small" />
+								</ListItemIcon>
+								<ListItemText>Edit Public Details</ListItemText>
 							</MenuItem>
 						)}
 
@@ -642,6 +660,12 @@ export default function DiagramCard({ d = {}, onOpen, onUpdate, onDelete }) {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<EditPublicDetailsModal
+				open={editOpen}
+				onClose={() => setEditOpen(false)}
+				diagramId={d.diagramId}
+			/>
 		</>
 	);
 }
