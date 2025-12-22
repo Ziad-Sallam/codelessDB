@@ -48,12 +48,11 @@ jobs:
         if: always()
         id: test-results
         run: |
-          if [ -d "target/surefire-reports" ]; then
-            TOTAL=$(find target/surefire-reports -name "TEST-*.xml" -exec grep -h "tests=" {} \; | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            FAILURES=$(find target/surefire-reports -name "TEST-*.xml" -exec grep -h "failures=" {} \; | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            ERRORS=$(find target/surefire-reports -name "TEST-*.xml" -exec grep -h "errors=" {} \; | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            SKIPPED=$(find target/surefire-reports -name "TEST-*.xml" -exec grep -h "skipped=" {} \; | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-
+          if [ -d "backend/target/surefire-reports" ]; then
+            TOTAL=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "tests=" {} \; | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            FAILURES=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "failures=" {} \; | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            ERRORS=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "errors=" {} \; | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            SKIPPED=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "skipped=" {} \; | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
             echo "total=${TOTAL:-0}" >> $GITHUB_OUTPUT
             echo "failures=${FAILURES:-0}" >> $GITHUB_OUTPUT
             echo "errors=${ERRORS:-0}" >> $GITHUB_OUTPUT
@@ -64,8 +63,8 @@ jobs:
         if: always()
         id: coverage
         run: |
-          if [ -f "target/site/jacoco/index.html" ]; then
-            COVERAGE=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1 || echo "N/A")
+          if [ -f "backend/target/site/jacoco/index.html" ]; then
+            COVERAGE=$(grep -oP 'Total.*?(\d+)%' backend/target/site/jacoco/index.html | grep -oP '\d+%' | head -1 || echo "N/A")
             echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
             COVERAGE_NUM=$(echo $COVERAGE | grep -oP '\d+' || echo "0")
             echo "coverage_num=$COVERAGE_NUM" >> $GITHUB_OUTPUT
@@ -144,7 +143,14 @@ jobs:
             const resourcesSection = `\n### 📋 Resources\n| Resource | Link |\n|----------|------|\n| 📊 Coverage Report | [Download](${repoUrl}/actions/runs/${runId}#artifacts) |\n| 📝 Test Report | [View Tests](${repoUrl}/actions/runs/${runId}) |\n| 🔍 Full Logs | [View Logs](${repoUrl}/actions/runs/${runId}) |\n`;
 
             const body = `## ${status} CI Build Report      ### Build Summary
-
+            | Metric | Value |
+            |--------|-------|
+            | Total Tests       | ${total}                  |
+            | Passed Tests      | ${passed}                 |
+            | Failed Tests      | ${failures}               |
+            | Errors            | ${errors}                 |
+            | Skipped           | ${skipped}                |
+            | Coverage          | ${coverageStatus}         |
 
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
