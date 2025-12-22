@@ -1,29 +1,28 @@
-import { useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  Avatar,
-  Button,
-  Typography,
-  Box,
-  IconButton,
-  Stack,
-  Chip,
-} from "@mui/material";
 import {
   ChevronLeft,
   ChevronRight,
-  Group as UsersIcon,
   Storage as DatabaseIcon,
-  PersonAdd as UserPlusIcon,
-  Person as PersonIcon,
   Star as StarIcon,
+  PersonAdd as UserPlusIcon,
+  Group as UsersIcon
 } from "@mui/icons-material";
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  IconButton,
+  Stack,
+  Typography
+} from "@mui/material";
+import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { getInitials } from "../pages/diagrams/Contributors.jsx";
 
-const UserCarousel = ({ users, title = "Featured Designers" }) => {
+const UserCarousel = ({ users, title = "Featured Designers", onFollowToggle, currentUser }) => {
+
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
@@ -164,9 +163,9 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
               >
                 <Box sx={{ mb: 2, minWidth: 0 }}>
                   <Typography
-                    variant="subtitle1"
+                    variant="h6"
                     sx={{
-                      fontWeight: 600,
+                      fontWeight: 700,
                       lineHeight: 1.2,
                       overflow: "hidden",
                       display: "-webkit-box",
@@ -179,6 +178,13 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   >
                     {user.name}
                   </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ display: "block", mt: 0.5, fontWeight: 500 }}
+                  >
+                    @{user.username}
+                  </Typography>
                 </Box>
 
                 <Typography
@@ -186,10 +192,10 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   color="text.secondary"
                   sx={{
                     mb: 2,
-                    minHeight: 40,
+                    minHeight: 60,
                     overflow: "hidden",
                     display: "-webkit-box",
-                    WebkitLineClamp: 2,
+                    WebkitLineClamp: 3,
                     WebkitBoxOrient: "vertical",
                     textOverflow: "ellipsis",
                     wordBreak: "break-word",
@@ -198,29 +204,65 @@ const UserCarousel = ({ users, title = "Featured Designers" }) => {
                   {user.bio}
                 </Typography>
 
-                <Stack direction="row" spacing={10} sx={{ mt: "auto", mb: 2 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <StarIcon sx={{ fontSize: 16, color: "#ffb400" }} />
-                    <Typography variant="body2" fontWeight={500}>
-                      {user.totalStars}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      stars
-                    </Typography>
-                  </Box>
+                <Stack spacing={1} sx={{ mt: "auto", mb: 2 }}>
+                  <Stack direction="row" justifyContent="center" spacing={8} alignItems="center">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <StarIcon sx={{ fontSize: 16, color: "#ffb400" }} />
+                      <Typography variant="body2" fontWeight={500}>
+                        {user.totalStars}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        stars
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <DatabaseIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                      <Typography variant="body2" fontWeight={500}>
+                        {user.publicCount}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        schemas
+                      </Typography>
+                    </Box>
+                  </Stack>
 
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <DatabaseIcon
-                      sx={{ fontSize: 16, color: "text.secondary" }}
-                    />
-                    <Typography variant="body2" fontWeight={500}>
-                      {user.publicCount}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      schemas
-                    </Typography>
-                  </Box>
+                  <Stack direction="row" justifyContent="center" spacing={5} alignItems="center">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <UsersIcon sx={{ fontSize: 16, color: "#1976d2" }} />
+                      <Typography variant="body2" fontWeight={600}>
+                        {user.followersCount}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Followers
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <UsersIcon sx={{ fontSize: 16, color: "#9c27b0" }} />
+                      <Typography variant="body2" fontWeight={600}>
+                        {user.followingCount}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Following
+                      </Typography>
+                    </Box>
+                  </Stack>
                 </Stack>
+                <Button
+                  variant={user.isFollowed ? "contained" : "outlined"}
+                  color={user.isFollowed ? "secondary" : "primary"}
+                  size="small"
+                  fullWidth
+                  disabled={currentUser && (currentUser.username === user.username || currentUser.id === user.id)}
+                  startIcon={user.isFollowed ? <UsersIcon /> : <UserPlusIcon />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFollowToggle && onFollowToggle(user);
+                  }}
+                >
+                  {currentUser && (currentUser.username === user.username || currentUser.id === user.id) 
+                    ? "You" 
+                    : (user.isFollowed ? "Unfollow" : "Follow")}
+                </Button>
               </CardContent>
             </Box>
           </Card>

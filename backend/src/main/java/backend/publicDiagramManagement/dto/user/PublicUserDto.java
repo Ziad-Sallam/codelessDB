@@ -1,12 +1,14 @@
 package backend.publicDiagramManagement.dto.user;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 
 @Data
@@ -24,4 +26,9 @@ public class PublicUserDto {
     private LocalDateTime createdAt;
     private long publicCount;
     private long totalStars;
+    @JsonProperty("isFollowed")
+    private boolean isFollowed;
+    private int followersCount;
+    private int followingCount;
+    private long starredCount;
 }

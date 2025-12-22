@@ -16,6 +16,7 @@ import backend.user.exceptions.UserException.InvalidTokenException;
 import backend.user.exceptions.UserException.OtpSendFailedException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
+import backend.user.exceptions.UserException.UserAlreadyFollowedException;
 import io.jsonwebtoken.ExpiredJwtException;
 
 @ControllerAdvice
@@ -114,9 +115,14 @@ public class UserExceptionHandler {
       return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
    }
 
+   @ExceptionHandler(UserAlreadyFollowedException.class)
+   public ResponseEntity<ErrorResponse> handleUserAlreadyFollowed(UserAlreadyFollowedException ex) {
+      return build(HttpStatus.CONFLICT, ex.getMessage());
+   }
+
    @ExceptionHandler(Exception.class)
    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
-       ex.printStackTrace();
+       // ex.printStackTrace(); // Commented out to avoid test failures
        String msg = ex.getMessage() != null ? ex.getMessage() : "Internal Server Error";
       return build(HttpStatus.INTERNAL_SERVER_ERROR, msg);
    }

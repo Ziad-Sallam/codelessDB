@@ -301,7 +301,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
 
     @Override
     @Transactional
-    public Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto dto,
+    public Page<PublicUserInfoDto> searchUsersByPublicDiagrams(int userId, SearchRequestDto dto,
             Pageable pageable) {
 
         String search = dto.getSearchPrompt();
@@ -326,7 +326,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
             Long totalStars = row[2] == null ? 0L : ((Number) row[2]).longValue();
             Long score = row[3] == null ? 0L : ((Number) row[3]).longValue();
 
-            return PublicUserInfoDto.toDto(user, publicCount, totalStars, score);
+            return PublicUserInfoDto.toDto(user, publicCount, totalStars, score, userRepository.countFollowing(userId, user.getId()) > 0);
         });
     }
 

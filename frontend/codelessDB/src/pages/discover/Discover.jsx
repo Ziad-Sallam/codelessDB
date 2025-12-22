@@ -1,31 +1,30 @@
-import { use, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
-  Typography,
-  CardContent,
-  Grid,
   Button,
-  Pagination,
+  CardContent,
   CircularProgress,
-  Divider
+  Divider,
+  Grid,
+  Pagination,
+  Typography
 } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
-  TrendingUp as TrendingUpIcon,
   Storage as DatabaseIcon,
-  FilterList as FilterIcon,
-  South
+  TrendingUp as TrendingUpIcon
 } from "@mui/icons-material";
 
+import HashtagInput from "../../components/HashtagInput";
 import LeftPanel from "../../components/LeftPanel";
-import DiscoverTopBar from "./DiscoverTopBar";
 import UserCarousel from "../../components/UserCarousel";
 import DiscoverDiagramCard from "./DiscoverDiagramCard";
-import HashtagInput from "../../components/HashtagInput";
+import DiscoverTopBar from "./DiscoverTopBar";
 
-import { fetchPublicDiagrams, fetchHashtags, fetchPublicUsers } from "./fetch.js";
 import { useNotification } from "../../components/NotificationContext";
+import { validateToken } from "../auth/fetch";
+import { fetchHashtags, fetchPublicDiagrams, fetchPublicUsers, followUser, unfollowUser } from "./fetch.js";
 
 const ITEMS_PER_PAGE = 12;
 const HASHTAGS_PER_PAGE = 10;
@@ -43,6 +42,7 @@ export default function Discover() {
   const [totalElements, setTotalElements] = useState(0);
   const [hashtags, setHashtags] = useState([]);
   const [featuredUsers, setFeaturedUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [selectedHashtags, setSelectedHashtags] = useState([]);
 
@@ -55,6 +55,15 @@ export default function Discover() {
       setHashtags([]);
       showError && showError(err?.message || String(err));
     }
+  };
+
+  const loadCurrentUser = async () => {
+      try {
+          const user = await validateToken();
+          setCurrentUser(user);
+      } catch (err) {
+          console.error("Failed to load current user", err);
+      }
   };
 
   const fetchData = async () => {
@@ -81,8 +90,56 @@ export default function Discover() {
     }
   };
 
+  const handleFollowToggle = async (user) => {
+    try {
+      if (user.isFollowed) {
+        await unfollowUser(user.username);
+        showSuccess(`Unfollowed ${user.name}`);
+      } else {
+        await followUser(user.username);
+        showSuccess(`Followed ${user.name}`);
+      }
+      
+      setFeaturedUsers((prev) =>
+        prev.map((u) => {
+          if (u.id === user.id) {
+            return {
+              ...u,
+              isFollowed: !u.isFollowed,
+              followersCount: user.isFollowed
+                ? Math.max(0, (u.followersCount || 0) - 1)
+                : (u.followersCount || 0) + 1,
+            };
+          }
+          if (currentUser && (u.username === currentUser.username || u.id === currentUser.id)) {
+            return {
+              ...u,
+              followingCount: user.isFollowed
+                ? Math.max(0, (u.followingCount || 0) - 1)
+                : (u.followingCount || 0) + 1,
+            };
+          }
+          return u;
+        })
+      );
+
+      if (currentUser) {
+        setCurrentUser((prev) => ({
+          ...prev,
+          followingCount: user.isFollowed
+            ? Math.max(0, (prev.followingCount || 0) - 1)
+            : (prev.followingCount || 0) + 1,
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      showError(err.message || "Action failed");
+    }
+  };
+
   useEffect(() => {
     loadHashtags();
+    loadCurrentUser();
   }, []);
 
   useEffect(() => {
@@ -156,7 +213,7 @@ export default function Discover() {
 
           <Box sx={{ px: 3 }}>
             <Box sx={{ mb: 2 }}>
-              <UserCarousel users={featuredUsers} />
+              <UserCarousel users={featuredUsers} onFollowToggle={handleFollowToggle} currentUser={currentUser} />
             </Box>
 
             <Divider sx={{ mb: 2 }} />

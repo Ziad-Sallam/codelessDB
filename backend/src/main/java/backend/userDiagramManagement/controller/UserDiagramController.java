@@ -122,4 +122,15 @@ public class UserDiagramController {
         DiagramShareResponseDto response = userDiagramService.shareDiagram(id(authUser), id, request);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/update-ddl/{id}")
+    public ResponseEntity<String> updateDDL(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable UUID id,
+            @RequestBody String ddl) {
+
+        userDiagramService.updateDDL(id, ddl);
+
+        return ResponseEntity.ok("DDL updated successfully");
+    }
 }

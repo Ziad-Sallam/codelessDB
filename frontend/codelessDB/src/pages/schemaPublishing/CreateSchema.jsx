@@ -1,21 +1,21 @@
 import {
-    CheckCircle as CheckCircleIcon,
-    RadioButtonUnchecked as CircleIcon,
-    Storage as DatabaseIcon,
-    Visibility as EyeIcon,
-    Info as InfoIcon
+  CheckCircle as CheckCircleIcon,
+  RadioButtonUnchecked as CircleIcon,
+  Storage as DatabaseIcon,
+  Visibility as EyeIcon,
+  Info as InfoIcon
 } from "@mui/icons-material";
 import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    CardHeader,
-    Container,
-    LinearProgress,
-    Stack,
-    TextField,
-    Typography
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Container,
+  LinearProgress,
+  Stack,
+  TextField,
+  Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -200,12 +200,12 @@ export default function CreateSchema() {
           }
         />
 
-        <Box sx={{ flexGrow: 1, overflowY: "auto", p: 4 }}>
-          <Container maxWidth="xl">
+        <Box sx={{ flexGrow: 1, overflowY: "auto", p: { xs: 2, sm: 3, md: 4 } }}>
+          <Container maxWidth={false}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4 }}>
 
               {/* Main Form */}
-              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
 
                 {/* Diagram Selection */}
                 <Card variant="outlined">
@@ -308,7 +308,7 @@ export default function CreateSchema() {
                 </Card>
 
                 {/* DDL Display */}
-                {/* {selectedDiagram && (
+                {selectedDiagram && (
                   <Card variant="outlined">
                     <CardHeader
                       title={<Typography variant="h6">Database DDL</Typography>}
@@ -322,7 +322,7 @@ export default function CreateSchema() {
                       </Paper>
                     </CardContent>
                   </Card>
-                )} */}
+                )}
 
                 {/* Predefined Queries */}
                 <Card variant="outlined">
@@ -354,7 +354,7 @@ export default function CreateSchema() {
               </Box>
 
               {/* Right Sidebar - Progress */}
-              <Box sx={{ width: { lg: 300 }, flexShrink: 0 }}>
+              <Box sx={{ width: { lg: 320 }, flexShrink: 0 }}>
                 <Box sx={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 3 }}>
 
                   {/* Completion Progress */}
