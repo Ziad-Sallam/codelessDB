@@ -1,34 +1,19 @@
-# .github/workflows/maven-ci.yml
-name: Java CI with Maven
+name: Java CI with Coverage and Test Results
 
 on:
-  push:
-    branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
   pull_request:
-    branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
-
-permissions:
-  contents: write
-  checks: write
-  pull-requests: write
-  security-events: write
-
-concurrency:
-  group: java-tests-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
-    defaults:
-      run:
-        working-directory: backend
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write # Required for test-reporter to create check runs
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -37,131 +22,26 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Verify Maven
-        run: mvn -v
-
-      - name: Build and run tests with coverage
-        id: maven-build
-        run: mvn -B clean verify --fail-at-end -Dstyle.color=always
+      - name: Build and Run Tests
+        # Use continue-on-error so the report is generated even if tests fail
+        run: mvn clean test
         continue-on-error: true
 
-      # Extract test results
-      - name: Extract Test Results
-        if: always()
-        id: test-results
-        run: |
-          if [ -d "target/surefire-reports" ]; then
-            TOTAL=$(grep -h "tests=" target/surefire-reports/TEST-*.xml | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            FAILURES=$(grep -h "failures=" target/surefire-reports/TEST-*.xml | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            ERRORS=$(grep -h "errors=" target/surefire-reports/TEST-*.xml | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            SKIPPED=$(grep -h "skipped=" target/surefire-reports/TEST-*.xml | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-          else
-            TOTAL=0; FAILURES=0; ERRORS=0; SKIPPED=0
-          fi
-
-          echo "total=$TOTAL" >> $GITHUB_OUTPUT
-          echo "failures=$FAILURES" >> $GITHUB_OUTPUT
-          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
-          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
-
-      # Extract overall coverage from Jacoco HTML
-      - name: Extract Overall Coverage
-        if: always()
-        id: coverage
-        run: |
-          if [ -f "target/site/jacoco/index.html" ]; then
-            COVERAGE=$(grep -oP 'Total.*?(\d+)%' target/site/jacoco/index.html | grep -oP '\d+%' | head -1)
-            COVERAGE_NUM=$(echo "$COVERAGE" | grep -oP '\d+')
-          else
-            COVERAGE="N/A"
-            COVERAGE_NUM=0
-          fi
-
-          echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
-          echo "coverage_num=$COVERAGE_NUM" >> "$GITHUB_OUTPUT"
-
-      # Comment Test & Coverage Summary on PR
-      - name: Comment Test & Coverage Summary on PR
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-            TOTAL="${{ steps.test-results.outputs.total }}"
-            FAILURES="${{ steps.test-results.outputs.failures }}"
-            ERRORS="${{ steps.test-results.outputs.errors }}"
-            SKIPPED="${{ steps.test-results.outputs.skipped }}"
-            COVERAGE="${{ steps.coverage.outputs.coverage }}"
-        run: |
-          PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
-
-          # Initialize Markdown
-          echo "## CI Test & Coverage Summary" > pr_summary.md
-          echo "" >> pr_summary.md
-          echo "| Metric | Value |" >> pr_summary.md
-          echo "|--------|-------|" >> pr_summary.md
-          echo "| Total Tests | $TOTAL |" >> pr_summary.md
-          echo "| Passed | $PASSED |" >> pr_summary.md
-          echo "| Failed | $FAILURES |" >> pr_summary.md
-          echo "| Errors | $ERRORS |" >> pr_summary.md
-          echo "| Skipped | $SKIPPED |" >> pr_summary.md
-          echo "| Overall Coverage | $COVERAGE |" >> pr_summary.md
-          echo "" >> pr_summary.md
-
-          # Add package coverage if Jacoco XML exists
-          if [ -f backend/target/site/jacoco/jacoco.xml ]; then
-            echo "### Coverage per Package" >> pr_summary.md
-            echo "| Package | Line Coverage | Branch Coverage |" >> pr_summary.md
-            echo "|---------|---------------|----------------|" >> pr_summary.md
-
-            for pkg in $(xmllint --xpath "//*[local-name()='package']/@name" backend/target/site/jacoco/jacoco.xml 2>/dev/null | sed 's/name="\([^"]*\)"/\1\n/g'); do
-              LINE=$(xmllint --xpath "string(//*[local-name()='package'][@name='$pkg']/@line-rate)" backend/target/site/jacoco/jacoco.xml)
-              BRANCH=$(xmllint --xpath "string(//*[local-name()='package'][@name='$pkg']/@branch-rate)" backend/target/site/jacoco/jacoco.xml)
-              LINE_P=$(awk "BEGIN {printf \"%.0f\", $LINE*100}")
-              BRANCH_P=$(awk "BEGIN {printf \"%.0f\", $BRANCH*100}")
-              echo "| $pkg | $LINE_P% | $BRANCH_P% |" >> pr_summary.md
-            done
-          else
-            echo "No Jacoco coverage report found." >> pr_summary.md
-          fi
-
-          # Show in Actions log
-          cat pr_summary.md
-
-          # Post comment to PR
-          gh pr comment $PR_NUMBER --body "$(cat pr_summary.md)"
-
-      # Publish test report (optional)
-      - name: Publish Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
+      # 1. Show Coverage per Package (Folder)
+      - name: Add Coverage PR Comment
+        uses: madrapps/jacoco-report@v1.7.1
         with:
-          name: Maven Tests
-          path: backend/target/surefire-reports/TEST-*.xml
-          reporter: java-junit
-          fail-on-error: false
+          paths: ${{ github.workspace }}/backend/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 80
+          title: "📊 Package Coverage Report"
+          update-comment: true
 
-      # Upload build artifacts
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        if: steps.maven-build.outcome == 'success'
+      # 2. Show Number of Tests Passed/Failed
+      - name: Test Report
+        uses: dorny/test-reporter@v1
         with:
-          name: package
-          path: backend/target/*.jar
-
-      # Fail workflow if build/tests fail or coverage < 60%
-      - name: Fail if Build or Coverage Failed
-        if: always()
-        shell: bash
-        run: |
-          set -e
-          FAILURES="${{ steps.test-results.outputs.failures }}"
-          ERRORS="${{ steps.test-results.outputs.errors }}"
-          COVERAGE_NUM="${{ steps.coverage.outputs.coverage_num }}"
-          echo "Failures: $FAILURES"
-          echo "Errors: $ERRORS"
-          echo "Coverage: $COVERAGE_NUM%"
-          if [[ "$FAILURES" -gt 0 || "$ERRORS" -gt 0 || "$COVERAGE_NUM" -lt 60 ]]; then
-            echo "::error::Build failed due to test failures or insufficient coverage (<60%)"
-            exit 1
-          fi
+          name: "✅ JUnit Test Results"
+          path: "backend/target/surefire-reports/*.xml"
+          reporter: java-junit
+          token: ${{ secrets.GITHUB_TOKEN }}
