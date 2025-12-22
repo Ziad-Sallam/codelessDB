@@ -34,6 +34,7 @@ export default function EditPublicDetailsModal({ open, onClose, diagramId }) {
   const [allHashtags, setAllHashtags] = useState([]);
   const [publicDiagram, setPublicDiagram] = useState(null);
 
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -41,15 +42,22 @@ export default function EditPublicDetailsModal({ open, onClose, diagramId }) {
   useEffect(() => {
     if (open && diagramId) {
       const loadPublicDiagram = async () => {
-        const data = await getPublicDiagram(diagramId);
-        console.log(data);
-        setPublicDiagram(data);
-        setShortDescription(data.shortDescription || "");
-        setDetailedDescription(data.detailedDescription || "");
-        setSelectedHashtags(data.hashTags || []);
-        setQueries(data.cannedQueries || []);
-        setHasChanges(false);
-      }
+        setIsLoading(true);
+        try {
+          const data = await getPublicDiagram(diagramId);
+          setPublicDiagram(data);
+          setShortDescription(data.shortDescription || "");
+          setDetailedDescription(data.detailedDescription || "");
+          setSelectedHashtags(data.hashTags || []);
+          setQueries(data.cannedQueries || []);
+          setHasChanges(false);
+        } catch (err) {
+          showError("Failed to load public diagram details");
+          onClose();
+        } finally {
+          setIsLoading(false);
+        }
+      };
       loadPublicDiagram();
     }
   }, [open, diagramId]);
@@ -71,7 +79,7 @@ export default function EditPublicDetailsModal({ open, onClose, diagramId }) {
     const changed =
       shortDescription !== (publicDiagram.shortDescription || "") ||
       detailedDescription !== (publicDiagram.detailedDescription || "") ||
-      JSON.stringify(selectedHashtags) !== JSON.stringify(publicDiagram.hashtags || []) ||
+      JSON.stringify(selectedHashtags) !== JSON.stringify(publicDiagram.hashTags || []) ||
       JSON.stringify(queries) !== JSON.stringify(publicDiagram.cannedQueries || []);
     setHasChanges(changed);
   }, [shortDescription, detailedDescription, selectedHashtags, queries, publicDiagram]);
@@ -99,12 +107,17 @@ export default function EditPublicDetailsModal({ open, onClose, diagramId }) {
         selectedHashtags,
         queries
       );
-      setPublicDiagram({
-        ...publicDiagram,
+
+      const updatedData = {
         shortDescription,
         detailedDescription,
-        hashtags: selectedHashtags,
+        hashTags: selectedHashtags,
         cannedQueries: queries,
+      };
+
+      setPublicDiagram({
+        ...publicDiagram,
+        ...updatedData
       });
       showSuccess("Public details updated successfully");
       onClose();
@@ -123,101 +136,133 @@ export default function EditPublicDetailsModal({ open, onClose, diagramId }) {
         maxWidth="lg"
         fullWidth
         scroll="paper"
+        PaperProps={{
+          sx: { borderRadius: 3, minHeight: '60vh' }
+        }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight="bold">Edit Public Details</Typography>
-          <IconButton onClick={handleCloseAttempt} size="small">
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight="800">Edit Diagram Details</Typography>
+            <Typography variant="body2" color="text.secondary">Update your diagram's public presence</Typography>
+          </Box>
+          <IconButton onClick={handleCloseAttempt} size="small" sx={{ color: 'text.secondary' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <Divider />
         <DialogContent sx={{ p: 4 }}>
-          <Grid container spacing={2} sx={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Short Description & Hashtags */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Short Description</Typography>
-              <TextField
-                fullWidth
-                variant="outlined"
-                value={shortDescription}
-                onChange={(e) => setShortDescription(e.target.value)}
-                placeholder="A brief one-line description"
-                helperText={`${shortDescription.length}/300 characters`}
-                inputProps={{ maxLength: 300 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} mb={-3}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Hashtags</Typography>
-              <HashtagInput
-                hashtags={allHashtags}
-                selectedHashtags={selectedHashtags}
-                onSelect={setSelectedHashtags}
-                allowCreation={true}
-              />
-            </Grid>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 10, gap: 2 }}>
+              <CircularProgress size={40} />
+              <Typography color="text.secondary">Loading public details...</Typography>
+            </Box>
+          ) : (
+            <Grid container spacing={3} display="flex" flexDirection="column" >
+              <Grid item xs={12}>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="700" gutterBottom>Short Description</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={shortDescription}
+                    onChange={(e) => setShortDescription(e.target.value)}
+                    placeholder="A brief one-line description for the card"
+                    helperText={`${shortDescription.length}/300 characters`}
+                    inputProps={{ maxLength: 300 }}
+                    sx={{ bgcolor: 'background.paper' }}
+                  />
+                </Box>
+              </Grid>
 
-            {/* Detailed Description */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mb: -1 }}>Detailed Description</Typography>
-              <MarkdownEditor
-                value={detailedDescription}
-                onChange={setDetailedDescription}
-                placeholder="Write a comprehensive description..."
-              />
-            </Grid>
+              <Grid item xs={12}>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="700" gutterBottom>Hashtags</Typography>
+                  <HashtagInput
+                    hashtags={allHashtags}
+                    selectedHashtags={selectedHashtags}
+                    onSelect={setSelectedHashtags}
+                    allowCreation={true}
+                  />
+                </Box>
+              </Grid>
 
-            {/* DDL Reference */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>DDL Reference</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Use this DDL as a reference for writing your canned queries.
-              </Typography>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  bgcolor: 'action.hover',
-                  maxHeight: '300px',
-                  overflow: 'auto',
-                  width: '100%',
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  component="pre"
-                  sx={{
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    fontFamily: 'monospace',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  {publicDiagram?.ddl || "No DDL available for this diagram."}
-                </Typography>
-              </Paper>
-            </Grid>
+              <Grid item xs={12}>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="700" gutterBottom>Detailed Description (Markdown)</Typography>
+                  <MarkdownEditor
+                    value={detailedDescription}
+                    onChange={setDetailedDescription}
+                    placeholder="Write a comprehensive guide, documentation, or explanation..."
+                  />
+                </Box>
+              </Grid>
 
-            {/* Canned Queries */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Predefined Transactions (Canned Queries)</Typography>
-              <QueryBuilder
-                queries={queries}
-                onChange={setQueries}
-              />
+              <Grid item xs={12}>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="700" gutterBottom>DDL Reference</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    Reference the schema structure while writing queries.
+                  </Typography>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      bgcolor: 'grey.50',
+                      maxHeight: '250px',
+                      overflow: 'auto',
+                      borderRadius: 2,
+                      borderStyle: 'dashed'
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      component="pre"
+                      sx={{
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: '0.75rem',
+                        color: 'text.primary'
+                      }}
+                    >
+                      {publicDiagram?.ddl || "No DDL available for this diagram."}
+                    </Typography>
+                  </Paper>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="700" gutterBottom>Canned Queries</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    Commonly used SQL transactions for this schema.
+                  </Typography>
+                  <QueryBuilder
+                    queries={queries}
+                    onChange={setQueries}
+                  />
+                </Box>
+              </Grid>
             </Grid>
-          </Grid>
+          )}
         </DialogContent>
         <Divider />
-        <DialogActions sx={{ p: 2, px: 4 }}>
-          <Button onClick={handleCloseAttempt} variant="outlined" disabled={isSaving}>
-            Close
+        <DialogActions sx={{ p: 3, px: 4, gap: 1 }}>
+          <Button onClick={handleCloseAttempt} variant="text" color="inherit" disabled={isSaving} sx={{ fontWeight: 600 }}>
+            Discard Changes
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
-            disabled={isSaving || !hasChanges}
-            startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
-            sx={{ px: 4 }}
+            disabled={isSaving || !hasChanges || isLoading}
+            startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            sx={{
+              px: 4,
+              py: 1.2,
+              borderRadius: 2,
+              fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)'
+            }}
           >
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
@@ -232,9 +277,9 @@ export default function EditPublicDetailsModal({ open, onClose, diagramId }) {
         }}
         onCancel={() => setConfirmCloseOpen(false)}
         title="Unsaved Changes"
-        message="You have unsaved changes. Are you sure you want to close? Your changes will be lost."
+        message="You have unsaved changes that will be lost. Are you sure you want to close?"
         confirmText="Close Anyway"
-        cancelText="Stay"
+        cancelText="Keep Editing"
         confirmButtonStyle="danger"
       />
     </>
