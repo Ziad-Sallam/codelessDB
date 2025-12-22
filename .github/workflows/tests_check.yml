@@ -42,8 +42,7 @@ jobs:
         continue-on-error: true
 
       # ------------------------------------------------------------------------
-      # ADVANCED REPORTING SCRIPT
-      # Creates a nested Package -> File structure
+      # ADVANCED REPORTING SCRIPT (With Changed Files Section)
       # ------------------------------------------------------------------------
       - name: Post Advanced Test & Coverage Report
         if: github.event_name == 'pull_request'
@@ -54,12 +53,17 @@ jobs:
             const fs = require('fs');
             const path = require('path');
 
-            // --- CONFIGURATION ---
-            const surefireDir = 'backend/target/surefire-reports';
-            const jacocoCsvPath = 'backend/target/site/jacoco/jacoco.csv';
-            
-            // --- 1. PARSE TEST RESULTS (Surefire XMLs) ---
+            // --- 1. GET CHANGED FILES IN PR ---
+            const { data: filesChanged } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            const changedFileNames = filesChanged.map(f => path.basename(f.filename, '.java'));
+
+            // --- 2. PARSE TEST RESULTS ---
             let total = 0, failures = 0, errors = 0, skipped = 0;
+            const surefireDir = 'backend/target/surefire-reports';
             if (fs.existsSync(surefireDir)) {
               const files = fs.readdirSync(surefireDir).filter(f => f.endsWith('.xml'));
               for (const file of files) {
@@ -68,86 +72,63 @@ jobs:
                 const f = (content.match(/failures="(\d+)"/) || [0,0])[1];
                 const e = (content.match(/errors="(\d+)"/) || [0,0])[1];
                 const s = (content.match(/skipped="(\d+)"/) || [0,0])[1];
-                total += parseInt(t);
-                failures += parseInt(f);
-                errors += parseInt(e);
-                skipped += parseInt(s);
+                total += parseInt(t); failures += parseInt(f); errors += parseInt(e); skipped += parseInt(s);
               }
             }
             const passed = total - failures - errors - skipped;
             const statusIcon = (failures + errors) > 0 ? '🔴' : '🟢';
 
-            // --- 2. PARSE COVERAGE (JaCoCo CSV) & GROUP BY PACKAGE ---
-            let coverageHtml = '';
+            // --- 3. PARSE COVERAGE & MAP TO CHANGED FILES ---
+            const jacocoCsvPath = 'backend/target/site/jacoco/jacoco.csv';
             let overallCovered = 0, overallMissed = 0;
+            let packageData = {};
+            let changedFilesRows = '';
 
             if (fs.existsSync(jacocoCsvPath)) {
               const csvContent = fs.readFileSync(jacocoCsvPath, 'utf8');
               const lines = csvContent.split('\n');
-              const packages = {}; // Map: packageName -> { missed, covered, classes: [] }
-
-              // CSV Header: GROUP, PACKAGE, CLASS, INSTRUCTION_MISSED, INSTRUCTION_COVERED...
+              
               for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(',');
                 if (cols.length < 5) continue;
                 
-                const pkgName = cols[1];
-                const className = cols[2];
-                const missed = parseInt(cols[3]); 
-                const covered = parseInt(cols[4]);
-                
-                if (!packages[pkgName]) {
-                  packages[pkgName] = { m: 0, c: 0, classes: [] };
-                }
-                
-                // Add to package totals
-                packages[pkgName].m += missed;
-                packages[pkgName].c += covered;
-                
-                // Add class data
+                const pkgName = cols[1], className = cols[2], missed = parseInt(cols[3]), covered = parseInt(cols[4]);
                 const totalInst = missed + covered;
                 const pct = totalInst === 0 ? 0 : (covered / totalInst) * 100;
-                packages[pkgName].classes.push({ name: className, pct: pct, m: missed, c: covered });
-                
-                // Add to global totals
+                const icon = pct < 60 ? '🔴' : (pct < 85 ? '🟡' : '🟢');
+
+                // Aggregate Package Data
+                if (!packageData[pkgName]) packageData[pkgName] = { m: 0, c: 0, classes: [] };
+                packageData[pkgName].m += missed;
+                packageData[pkgName].c += covered;
+                packageData[pkgName].classes.push({ name: className, pct, m: missed, c: covered, icon });
+
+                // Check if this class was modified in the PR
+                if (changedFileNames.includes(className)) {
+                  changedFilesRows += `| ${icon} ${className} | **${pct.toFixed(1)}%** | ${missed} | ${covered} |\n`;
+                }
+
                 overallCovered += covered;
                 overallMissed += missed;
               }
-
-              // Build HTML Hierarchy
-              // Iterate over packages sorted by coverage (ascending)
-              const sortedPackages = Object.entries(packages).sort((a, b) => {
-                 const pctA = (a[1].c / (a[1].c + a[1].m));
-                 const pctB = (b[1].c / (b[1].c + b[1].m));
-                 return pctA - pctB; 
-              });
-
-              for (const [pkgName, data] of sortedPackages) {
-                 const pkgTotal = data.m + data.c;
-                 const pkgPct = pkgTotal === 0 ? 0 : (data.c / pkgTotal) * 100;
-                 const pkgIcon = pkgPct < 50 ? '🔴' : (pkgPct < 80 ? '🟡' : '🟢');
-                 
-                 // Start Package Details
-                 coverageHtml += `<details><summary><b>${pkgIcon} ${pkgName}</b> (${pkgPct.toFixed(1)}%)</summary>\n`;
-                 coverageHtml += `<blockquote>\n<table>\n`;
-                 coverageHtml += `<thead><tr><th>Class</th><th>Coverage</th><th>Missed</th><th>Covered</th></tr></thead>\n<tbody>\n`;
-                 
-                 // List Files inside Package
-                 data.classes.sort((a,b) => a.pct - b.pct).forEach(cls => {
-                    const fileIcon = cls.pct < 50 ? '🔴' : (cls.pct < 80 ? '🟡' : '🟢');
-                    coverageHtml += `<tr><td>${fileIcon} ${cls.name}</td><td>${cls.pct.toFixed(1)}%</td><td>${cls.m}</td><td>${cls.c}</td></tr>\n`;
-                 });
-
-                 coverageHtml += `</tbody>\n</table>\n</blockquote>\n</details>\n`;
-              }
-            } else {
-              coverageHtml = '<p>No coverage report found.</p>';
             }
 
-            const grandTotal = overallCovered + overallMissed;
-            const grandPct = grandTotal === 0 ? 0 : (overallCovered / grandTotal) * 100;
+            const grandPct = (overallCovered + overallMissed) === 0 ? 0 : (overallCovered / (overallCovered + overallMissed)) * 100;
 
-            // --- 3. BUILD FINAL COMMENT ---
+            // --- 4. CONSTRUCT HTML FOR PACKAGE BREAKDOWN ---
+            let packageBreakdownHtml = '';
+            Object.entries(packageData).sort((a, b) => (a[1].c/(a[1].c+a[1].m)) - (b[1].c/(b[1].c+b[1].m))).forEach(([pkg, data]) => {
+              const pPct = (data.c / (data.c + data.m)) * 100;
+              const pIcon = pPct < 60 ? '🔴' : (pPct < 85 ? '🟡' : '🟢');
+              packageBreakdownHtml += `<details><summary>${pIcon} <b>${pkg}</b> (${pPct.toFixed(1)}%)</summary><blockquote><table>\n`;
+              packageBreakdownHtml += `<tr><th>Class</th><th>Cov.</th><th>Miss</th><th>Hits</th></tr>\n`;
+              data.classes.forEach(c => {
+                packageBreakdownHtml += `<tr><td>${c.icon} ${c.name}</td><td>${c.pct.toFixed(1)}%</td><td>${c.m}</td><td>${c.c}</td></tr>\n`;
+              });
+              packageBreakdownHtml += `</table></blockquote></details>`;
+            });
+
+            // --- 5. FINAL BODY ASSEMBLY ---
             const body = `
             ### ${statusIcon} Test & Coverage Report
             
@@ -155,40 +136,28 @@ jobs:
             | :--- | :--- |
             | **Total Tests** | ${total} |
             | **Passed** | 🟢 ${passed} |
-            | **Failed** | 🔴 ${failures} |
             | **Overall Coverage** | **${grandPct.toFixed(1)}%** |
 
+            ### 🛠️ Coverage for Files Changed in this PR
+            ${changedFilesRows.length > 0 ? 
+              `| Class | Coverage | Missed | Covered |\n| :--- | :--- | :--- | :--- |\n${changedFilesRows}` : 
+              '_No Java code changes detected in this PR._'}
+
             ---
-            ### 📂 Package Breakdown
-            _Click on a package to view class-level coverage._
-            
-            ${coverageHtml}
+            ### 📂 Full Package Breakdown
+            <details><summary>Click to expand all packages</summary>\n\n${packageBreakdownHtml}\n</details>
             `;
 
-            // --- 4. POST COMMENT ---
+            // --- 6. UPSERT COMMENT ---
             const { data: comments } = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
             });
-
-            // Find existing bot comment to update instead of spamming
             const botComment = comments.find(c => c.body.includes('Test & Coverage Report'));
-
+            const params = { owner: context.repo.owner, repo: context.repo.repo, body };
             if (botComment) {
-              await github.rest.issues.updateComment({
-                comment_id: botComment.id,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: body
-              });
+              await github.rest.issues.updateComment({ ...params, comment_id: botComment.id });
             } else {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: body
-              });
+              await github.rest.issues.createComment({ ...params, issue_number: context.issue.number });
             }
 
       # Standard Checks
