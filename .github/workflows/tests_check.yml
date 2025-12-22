@@ -136,37 +136,43 @@ jobs:
           name: package
           path: backend/target/*.jar
       
-      - name: Extract coverage per package
-        id: package-coverage
-        run: |
-          echo "| Package | Line Coverage | Branch Coverage |" > coverage_packages.md
-          echo "|---------|---------------|----------------|" >> coverage_packages.md
-
-          for pkg in $(xmllint --xpath "//package/@name" target/site/jacoco/jacoco.xml 2>/dev/null | sed 's/name="\([^"]*\)"/\1\n/g'); do
-            LINE=$(xmllint --xpath "string(//package[@name='$pkg']/@line-rate)" target/site/jacoco/jacoco.xml)
-            BRANCH=$(xmllint --xpath "string(//package[@name='$pkg']/@branch-rate)" target/site/jacoco/jacoco.xml)
-            LINE_P=$(awk "BEGIN {printf \"%.0f\", $LINE*100}")
-            BRANCH_P=$(awk "BEGIN {printf \"%.0f\", $BRANCH*100}")
-            echo "| $pkg | $LINE_P% | $BRANCH_P% |" >> coverage_packages.md
-          done
-
-          cat coverage_packages.md
-
-
-      - name: Comment package coverage on PR
+      - name: Extract & Comment Package Coverage
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const body = fs.readFileSync('coverage_packages.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+            const { parseStringPromise } = require('xml2js');
+
+            // Read Jacoco XML
+            const xml = fs.readFileSync('backend/target/site/jacoco/jacoco.xml', 'utf8');
+
+            (async () => {
+              const result = await parseStringPromise(xml);
+              const packages = result.report.package || [];
+
+              // Build Markdown table
+              let body = '## Code Coverage per Package\n';
+              body += '| Package | Line Coverage | Branch Coverage |\n';
+              body += '|---------|---------------|----------------|\n';
+
+              packages.forEach(pkg => {
+                const name = pkg.$.name;
+                const line = Math.round(parseFloat(pkg.$['line-rate']) * 100);
+                const branch = Math.round(parseFloat(pkg.$['branch-rate']) * 100);
+                body += `| ${name} | ${line}% | ${branch}% |\n`;
+              });
+
+              // Post comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            })();
+
 
       # Fail workflow if build/tests fail or coverage < 60%
       - name: Fail if Build or Coverage Failed
