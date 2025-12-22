@@ -15,9 +15,9 @@ import { uploadToCloudinary } from "../../components/uploadImage.js";
 import CodeEditor from "./code-editor/CodeEditor.jsx";
 import Cursor from "./collab/Cursor.jsx";
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
+
 import {
 	generateSQLFromBackend,
-	updateDiagram,
 	fetchDiagramMetadata,
 	fetchDiagramSnapshot
 } from "./fetch.js";
@@ -31,22 +31,12 @@ import "./Schema.css";
 import { toPng } from "html-to-image";
 import Toolbar from "./ConnectionControls.jsx";
 
-import * as Y from "yjs";
 import ActiveUsers from "./collab/ActiveUsers.jsx";
 import {
 	CollaborationProvider,
 	useCollaboration,
 } from "./collab/CollaborationContext.jsx";
 import ShareWindow from "../../components/ShareWindow.jsx";
-
-function uint8ArrayToBase64(bytes) {
-	let binary = '';
-	const len = bytes.byteLength;
-	for (let i = 0; i < len; i++) {
-		binary += String.fromCharCode(bytes[i]);
-	}
-	return window.btoa(binary);
-}
 
 const SchemaContent = () => {
 	const { roomId } = useParams();
@@ -75,7 +65,6 @@ const SchemaContent = () => {
   const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
   const [generatedSql, setGeneratedSql] = useState("");
   const [isReadOnly, setIsReadOnly] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [shareOpen,setShareOpen] = useState(false);
 
@@ -139,7 +128,7 @@ const SchemaContent = () => {
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [undo, redo]);
 
-	const takeSnapshot = async () => {
+	const takeThumbnail = async () => {
 		const viewport = document.querySelector(".react-flow__viewport");
 
 		await reactFlowInstance.fitView({ padding: 50 });
@@ -244,8 +233,6 @@ const SchemaContent = () => {
         />
       )}
 
-      
-
       <input
         className="schema-name"
         placeholder="Database Name"
@@ -259,9 +246,6 @@ const SchemaContent = () => {
       </div>
       <div className="share-window">
         <ShareWindow diagramId={roomId} shareOpen={shareOpen} setShareOpen={setShareOpen}/>
-      </div>
-      <div >
-        <button className="save-btn" onClick={onSaveDiagram}>Save</button>
       </div>
 
 			<div className="drawing-canva">
