@@ -7,13 +7,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import backend.cannedquery.exception.CannedQueryException.CannedQueryNotFoundException;
 import backend.cannedquery.exception.CannedQueryException.CannedQueryAlreadyExistsException;
+import backend.cannedquery.exception.CannedQueryException.CannedQueryNotFoundException;
 import backend.databaseManagement.UserDatabaseRepository;
 import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
 import backend.entities.CannedQueriesDB;
 import backend.entities.UserDatabase;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -33,9 +32,9 @@ public class CannedQueryService {
 
     public CannedQueryDto getQueryById(Integer id, Integer databaseId) {
         CannedQueriesDB query = cannedQueryRepository.findByIdAndDatabaseId(id, databaseId);
-        if (query == null) {
+        if (query == null) 
             throw new CannedQueryNotFoundException("Canned query not found");
-        }
+        
         return new CannedQueryDto(query);
     }
 
