@@ -41,8 +41,10 @@ jobs:
         run: mvn -B clean verify --fail-at-end -Dstyle.color=always
         continue-on-error: true
 
+# ... (Steps: Checkout, JDK, Maven Build) ...
+
       # ------------------------------------------------------------------------
-      # ADVANCED REPORTING SCRIPT (With Changed Files Section)
+      # ADVANCED REPORTING SCRIPT (With Tests, Changed Files, and Hierarchy)
       # ------------------------------------------------------------------------
       - name: Post Advanced Test & Coverage Report
         if: github.event_name == 'pull_request'
@@ -61,7 +63,7 @@ jobs:
             });
             const changedFileNames = filesChanged.map(f => path.basename(f.filename, '.java'));
 
-            // --- 2. PARSE TEST RESULTS ---
+            // --- 2. PARSE TEST RESULTS (Surefire XMLs) ---
             let total = 0, failures = 0, errors = 0, skipped = 0;
             const surefireDir = 'backend/target/surefire-reports';
             if (fs.existsSync(surefireDir)) {
@@ -72,7 +74,10 @@ jobs:
                 const f = (content.match(/failures="(\d+)"/) || [0,0])[1];
                 const e = (content.match(/errors="(\d+)"/) || [0,0])[1];
                 const s = (content.match(/skipped="(\d+)"/) || [0,0])[1];
-                total += parseInt(t); failures += parseInt(f); errors += parseInt(e); skipped += parseInt(s);
+                total += parseInt(t); 
+                failures += parseInt(f); 
+                errors += parseInt(e); 
+                skipped += parseInt(s);
               }
             }
             const passed = total - failures - errors - skipped;
@@ -97,13 +102,11 @@ jobs:
                 const pct = totalInst === 0 ? 0 : (covered / totalInst) * 100;
                 const icon = pct < 60 ? '🔴' : (pct < 85 ? '🟡' : '🟢');
 
-                // Aggregate Package Data
                 if (!packageData[pkgName]) packageData[pkgName] = { m: 0, c: 0, classes: [] };
                 packageData[pkgName].m += missed;
                 packageData[pkgName].c += covered;
                 packageData[pkgName].classes.push({ name: className, pct, m: missed, c: covered, icon });
 
-                // Check if this class was modified in the PR
                 if (changedFileNames.includes(className)) {
                   changedFilesRows += `| ${icon} ${className} | **${pct.toFixed(1)}%** | ${missed} | ${covered} |\n`;
                 }
@@ -122,7 +125,7 @@ jobs:
               const pIcon = pPct < 60 ? '🔴' : (pPct < 85 ? '🟡' : '🟢');
               packageBreakdownHtml += `<details><summary>${pIcon} <b>${pkg}</b> (${pPct.toFixed(1)}%)</summary><blockquote><table>\n`;
               packageBreakdownHtml += `<tr><th>Class</th><th>Cov.</th><th>Miss</th><th>Hits</th></tr>\n`;
-              data.classes.forEach(c => {
+              data.classes.sort((a,b) => a.pct - b.pct).forEach(c => {
                 packageBreakdownHtml += `<tr><td>${c.icon} ${c.name}</td><td>${c.pct.toFixed(1)}%</td><td>${c.m}</td><td>${c.c}</td></tr>\n`;
               });
               packageBreakdownHtml += `</table></blockquote></details>`;
@@ -136,6 +139,8 @@ jobs:
             | :--- | :--- |
             | **Total Tests** | ${total} |
             | **Passed** | 🟢 ${passed} |
+            | **Failed** | 🔴 ${failures + errors} |
+            | **Skipped** | ⏭️ ${skipped} |
             | **Overall Coverage** | **${grandPct.toFixed(1)}%** |
 
             ### 🛠️ Coverage for Files Changed in this PR
