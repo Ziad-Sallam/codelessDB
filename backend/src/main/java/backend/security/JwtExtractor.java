@@ -1,6 +1,9 @@
 package backend.security;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +15,7 @@ public class JwtExtractor {
 
     /**
      * Extracts, validates the token, and returns the AuthUser principal.
-     * * @param authHeader The full Authorization header string 
+     * * @param authHeader The full Authorization header string
      * (e.g., "Bearer <token>").
      * 
      * @return The AuthUser object if valid, or null if the header is
@@ -22,15 +25,16 @@ public class JwtExtractor {
      */
     public AuthUser authenticate(String tokenArg, boolean inHeader) throws JwtValidationException {
         // No JWT → return null (let the caller decide if auth is mandatory)
-        if (tokenArg == null) return null;
-        
+        if (tokenArg == null)
+            return null;
+
         String token;
         if (inHeader) {
             if (!tokenArg.startsWith("Bearer "))
                 return null;
-            
+
             token = tokenArg.substring(7);
-            
+
         } else {
             token = tokenArg;
         }
@@ -43,28 +47,34 @@ public class JwtExtractor {
             userId = jwtUtil.extractSubject(token);
             username = jwtUtil.extractUsername(token);
 
-            // Validate the token using the primary check 
+            // Validate the token using the primary check
             // (can include expiration, signature, etc.)
             if (!jwtUtil.isTokenValid(token, userId)) {
-                throw new JwtValidationException("Token failed validation check.", null);
+                throw new JwtValidationException("Token failed validation check.",
+                        List.of(new OAuth2Error("invalid_token", "Token failed validation check.", null)));
             }
 
             return new AuthUser(userId, username);
-        
+
         } catch (io.jsonwebtoken.ExpiredJwtException ex) {
-            throw new JwtValidationException("Token expired", null);
-        
+            throw new JwtValidationException("Token expired",
+                    List.of(new OAuth2Error("token_expired", "Token expired", null)));
+
         } catch (io.jsonwebtoken.security.SignatureException ex) {
-            throw new JwtValidationException("Invalid token signature", null);
-        
+            throw new JwtValidationException("Invalid token signature",
+                    List.of(new OAuth2Error("invalid_signature", "Invalid token signature", null)));
+
         } catch (io.jsonwebtoken.MalformedJwtException ex) {
-            throw new JwtValidationException("Malformed JWT token", null);
-        
+            throw new JwtValidationException("Malformed JWT token",
+                    List.of(new OAuth2Error("malformed_token", "Malformed JWT token", null)));
+
         } catch (IllegalArgumentException ex) {
-            throw new JwtValidationException("Invalid or empty JWT token", null);
-        
+            throw new JwtValidationException("Invalid or empty JWT token",
+                    List.of(new OAuth2Error("invalid_token", "Invalid or empty JWT token", null)));
+
         } catch (Exception ex) {
-            throw new JwtValidationException("Invalid token", null);
+            throw new JwtValidationException("Invalid token",
+                    List.of(new OAuth2Error("invalid_token", "Invalid token", null)));
         }
     }
 }

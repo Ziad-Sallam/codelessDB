@@ -15,7 +15,11 @@ public class YjsSnapshotClient {
 	@Value("${snapshot.url}")
 	private String snapShotUrl;
 
-	private final RestTemplate restTemplate = new RestTemplate();
+	private final RestTemplate restTemplate;
+
+	public YjsSnapshotClient(RestTemplate restTemplate) {
+		this.restTemplate = restTemplate;
+	}
 
 	/**
 	 * Sends an http post request to a Y.js service
@@ -31,7 +35,7 @@ public class YjsSnapshotClient {
 		if (existingSnapshot == null) {
 			existingSnapshot = new byte[0];
 		}
-		
+
 		HttpEntity<byte[]> request = new HttpEntity<>(existingSnapshot, headers);
 
 		ResponseEntity<byte[]> response = restTemplate.exchange(
