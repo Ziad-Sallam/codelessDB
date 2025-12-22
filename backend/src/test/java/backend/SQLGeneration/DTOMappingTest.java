@@ -9,8 +9,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DTOMappingTest {

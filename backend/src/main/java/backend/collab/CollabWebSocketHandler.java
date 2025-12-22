@@ -31,7 +31,7 @@ public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 		if (diagramId != null) {
 			roomManager.joinRoom(diagramId, session);
 			log.info("New binary connection established for Diagram ID: {}", diagramId);
-		
+
 		} else {
 			log.warn("Session {} established without a valid diagramId.", session.getId());
 			session.close(CloseStatus.BAD_DATA);
@@ -54,14 +54,12 @@ public class CollabWebSocketHandler extends BinaryWebSocketHandler {
 		String diagramId = getDiagramId(session);
 		Role role = (Role) session.getAttributes().get("role");
 
-		if (diagramId != null) {
-			// log.info("Received binary message for Diagram ID {} with {} bytes.", diagramId, payload.remaining());
-
-			// Broadcast the received message ONLY to clients in the same diagram/room
-			roomManager.sendUpdate(diagramId, payload.array(), session.getId(), role);
-		
-		} else {
-			log.warn("Ignoring binary message from session {} as diagramId is missing.", session.getId());
+		if (diagramId == null) {
+			log.warn("Ignoring binary message without diagramId");
+			return;
 		}
+
+		roomManager.sendUpdate(diagramId, payload.array(), session.getId(), role);
 	}
+
 }

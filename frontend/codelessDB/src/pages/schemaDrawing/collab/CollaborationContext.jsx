@@ -84,6 +84,8 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const metaMap = doc.getMap("meta");
 
 		ydocRef.current = doc;
+		// console.log("Empty doc: ")
+		// console.log(Y.encodeStateAsUpdate(doc));
 
 		const provider = new WebsocketProvider(
 			`ws://localhost:8080/ws/collab`,
@@ -191,19 +193,18 @@ export const CollaborationProvider = ({ roomId, children }) => {
 	}, [roomId, user]); 
 
 	// ----------------- Snapshot Loader -----------------
-	const loadCompositeYjsData = useCallback((snapshotBase64) => {
+	// snapshotBytes is Uint8Array
+	const applySnapshot = useCallback((snapshotBytes) => {
 		const ydoc = ydocRef.current;
 		if (!ydoc) return;
 
 		ydoc.transact(() => {
-			// 1. Try applying the Snapshot (Database)
-			if (snapshotBase64) {
+
+			if (snapshotBytes && snapshotBytes.byteLength > 0) {
 				try {
-					const snapshotBytes = base64ToBytes(snapshotBase64);
-					if (snapshotBytes.byteLength > 0) {
-						Y.applyUpdate(ydoc, snapshotBytes);
-						console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);
-					}
+					Y.applyUpdate(ydoc, snapshotBytes);
+					console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);
+				
 				} catch (err) {
 					console.error("❌ CRITICAL: Database Snapshot is corrupt!", err);
 				}
@@ -339,7 +340,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 				addNodeYjs,
 				addEdgeYjs,
 				updateSchemaName,
-				loadCompositeYjsData,
+				applySnapshot,
 				undo,
 				redo,
 			}}

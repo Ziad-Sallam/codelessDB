@@ -1,23 +1,21 @@
 package backend.collab.snapshot;
 
-import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.stereotype.Service;
 
-import backend.collab.exceptions.CollabException.YDocUpdateException;
-import backend.collab.services.RedisStreamService;
 import backend.collab.services.UpdateWriter;
 import backend.entities.Diagram;
 import backend.user.Role;
 import backend.userDiagramManagement.repository.DiagramRepository;
 import backend.userDiagramManagement.service.UserDiagramService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class SnapshotService {
 
 	private final DiagramRepository diagramRepository;
@@ -28,34 +26,49 @@ public class SnapshotService {
 
 	private final UpdateWriter updateWriter;
 
-	public SnapshotDto getLatestDiagram(int userId, UUID diagramId) {
+	private final ConcurrentHashMap<String, Lock> snapshotLocks = new ConcurrentHashMap<>();
+
+	public SnapshotDto getDiagramMetadata(int userId, UUID diagramId) {
 		userDiagramService.getUserOrThrow(userId);
 		Role role = userDiagramService
 						.getUserDiagramOrThrow(userId, diagramId)
 						.getRole();
 
-		takeSnapshotThread(diagramId.toString());
 		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
-		byte[] snapshot = diagram.getContent();
+		
+		return new SnapshotDto(diagram.getName(), role);
+	}
 
-		return new SnapshotDto(snapshot, diagram.getName(), role);
+	public byte[] getDiagramSnapshot(int userId, UUID diagramId) {
+		userDiagramService.getUserOrThrow(userId);
+		// Access check
+		userDiagramService.getUserDiagramOrThrow(userId, diagramId);
+
+		Diagram diagram = userDiagramService.getDiagramOrThrow(diagramId);
+		return diagram.getContent();
 	}
 
 	public void takeSnapshot(String diagramId) {
 		updateWriter.submitWriteTask(() -> takeSnapshotThread(diagramId));
 	}
 
-	private void takeSnapshotThread(String diagramId) {
-		Diagram diagram = userDiagramService.getDiagramOrThrow(UUID.fromString(diagramId));
+	public void takeSnapshotThread(String diagramId) {
+		Lock lock = snapshotLocks.computeIfAbsent(diagramId, k -> new ReentrantLock());
+		lock.lock();
+		try {
+			Diagram diagram = userDiagramService.getDiagramOrThrow(UUID.fromString(diagramId));
 
-		// send a request to a Node.js worker node 
-		// to take a snapshot from redis updates and deletes them
-		byte[] snapshot = snapshotClient.snapshot(diagramId);
-		log.info("Snapshot taken {}", snapshot);
-		
-		if (snapshot != null && snapshot.length > 0) {
-			diagram.setContent(snapshot);
-			diagramRepository.save(diagram);
+			// send a request to a Node.js worker node
+			// to take a snapshot from redis updates and deletes them
+			byte[] snapshot = snapshotClient.snapshot(diagramId, diagram.getContent());
+
+			if (snapshot != null && snapshot.length > 0) {
+				diagram.setContent(snapshot);
+				diagramRepository.save(diagram);
+			}
+
+		} finally {
+			lock.unlock();
 		}
 	}
 }

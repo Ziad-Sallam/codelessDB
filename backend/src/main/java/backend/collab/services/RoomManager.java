@@ -1,26 +1,17 @@
 package backend.collab.services;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import backend.collab.Room;
 import backend.collab.exceptions.CollabException.RoomNotFoundException;
 import backend.collab.snapshot.SnapshotService;
 import backend.user.Role;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
 
 public interface RoomManager {
@@ -56,7 +47,7 @@ class RoomManagerImpl implements RoomManager {
 		room.removeSession(session);
 		if (room.isEmpty()) {
 			activeRooms.remove(roomId);
-			// room.takeSnapshot();
+			room.takeSnapshot();
 			room.close();
 		}
 	}
@@ -74,15 +65,14 @@ class RoomManagerImpl implements RoomManager {
 		if (room == null) {
 			throw new RoomNotFoundException("Room with diagramId %s is not found".formatted(diagramId));
 		}
-		room.doUpdate(data, senderId, role);
-
+		
 		final boolean cursorUpdate = (data[0] == 1);
-
+		
 		// Cursor positions don't need to be stored
 		if (!cursorUpdate) {
-			log.info("Storing update {} for diagramId {}", data, diagramId);
 			redisService.addUpdate(diagramId, data);
 		}
 		
+		room.doUpdate(data, senderId, role);
 	}
 }
