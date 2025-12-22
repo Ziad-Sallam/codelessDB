@@ -49,10 +49,10 @@ jobs:
         id: test-results
         run: |
           if [ -d "backend/target/surefire-reports" ]; then
-            TOTAL=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "tests=" {} \; | sed 's/.*tests="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            FAILURES=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "failures=" {} \; | sed 's/.*failures="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            ERRORS=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "errors=" {} \; | sed 's/.*errors="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
-            SKIPPED=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h "skipped=" {} \; | sed 's/.*skipped="\([0-9]*\)".*/\1/' | awk '{s+=$1} END {print s}')
+            TOTAL=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h '<testsuite ' {} \; | sed -E 's/.*tests="([0-9]+)".*/\1/' | awk '{s+=$1} END {print s}')
+            FAILURES=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h '<testsuite ' {} \; | sed -E 's/.*failures="([0-9]+)".*/\1/' | awk '{s+=$1} END {print s}')
+            ERRORS=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h '<testsuite ' {} \; | sed -E 's/.*errors="([0-9]+)".*/\1/' | awk '{s+=$1} END {print s}')
+            SKIPPED=$(find backend/target/surefire-reports -name "TEST-*.xml" -exec grep -h '<testsuite ' {} \; | sed -E 's/.*skipped="([0-9]+)".*/\1/' | awk '{s+=$1} END {print s}')
             echo "total=${TOTAL:-0}" >> $GITHUB_OUTPUT
             echo "failures=${FAILURES:-0}" >> $GITHUB_OUTPUT
             echo "errors=${ERRORS:-0}" >> $GITHUB_OUTPUT
@@ -81,7 +81,7 @@ jobs:
           FAILURES="${{ steps.test-results.outputs.failures }}"
           ERRORS="${{ steps.test-results.outputs.errors }}"
           COVERAGE_NUM="${{ steps.coverage.outputs.coverage_num }}"
-          
+
           if [ "$BUILD_OUTCOME" = "success" ]; then
             echo "reason=none" >> $GITHUB_OUTPUT
             echo "failed=false" >> $GITHUB_OUTPUT
@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Show Test Summary in GitHub Actions
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        if: always()
         run: |
           TOTAL=${{ steps.test-results.outputs.total }}
           FAILURES=${{ steps.test-results.outputs.failures }}
@@ -139,7 +139,7 @@ jobs:
             FAILURE_DETAILS="\n### ⚠️ Build Failure Analysis\n**Failure Type:** Build Error\n**Details:** Check build logs for errors.\n"
           fi
 
-          # Write summary to GitHub Actions job summary
+          # GitHub Actions job summary
           echo "## $STATUS CI Build Report" >> $GITHUB_STEP_SUMMARY
           echo "### Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
@@ -187,5 +187,5 @@ jobs:
       - name: Final Build Status Check
         if: steps.maven-build.outcome != 'success'
         run: |
-          echo "::error::Build failed - see details in PR comment and logs"
+          echo "::error::Build failed - see details in GitHub Actions summary and logs"
           exit 1
