@@ -69,6 +69,8 @@ const SchemaContent = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [shareOpen,setShareOpen] = useState(false);
 
+  const [diagramExistFlag, setDiagramExistFlag] = useState(true);
+
 	const { screenToFlowPosition } = useReactFlow();
 
 	const onMouseMove = useCallback(
@@ -100,7 +102,7 @@ const SchemaContent = () => {
 			setDiagramExistFlag(true);
 			
 		} catch (err) {
-			showError(err.message);
+			// showError(err.message);
 			setDiagramExistFlag(false);
 		}
 	};

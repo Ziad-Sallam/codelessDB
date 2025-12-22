@@ -12,25 +12,8 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { UndoManager } from "yjs";
 import { useAuth } from "../../../components/AuthProvider";
-import { get } from "lodash";
 
 const CollaborationContext = createContext(null);
-
-const base64ToBytes = (base64) => {
-	if (!base64 || typeof base64 !== "string") return new Uint8Array(0);
-	try {
-		const clean = base64.replace(/\s/g, "");
-		const binary = window.atob(clean);
-		const bytes = new Uint8Array(binary.length);
-		for (let i = 0; i < binary.length; i++) {
-			bytes[i] = binary.charCodeAt(i);
-		}
-		return bytes;
-	} catch (err) {
-		console.error("❌ Failed to decode snapshot", err);
-		return new Uint8Array(0);
-	}
-};
 
 function hslToHex(h, s, l) {
   s /= 100;
@@ -58,7 +41,6 @@ function getReadableRandomHex() {
 }
 
 
-
 // ----------------- Provider -----------------
 export const CollaborationProvider = ({ roomId, children }) => {
 	const { user } = useAuth();
@@ -84,8 +66,6 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const metaMap = doc.getMap("meta");
 
 		ydocRef.current = doc;
-		// console.log("Empty doc: ")
-		// console.log(Y.encodeStateAsUpdate(doc));
 
 		const provider = new WebsocketProvider(
 			`ws://localhost:8080/ws/collab`,
