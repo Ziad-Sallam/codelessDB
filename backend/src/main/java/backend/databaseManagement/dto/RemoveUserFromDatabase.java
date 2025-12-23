@@ -11,8 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class AddDatabaseToUser {
+public class RemoveUserFromDatabase {
     private int databaseId;
     private int userId;
-    private String role;
 }

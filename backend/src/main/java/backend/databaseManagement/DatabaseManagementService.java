@@ -202,24 +202,16 @@ public class DatabaseManagementService {
     }
 
     public void addDatabaseToUser(int databaseId, int userId, int ownerId, String roleStr) {
-        if (databaseId <= 0 || userId <= 0 || ownerId <= 0) {
-            throw new IllegalArgumentException("Invalid database ID");
-        }
-        if (databaseId == ownerId)
-            throw new IllegalArgumentException("Database ID and Owner ID cannot be the same");
+        if (databaseId <= 0 || userId <= 0 || ownerId <= 0) throw new IllegalArgumentException("Invalid database ID");
+        if (databaseId == ownerId) throw new IllegalArgumentException("Database ID and Owner ID cannot be the same");
         UserDatabase database = userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
         User owner = userRepository.findById(ownerId);
-
-        if (owner == null)
-            throw new UserNotFoundException("Owner not found");
-        if (owner.getId() != ownerId)
-            throw new UnauthorizedAccessException("Unauthorized Access");
+        if (owner == null) throw new UserNotFoundException("Owner not found");
+        if (owner.getId() != ownerId) throw new UnauthorizedAccessException("Unauthorized Access");
 
         User user = userRepository.findById(userId);
-        if (user == null)
-            throw new UserNotFoundException("User not found");
-
+        if (user == null) throw new UserNotFoundException("User not found");
         Role role = Role.valueOf(roleStr.toUpperCase());
 
         UserDatabaseAccess access = UserDatabaseAccess.builder()
@@ -231,13 +223,14 @@ public class DatabaseManagementService {
         userRepository.save(user);
     }
 
-    public void removeDatabaseFromUser(int databaseId, int userId) {
+    public void removeDatabaseFromUser(int databaseId, int userId, int ownerId) {
         userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+        User owner = userRepository.findById(ownerId);
+        if (owner == null) throw new UserNotFoundException("Owner not found");
+        if (owner.getId() != ownerId) throw new UnauthorizedAccessException("Unauthorized Access");
         User user = userRepository.findById(userId);
-        if (user == null)
-            throw new UserNotFoundException("User not found");
-
+        if (user == null) throw new UserNotFoundException("User not found");
         user.getDatabaseAccess().removeIf(access -> access.getDatabase().getId() == databaseId);
         userRepository.save(user);
     }

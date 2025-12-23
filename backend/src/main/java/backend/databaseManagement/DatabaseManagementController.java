@@ -16,6 +16,7 @@ import backend.databaseManagement.dto.CreateServerDTO;
 import backend.databaseManagement.dto.InitiateDatabaseDTO;
 import backend.databaseManagement.dto.PasswordRequest;
 import backend.databaseManagement.dto.SendDatabasesDTO;
+import backend.databaseManagement.dto.AddDatabaseToUser;
 import backend.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 
@@ -41,7 +42,8 @@ public class DatabaseManagementController {
     public ResponseEntity<Boolean> checkDatabasePassword(
             @RequestBody PasswordRequest passwordRequest) {
         return ResponseEntity.ok(
-                databaseManagementService.checkDatabasePassword(passwordRequest.getDatabaseId(), passwordRequest.getPassword()));
+                databaseManagementService.checkDatabasePassword(passwordRequest.getDatabaseId(),
+                        passwordRequest.getPassword()));
     }
 
     @GetMapping("/get-user-databases")
@@ -75,4 +77,29 @@ public class DatabaseManagementController {
         return ResponseEntity.ok(
                 databaseManagementService.getUserServers(authUser.userId()));
     }
+
+    @PostMapping("/add-database-to-user")
+    public ResponseEntity<AddDatabaseToUser> addDatabaseToUser(
+            @RequestBody AddDatabaseToUser addDatabaseToUser,
+            @AuthenticationPrincipal AuthUser authUser) {
+        databaseManagementService.addDatabaseToUser(
+                addDatabaseToUser.getDatabaseId(),
+                addDatabaseToUser.getUserId(),
+                authUser.userId(),
+                addDatabaseToUser.getRole());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/remove-database-from-user")
+    public ResponseEntity<Void> removeDatabaseFromUser(
+            @RequestBody AddDatabaseToUser addDatabaseToUser,
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        databaseManagementService.removeDatabaseFromUser(
+                addDatabaseToUser.getDatabaseId(),
+                addDatabaseToUser.getUserId(),
+                authUser.userId());
+        return ResponseEntity.noContent().build();
+    }
+
 }

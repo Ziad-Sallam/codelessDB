@@ -1,4 +1,4 @@
-package backend.DatabaseManagement;
+package backend.databaseManagement;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +30,7 @@ import backend.databaseManagement.dto.CreateServerDTO;
 import backend.databaseManagement.dto.InitiateDatabaseDTO;
 import backend.databaseManagement.dto.SendDatabasesDTO;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
+import backend.databaseManagement.exception.DatabaseException.ServerAlreadyExistsException;
 import backend.databaseManagement.exception.DatabaseException.UnauthorizedAccessException;
 import backend.entities.Server;
 import backend.entities.User;
@@ -378,6 +379,40 @@ class DatabaseManagementServiceTest {
     }
 
     @Test
+    void testCreateServer_serverAlreadyExists() {
+        // Arrange
+        CreateServerDTO dto = new CreateServerDTO();
+        dto.setServerName("MyServer");
+
+        User owner = new User();
+        owner.setId(1);
+
+        Server existingServer = new Server();
+        existingServer.setId(10);
+        existingServer.setName("MyServer");
+        existingServer.setOwner(owner);
+
+        owner.getServers().add(existingServer);
+
+        when(userRepository.findById(1)).thenReturn(owner);
+
+        // Act + Assert
+        ServerAlreadyExistsException ex = assertThrows(
+                ServerAlreadyExistsException.class,
+                () -> service.createServer(dto, 1)
+        );
+
+        assertEquals(
+                "Server name already exists for this user!",
+                ex.getMessage()
+        );
+
+        verify(serverRepository, never()).save(any());
+        verify(userRepository, never()).save(any());
+    }
+
+
+    @Test
     void testGetUserServers_success() {
         User user = new User();
         user.setId(1);
@@ -637,11 +672,11 @@ class DatabaseManagementServiceTest {
 
     @Test
     void testAddDatabaseToUser_invalidIds() {
-        assertThrows(IllegalArgumentException.class, () -> service.addDatabaseToUser(0, 1, 1, "READ"));
+        assertThrows(IllegalArgumentException.class, () -> service.addDatabaseToUser(0, 1, 1, "READER"));
 
-        assertThrows(IllegalArgumentException.class, () -> service.addDatabaseToUser(1, 0, 1, "READ"));
+        assertThrows(IllegalArgumentException.class, () -> service.addDatabaseToUser(1, 0, 1, "READER"));
 
-        assertThrows(IllegalArgumentException.class, () -> service.addDatabaseToUser(1, 1, 0, "READ"));
+        assertThrows(IllegalArgumentException.class, () -> service.addDatabaseToUser(1, 1, 0, "READER"));
     }
 
     @Test
@@ -650,14 +685,14 @@ class DatabaseManagementServiceTest {
                 .thenReturn(Optional.of(new UserDatabase()));
         when(userRepository.findById(1)).thenReturn(null);
 
-        assertThrows(UserNotFoundException.class, () -> service.addDatabaseToUser(10, 2, 1, "READ"));
+        assertThrows(UserNotFoundException.class, () -> service.addDatabaseToUser(10, 2, 1, "READER"));
     }
 
     @Test
     void testAddDatabaseToUser_databaseIdEqualsOwnerId() {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.addDatabaseToUser(5, 2, 5, "READ"));
+                () -> service.addDatabaseToUser(5, 2, 5, "READER"));
 
         assertEquals("Database ID and Owner ID cannot be the same", ex.getMessage());
     }
@@ -672,7 +707,7 @@ class DatabaseManagementServiceTest {
         when(userRepository.findById(1)).thenReturn(owner);
         when(userRepository.findById(2)).thenReturn(null);
 
-        assertThrows(UserNotFoundException.class, () -> service.addDatabaseToUser(10, 2, 1, "READ"));
+        assertThrows(UserNotFoundException.class, () -> service.addDatabaseToUser(10, 2, 1, "READER"));
     }
 
     @Test
@@ -692,9 +727,85 @@ class DatabaseManagementServiceTest {
     }
 
     @Test
+    void testAddDatabaseToUser_unauthorizedAccess() {
+        User owner = new User();
+        owner.setId(99); // Different from ownerId argument
+
+        UserDatabase db = new UserDatabase();
+        db.setId(10);
+        db.setOwner(owner);
+
+        when(userDatabaseRepository.findById(10))
+                .thenReturn(Optional.of(db));
+        when(userRepository.findById(1))
+                .thenReturn(owner); 
+
+        assertThrows(UnauthorizedAccessException.class, () -> service.addDatabaseToUser(10, 2, 1, "READER"));
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testRemoveDatabaseFromUser_databaseNotFound() {
+        when(userDatabaseRepository.findById(10))
+                .thenReturn(Optional.empty());
+
+        assertThrows(DatabaseNotFoundException.class, () -> service.removeDatabaseFromUser(10, 2, 1));
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testRemoveDatabaseFromUser_ownerNotFound() {
+        when(userDatabaseRepository.findById(10))
+                .thenReturn(Optional.of(new UserDatabase()));
+        when(userRepository.findById(1))
+                .thenReturn(null);
+
+        assertThrows(UserNotFoundException.class, () -> service.removeDatabaseFromUser(10, 2, 1));
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testRemoveDatabaseFromUser_unauthorizedAccess() {
+        User owner = new User();
+        owner.setId(99); 
+
+        when(userDatabaseRepository.findById(10))
+                .thenReturn(Optional.of(new UserDatabase()));
+        when(userRepository.findById(1))
+                .thenReturn(owner);
+
+        assertThrows(UnauthorizedAccessException.class, () -> service.removeDatabaseFromUser(10, 2, 1));
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testRemoveDatabaseFromUser_userNotFound() {
+        User owner = new User();
+        owner.setId(1);
+
+        when(userDatabaseRepository.findById(10))
+                .thenReturn(Optional.of(new UserDatabase()));
+        when(userRepository.findById(1))
+                .thenReturn(owner);
+        when(userRepository.findById(2))
+                .thenReturn(null);
+
+        assertThrows(UserNotFoundException.class, () -> service.removeDatabaseFromUser(10, 2, 1));
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     void testRemoveDatabaseFromUser_success() {
+        User owner = new User();
+        owner.setId(1);
+
         User user = new User();
-        user.setId(1);
+        user.setId(2);
 
         UserDatabase db = new UserDatabase();
         db.setId(10);
@@ -707,48 +818,17 @@ class DatabaseManagementServiceTest {
 
         user.getDatabaseAccess().add(access);
 
-        when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
-        when(userRepository.findById(1)).thenReturn(user);
-
-        service.removeDatabaseFromUser(10, 1);
-
-        assertTrue(user.getDatabaseAccess().isEmpty());
-        verify(userRepository, times(1)).save(user);
-    }
-
-    @Test
-    void testRemoveDatabaseFromUser_databaseNotFound() {
-        when(userDatabaseRepository.findById(10)).thenReturn(Optional.empty());
-
-        assertThrows(DatabaseNotFoundException.class, () -> service.removeDatabaseFromUser(10, 1));
-    }
-
-    @Test
-    void testAddDatabaseToUser_unauthorizedAccess() {
-        User owner = new User();
-        owner.setId(99); // Different from ownerId argument
-
-        UserDatabase db = new UserDatabase();
-        db.setId(10);
-        db.setOwner(owner);
-
         when(userDatabaseRepository.findById(10))
                 .thenReturn(Optional.of(db));
         when(userRepository.findById(1))
-                .thenReturn(owner); // ownerId = 1 but owner.getId() = 99
+                .thenReturn(owner);
+        when(userRepository.findById(2))
+                .thenReturn(user);
 
-        assertThrows(UnauthorizedAccessException.class, () -> service.addDatabaseToUser(10, 2, 1, "READ"));
+        service.removeDatabaseFromUser(10, 2, 1);
 
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    void testRemoveDatabaseFromUser_userNotFound() {
-        when(userDatabaseRepository.findById(10))
-                .thenReturn(Optional.of(new UserDatabase()));
-        when(userRepository.findById(1)).thenReturn(null);
-
-        assertThrows(UserNotFoundException.class, () -> service.removeDatabaseFromUser(10, 1));
+        assertTrue(user.getDatabaseAccess().isEmpty());
+        verify(userRepository, times(1)).save(user);
     }
 
 }
