@@ -1,4 +1,4 @@
-package backend.publicDiagramManagement.PublucDiagramServiceTest;
+package backend.publicDiagramManagement.PublicDiagramServiceTest;
 
 import backend.entities.Diagram;
 import backend.entities.joins.UserDiagram;

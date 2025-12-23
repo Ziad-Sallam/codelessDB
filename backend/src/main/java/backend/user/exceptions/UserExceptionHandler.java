@@ -16,6 +16,7 @@ import backend.user.exceptions.UserException.InvalidTokenException;
 import backend.user.exceptions.UserException.OtpSendFailedException;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.user.exceptions.UserException.UsernameAlreadyExistsException;
+import backend.user.exceptions.UserException.UserAlreadyFollowedException;
 import io.jsonwebtoken.ExpiredJwtException;
 
 @ControllerAdvice
@@ -112,6 +113,11 @@ public class UserExceptionHandler {
    @ExceptionHandler(OtpSendFailedException.class)
    public ResponseEntity<ErrorResponse> handleOtpSendFailed(OtpSendFailedException ex) {
       return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+   }
+
+   @ExceptionHandler(UserAlreadyFollowedException.class)
+   public ResponseEntity<ErrorResponse> handleUserAlreadyFollowed(UserAlreadyFollowedException ex) {
+      return build(HttpStatus.CONFLICT, ex.getMessage());
    }
 
    @ExceptionHandler(Exception.class)

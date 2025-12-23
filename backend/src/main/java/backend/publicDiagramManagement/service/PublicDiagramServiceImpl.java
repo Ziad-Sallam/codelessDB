@@ -71,10 +71,19 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
     @Override
     @Transactional
     public void publishDiagram(int userId, PublishDiagramRequestDto dto) {
+        saveOrUpdate(userId, dto, "publish diagrams");
+    }
 
+    @Override
+    @Transactional
+    public void updatePublicDiagram(int userId, PublishDiagramRequestDto dto) {
+        saveOrUpdate(userId, dto, "update public details");
+    }
+
+    private void saveOrUpdate(int userId, PublishDiagramRequestDto dto, String action) {
         UserDiagram userDiagram = userDiagramService.getUserDiagramOrThrow(userId, dto.getDiagramId());
 
-        userDiagramService.checkOwner(userDiagram, "publish");
+        userDiagramService.checkOwner(userDiagram, action);
 
         Diagram diagram = userDiagram.getDiagram();
 
@@ -82,7 +91,6 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
                 .orElseGet(() -> {
                     PublicDiagram pd = new PublicDiagram();
                     pd.setDiagram(diagram);
-                    // pd.setId(diagram.getId());
                     pd.setStars(0);
                     pd.setForks(0);
                     pd.setViews(0);
@@ -96,6 +104,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
         // Hashtags
         Set<Hashtag> hashtags = hashtagService.resolveHashtags(new HashSet<>(dto.getHashTags()));
         publicDiagram.setHashtags(hashtags);
+
         // Canned Queries
         Set<CannedQueriesDiagrams> cannedQueries = dto.getCannedQueries().stream()
                 .map(q -> {
@@ -301,7 +310,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
 
     @Override
     @Transactional
-    public Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto dto,
+    public Page<PublicUserInfoDto> searchUsersByPublicDiagrams(int userId, SearchRequestDto dto,
             Pageable pageable) {
 
         String search = dto.getSearchPrompt();
@@ -326,7 +335,7 @@ public class PublicDiagramServiceImpl implements PublicDiagramService {
             Long totalStars = row[2] == null ? 0L : ((Number) row[2]).longValue();
             Long score = row[3] == null ? 0L : ((Number) row[3]).longValue();
 
-            return PublicUserInfoDto.toDto(user, publicCount, totalStars, score);
+            return PublicUserInfoDto.toDto(user, publicCount, totalStars, score, userRepository.countFollowing(userId, user.getId()) > 0);
         });
     }
 

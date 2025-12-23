@@ -1,5 +1,5 @@
-import { Card, CardContent, Typography, Box, CircularProgress } from "@mui/material";
-import { Check as CheckIcon, Storage as DatabaseIcon, CalendarToday as CalendarIcon } from "@mui/icons-material";
+import { CalendarToday as CalendarIcon, Check as CheckIcon, Storage as DatabaseIcon } from "@mui/icons-material";
+import { Box, Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useState } from "react";
 
 export default function DiagramSelector({ loading, diagramsCards, selectedDiagram, onSelect }) {
@@ -18,7 +18,7 @@ export default function DiagramSelector({ loading, diagramsCards, selectedDiagra
         display: "flex",
         gap: 2,
         overflowX: "auto",
-        maxWidth: 1150,
+        width: "100%",
         p: 1,
         "&::-webkit-scrollbar": { height: 8 },
         "&::-webkit-scrollbar-thumb": { backgroundColor: "#ccc", borderRadius: 4 },

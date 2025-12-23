@@ -1,4 +1,4 @@
-package backend.publicDiagramManagement.PublucDiagramServiceTest;
+package backend.publicDiagramManagement.PublicDiagramServiceTest;
 
 import java.util.Collections;
 import java.util.HashSet;

@@ -14,6 +14,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { nodeTypes, edgeTypes } from "./index";
 import "./Schema.css";
+import { Box, CircularProgress } from "@mui/material";
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
 import { validateSchema } from "./generate/CheckCorrectness";
 import { convertToJSON } from "./generate/JsonConverter";
@@ -35,6 +36,7 @@ export default function Schema() {
   const { showSuccess, showError, showWarning } = useNotification();
   const { id } = useParams();
   const [diagramExistFlag, setDiagramExistFlag] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
@@ -47,6 +49,7 @@ export default function Schema() {
 
   const loadDiagram = async () => {
     try {
+      setIsLoading(true);
       const response = await fetchDiagram(id);
       const content = JSON.parse(response.content || "{}");
       setNodes(content.nodes || []);
@@ -57,12 +60,14 @@ export default function Schema() {
     } catch (err) {
       // showError && showError(err?.message || String(err));
       setDiagramExistFlag(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadDiagram();
-  }, []);
+  }, [id]);
 
   const takeSnapshot = async () => {
 
@@ -199,6 +204,14 @@ export default function Schema() {
     }
 
   };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", justifyContent: "center", alignItems: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (!diagramExistFlag) {
     return <DiagramNotFound />;

@@ -43,4 +43,16 @@ public class UserException {
 			super(message);
 		}
 	}
+
+	public static class UserAlreadyFollowedException extends RuntimeException {
+		public UserAlreadyFollowedException(String message) {
+			super(message);
+		}
+	}
+
+	public static class UserCantFollowHimselfException extends RuntimeException {
+		public UserCantFollowHimselfException(String message) {
+			super(message);
+		}
+	}
 }
