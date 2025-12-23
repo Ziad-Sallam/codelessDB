@@ -3,6 +3,7 @@ package backend.user;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -116,5 +117,16 @@ public class UserController {
 				"apiKey", cloudinary.config.apiKey,
 				"cloudName", cloudinary.config.cloudName,
 				"uploadPreset", uploadPreset);
+	}
+
+	@GetMapping("/search")
+	public ResponseEntity<Page<UserSearchDto>> searchUsers(
+			@RequestParam(required = false, defaultValue = "") String query,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
+			@RequestParam(required = false) Integer excludeDatabaseId) {
+		Page<UserSearchDto> users = userService.searchUsers(query, page, size,
+				excludeDatabaseId);
+		return ResponseEntity.ok(users);
 	}
 }

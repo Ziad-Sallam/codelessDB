@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -275,5 +278,18 @@ public class UserService {
 
 		resetAiQuotaIfNeeded(user);
 		return user.getAiQuotaRemaining();
+	}
+
+	public Page<UserSearchDto> searchUsers(String query, int page, int size, Integer excludeDatabaseId) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<User> results;
+
+		if (excludeDatabaseId != null) {
+			results = userRepository.searchUsersExcludingDatabase(query, excludeDatabaseId, pageable);
+		} else {
+			results = userRepository.simpleSearchUsers(query, pageable);
+		}
+
+		return results.map(UserSearchDto::new);
 	}
 }

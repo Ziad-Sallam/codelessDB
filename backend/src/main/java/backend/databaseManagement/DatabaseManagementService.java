@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.dto.CreateDatabaseDTO;
 import backend.databaseManagement.dto.CreateServerDTO;
+import backend.databaseManagement.dto.DatabaseUserDto;
 import backend.databaseManagement.dto.InitiateDatabaseDTO;
 import backend.databaseManagement.dto.SendDatabasesDTO;
 import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
@@ -202,16 +204,21 @@ public class DatabaseManagementService {
     }
 
     public void addDatabaseToUser(int databaseId, int userId, int ownerId, String roleStr) {
-        if (databaseId <= 0 || userId <= 0 || ownerId <= 0) throw new IllegalArgumentException("Invalid database ID");
-        if (databaseId == ownerId) throw new IllegalArgumentException("Database ID and Owner ID cannot be the same");
+        if (databaseId <= 0 || userId <= 0 || ownerId <= 0)
+            throw new IllegalArgumentException("Invalid IDs");
+        if (userId == ownerId)
+            throw new IllegalArgumentException("Cannot add yourself to your own database");
         UserDatabase database = userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
         User owner = userRepository.findById(ownerId);
-        if (owner == null) throw new UserNotFoundException("Owner not found");
-        if (owner.getId() != ownerId) throw new UnauthorizedAccessException("Unauthorized Access");
+        if (owner == null)
+            throw new UserNotFoundException("Owner not found");
+        if (owner.getId() != ownerId)
+            throw new UnauthorizedAccessException("Unauthorized Access");
 
         User user = userRepository.findById(userId);
-        if (user == null) throw new UserNotFoundException("User not found");
+        if (user == null)
+            throw new UserNotFoundException("User not found");
         Role role = Role.valueOf(roleStr.toUpperCase());
 
         UserDatabaseAccess access = UserDatabaseAccess.builder()
@@ -227,11 +234,66 @@ public class DatabaseManagementService {
         userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
         User owner = userRepository.findById(ownerId);
-        if (owner == null) throw new UserNotFoundException("Owner not found");
-        if (owner.getId() != ownerId) throw new UnauthorizedAccessException("Unauthorized Access");
+        if (owner == null)
+            throw new UserNotFoundException("Owner not found");
+        if (owner.getId() != ownerId)
+            throw new UnauthorizedAccessException("Unauthorized Access");
         User user = userRepository.findById(userId);
-        if (user == null) throw new UserNotFoundException("User not found");
+        if (user == null)
+            throw new UserNotFoundException("User not found");
         user.getDatabaseAccess().removeIf(access -> access.getDatabase().getId() == databaseId);
+        userRepository.save(user);
+    }
+
+    public List<DatabaseUserDto> getDatabaseUsers(int databaseId, int ownerId) {
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+
+        // Verify the requesting user has access to this database
+        User owner = userRepository.findById(ownerId);
+        if (owner == null)
+            throw new UserNotFoundException("User not found");
+
+        boolean hasAccess = owner.getDatabaseAccess().stream()
+                .anyMatch(access -> access.getDatabase().getId() == databaseId);
+
+        if (!hasAccess)
+            throw new UnauthorizedAccessException("Unauthorized Access");
+
+        return database.getUserAccess().stream()
+                .map(DatabaseUserDto::new)
+                .toList();
+    }
+
+    public void updateUserRole(int databaseId, int userId, int ownerId, String roleStr) {
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+
+        // Verify the requesting user is the owner
+        User owner = userRepository.findById(ownerId);
+        if (owner == null)
+            throw new UserNotFoundException("Owner not found");
+        if (database.getOwner().getId() != ownerId)
+            throw new UnauthorizedAccessException("Only the owner can change roles");
+
+        User user = userRepository.findById(userId);
+        if (user == null)
+            throw new UserNotFoundException("User not found");
+
+        // Cannot change the owner's role
+        if (userId == database.getOwner().getId()) {
+            throw new IllegalArgumentException("Cannot change the owner's role");
+        }
+
+        Role newRole = Role.valueOf(roleStr.toUpperCase());
+
+        // Find and update the user's access
+        UserDatabaseAccess access = user.getDatabaseAccess().stream()
+                .filter(a -> a.getDatabase().getId() == databaseId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("User does not have access to this database"));
+
+        access.setRole(newRole);
         userRepository.save(user);
     }
 

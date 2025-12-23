@@ -24,6 +24,34 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByUsername(String username);
 
     @Query(value = """
+            SELECT u FROM User u
+            WHERE :search IS NULL
+                OR :search = ''
+                OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(u.bio) LIKE LOWER(CONCAT('%', :search, '%'))
+            """)
+    Page<User> simpleSearchUsers(@Param("search") String search, Pageable pageable);
+
+    @Query(value = """
+            SELECT u FROM User u
+            WHERE (
+                :search IS NULL
+                OR :search = ''
+                OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(u.bio) LIKE LOWER(CONCAT('%', :search, '%'))
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM UserDatabaseAccess uda
+                WHERE uda.user = u
+                AND uda.database.id = :databaseId
+            )
+            """)
+    Page<User> searchUsersExcludingDatabase(@Param("search") String search, @Param("databaseId") int databaseId,
+            Pageable pageable);
+
+    @Query(value = """
             SELECT
                 u,
                 COUNT(DISTINCT pd.id),
