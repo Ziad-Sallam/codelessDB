@@ -10,6 +10,7 @@ import backend.databaseManagement.UserDatabaseRepository;
 import backend.databaseManagement.exception.DatabaseException;
 import backend.entities.User;
 import backend.entities.UserDatabase;
+import backend.entities.joins.UserDatabaseAccess;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotConnectedException;
@@ -34,7 +35,10 @@ public class MessageService {
         UserDatabase database = userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
-        if (!user.getAccessibleDatabases().contains(database))
+        boolean hasAccess = user.getDatabaseAccess().stream()
+                .anyMatch(access -> access.getDatabase().getId() == databaseId);
+
+        if (!hasAccess)
             throw new DatabaseException.UnauthorizedAccessException("Unauthorized access");
 
         if (!tracker.isOnline(String.valueOf(databaseId)))
@@ -57,7 +61,10 @@ public class MessageService {
         UserDatabase database = userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
-        if (!user.getAccessibleDatabases().contains(database))
+        boolean hasAccess = user.getDatabaseAccess().stream()
+                .anyMatch(access -> access.getDatabase().getId() == databaseId);
+
+        if (!hasAccess)
             throw new DatabaseException.UnauthorizedAccessException("Unauthorized access");
 
         return tracker.isOnline(String.valueOf(databaseId));

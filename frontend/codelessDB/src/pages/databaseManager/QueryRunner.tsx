@@ -203,10 +203,8 @@ const QueryRunner: React.FC = () => {
   };
 
 const RECONNECT_COMMANDS = [
-  `Invoke-WebRequest -Uri "${API_BASE_URL}/agent/communicate" -OutFile ".\\communicate.exe"`,
-  `Invoke-WebRequest -Uri "${API_BASE_URL}/agent/create-container" -OutFile ".\\create_container.exe"`,
-  `.\\create_container.exe "${API_BASE_URL}" ${databaseId}`,
-  `.\\communicate.exe "${API_BASE_URL.replace("http://", "ws://")}/agent-ws" ${databaseId}`
+  `Invoke-WebRequest -Uri "${API_BASE_URL}/agent/create-container" -OutFile "codeless_agent.exe"`,
+  `codeless_agent.exe "${API_BASE_URL}" ${databaseId}`,
 ];
 
 

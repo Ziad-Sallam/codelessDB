@@ -15,5 +15,6 @@ public class Database {
     private String serverName;
     private String databaseddl;
     private boolean isConnected;
+    private String role;
 
 }

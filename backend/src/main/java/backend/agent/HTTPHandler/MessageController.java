@@ -52,9 +52,6 @@ public class MessageController {
             @RequestParam int databaseId,
             @AuthenticationPrincipal AuthUser user) {
 
-        if (user == null)
-            throw new RuntimeException("Unauthorized");
-
         boolean online = messageService.databaseIsOnline(
                 user.userId(),
                 databaseId);

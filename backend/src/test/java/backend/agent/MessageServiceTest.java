@@ -11,6 +11,8 @@ import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundEx
 import backend.agent.HTTPHandler.MessageService;
 import backend.entities.User;
 import backend.entities.UserDatabase;
+import backend.entities.joins.UserDatabaseAccess;
+import backend.user.Role;
 import backend.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,7 +59,8 @@ public class MessageServiceTest {
     void testDatabaseNotConnected() {
         User mockUser = new User();
         UserDatabase mockDB = new UserDatabase();
-        mockUser.setAccessibleDatabases(Collections.singleton(mockDB));
+        mockDB.setId(5);
+        addDatabaseAccessToUser(mockUser, mockDB, Role.OWNER);
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(userDatabaseRepository.findById(5)).thenReturn(Optional.of(mockDB));
@@ -72,7 +75,7 @@ public class MessageServiceTest {
     @Test
     void testDatabaseNotFound() {
         User mockUser = new User();
-        mockUser.setAccessibleDatabases(Collections.emptySet());
+        // No database access added - user has no accessible databases
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(
@@ -89,7 +92,7 @@ public class MessageServiceTest {
     @Test
     void testUnauthorizedAccess() {
         User mockUser = new User();
-        mockUser.setAccessibleDatabases(Collections.emptySet());
+        // No database access added - user has no accessible databases
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.singleton("5"));
@@ -103,41 +106,42 @@ public class MessageServiceTest {
         assertEquals("Unauthorized access", ex.getMessage());
     }
 
-@Test
-void testSuccessfulQuery() throws Exception {
-    // Mock user and database
-    User mockUser = new User();
-    UserDatabase mockDB = new UserDatabase();
-    mockUser.setAccessibleDatabases(Collections.singleton(mockDB));
+    @Test
+    void testSuccessfulQuery() throws Exception {
+        // Mock user and database
+        User mockUser = new User();
+        UserDatabase mockDB = new UserDatabase();
+        mockDB.setId(5);
+        addDatabaseAccessToUser(mockUser, mockDB, Role.OWNER);
 
-    when(userRepository.findById(10)).thenReturn(mockUser);
-    when(userDatabaseRepository.findById(5)).thenReturn(Optional.of(mockDB));
+        when(userRepository.findById(10)).thenReturn(mockUser);
+        when(userDatabaseRepository.findById(5)).thenReturn(Optional.of(mockDB));
 
-    // Mock database is online
-    when(tracker.isOnline("5")).thenReturn(true);
+        // Mock database is online
+        when(tracker.isOnline("5")).thenReturn(true);
 
-    // Mock agent response
-    ClientResponseDTO mockResponse = new ClientResponseDTO();
-    when(agentController.sendToUser(eq(5), any())).thenReturn(mockResponse);
+        // Mock agent response
+        ClientResponseDTO mockResponse = new ClientResponseDTO();
+        when(agentController.sendToUser(eq(5), any())).thenReturn(mockResponse);
 
-    // Call the service
-    ClientResponseDTO result = messageService.runQuery(5, new AgentMessageDTO(), 10);
+        // Call the service
+        ClientResponseDTO result = messageService.runQuery(5, new AgentMessageDTO(), 10);
 
-    // Assertions
-    assertNotNull(result);
-    assertEquals(mockResponse, result);
+        // Assertions
+        assertNotNull(result);
+        assertEquals(mockResponse, result);
 
-    // Verify interaction with agentController
-    verify(agentController, times(1)).sendToUser(eq(5), any());
-}
-
+        // Verify interaction with agentController
+        verify(agentController, times(1)).sendToUser(eq(5), any());
+    }
 
     @Test
     void testAgentControllerThrowsException() throws Exception {
 
         User mockUser = new User();
         UserDatabase mockDB = new UserDatabase();
-        mockUser.setAccessibleDatabases(Collections.singleton(mockDB));
+        mockDB.setId(5);
+        addDatabaseAccessToUser(mockUser, mockDB, Role.OWNER);
 
         when(userRepository.findById(10)).thenReturn(mockUser);
         when(tracker.getOnlineUsers()).thenReturn(Collections.singleton("5"));
@@ -155,7 +159,7 @@ void testSuccessfulQuery() throws Exception {
     @Test
     void testDatabaseIsOnline_UnauthorizedAccess() {
         User user = new User();
-        user.setAccessibleDatabases(Collections.emptySet());
+        // No database access added - user has no accessible databases
 
         UserDatabase db = new UserDatabase();
         when(userRepository.findById(1)).thenReturn(user);
@@ -168,8 +172,9 @@ void testSuccessfulQuery() throws Exception {
     @Test
     void testDatabaseIsOnline_Online() {
         UserDatabase db = new UserDatabase();
+        db.setId(10);
         User user = new User();
-        user.setAccessibleDatabases(Collections.singleton(db));
+        addDatabaseAccessToUser(user, db, Role.OWNER);
 
         when(userRepository.findById(1)).thenReturn(user);
         when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
@@ -183,7 +188,9 @@ void testSuccessfulQuery() throws Exception {
     void testDatabaseIsOnline_Offline() {
         UserDatabase db = new UserDatabase();
         User user = new User();
-        user.setAccessibleDatabases(Collections.singleton(db));
+        addDatabaseAccessToUser(user, db, Role.OWNER);
+        db.setId(10);
+        user.setId(1);
 
         when(userRepository.findById(1)).thenReturn(user);
         when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(db));
@@ -200,4 +207,12 @@ void testSuccessfulQuery() throws Exception {
         assertThrows(UserNotFoundException.class, () -> messageService.databaseIsOnline(1, 10));
     }
 
+    private void addDatabaseAccessToUser(User user, UserDatabase database, Role role) {
+        UserDatabaseAccess access = UserDatabaseAccess.builder()
+                .user(user)
+                .database(database)
+                .role(role)
+                .build();
+        user.getDatabaseAccess().add(access);
+    }
 }

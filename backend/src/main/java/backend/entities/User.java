@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import backend.entities.joins.UserDatabaseAccess;
 import backend.entities.joins.UserDiagram;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -122,7 +123,6 @@ public class User {
 
     @JsonIgnore
     @Builder.Default
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_database_access", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "database_id"))
-    private Set<UserDatabase> accessibleDatabases = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserDatabaseAccess> databaseAccess = new HashSet<>();
 }
