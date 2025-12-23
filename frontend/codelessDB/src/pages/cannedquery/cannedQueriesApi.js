@@ -17,23 +17,23 @@ api.interceptors.request.use((config) => {
 });
 export const cannedQueriesApi = {
   getAllQueries: async (databaseId) => {
-    const response = await api.get(`/canned-queries/database/${databaseId}`);
+    const response = await api.get(`/api/canned-queries/database/${databaseId}`);
     return response.data;
   },
   getQueryById: async (queryId, databaseId) => {
-    const response = await api.get(`/canned-queries/${queryId}/database/${databaseId}`);
+    const response = await api.get(`/api/canned-queries/${queryId}/database/${databaseId}`);
     return response.data;
   },
   createQuery: async (queryData) => {
-    const response = await api.post('/canned-queries', queryData);
+    const response = await api.post('/api/canned-queries', queryData);
     return response.data;
   },
   updateQuery: async (queryId, queryData) => {
-    const response = await api.put(`/canned-queries/${queryId}`, queryData);
+    const response = await api.put(`/api/canned-queries/${queryId}`, queryData);
     return response.data;
   },
   deleteQuery: async (queryId, databaseId) => {
-    const response = await api.delete(`/canned-queries/${queryId}/database/${databaseId}`);
+    const response = await api.delete(`/api/canned-queries/${queryId}/database/${databaseId}`);
     return response.data;
   },
 };
