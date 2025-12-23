@@ -271,13 +271,13 @@ def execute_sql(cursor, query, params=None):
         return {"success": False, "message": str(e)}
 
 
-def connect_to_mysql(host=None, port=None, user=None, password=None, database=None):
-    global connection_global, cursor_global, host_port_global, data
+def connect_to_mysql(host=None, port=None, user=None, password_=None, database=None):
+    global connection_global, cursor_global, host_port_global, data, password
 
     host = host or "localhost"
     port = port or host_port_global
     user = user or "root"
-    password = password or data["password"]
+    password = password
     database = database or data.get("databaseName")
 
     backoff = 5
