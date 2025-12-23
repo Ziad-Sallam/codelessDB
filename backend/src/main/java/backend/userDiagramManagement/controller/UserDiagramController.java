@@ -18,11 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import backend.publicDiagramManagement.dto.PageResponse;
 import backend.security.AuthUser;
+import backend.userDiagramManagement.dto.DiagramDto;
 import backend.userDiagramManagement.dto.DiagramInfoDto;
 import backend.userDiagramManagement.dto.create.DiagramCreateRequestDto;
 import backend.userDiagramManagement.dto.delete.DiagramDeleteResponseDto;
-import backend.publicDiagramManagement.dto.PageResponse;
 import backend.userDiagramManagement.dto.search.DiagramSearchRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareRequestDto;
 import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
@@ -101,6 +102,15 @@ public class UserDiagramController {
         Page<DiagramInfoDto> result = userDiagramService.searchDiagrams(id(authUser), request, pageable);
 
         return ResponseEntity.ok(new PageResponse<>(result));
+    }
+
+    @GetMapping("/search/{id}")
+    public ResponseEntity<DiagramDto> searchDiagramById(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable UUID id) {
+
+        DiagramDto diagram = userDiagramService.searchDiagramById(id(authUser), id);
+        return ResponseEntity.ok(diagram);
     }
 
     @PutMapping("/share/{id}")

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -293,7 +292,7 @@ class CommentServiceImplTest {
         when(userRepository.findById(1)).thenReturn(testUser);
         when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
-        CommentDto result = commentService.reactToComment(1, 1L, "DISLIKE");
+        commentService.reactToComment(1, 1L, "DISLIKE");
 
         assertFalse(comment.getDislikedBy().contains(testUser));
     }
@@ -306,7 +305,7 @@ class CommentServiceImplTest {
         when(userRepository.findById(1)).thenReturn(testUser);
         when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
-        CommentDto result = commentService.reactToComment(1, 1L, "DISLIKE");
+        commentService.reactToComment(1, 1L, "DISLIKE");
 
         assertTrue(comment.getDislikedBy().contains(testUser));
         assertFalse(comment.getLikedBy().contains(testUser));

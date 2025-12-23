@@ -23,7 +23,6 @@ class DiagramExceptionHandlerTest {
     private final DiagramExceptionHandler handler = new DiagramExceptionHandler();
 
     @Test
-    @SuppressWarnings("deprecation")
     void handleValidation_withFieldErrors() throws Exception {
         BindingResult bindingResult = mock(BindingResult.class);
         FieldError fieldError = new FieldError("object", "field", "default message");
@@ -39,7 +38,6 @@ class DiagramExceptionHandlerTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
     void handleValidation_withoutFieldErrors() {
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.getFieldErrors()).thenReturn(List.of());

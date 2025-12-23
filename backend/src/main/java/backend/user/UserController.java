@@ -97,7 +97,6 @@ public class UserController {
 		return ResponseEntity.ok("User deleted");
 	}
 
-	@SuppressWarnings("unchecked")
 	@GetMapping("/signature/upload")
 	public Map<String, Object> getSignature(@RequestParam String publicId) {
 		long timestamp = System.currentTimeMillis() / 1000;

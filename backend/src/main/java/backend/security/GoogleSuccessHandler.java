@@ -59,7 +59,7 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
         userDto.setUsername(uniqueUsername);
         userDto.setPicture(picture);
 
-        int userId = userService.createUser(userDto);
+        userService.createUser(userDto);
 
         user = userService.findUserByEmail(email);
 
