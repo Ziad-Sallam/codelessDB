@@ -62,10 +62,6 @@ const Register = () => {
   const { setUser } = useAuth();
 
   useEffect(() => {
-    document.title = "Register | CodeLess";
-  }, []);
-
-  useEffect(() => {
     const handleOAuthCallback = async () => {
       const token = searchParams.get("token");
       const oauthError = searchParams.get("error");
@@ -90,7 +86,6 @@ const Register = () => {
 
       if (oauthError) {
         setError("Google signup failed. Please try again.");
-        window.history.replaceState({}, document.title, "/register");
       }
 
       const flow = searchParams.get("flow");

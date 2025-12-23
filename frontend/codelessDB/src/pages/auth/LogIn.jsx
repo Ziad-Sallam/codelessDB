@@ -21,10 +21,6 @@ const LogIn = () => {
   const { user, setUser } = useAuth();
 
   useEffect(() => {
-    document.title = "Log in | CodeLess";
-  }, []);
-
-  useEffect(() => {
     const handleOAuthCallback = async () => {
       const token = searchParams.get("token");
 
@@ -51,7 +47,6 @@ const LogIn = () => {
 
       if (oauthError) {
         setError("Google login failed. Please try again.");
-        window.history.replaceState({}, document.title, "/login");
       }
     };
 

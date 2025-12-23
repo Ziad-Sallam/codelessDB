@@ -1,27 +1,24 @@
-name: Check Java Tests
+name: Java CI with Maven
 
 on:
   push:
-    branches:
-      - main
-      - milestone1
-      - milestone3
-
+    branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
   pull_request:
-    branches:
-      - main
-      - milestone1
-      - milestone3
+    branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 concurrency:
   group: java-tests-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Run Backend Tests
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     defaults:
       run:
@@ -38,17 +35,180 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Verify Maven
-        run: mvn -v
+      # Run Tests & Generate JaCoCo CSV/XML
+      - name: Build and Test
+        id: maven-build
+        run: mvn -B clean verify --fail-at-end -Dstyle.color=always
+        continue-on-error: true
 
-      - name: Run tests
-        run: mvn -B clean test --fail-at-end -Dstyle.color=always
+      # ------------------------------------------------------------------------
+      # ADVANCED REPORTING SCRIPT (With Tests, Changed Files, and Hierarchy)
+      # ------------------------------------------------------------------------
+      - name: Post Advanced Test & Coverage Report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
 
-      - name: Upload test reports
-        if: always()
+            // --- 1. GET CHANGED FILES IN PR ---
+            const { data: filesChanged } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            const changedFileNames = filesChanged.map(f => path.basename(f.filename, '.java'));
+
+            // --- 2. PARSE TEST RESULTS (Surefire XMLs) ---
+            let total = 0, failures = 0, errors = 0, skipped = 0;
+            const surefireDir = 'backend/target/surefire-reports';
+            if (fs.existsSync(surefireDir)) {
+              const files = fs.readdirSync(surefireDir).filter(f => f.endsWith('.xml'));
+              for (const file of files) {
+                const content = fs.readFileSync(path.join(surefireDir, file), 'utf8');
+                const t = (content.match(/tests="(\d+)"/) || [0,0])[1];
+                const f = (content.match(/failures="(\d+)"/) || [0,0])[1];
+                const e = (content.match(/errors="(\d+)"/) || [0,0])[1];
+                const s = (content.match(/skipped="(\d+)"/) || [0,0])[1];
+                total += parseInt(t); 
+                failures += parseInt(f); 
+                errors += parseInt(e); 
+                skipped += parseInt(s);
+              }
+            }
+            const passed = total - failures - errors - skipped;
+            const statusIcon = (failures + errors) > 0 ? '🔴' : '🟢';
+
+            // --- 3. PARSE COVERAGE & MAP TO CHANGED FILES ---
+            const jacocoCsvPath = 'backend/target/site/jacoco/jacoco.csv';
+            let overallCovered = 0, overallMissed = 0;
+            let packageData = {};
+            let changedFilesRows = '';
+
+            if (fs.existsSync(jacocoCsvPath)) {
+              const csvContent = fs.readFileSync(jacocoCsvPath, 'utf8');
+              const lines = csvContent.split('\n');
+              
+              for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',');
+                if (cols.length < 5) continue;
+                
+                const pkgName = cols[1], className = cols[2], missed = parseInt(cols[3]), covered = parseInt(cols[4]);
+                const totalInst = missed + covered;
+                const pct = totalInst === 0 ? 0 : (covered / totalInst) * 100;
+                const icon = pct < 60 ? '🔴' : (pct < 85 ? '🟡' : '🟢');
+
+                if (!packageData[pkgName]) packageData[pkgName] = { m: 0, c: 0, classes: [] };
+                packageData[pkgName].m += missed;
+                packageData[pkgName].c += covered;
+                packageData[pkgName].classes.push({ name: className, pct, m: missed, c: covered, icon });
+
+                if (changedFileNames.includes(className)) {
+                  changedFilesRows += `| ${icon} ${className} | **${pct.toFixed(1)}%** | ${missed} | ${covered} |\n`;
+                }
+
+                overallCovered += covered;
+                overallMissed += missed;
+              }
+            }
+
+            const grandPct = (overallCovered + overallMissed) === 0 ? 0 : (overallCovered / (overallCovered + overallMissed)) * 100;
+
+            // EXPORT COVERAGE FOR LATER VALIDATION STEP
+            core.exportVariable('ACTUAL_COVERAGE', grandPct.toFixed(1));
+            core.exportVariable('TEST_FAILURES', (failures + errors));
+
+            // --- 4. CONSTRUCT HTML FOR PACKAGE BREAKDOWN ---
+            let packageBreakdownHtml = '';
+            Object.entries(packageData).sort((a, b) => (a[1].c/(a[1].c+a[1].m)) - (b[1].c/(b[1].c+b[1].m))).forEach(([pkg, data]) => {
+              const pPct = (data.c / (data.c + data.m)) * 100;
+              const pIcon = pPct < 60 ? '🔴' : (pPct < 85 ? '🟡' : '🟢');
+              packageBreakdownHtml += `<details><summary>${pIcon} <b>${pkg}</b> (${pPct.toFixed(1)}%)</summary><blockquote><table>\n`;
+              packageBreakdownHtml += `<tr><th>Class</th><th>Cov.</th><th>Miss</th><th>Hits</th></tr>\n`;
+              data.classes.sort((a,b) => a.pct - b.pct).forEach(c => {
+                packageBreakdownHtml += `<tr><td>${c.icon} ${c.name}</td><td>${c.pct.toFixed(1)}%</td><td>${c.m}</td><td>${c.c}</td></tr>\n`;
+              });
+              packageBreakdownHtml += `</table></blockquote></details>`;
+            });
+
+            // --- 5. FINAL BODY ASSEMBLY ---
+            const body = `
+            ### ${statusIcon} Test & Coverage Report
+            
+            | Metric | Count |
+            | :--- | :--- |
+            | **Total Tests** | ${total} |
+            | **Passed** | 🟢 ${passed} |
+            | **Failed** | 🔴 ${failures + errors} |
+            | **Skipped** | ⏭️ ${skipped} |
+            | **Overall Coverage** | **${grandPct.toFixed(1)}%** |
+
+            ### 🛠️ Coverage for Files Changed in this PR
+            ${changedFilesRows.length > 0 ? 
+              `| Class | Coverage | Missed | Covered |\n| :--- | :--- | :--- | :--- |\n${changedFilesRows}` : 
+              '_No Java code changes detected in this PR._'}
+
+            ---
+            ### 📂 Full Package Breakdown
+            <details><summary>Click to expand all packages</summary>\n\n${packageBreakdownHtml}\n</details>
+            `;
+
+            // --- 6. UPSERT COMMENT ---
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
+            });
+            const botComment = comments.find(c => c.body.includes('Test & Coverage Report'));
+            if (botComment) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: botComment.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
+            }
+
+      # ------------------------------------------------------------------------
+      # 7. QUALITY GATE & JAR VALIDATION
+      # ------------------------------------------------------------------------
+      - name: Validate Build and Coverage
+        shell: bash
+        run: |
+          echo "Checking Quality Gates..."
+          
+          # 1. JAR Validation
+          JAR_COUNT=$(find target -name "*.jar" -type f | wc -l)
+          if [ "$JAR_COUNT" -eq 0 ]; then
+            echo "::error::Validation Failed: No JAR file was generated in the target folder."
+            exit 1
+          else
+            echo "✅ JAR file generated successfully."
+          fi
+
+          # 2. Test Failure Check
+          if [ "$TEST_FAILURES" -gt 0 ]; then
+            echo "::error::Quality Gate Failed: $TEST_FAILURES tests failed/errored."
+            exit 1
+          fi
+
+          # 3. Coverage Threshold (60%)
+          THRESHOLD=60
+          # Using bc for float comparison if needed, or simple integer check
+          if (( $(echo "$ACTUAL_COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "::error::Quality Gate Failed: Coverage is $ACTUAL_COVERAGE%, which is below the required $THRESHOLD%."
+            exit 1
+          else
+            echo "✅ Coverage Gate Passed ($ACTUAL_COVERAGE%)."
+          fi
+
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
-          name: surefire-reports
-          path: backend/target/surefire-reports
-
-
+          name: spring-boot-app
+          path: backend/target/*.jar
+      # Fail Build if necessary
+      - name: Verify Quality Gate
+        if: always()
+        run: |
+          if [ "${{ steps.maven-build.outcome }}" != "success" ]; then
+             echo "::error::Maven Build Failed"
+             exit 1
+          fi

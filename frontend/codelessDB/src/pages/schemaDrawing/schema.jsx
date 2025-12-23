@@ -1,3 +1,6 @@
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
 import {
 	Background,
 	Controls,
@@ -5,45 +8,45 @@ import {
 	ReactFlow,
 	ReactFlowProvider,
 	useReactFlow,
-	useViewport
+	useViewport,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useNotification } from "../../components/NotificationContext";
-import { uploadToCloudinary } from "../../components/uploadImage.js";
-import CodeEditor from "./code-editor/CodeEditor.jsx";
-import Cursor from "./collab/Cursor.jsx";
-import applyRelationLogic from "./connectingLogic/ConnectingLogic";
 
-import {
-	generateSQLFromBackend,
-	fetchDiagramMetadata,
-	fetchDiagramSnapshot
-} from "./fetch.js";
+import { Box, CircularProgress } from "@mui/material";
 
-import { validateSchema } from "./generate/CheckCorrectness";
-import { convertToJSON } from "./generate/JsonConverter";
-import { edgeTypes, nodeTypes } from "./index";
-import "./Schema.css";
-import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
-
-// 1. IMPORT HTML-TO-IMAGE
 import { toPng } from "html-to-image";
+
+import { useNotification } from "../../components/NotificationContext";
+import ShareWindow from "../../components/ShareWindow.jsx";
+
+import CodeEditor from "./code-editor/CodeEditor.jsx";
 import Toolbar from "./ConnectionControls.jsx";
 
+import Cursor from "./collab/Cursor.jsx";
 import ActiveUsers from "./collab/ActiveUsers.jsx";
 import {
 	CollaborationProvider,
 	useCollaboration,
 } from "./collab/CollaborationContext.jsx";
-import ShareWindow from "../../components/ShareWindow.jsx";
+
+import applyRelationLogic from "./connectingLogic/ConnectingLogic";
+import {
+	generateSQLFromBackend,
+	fetchDiagramMetadata,
+	fetchDiagramSnapshot,
+} from "./fetch.js";
+
+import { validateSchema } from "./generate/CheckCorrectness";
+import { convertToJSON } from "./generate/JsonConverter";
+
+import { nodeTypes, edgeTypes } from "./index";
+
+import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
+
+import "./Schema.css";
+
 
 const SchemaContent = () => {
-	const { roomId } = useParams();
-	const { showSuccess, showError, showWarning } = useNotification();
-
-	// 3. USE THE CONTEXT
 	const {
 		ydoc,
 		nodes,
@@ -61,6 +64,9 @@ const SchemaContent = () => {
 		undo,
 		redo
 	} = useCollaboration();
+	
+	const { roomId } = useParams();
+	const { showSuccess, showError, showWarning } = useNotification();
 
   const [selectedRelationType, setSelectedRelationType] = useState("1:N");
   const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
@@ -68,8 +74,9 @@ const SchemaContent = () => {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [shareOpen,setShareOpen] = useState(false);
-
   const [diagramExistFlag, setDiagramExistFlag] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(true);
 
 	const { screenToFlowPosition } = useReactFlow();
 
@@ -90,6 +97,7 @@ const SchemaContent = () => {
 
 	const loadDigram = async () => {
 		try {
+			setIsLoading(true);
 			// 1. Fetch Snapshot (Binary)
 			const snapshotBuffer = await fetchDiagramSnapshot(roomId);
 			applySnapshot(new Uint8Array(snapshotBuffer));
@@ -104,6 +112,9 @@ const SchemaContent = () => {
 		} catch (err) {
 			// showError(err.message);
 			setDiagramExistFlag(false);
+		
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -228,6 +239,14 @@ const SchemaContent = () => {
   function handleShareClick() {
 		setShareOpen(true);
 	}
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", justifyContent: "center", alignItems: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   if (!diagramExistFlag) {
     return <DiagramNotFound />;
   }
@@ -238,7 +257,7 @@ const SchemaContent = () => {
         <CodeEditor
           initialCode={generatedSql}
           onClose={() => setIsSqlPanelOpen(false)}
-          diagramId={id}
+          diagramId={roomId}
         />
       )}
 
