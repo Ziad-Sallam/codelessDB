@@ -293,4 +293,10 @@ public class UserDiagramService implements IUserDiagramService {
         diagram.setDdl(ddl);
         diagramRepository.save(diagram);
     }
+
+    @Override
+    public String getDDL(UUID diagramId) {
+        Diagram diagram = getDiagramOrThrow(diagramId);
+        return diagram.getDdl();
+    }
 }

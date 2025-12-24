@@ -46,3 +46,15 @@ export async function updateDDL(id, ddl) {
 
   return handleResponse(response);
 }
+
+export async function getDDL(id) {
+  const response = await fetch(`${API_URL}/diagrams/get-ddl/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+  });
+
+  return handleResponse(response);
+}

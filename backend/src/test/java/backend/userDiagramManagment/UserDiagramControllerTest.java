@@ -209,4 +209,16 @@ class UserDiagramControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void getDDL_success() throws Exception {
+        UUID diagramId = UUID.randomUUID();
+        String ddl = "CREATE TABLE users (id INT PRIMARY KEY);";
+
+        when(userDiagramService.getDDL(eq(diagramId))).thenReturn(ddl);
+
+        mockMvc.perform(get("/diagrams/get-ddl/" + diagramId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(ddl));
+    }
+
 }

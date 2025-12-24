@@ -326,6 +326,25 @@ class UserDiagramServiceTest {
                                 () -> service.updateDDL(diagram.getId(), null));
         }
 
+        @Test
+        void getDDL_success() {
+                String ddl = "CREATE TABLE users (id INT PRIMARY KEY);";
+                diagram.setDdl(ddl);
+                when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.of(diagram));
+
+                String result = service.getDDL(diagram.getId());
+
+                assertEquals(ddl, result);
+        }
+
+        @Test
+        void getDDL_notFound() {
+                when(diagramRepository.findById(diagram.getId())).thenReturn(Optional.empty());
+
+                assertThrows(DiagramException.DiagramNotFoundException.class,
+                                () -> service.getDDL(diagram.getId()));
+        }
+
         // ------------------------------------------------------------
         // SHARE DIAGRAM (UPDATES & DELETIONS)
         // ------------------------------------------------------------

@@ -31,14 +31,10 @@ import {
 
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
 import {
-	generateSQLFromBackend,
 	fetchDiagramMetadata,
 	fetchDiagramSnapshot,
 	updateDiagramMetadata,
 } from "./fetch.js";
-
-import { validateSchema } from "./generate/CheckCorrectness";
-import { convertToJSON } from "./generate/JsonConverter";
 
 import { nodeTypes, edgeTypes } from "./index";
 
@@ -75,7 +71,6 @@ const SchemaContent = () => {
 
 	const [selectedRelationType, setSelectedRelationType] = useState("1:N");
 	const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
-	const [generatedSql, setGeneratedSql] = useState("");
 	const [isReadOnly, setIsReadOnly] = useState(false);
 	const [reactFlowInstance, setReactFlowInstance] = useState(null);
 	const [shareOpen, setShareOpen] = useState(false);
@@ -221,26 +216,6 @@ const SchemaContent = () => {
 		addNodeYjs(newNode);
 	};
 
-	const onGenerateSQL = async () => {
-		const validation = validateSchema(nodes);
-
-		if (!validation.isValid) {
-			showError(`Validation Failed:\n- ${validation.errors.join("\n- ")}`);
-			return;
-		}
-
-		const finalJson = convertToJSON(schemaName, nodes);
-
-		try {
-			const data = await generateSQLFromBackend(finalJson);
-			setGeneratedSql(data);
-			setIsSqlPanelOpen(true);
-		} catch (err) {
-			showError(err.message);
-			setIsSqlPanelOpen(false);
-		}
-	};
-
 	function handleShareClick() {
 		setShareOpen(true);
 	}
@@ -295,9 +270,10 @@ const SchemaContent = () => {
 			{isLoading && <LoadingPage />}
 			{isSqlPanelOpen && (
 				<CodeEditor
-					initialCode={generatedSql}
 					onClose={() => setIsSqlPanelOpen(false)}
 					diagramId={roomId}
+					schemaName={schemaName}
+					nodes={nodes}
 				/>
 			)}
 			<button className="exit-button" onClick={handleExitClick}>
@@ -387,8 +363,8 @@ const SchemaContent = () => {
 				</div>
 
 			)}
-			<button className="generate" onClick={onGenerateSQL}>
-				Generate SQL
+			<button className="generate" onClick={() => setIsSqlPanelOpen(true)}>
+				SQL Editor
 			</button>
 		</div>
 	);

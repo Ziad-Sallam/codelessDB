@@ -133,4 +133,13 @@ public class UserDiagramController {
 
         return ResponseEntity.ok("DDL updated successfully");
     }
+
+    @GetMapping("/get-ddl/{id}")
+    public ResponseEntity<String> getDDL(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable UUID id) {
+
+        String ddl = userDiagramService.getDDL(id);
+        return ResponseEntity.ok(ddl);
+    }
 }
