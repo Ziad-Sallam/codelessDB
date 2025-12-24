@@ -16,9 +16,7 @@ import backend.user.UserDto;
 import backend.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Component
 public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
 
@@ -61,7 +59,7 @@ public class GoogleSuccessHandler implements AuthenticationSuccessHandler {
         userDto.setUsername(uniqueUsername);
         userDto.setPicture(picture);
 
-        int userId = userService.createUser(userDto);
+        userService.createUser(userDto);
 
         user = userService.findUserByEmail(email);
 

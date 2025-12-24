@@ -14,7 +14,7 @@ import java.util.UUID;
 public class DiagramDto {
     private UUID id;
     private String name;
-    private String content;
+    private byte[] content;
     private Role role;
 
     public static DiagramDto toDto(Diagram diagram, Role role) {
