@@ -80,13 +80,11 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		providerRef.current = provider;
 
 		// ----------------- Undo Configuration -----------------
-		// FIXED: Removed trackedOrigins restriction. 
-		// Now tracks "position" (movement), "user" (data changes), and default (add/remove).
+		
 		undoManagerRef.current = new UndoManager(
 			[nodesMap, edgesMap],
 			{
-				captureTimeout: 500, // Groups updates within 500ms into one undo step
-				// trackedOrigins: new Set(["user"]), // <--- REMOVED THIS LINE
+				captureTimeout: 500, 
 				trackedOrigins: new Set([null, "user", "position"]),
 			}
 		);
@@ -138,10 +136,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 		// ----------------- Yjs → React Sync -----------------
 		const syncObserver = (event, transaction) => {
-			// Ignore local position updates that originated from "position"
-			// (Dragging triggers this, preventing jitter)
-			// HOWEVER, if we Undo, the transaction origin is usually null (or the UndoManager),
-			// so Undo actions WILL pass through here and update the UI.
+			
 			if (transaction && transaction.origin === "position") {
 				return;
 			}
@@ -256,8 +251,6 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 			const nodesMap = doc.getMap("nodes");
 
-			// Position updates are transacted with origin "position"
-			// UndoManager (now configured without trackedOrigins) will track this
 			doc.transact(() => {
 				pendingPositions.current.forEach((position, id) => {
 					const node = nodesMap.get(id);
@@ -281,9 +274,6 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 		const nodesMap = doc.getMap("nodes");
 
-		// 2. Sync to Yjs (Batched)
-		// Transactions here (add/remove) have undefined origin, 
-		// which are now tracked by UndoManager since trackedOrigins is removed.
 		doc.transact(() => {
 			changes.forEach((change) => {
 				if (change.type === "position" && change.position) {
