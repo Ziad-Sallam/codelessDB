@@ -43,12 +43,12 @@ public class Diagram {
     private String name = "Untitled Diagram";
 
     @Lob
-    @Column(columnDefinition = "BLOB")
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] content;
 
     @Builder.Default
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String ddl = "";
 
     private String thumbnail;
