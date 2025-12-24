@@ -72,3 +72,17 @@ export async function updateDiagram(id, payload) {
 
   return handleResponse(response);
 }
+
+export async function updateDiagramMetadata(id, payload) {
+  const response = await fetch(`${API_URL}/diagrams/update/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+}
+

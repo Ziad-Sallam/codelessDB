@@ -1,25 +1,25 @@
 const API_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 async function handleResponse(response) {
-  const contentType = response.headers.get("content-type");
-  let data;
+	const contentType = response.headers.get("content-type");
+	let data;
 
-  if (contentType?.includes("application/json")) {
-    data = await response.json();
-  } else {
-    data = await response.text();
-  }
+	if (contentType?.includes("application/json")) {
+		data = await response.json();
+	} else {
+		data = await response.text();
+	}
 
-  if (!response.ok) {
-    const message =
-      typeof data === "string"
-        ? data
-        : data.message || data.error || "Request failed";
+	if (!response.ok) {
+		const message =
+			typeof data === "string"
+				? data
+				: data.message || data.error || "Request failed";
 
-    throw new Error(message);
-  }
+		throw new Error(message);
+	}
 
-  return data;
+	return data;
 }
 
 
@@ -139,7 +139,7 @@ export async function shareDiagram(diagramId, toUserName, role, deleteUser = fal
 	});
 
 
-  return handleResponse(response);
+	return handleResponse(response);
 }
 
 
@@ -175,5 +175,23 @@ export async function unpublishDiagram(diagramId) {
 		throw new Error(error.message || "Failed to unpublish diagram");
 	}
 
+
 	return response.text();
+}
+
+export async function searchPublicUsers(searchPrompt, pageNumber = 0, pageSize = 10) {
+	const response = await fetch(`${API_URL}/publicDiagrams/searchUsers?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+		},
+		body: JSON.stringify({ searchPrompt, hashtags: [] }),
+	});
+
+	if (!response.ok) {
+		throw new Error(response.json().message);
+	}
+
+	return await response.json();
 }

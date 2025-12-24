@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-
+import { useParams, useBlocker, useNavigate } from "react-router-dom";
 import {
 	Background,
 	Controls,
@@ -11,39 +10,29 @@ import {
 	useViewport,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-
-import { Box, CircularProgress } from "@mui/material";
-
 import { toPng } from "html-to-image";
-
 import { useNotification } from "../../components/NotificationContext";
 import ShareWindow from "../../components/ShareWindow.jsx";
-
 import CodeEditor from "./code-editor/CodeEditor.jsx";
 import Toolbar from "./ConnectionControls.jsx";
-
 import Cursor from "./collab/Cursor.jsx";
 import ActiveUsers from "./collab/ActiveUsers.jsx";
 import {
 	CollaborationProvider,
 	useCollaboration,
 } from "./collab/CollaborationContext.jsx";
-
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
 import {
-	generateSQLFromBackend,
 	fetchDiagramMetadata,
 	fetchDiagramSnapshot,
+	updateDiagramMetadata,
 } from "./fetch.js";
-
-import { validateSchema } from "./generate/CheckCorrectness";
-import { convertToJSON } from "./generate/JsonConverter";
-
 import { nodeTypes, edgeTypes } from "./index";
-
 import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
-
 import "./Schema.css";
+import { renameDiagram } from "../diagrams/fetch.js";
+import { uploadToCloudinary } from "../../uploadToCloudinary.js";
+import LoadingPage from "../../components/LoadingPage.jsx";
 
 
 const SchemaContent = () => {
@@ -64,19 +53,19 @@ const SchemaContent = () => {
 		undo,
 		redo
 	} = useCollaboration();
-	
+
+	const navigate = useNavigate();
 	const { roomId } = useParams();
 	const { showSuccess, showError, showWarning } = useNotification();
 
-  const [selectedRelationType, setSelectedRelationType] = useState("1:N");
-  const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
-  const [generatedSql, setGeneratedSql] = useState("");
-  const [isReadOnly, setIsReadOnly] = useState(false);
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  const [shareOpen,setShareOpen] = useState(false);
-  const [diagramExistFlag, setDiagramExistFlag] = useState(true);
+	const [selectedRelationType, setSelectedRelationType] = useState("1:N");
+	const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
+	const [isReadOnly, setIsReadOnly] = useState(false);
+	const [reactFlowInstance, setReactFlowInstance] = useState(null);
+	const [shareOpen, setShareOpen] = useState(false);
+	const [diagramExistFlag, setDiagramExistFlag] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(true);
 
 	const { screenToFlowPosition } = useReactFlow();
 
@@ -101,18 +90,18 @@ const SchemaContent = () => {
 			// 1. Fetch Snapshot (Binary)
 			const snapshotBuffer = await fetchDiagramSnapshot(roomId);
 			applySnapshot(new Uint8Array(snapshotBuffer));
-			
+
 			// 2. Fetch Metadata (JSON)
 			const meta = await fetchDiagramMetadata(roomId);
 
 			updateSchemaName(meta.diagramName);
 			setIsReadOnly(meta.role === "READER");
 			setDiagramExistFlag(true);
-			
+
 		} catch (err) {
-			// showError(err.message);
+
 			setDiagramExistFlag(false);
-		
+
 		} finally {
 			setIsLoading(false);
 		}
@@ -124,14 +113,14 @@ const SchemaContent = () => {
 
 	useEffect(() => {
 		const handleKeyDown = (e) => {
-			// Check for Ctrl (Windows) or Meta (Mac)
+
 			if (e.ctrlKey || e.metaKey) {
 				if (e.key === "z") {
 					e.preventDefault();
 					if (e.shiftKey) {
-						redo(); // Ctrl + Shift + Z
+						redo();
 					} else {
-						undo(); // Ctrl + Z
+						undo();
 					}
 				} else if (e.key === "y") {
 					e.preventDefault();
@@ -199,7 +188,7 @@ const SchemaContent = () => {
 		const id = `${nodes.length + 1}_${Date.now()}`;
 		const newNode = {
 			id,
-			type: "Defult-Node", // Make sure this matches your nodeTypes key
+			type: "Defult-Node",
 			data: {
 				tableName: `Entity_${nodes.length + 1}`,
 				columns: [
@@ -216,65 +205,84 @@ const SchemaContent = () => {
 		addNodeYjs(newNode);
 	};
 
-	const onGenerateSQL = async () => {
-		const validation = validateSchema(nodes);
-
-		if (!validation.isValid) {
-			showError(`Validation Failed:\n- ${validation.errors.join("\n- ")}`);
-			return;
-		}
-
-		const finalJson = convertToJSON(schemaName, nodes);
-
-    try {
-      const data = await generateSQLFromBackend(finalJson);
-      setGeneratedSql(data);
-      setIsSqlPanelOpen(true);
-    } catch (err) {
-      showError(err.message);
-      setIsSqlPanelOpen(false);
-    }
-  };
-
-  function handleShareClick() {
+	function handleShareClick() {
 		setShareOpen(true);
 	}
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", justifyContent: "center", alignItems: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
 
-  if (!diagramExistFlag) {
-    return <DiagramNotFound />;
-  }
+	async function rename(newName) {
+		try {
+			newName = newName.trim();
+			await renameDiagram(roomId, newName);
+			showSuccess("Name Changed Successfuly")
+		} catch {
+			showError("Error")
+		}
+	}
 
-  return (
-    <div className="drawing-container" onMouseMove={onMouseMove}>
-      {isSqlPanelOpen && (
-        <CodeEditor
-          initialCode={generatedSql}
-          onClose={() => setIsSqlPanelOpen(false)}
-          diagramId={roomId}
-        />
-      )}
+	const handleSaveAndExit = async () => {
+		setIsLoading(true);
+		try {
+			const screenShot = await takeThumbnail();
+			if (screenShot) {
+				const screenShotUrl = await uploadToCloudinary(screenShot, roomId);
+				await updateDiagramMetadata(roomId, { thumbnail: screenShotUrl });
+			}
+		} catch (error) {
+			console.error("Auto-save failed:", error);
+		}
+	};
 
-      <input
-        className="schema-name"
-        placeholder="Database Name"
-        value={schemaName}
-        onChange={(e) => updateSchemaName(e.target.value)}
-        disabled={isReadOnly}
-      />
-      <div className="active-users">
-        <ActiveUsers />
-        <button className="add-user" onClick={handleShareClick}>+</button>
-      </div>
-      <div className="share-window">
-        <ShareWindow diagramId={roomId} shareOpen={shareOpen} setShareOpen={setShareOpen}/>
-      </div>
+	const blocker = useBlocker(
+		({ currentLocation, nextLocation }) =>
+			currentLocation.pathname !== nextLocation.pathname
+	);
+
+	useEffect(() => {
+		if (blocker.state === "blocked") {
+			handleSaveAndExit().then(() => {
+				blocker.proceed();
+			});
+		}
+	}, [blocker]);
+
+	async function handleExitClick() {
+		navigate("/diagrams");
+	}
+
+
+	if (!diagramExistFlag) {
+		return <DiagramNotFound />;
+	}
+
+	return (
+		<div className="drawing-container" onMouseMove={onMouseMove}>
+			{isLoading && <LoadingPage />}
+			{isSqlPanelOpen && (
+				<CodeEditor
+					onClose={() => setIsSqlPanelOpen(false)}
+					diagramId={roomId}
+					schemaName={schemaName}
+					nodes={nodes}
+				/>
+			)}
+			<button className="exit-button" onClick={handleExitClick}>
+				↩
+			</button>
+			<input
+				className="schema-name"
+				placeholder="Database Name"
+				value={schemaName}
+				onChange={(e) => updateSchemaName(e.target.value)}
+				onBlur={(e) => rename(e.target.value)}
+				disabled={isReadOnly}
+			/>
+			<div className="active-users">
+				<ActiveUsers />
+				<button className="add-user" onClick={handleShareClick}>+</button>
+			</div>
+			<div className="share-window">
+				<ShareWindow diagramId={roomId} shareOpen={shareOpen} setShareOpen={setShareOpen} />
+			</div>
 
 			<div className="drawing-canva">
 				<ReactFlow
@@ -339,13 +347,11 @@ const SchemaContent = () => {
 						undo={undo}
 						redo={redo}
 					/>
-
-
 				</div>
 
 			)}
-			<button className="generate" onClick={onGenerateSQL}>
-				Generate SQL
+			<button className="generate" onClick={() => setIsSqlPanelOpen(true)}>
+				SQL Editor
 			</button>
 		</div>
 	);

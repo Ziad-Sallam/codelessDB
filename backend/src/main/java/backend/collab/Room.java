@@ -43,20 +43,19 @@ public class Room implements IRoom {
 	private static final int SNAPSHOT_THRESHOLD = 300;
 
 	private final String diagramId;
-	
+
 	/* Thread-safe Set to store the active WebSocket sessions */
 	private final Set<WebSocketSession> sessions;
-	
-	private final AtomicInteger updateCounter;
-	
-	private final SnapshotService snapshotService;
 
+	private final AtomicInteger updateCounter;
+
+	private final SnapshotService snapshotService;
 
 	public Room(String diagramId, SnapshotService snapshotService) {
 		this.diagramId = diagramId;
 		this.sessions = Collections.synchronizedSet(new HashSet<>());
 		this.updateCounter = new AtomicInteger();
-		
+
 		this.snapshotService = snapshotService;
 	}
 
@@ -103,14 +102,14 @@ public class Room implements IRoom {
 			log.warn("No sessions found for diagramId: {}", diagramId);
 			return;
 		}
-		
+
 		final boolean cursorUpdate = (update[0] == 1);
-		
+
 		if (!cursorUpdate && role == Role.READER) {
 			log.warn("Readers cannot send updates");
 			return;
 		}
-		
+
 		if (!cursorUpdate) {
 			this.updateCounter.incrementAndGet();
 			if (updateCounter.get() >= SNAPSHOT_THRESHOLD) {
@@ -126,14 +125,16 @@ public class Room implements IRoom {
 		BinaryMessage message = new BinaryMessage(update);
 
 		// Stream and send to the targeted room sessions
-		this.sessions.stream().forEach(session -> {
-			if (session.isOpen() && !session.getId().equals(senderId)) {
-				try {
-					session.sendMessage(message);
+		this.sessions.parallelStream().forEach(session -> {
+			synchronized (session) {
+				if (session.isOpen() && !session.getId().equals(senderId)) {
+					try {
+						session.sendMessage(message);
 
-				} catch (IOException e) {
-					log.error("Error sending message to session {} in diagram {}:\n {}",
+					} catch (IOException e) {
+						log.error("Error sending message to session {} in diagram {}:\n {}",
 								session.getId(), diagramId, e.getMessage());
+					}
 				}
 			}
 		});
