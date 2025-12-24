@@ -107,28 +107,27 @@ public class UserDiagramService implements IUserDiagramService {
         return DiagramInfoDto.toDto(diagram, Role.OWNER, getContributors(diagram.getId()), false);
     }
 
-    @Override
     @Transactional
     public LocalDateTime updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramId) {
         getUserOrThrow(userId);
         Diagram diagram = getDiagramOrThrow(diagramId);
         UserDiagram userDiagram = getUserDiagramOrThrow(userId, diagramId);
 
-        if (userDiagram.getRole() == Role.READER) {
-            throw new DiagramException.PermissionDeniedException("Only the owner can update this diagram");
-        }
+		if (userDiagram.getRole() == Role.READER) {
+			throw new DiagramException.PermissionDeniedException("Only the owner can update this diagram");
+		}
 
-        if (request.getName() != null) {
-            diagram.setName(request.getName());
-        }
-        if (request.getJsonContent() != null) {
-            diagram.setContent(request.getJsonContent());
-        }
-        if (request.getThumbnail() != null) {
-            diagram.setThumbnail(request.getThumbnail());
-        }
-        return diagramRepository.save(diagram).getLastModified();
-    }
+		if (request.getName() != null) {
+			diagram.setName(request.getName());
+		}
+		if (request.getJsonContent() != null) {
+			diagram.setContent(request.getJsonContent());
+		}
+		if (request.getThumbnail() != null) {
+			diagram.setThumbnail(request.getThumbnail());
+		}
+		return diagramRepository.save(diagram).getLastModified();
+	}
 
     @Override
     @Transactional

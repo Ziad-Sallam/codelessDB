@@ -14,12 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -32,10 +32,12 @@ import com.cloudinary.Cloudinary;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import backend.security.AuthUser;
+import backend.security.GoogleSuccessHandler;
+import backend.security.JwtExtractor;
 import backend.security.JwtUtil;
 import backend.user.exceptions.UserExceptionHandler;
 
-@WebMvcTest({UserController.class, UserExceptionHandler.class})
+@WebMvcTest({ UserController.class, UserExceptionHandler.class })
 @AutoConfigureMockMvc(addFilters = false)
 @Import(UserControllerTest.TestConfig.class)
 class UserControllerTest {
@@ -71,6 +73,12 @@ class UserControllerTest {
 
     @MockitoBean
     private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private JwtExtractor jwtExtractor;
+
+    @MockitoBean
+    private GoogleSuccessHandler googleSuccessHandler;
 
     @MockitoBean(name = "cloudinary")
     private Cloudinary cloudinary;

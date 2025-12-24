@@ -7,27 +7,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import backend.config.ErrorResponse;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtExtractor jwtExtractor;
 
     /**
      * Write a 401 Unauthorized JSON response.
@@ -60,58 +56,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // No JWT → continue normally
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token;
-        Integer userId;
-        String username;
-
-        try {
-            token = authHeader.substring(7);
-
-            userId = jwtUtil.extractSubject(token);
-
-            username = jwtUtil.extractUsername(token);
-
-        } catch (ExpiredJwtException ex) {
-            writeUnauthorized(response, "Token expired");
-            return;
-
-        } catch (SignatureException ex) {
-            writeUnauthorized(response, "Invalid token signature");
-            return;
-
-        } catch (MalformedJwtException ex) {
-            writeUnauthorized(response, "Malformed JWT token");
-            return;
-
-        } catch (IllegalArgumentException ex) {
-            writeUnauthorized(response, "Invalid or empty JWT token");
-            return;
-
-        } catch (Exception ex) {
-            writeUnauthorized(response, "Invalid token");
-            return;
-        }
-
-        // Validate token normally
+        // The filter should only proceed if the security context is NOT set.
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                AuthUser authUser = jwtExtractor.authenticate(authHeader, true);
 
-            if (jwtUtil.isTokenValid(authHeader.substring(7), userId)) {
-
-                AuthUser authUser = new AuthUser(userId, username);
-
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        authUser,
-                        null,
-                        null // or your roles
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                if (authUser != null) {
+                    // Token is valid; set authentication
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            authUser,
+                            null,
+                            null
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            } catch (JwtValidationException ex) {
+                // Handle the validation failure by sending a 401 response
+                writeUnauthorized(response, ex.getMessage());
+                return;
             }
         }
 

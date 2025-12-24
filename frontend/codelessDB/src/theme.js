@@ -13,6 +13,7 @@ const theme = createTheme({
 		background: {
 			light: "#f6f8fb",
 			dark: "#082043",
+			gradient: "linear-gradient(180deg, #0a2751ff 0%, #05183aff 100%)",
 		},
 		text: {
 			primary: "#0f172a",

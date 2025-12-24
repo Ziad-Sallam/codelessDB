@@ -4,8 +4,7 @@ import lombok.Data;
 
 @Data
 public class DiagramUpdateRequestDto {
-
     private String name;
-    private String jsonContent;
+    private byte[] jsonContent;
     private String thumbnail;
 }

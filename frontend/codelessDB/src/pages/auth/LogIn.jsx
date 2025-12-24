@@ -21,18 +21,16 @@ const LogIn = () => {
   const { user, setUser } = useAuth();
 
   useEffect(() => {
-    document.title = "Log in | CodeLess";
-  }, []);
-
-  useEffect(() => {
     const handleOAuthCallback = async () => {
       const token = searchParams.get("token");
+
       const oauthError = searchParams.get("error");
 
       if (token) {
         try {
           // Save token
           localStorage.setItem("authToken", token);
+          
 
           // Validate token and update auth context
           const userData = await validateToken();
@@ -49,7 +47,6 @@ const LogIn = () => {
 
       if (oauthError) {
         setError("Google login failed. Please try again.");
-        window.history.replaceState({}, document.title, "/login");
       }
     };
 
@@ -73,6 +70,7 @@ const LogIn = () => {
     try {
       const data = await login(email, password);
       const token = data?.token ?? data;
+      
       console.log(data);
 
       if (!token) {

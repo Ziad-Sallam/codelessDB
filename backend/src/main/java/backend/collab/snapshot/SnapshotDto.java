@@ -1,0 +1,13 @@
+package backend.collab.snapshot;
+
+import backend.user.Role;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class SnapshotDto {
+	private String diagramName;	
+	
+	private Role role;
+}

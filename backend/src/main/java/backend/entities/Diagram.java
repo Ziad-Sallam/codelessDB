@@ -42,8 +42,9 @@ public class Diagram {
     @Column(nullable = false, length = 200)
     private String name = "Untitled Diagram";
 
-    @Column(columnDefinition = "JSON")
-    private String content;
+    @Lob
+    @Column(columnDefinition = "BLOB")
+    private byte[] content;
 
     @Builder.Default
     @Lob

@@ -44,7 +44,8 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/agent-ws/**",
-                                "/database/create-mysql-container")
+                                "/database/create-mysql-container",
+                                "/ws/collab/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth
