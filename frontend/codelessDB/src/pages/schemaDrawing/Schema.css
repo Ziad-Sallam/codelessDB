@@ -23,7 +23,7 @@
 .schema-name{
    position: fixed;
   top: 10px;
-  left: 10px;
+  left: 70px;
   z-index: 9999;
   margin: 10px;
   height: 40px;
@@ -262,6 +262,33 @@
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
   margin-bottom: 16px;
+}
+
+.exit-button{
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  width: 45px;
+  padding: 8px 12px;
+  margin: 10px;
+  background: #0f172a; /* Slate 900 */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2);
+}
+
+.exit-button:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(15, 23, 42, 0.25);
 }
 
 @keyframes rotation {

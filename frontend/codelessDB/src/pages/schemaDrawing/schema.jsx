@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useBlocker, useNavigate } from "react-router-dom";
 
 import {
 	Background,
@@ -34,6 +34,7 @@ import {
 	generateSQLFromBackend,
 	fetchDiagramMetadata,
 	fetchDiagramSnapshot,
+	updateDiagramMetadata,
 } from "./fetch.js";
 
 import { validateSchema } from "./generate/CheckCorrectness";
@@ -45,6 +46,8 @@ import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
 
 import "./Schema.css";
 import { renameDiagram } from "../diagrams/fetch.js";
+import { uploadToCloudinary } from "../../uploadToCloudinary.js";
+import LoadingPage from "../../components/LoadingPage.jsx";
 
 
 const SchemaContent = () => {
@@ -66,6 +69,7 @@ const SchemaContent = () => {
 		redo
 	} = useCollaboration();
 
+	const navigate = useNavigate();
 	const { roomId } = useParams();
 	const { showSuccess, showError, showWarning } = useNotification();
 
@@ -250,13 +254,37 @@ const SchemaContent = () => {
 			showError("Error")
 		}
 	}
-	if (isLoading) {
-		return (
-			<Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", justifyContent: "center", alignItems: "center" }}>
-				<CircularProgress />
-			</Box>
-		);
+
+	const handleSaveAndExit = async () => {
+		setIsLoading(true);
+		try {
+			const screenShot = await takeThumbnail();
+			if (screenShot) {
+				const screenShotUrl = await uploadToCloudinary(screenShot, roomId);
+				await updateDiagramMetadata(roomId, { thumbnail: screenShotUrl });
+			}
+		} catch (error) {
+			console.error("Auto-save failed:", error);
+		}
+	};
+
+	const blocker = useBlocker(
+		({ currentLocation, nextLocation }) =>
+			currentLocation.pathname !== nextLocation.pathname
+	);
+
+	useEffect(() => {
+		if (blocker.state === "blocked") {
+			handleSaveAndExit().then(() => {
+				blocker.proceed();
+			});
+		}
+	}, [blocker]);
+
+	async function handleExitClick() {
+		navigate("/diagrams");
 	}
+
 
 	if (!diagramExistFlag) {
 		return <DiagramNotFound />;
@@ -264,6 +292,7 @@ const SchemaContent = () => {
 
 	return (
 		<div className="drawing-container" onMouseMove={onMouseMove}>
+			{isLoading && <LoadingPage />}
 			{isSqlPanelOpen && (
 				<CodeEditor
 					initialCode={generatedSql}
@@ -271,7 +300,9 @@ const SchemaContent = () => {
 					diagramId={roomId}
 				/>
 			)}
-
+			<button className="exit-button" onClick={handleExitClick}>
+				↩
+			</button>
 			<input
 				className="schema-name"
 				placeholder="Database Name"
