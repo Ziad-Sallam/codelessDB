@@ -6,6 +6,8 @@ import java.util.List;
 import org.apache.coyote.BadRequestException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,10 +28,14 @@ import org.springframework.http.ResponseEntity;
 import backend.databaseManagement.dto.AddDatabaseToUser;
 import backend.databaseManagement.dto.CreateDatabaseDTO;
 import backend.databaseManagement.dto.CreateServerDTO;
+import backend.databaseManagement.dto.DatabaseUserDto;
 import backend.databaseManagement.dto.InitiateDatabaseDTO;
 import backend.databaseManagement.dto.PasswordRequest;
 import backend.databaseManagement.dto.SendDatabasesDTO;
+import backend.entities.joins.UserDatabaseAccess;
 import backend.security.AuthUser;
+import backend.entities.User;
+import backend.user.Role;
 
 class DatabaseManagementControllerTest {
 
@@ -312,5 +318,81 @@ class DatabaseManagementControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertFalse(response.getBody());
     }
+
+@Test
+void updateUserRole_success_returnsNoContent() {
+    // Arrange
+    AddDatabaseToUser request = new AddDatabaseToUser();
+    request.setDatabaseId(10);
+    request.setUserId(2);
+    request.setRole("WRITER");
+
+    AuthUser authUser = mock(AuthUser.class);
+    when(authUser.userId()).thenReturn(1);
+
+    doNothing().when(databaseManagementService).updateUserRole(
+            10, 2, 1, "WRITER"
+    );
+
+    // Act
+    ResponseEntity<Void> response =
+            controller.updateUserRole(request, authUser);
+
+    // Assert
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertNull(response.getBody());
+
+    verify(databaseManagementService).updateUserRole(
+            10, 2, 1, "WRITER"
+    );
+}
+
+@Test
+void getDatabaseUsers_success_returnsOkAndUsers() {
+    // Arrange
+    int databaseId = 10;
+
+    AuthUser authUser = mock(AuthUser.class);
+    when(authUser.userId()).thenReturn(1);
+
+    // Mock User
+    User user1 = mock(User.class);
+    when(user1.getId()).thenReturn(2);
+    when(user1.getUsername()).thenReturn("user1");
+    when(user1.getEmail()).thenReturn("user1@test.com");
+    when(user1.getPicture()).thenReturn("pic1.png");
+
+    // Mock UserDatabaseAccess
+    UserDatabaseAccess access1 = mock(UserDatabaseAccess.class);
+    when(access1.getUser()).thenReturn(user1);
+    when(access1.getRole()).thenReturn(Role.READER);
+
+    DatabaseUserDto dto1 = new DatabaseUserDto(access1);
+
+    List<DatabaseUserDto> users = List.of(dto1);
+
+    when(databaseManagementService.getDatabaseUsers(databaseId, 1))
+            .thenReturn(users);
+
+    // Act
+    ResponseEntity<List<DatabaseUserDto>> response =
+            controller.getDatabaseUsers(databaseId, authUser);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(1, response.getBody().size());
+
+    DatabaseUserDto result = response.getBody().get(0);
+    assertEquals(2, result.getUserId());
+    assertEquals("user1", result.getUsername());
+    assertEquals("user1@test.com", result.getEmail());
+    assertEquals("pic1.png", result.getPicture());
+    assertEquals("READER", result.getRole());
+
+    verify(databaseManagementService)
+            .getDatabaseUsers(databaseId, 1);
+}
+
 
 }
