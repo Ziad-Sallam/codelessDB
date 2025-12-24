@@ -79,12 +79,15 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 		providerRef.current = provider;
 
-		// Undo (ignore position-only transactions)
+		// ----------------- Undo Configuration -----------------
+		// FIXED: Removed trackedOrigins restriction. 
+		// Now tracks "position" (movement), "user" (data changes), and default (add/remove).
 		undoManagerRef.current = new UndoManager(
 			[nodesMap, edgesMap],
 			{
-				captureTimeout: 500,
-				trackedOrigins: new Set(["user"]),
+				captureTimeout: 500, // Groups updates within 500ms into one undo step
+				// trackedOrigins: new Set(["user"]), // <--- REMOVED THIS LINE
+				trackedOrigins: new Set([null, "user", "position"]),
 			}
 		);
 
@@ -104,25 +107,19 @@ export const CollaborationProvider = ({ roomId, children }) => {
 			const states = awareness.getStates();
 			const newCursors = [];
 
-			// Use a Map to deduplicate users by their unique DB ID (user.id)
-			// instead of just listing every socket client.
 			const uniqueUsersMap = new Map();
 
 			states.forEach((state, clientId) => {
 				if (!state.user) return;
 
-				// 1. Handle Connected Users (Prevent Duplicates)
 				if (!uniqueUsersMap.has(state.user.name)) {
 					uniqueUsersMap.set(state.user.name, {
-						clientId: clientId, // Store the primary client ID
+						clientId: clientId, 
 						...state.user,
-						// Check if this user is the current user based on ID, not just ClientID
 						isMe: state.user.name === user.username,
 					});
 				}
 
-				// 2. Handle Cursors (Cursors remain per-client/tab)
-				// We only show cursors from OTHERS (clientId !== awareness.clientID)
 				if (state.cursor && clientId !== awareness.clientID) {
 					newCursors.push({
 						id: clientId,
@@ -140,10 +137,11 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		awareness.on("change", handleAwarenessChange);
 
 		// ----------------- Yjs → React Sync -----------------
-		// ----------------- Yjs → React Sync -----------------
 		const syncObserver = (event, transaction) => {
-			// Ignore local position updates (throttled from flushPositions)
-			// This prevents "echo" updates that cause jitter during smooth local dragging.
+			// Ignore local position updates that originated from "position"
+			// (Dragging triggers this, preventing jitter)
+			// HOWEVER, if we Undo, the transaction origin is usually null (or the UndoManager),
+			// so Undo actions WILL pass through here and update the UI.
 			if (transaction && transaction.origin === "position") {
 				return;
 			}
@@ -156,9 +154,9 @@ export const CollaborationProvider = ({ roomId, children }) => {
 					const prevNode = prevMap.get(yNode.id);
 					if (prevNode) {
 						return {
-							...prevNode, // Keep local state (width, height, measured, dragging)
-							...yNode,    // Apply Remote updates
-							// strictly prioritize local position if dragging
+							...prevNode,
+							...yNode,
+							// Strictly prioritize local position if dragging
 							position: prevNode.dragging ? prevNode.position : yNode.position,
 							selected: prevNode.selected,
 							dragging: prevNode.dragging,
@@ -194,7 +192,6 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		metaMap.observe(syncObserver);
 
 		// ----------------- Cleanup -----------------
-		// Helper to force clean disconnect
 		const handleBeforeUnload = () => {
 			awareness.setLocalState(null);
 			provider.disconnect();
@@ -204,29 +201,23 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 		return () => {
 			window.removeEventListener("beforeunload", handleBeforeUnload);
-
-			// Explicitly nullify local state so other clients remove this user immediately
 			awareness.setLocalState(null);
 			awareness.off("change", handleAwarenessChange);
-
 			provider.destroy();
 			doc.destroy();
 		};
 	}, [roomId, user]);
 
 	// ----------------- Snapshot Loader -----------------
-	// snapshotBytes is Uint8Array
 	const applySnapshot = useCallback((snapshotBytes) => {
 		const ydoc = ydocRef.current;
 		if (!ydoc) return;
 
 		ydoc.transact(() => {
-
 			if (snapshotBytes && snapshotBytes.byteLength > 0) {
 				try {
 					Y.applyUpdate(ydoc, snapshotBytes);
 					console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);
-
 				} catch (err) {
 					console.error("❌ CRITICAL: Database Snapshot is corrupt!", err);
 				}
@@ -265,6 +256,8 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 			const nodesMap = doc.getMap("nodes");
 
+			// Position updates are transacted with origin "position"
+			// UndoManager (now configured without trackedOrigins) will track this
 			doc.transact(() => {
 				pendingPositions.current.forEach((position, id) => {
 					const node = nodesMap.get(id);
@@ -289,6 +282,8 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const nodesMap = doc.getMap("nodes");
 
 		// 2. Sync to Yjs (Batched)
+		// Transactions here (add/remove) have undefined origin, 
+		// which are now tracked by UndoManager since trackedOrigins is removed.
 		doc.transact(() => {
 			changes.forEach((change) => {
 				if (change.type === "position" && change.position) {
@@ -355,8 +350,13 @@ export const CollaborationProvider = ({ roomId, children }) => {
 	}, []);
 
 	// ----------------- Undo / Redo -----------------
-	const undo = () => undoManagerRef.current?.undo();
-	const redo = () => undoManagerRef.current?.redo();
+	const undo = () => {
+		undoManagerRef.current?.undo();
+	};
+
+	const redo = () => {
+		undoManagerRef.current?.redo();
+	};
 
 	// ----------------- Context -----------------
 	return (
