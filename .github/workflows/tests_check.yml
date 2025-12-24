@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
   pull_request:
-    branches: [ main, milestone1, milestone3, SCRUM-202-Enhance-Github-Actions ]
 
 permissions:
   contents: read
