@@ -72,7 +72,7 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 				</ListItemButton>
 
 				<ListItemButton
-					selected={leftNav === "all"}
+					selected={leftNav === "servers"}
 					onClick={() => navigate('/servers')}
 					sx={{ borderRadius: 1, mb: 1 }}
 				>

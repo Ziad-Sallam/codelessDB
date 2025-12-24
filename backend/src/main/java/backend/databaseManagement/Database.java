@@ -22,5 +22,6 @@ public class Database {
     private String databaseddl;
     @Schema(description = "Whether the database is currently connected and accessible", example = "true")
     private boolean isConnected;
+    private String role;
 
 }

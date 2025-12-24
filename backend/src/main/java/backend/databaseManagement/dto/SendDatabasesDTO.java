@@ -1,5 +1,6 @@
-package backend.databaseManagement;
+package backend.databaseManagement.dto;
 
+import backend.databaseManagement.Database;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -8,6 +8,7 @@ import { TbLockPassword } from "react-icons/tb";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../components/AuthProvider.jsx";
 import { login, parseApiError, redirectToGoogleAuth, validateToken } from "./fetch.js";
+import Snowfall from 'react-snowfall';
 
 const LogIn = () => {
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ const LogIn = () => {
 
   return (
     <div className="login">
+      
       <div className="bg">
         <div className="title-section">
           <h1 className="Title">CodeLess</h1>
@@ -184,6 +186,7 @@ const LogIn = () => {
           </div>
         </div>
       </div>
+      <Snowfall color={"#82c3d9"}/>
     </div>
   );
 };

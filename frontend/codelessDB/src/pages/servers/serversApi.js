@@ -35,6 +35,20 @@ export const serversApi = {
     return data;
   },
 
+  searchUsers: async (query, page = 0, size = 10) => {
+    const { data } = await api.get('/user/search', {
+      params: { query, page, size }
+    });
+    return data;
+  },
+
+  addUserToDatabase: async (databaseId, userId, role) => {
+    await api.post('/database/add-database-to-user', {
+      databaseId,
+      userId,
+      role
+    });
+  },
   createServer: async (serverName) => {
     const { data } = await api.post('/database/create-server', { serverName });
     return data;

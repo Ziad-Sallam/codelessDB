@@ -15,6 +15,8 @@ import { useAuth } from "../../../components/AuthProvider";
 
 const CollaborationContext = createContext(null);
 
+const BACKEND_WS_URL = import.meta.env.VITE_BACKEND_WS_URL;
+
 function hslToHex(h, s, l) {
   s /= 100;
   l /= 100;
@@ -68,7 +70,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		ydocRef.current = doc;
 
 		const provider = new WebsocketProvider(
-			`ws://localhost:8080/ws/collab`,
+			`${BACKEND_WS_URL}/ws/collab`,
 			roomId,
 			doc,
 			{

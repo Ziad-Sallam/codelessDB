@@ -111,18 +111,13 @@ export default function CannedQueriesPage() {
     }
   };
 
-  const handleSave = async (formData) => {
+  const handleSave = async (queryData) => {
     try {
       if (editingQuery) {
-        const updateData = {
-          name: formData.title,
-          description: formData.description,
-          query: formData.body,
-          databaseId: currentDatabaseId,
-        };
+        // Data is already transformed by QueryDialog
         const updatedQuery = await cannedQueriesApi.updateQuery(
           editingQuery.id,
-          updateData
+          queryData
         );
         setQueries(
           queries.map((q) =>
@@ -145,13 +140,8 @@ export default function CannedQueriesPage() {
           severity: "success",
         });
       } else {
-        const createData = {
-          name: formData.title,
-          description: formData.description,
-          query: formData.body,
-          databaseId: currentDatabaseId,
-        };
-        const newQuery = await cannedQueriesApi.createQuery(createData);
+        // Data is already transformed by QueryDialog
+        const newQuery = await cannedQueriesApi.createQuery(queryData);
         const transformedQuery = {
           id: newQuery.id,
           title: newQuery.name,

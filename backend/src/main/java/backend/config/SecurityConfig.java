@@ -45,6 +45,8 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/agent-ws/**",
                                 "/database/create-mysql-container",
+                                "/database/check-database-password",
+                                "/agent/create-container",
                                 "/ws/collab/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

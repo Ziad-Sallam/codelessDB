@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import {
     Box, Card, CardContent, Typography, Alert, Snackbar,
-    CircularProgress, MenuItem, Select, FormControl, InputLabel, Chip,
-    Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton
+    CircularProgress, MenuItem, Select, FormControl, InputLabel, Chip, IconButton, Tooltip,
+    Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import StorageIcon from "@mui/icons-material/Storage";
 import DatabaseIcon from "@mui/icons-material/Storage";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PeopleIcon from "@mui/icons-material/People";
 import AddIcon from "@mui/icons-material/Add";
 
 import TopBars from "../../components/Topbarforcannedquery";
@@ -15,6 +17,8 @@ import TopBars from "../../components/Topbarforcannedquery";
 import LeftPanel from "../../components/LeftPanel.jsx";
 import { useAuth } from "../../components/AuthProvider.jsx";
 import { serversApi } from "./serversApi.js";
+import AddUserModal from "./AddUserModal.jsx";
+import ViewUsersModal from "./ViewUsersModal.jsx";
 
 import "./ServersPage.css";
 
@@ -33,6 +37,9 @@ export default function ServersPage() {
     const [isAddServerOpen, setIsAddServerOpen] = useState(false);
     const [newServerName, setNewServerName] = useState("");
     const [creatingServer, setCreatingServer] = useState(false);
+    const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+    const [viewUsersModalOpen, setViewUsersModalOpen] = useState(false);
+    const [selectedDatabase, setSelectedDatabase] = useState(null);
 
     useEffect(() => {
         fetchServersAndDatabases();
@@ -85,6 +92,21 @@ export default function ServersPage() {
 
     const showSnackbar = (message, severity) => setSnackbar({ open: true, message, severity });
     const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
+
+    const handleOpenAddUserModal = (database) => {
+        setSelectedDatabase(database);
+        setAddUserModalOpen(true);
+    };
+
+    const handleOpenViewUsersModal = (database) => {
+        setSelectedDatabase(database);
+        setViewUsersModalOpen(true);
+    };
+
+    const handleUserAdded = (message, severity = "success") => {
+        showSnackbar(message, severity);
+        // Don't close modal - let user add multiple users
+    };
 
     const handleServerChange = (event) => {
         setSelectedServerId(event.target.value);
@@ -206,42 +228,82 @@ export default function ServersPage() {
                                         <Box
                                             key={database.databaseId}
                                             className="database-card"
-                                            onClick={() => navigate(`/database-manager/${database.databaseId}`)}
-                                            sx={{ cursor: 'pointer' }}
+                                            sx={{ cursor: 'pointer', position: 'relative' }}
                                         >
-                                            <Box className="database-card-header">
-                                                <Typography variant="h6" className="database-name">
-                                                    {database.databaseName}
-                                                </Typography>
-                                                <Chip
-                                                    label={database.connected ? "Connected" : "Disconnected"}
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: database.connected ? '#4caf50' : '#f44336',
-                                                        color: 'white',
-                                                        fontWeight: 600,
-                                                        fontSize: '11px',
-                                                        height: '24px',
-                                                        '&::before': {
-                                                            content: '"●"',
-                                                            marginRight: '4px',
-                                                            fontSize: '10px'
-                                                        }
-                                                    }}
-                                                />
-                                            </Box>
-                                            <Typography className="database-server-name">
-                                                Server: {database.serverName}
-                                            </Typography>
-                                            {database.databaseddl && (
-                                                <Box className="database-ddl">
-                                                    <Box className="ddl-preview">
-                                                        <pre>
-                                                            <code>{database.databaseddl}</code>
-                                                        </pre>
+                                            <Box
+                                                onClick={() => navigate(`/database-manager/${database.databaseId}`)}
+                                                sx={{ flex: 1 }}
+                                            >
+                                                <Box className="database-card-header">
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Typography variant="h6" className="database-name">
+                                                            {database.databaseName}
+                                                        </Typography>
+                                                        {database.role === 'OWNER' && (
+                                                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                <Tooltip title="View Users">
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleOpenViewUsersModal(database);
+                                                                        }}
+                                                                        sx={{
+                                                                            color: 'info.main',
+                                                                            '&:hover': { backgroundColor: 'info.light' }
+                                                                        }}
+                                                                    >
+                                                                        <PeopleIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                                <Tooltip title="Add User">
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleOpenAddUserModal(database);
+                                                                        }}
+                                                                        sx={{
+                                                                            color: 'primary.main',
+                                                                            '&:hover': { backgroundColor: 'primary.light' }
+                                                                        }}
+                                                                    >
+                                                                        <PersonAddIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            </Box>
+                                                        )}
                                                     </Box>
+                                                    <Chip
+                                                        label={database.connected ? "Connected" : "Disconnected"}
+                                                        size="small"
+                                                        sx={{
+                                                            backgroundColor: database.connected ? '#4caf50' : '#f44336',
+                                                            color: 'white',
+                                                            fontWeight: 600,
+                                                            fontSize: '11px',
+                                                            height: '24px',
+                                                            '&::before': {
+                                                                content: '"●"',
+                                                                marginRight: '4px',
+                                                                fontSize: '10px'
+                                                            }
+                                                        }}
+                                                    />
                                                 </Box>
-                                            )}
+                                                <Typography className="database-server-name">
+                                                    Server: {database.serverName}
+                                                </Typography>
+                                                {database.databaseddl && (
+                                                    <Box className="database-ddl">
+                                                        <Box className="ddl-preview">
+                                                            <pre>
+                                                                <code>{database.databaseddl}</code>
+                                                            </pre>
+                                                        </Box>
+                                                    </Box>
+                                                )}
+                                            </Box>
                                         </Box>
                                     ))}
                                 </Box>
@@ -297,6 +359,24 @@ export default function ServersPage() {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            {selectedDatabase && (
+                <>
+                    <AddUserModal
+                        open={addUserModalOpen}
+                        onClose={() => setAddUserModalOpen(false)}
+                        databaseId={selectedDatabase.databaseId}
+                        databaseName={selectedDatabase.databaseName}
+                        onUserAdded={handleUserAdded}
+                    />
+                    <ViewUsersModal
+                        open={viewUsersModalOpen}
+                        onClose={() => setViewUsersModalOpen(false)}
+                        databaseId={selectedDatabase.databaseId}
+                        databaseName={selectedDatabase.databaseName}
+                    />
+                </>
+            )}
         </Box>
     );
 }

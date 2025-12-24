@@ -1,4 +1,4 @@
-package backend.databaseManagement;
+package backend.databaseManagement.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
