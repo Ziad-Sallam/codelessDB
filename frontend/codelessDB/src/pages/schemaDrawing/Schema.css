@@ -237,6 +237,8 @@
 .active-users .add-user:hover {
   background: #a3a3a3;
   transform: translateY(-2px);
+}
+
 /* Loading State */
 .loading-container {
   display: flex;
