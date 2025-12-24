@@ -689,12 +689,12 @@ class DatabaseManagementServiceTest {
     }
 
     @Test
-    void testAddDatabaseToUser_databaseIdEqualsOwnerId() {
+    void testAddDatabaseToUser_UserIdEqualsOwnerId() {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.addDatabaseToUser(5, 2, 5, "READER"));
+                () -> service.addDatabaseToUser(1, 5, 5, "READER"));
 
-        assertEquals("Database ID and Owner ID cannot be the same", ex.getMessage());
+        assertEquals("Cannot add yourself to your own database", ex.getMessage());
     }
 
     @Test

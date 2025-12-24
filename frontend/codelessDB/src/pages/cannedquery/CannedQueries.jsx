@@ -109,18 +109,13 @@ export default function CannedQueriesPage() {
     }
   };
 
-  const handleSave = async (formData) => {
+  const handleSave = async (queryData) => {
     try {
       if (editingQuery) {
-        const updateData = {
-          name: formData.title,
-          description: formData.description,
-          query: formData.body,
-          databaseId: currentDatabaseId,
-        };
+        // Data is already transformed by QueryDialog
         const updatedQuery = await cannedQueriesApi.updateQuery(
           editingQuery.id,
-          updateData
+          queryData
         );
         setQueries(
           queries.map((q) =>
@@ -143,13 +138,8 @@ export default function CannedQueriesPage() {
           severity: "success",
         });
       } else {
-        const createData = {
-          name: formData.title,
-          description: formData.description,
-          query: formData.body,
-          databaseId: currentDatabaseId,
-        };
-        const newQuery = await cannedQueriesApi.createQuery(createData);
+        // Data is already transformed by QueryDialog
+        const newQuery = await cannedQueriesApi.createQuery(queryData);
         const transformedQuery = {
           id: newQuery.id,
           title: newQuery.name,
@@ -168,7 +158,25 @@ export default function CannedQueriesPage() {
       }
     } catch (error) {
       console.error("Error saving query:", error);
-      const errorMessage = error.response?.data || error.message;
+      // Better error message extraction
+      let errorMessage = 'Unknown error occurred';
+      if (error.response?.data) {
+        // If it's a string message
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+        // If it has a message property
+        else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+        // If it's an object, stringify it
+        else {
+          errorMessage = JSON.stringify(error.response.data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       setSnackbar({
         open: true,
         message: "Failed to save query: " + errorMessage,
