@@ -175,6 +175,30 @@ class CommentServiceImplTest {
     }
 
     @Test
+    void addComment_depthLimitExceeded() {
+        // Grandparent (Depth 0)
+        Comment grandParent = Comment.builder().id(100L).build();
+
+        // Parent (Depth 1)
+        Comment parent = Comment.builder().id(101L).parent(grandParent).build();
+
+        // Child (Depth 2) - This is the one we try to reply to
+        Comment child = Comment.builder().id(102L).parent(parent).build();
+
+        when(userRepository.findById(1)).thenReturn(testUser);
+        when(publicDiagramRepository.findById(diagramId)).thenReturn(Optional.of(testDiagram));
+        when(commentRepository.findById(102L)).thenReturn(Optional.of(child));
+
+        // Try to create a reply to 'child' (which would be Depth 3)
+        CommentRequestDto dto = new CommentRequestDto("Too Deep", 102L);
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> commentService.addComment(1, diagramId, dto));
+
+        assertEquals("Maximum reply depth reached. You can only reply up to 2 replays.", exception.getMessage());
+    }
+
+    @Test
     void updateComment_success() {
         Comment existing = Comment.builder()
                 .id(1L)
