@@ -48,6 +48,17 @@ public class CommentServiceImpl implements CommentService {
         if (commentRequestDto.parentId() != null) {
             parent = commentRepository.findById(commentRequestDto.parentId())
                     .orElseThrow(() -> new RuntimeException("Parent comment not found"));
+
+            // Check reply depth
+            int depth = 0;
+            Comment current = parent;
+            while (current != null) {
+                depth++;
+                current = current.getParent();
+                if (depth >= 3) {
+                    throw new RuntimeException("Maximum reply depth reached. You can only reply up to 2 replays.");
+                }
+            }
         }
 
         Comment comment = Comment.builder()
