@@ -27,9 +27,6 @@ import {
 	fetchDiagramSnapshot,
 	updateDiagramMetadata,
 } from "./fetch.js";
-import { validateSchema } from "./generate/CheckCorrectness";
-import { convertToJSON } from "./generate/JsonConverter";
-
 import { nodeTypes, edgeTypes } from "./index";
 import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
 import "./Schema.css";
