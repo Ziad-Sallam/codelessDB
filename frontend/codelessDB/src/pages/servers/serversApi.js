@@ -7,7 +7,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization' : `Bearer ${localStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
   },
 });
 
@@ -32,6 +32,11 @@ export const serversApi = {
 
   getUserDatabases: async () => {
     const { data } = await api.get('/database/get-user-databases');
+    return data;
+  },
+
+  createServer: async (serverName) => {
+    const { data } = await api.post('/database/create-server', { serverName });
     return data;
   },
 };

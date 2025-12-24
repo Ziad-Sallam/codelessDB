@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import {
     Box, Card, CardContent, Typography, Alert, Snackbar,
-    CircularProgress, MenuItem, Select, FormControl, InputLabel, Chip
+    CircularProgress, MenuItem, Select, FormControl, InputLabel, Chip,
+    Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import StorageIcon from "@mui/icons-material/Storage";
 import DatabaseIcon from "@mui/icons-material/Storage";
+import AddIcon from "@mui/icons-material/Add";
 
 import TopBars from "../../components/Topbarforcannedquery";
 
@@ -26,6 +28,11 @@ export default function ServersPage() {
     const [selectedServerId, setSelectedServerId] = useState("");
     const [loading, setLoading] = useState(true);
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
+    // Add Server State
+    const [isAddServerOpen, setIsAddServerOpen] = useState(false);
+    const [newServerName, setNewServerName] = useState("");
+    const [creatingServer, setCreatingServer] = useState(false);
 
     useEffect(() => {
         fetchServersAndDatabases();
@@ -89,6 +96,24 @@ export default function ServersPage() {
         })
         : [];
 
+    const handleAddServer = async () => {
+        if (!newServerName.trim()) return;
+        setCreatingServer(true);
+        try {
+            await serversApi.createServer(newServerName);
+            showSnackbar("Server created successfully", "success");
+            setNewServerName("");
+            setIsAddServerOpen(false);
+            fetchServersAndDatabases();
+        } catch (error) {
+            console.error("Error creating server:", error);
+            const errorMessage = error.response?.data?.message || "Failed to create server";
+            showSnackbar(errorMessage, "error");
+        } finally {
+            setCreatingServer(false);
+        }
+    };
+
     if (loading) {
         return (
             <Box className="loading-container">
@@ -103,7 +128,7 @@ export default function ServersPage() {
             <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", backgroundColor: "#f6f8fb", minHeight: "100vh" }}>
                 <TopBars loadDiagrams={() => { }} />
                 <Box sx={{ p: 3 }}>
-                    <Box className="servers-header">
+                    <Box className="servers-header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                         <Box>
                             <Typography variant="h4" className="servers-title">
                                 Server Management
@@ -112,6 +137,14 @@ export default function ServersPage() {
                                 Manage your database servers and view connection status
                             </Typography>
                         </Box>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setIsAddServerOpen(true)}
+                            sx={{ height: 'fit-content' }}
+                        >
+                            Add Server
+                        </Button>
                     </Box>
                     <Card className="servers-selection-card">
                         <CardContent>
@@ -226,6 +259,33 @@ export default function ServersPage() {
                     )}
                 </Box>
             </Box>
+
+            <Dialog open={isAddServerOpen} onClose={() => setIsAddServerOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Add New Server</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="name"
+                        label="Server Name"
+                        type="text"
+                        fullWidth
+                        variant="outlined"
+                        value={newServerName}
+                        onChange={(e) => setNewServerName(e.target.value)}
+                        placeholder="e.g., Production Server"
+                        disabled={creatingServer}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsAddServerOpen(false)} color="inherit" disabled={creatingServer}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleAddServer} variant="contained" color="primary" disabled={!newServerName.trim() || creatingServer}>
+                        {creatingServer ? <CircularProgress size={24} color="inherit" /> : "Add Server"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <Snackbar
                 open={snackbar.open}
