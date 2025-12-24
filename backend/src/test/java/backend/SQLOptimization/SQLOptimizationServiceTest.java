@@ -1,24 +1,27 @@
 package backend.SQLOptimization;
 
-import backend.SQLOptimization.dto.OptimizeSQLResponse;
-import backend.SQLOptimization.exceptions.SQLOptimizationException.GeminiAPIException;
-import backend.SQLOptimization.exceptions.SQLOptimizationException.InvalidSQLException;
-import backend.SQLOptimization.service.SQLOptimizationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.*;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import backend.SQLOptimization.dto.OptimizeSQLResponse;
+import backend.SQLOptimization.exceptions.SQLOptimizationException.GeminiAPIException;
+import backend.SQLOptimization.exceptions.SQLOptimizationException.InvalidSQLException;
+import backend.SQLOptimization.service.SQLOptimizationService;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Full working unit tests for SQLOptimizationService.
@@ -26,12 +29,13 @@ import static org.mockito.Mockito.*;
 class SQLOptimizationServiceTest {
 
     private RestTemplate restTemplate;
+    private ObjectMapper objectMapper;
     private SQLOptimizationService service;
 
     @BeforeEach
     void setUp() {
         restTemplate = mock(RestTemplate.class);
-        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper = spy(new ObjectMapper());
         service = new SQLOptimizationService(restTemplate, objectMapper);
 
         ReflectionTestUtils.setField(service, "geminiApiKey", "testKey");
@@ -124,5 +128,57 @@ class SQLOptimizationServiceTest {
 
         GeminiAPIException ex = assertThrows(GeminiAPIException.class, () -> service.optimizeSQL("SELECT * FROM users"));
         assertTrue(ex.getMessage().contains("Failed to call Gemini API"));
+    }
+
+    @Test
+    void testOptimizeSQL_InvalidResponseFormat_ThrowsGeminiAPIException() {
+        String geminiRawResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "{\\"optimizedSQL\\":\\"\\",\\"summary\\":\\"Only summary\\"}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        ResponseEntity<String> entity = new ResponseEntity<>(geminiRawResponse, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), eq(String.class)))
+                .thenReturn(entity);
+
+        GeminiAPIException ex = assertThrows(GeminiAPIException.class, () -> service.optimizeSQL("SELECT * FROM users"));
+        assertTrue(ex.getMessage().contains("Invalid response format from Gemini"));
+    }
+
+    @Test
+    void testOptimizeSQL_ParsingError_ThrowsGeminiAPIException() {
+        String geminiRawResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "Invalid JSON content"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        ResponseEntity<String> entity = new ResponseEntity<>(geminiRawResponse, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), eq(String.class)))
+                .thenReturn(entity);
+
+        GeminiAPIException ex = assertThrows(GeminiAPIException.class, () -> service.optimizeSQL("SELECT * FROM users"));
+        assertTrue(ex.getMessage().contains("Failed to parse Gemini response"));
     }
 }

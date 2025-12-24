@@ -22,19 +22,33 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import backend.agent.WebSocketHandler.AgentMessageDTO;
 import backend.agent.WebSocketHandler.ClientResponseDTO;
+import backend.config.ErrorResponse;
 import backend.security.AuthUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/agent")
 @RequiredArgsConstructor
+@Tag(name = "AI Agent", description = "Endpoints for interacting with the AI agent for database queries and operations")
 public class MessageController {
 
     private final MessageService messageService;
 
     @PostMapping("/send")
+    @Operation(summary = "Send message to AI agent", description = "Sends a natural language query or command to the AI agent for processing against a database")
+    @ApiResponse(responseCode = "200", description = "Returns AI agent response with query results")
+    @ApiResponse(responseCode = "401", description = "Unauthorized", 
+                 content = @Content(schema = @Schema(implementation = ErrorResponse.class),
+                 examples = @ExampleObject(name = "Auth Error", value = "{\"message\": \"Full authentication is required to access this resource\", \"status\": 401}")))
     public ResponseEntity<ClientResponseDTO> sendToUser(
-            @RequestBody MessageDTO request,
+            @Parameter(description = "Message content and database ID") @RequestBody MessageDTO request,
             @AuthenticationPrincipal AuthUser user) {
 
         AgentMessageDTO message = new AgentMessageDTO("Server", request.getContent());
@@ -48,8 +62,10 @@ public class MessageController {
     }
 
     @GetMapping("/is-database-online")
+    @Operation(summary = "Check database status", description = "Verifies if a database container is running and accessible")
+    @ApiResponse(responseCode = "200", description = "Returns true if database is online, false otherwise")
     public ResponseEntity<Boolean> isDatabaseOnline(
-            @RequestParam int databaseId,
+            @Parameter(description = "Database ID to check") @RequestParam int databaseId,
             @AuthenticationPrincipal AuthUser user) {
 
         boolean online = messageService.databaseIsOnline(
@@ -59,9 +75,10 @@ public class MessageController {
         return ResponseEntity.ok(online);
     }
 
-@GetMapping("/create-container")
-public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
-
+    @GetMapping("/create-container")
+    @Operation(summary = "Download container creation agent", description = "Downloads the agent executable for creating database containers")
+    @ApiResponse(responseCode = "200", description = "Returns executable file")
+    public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
     Path path = Paths.get("backend/uploads/agent/dist/codeless_agent.exe")
             .toAbsolutePath();
 
@@ -74,7 +91,7 @@ public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
     return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION,
                     "attachment; filename=\"" + path.getFileName() + "\"")
-            .header(HttpHeaders.CONTENT_ENCODING, "identity") // 🔴 IMPORTANT
+            .header(HttpHeaders.CONTENT_ENCODING, "identity") 
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .contentLength(Files.size(path))
             .body(resource);
