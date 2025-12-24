@@ -114,7 +114,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 				if (!uniqueUsersMap.has(state.user.name)) {
 					uniqueUsersMap.set(state.user.name, {
-						clientId: clientId, 
+						clientId: clientId,
 						...state.user,
 						isMe: state.user.name === user.username,
 					});

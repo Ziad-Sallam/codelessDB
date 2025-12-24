@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useBlocker, useNavigate } from "react-router-dom";
-
 import {
 	Background,
 	Controls,
@@ -11,24 +10,17 @@ import {
 	useViewport,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-
-import { Box, CircularProgress } from "@mui/material";
-
 import { toPng } from "html-to-image";
-
 import { useNotification } from "../../components/NotificationContext";
 import ShareWindow from "../../components/ShareWindow.jsx";
-
 import CodeEditor from "./code-editor/CodeEditor.jsx";
 import Toolbar from "./ConnectionControls.jsx";
-
 import Cursor from "./collab/Cursor.jsx";
 import ActiveUsers from "./collab/ActiveUsers.jsx";
 import {
 	CollaborationProvider,
 	useCollaboration,
 } from "./collab/CollaborationContext.jsx";
-
 import applyRelationLogic from "./connectingLogic/ConnectingLogic";
 import {
 	generateSQLFromBackend,
@@ -36,14 +28,10 @@ import {
 	fetchDiagramSnapshot,
 	updateDiagramMetadata,
 } from "./fetch.js";
-
 import { validateSchema } from "./generate/CheckCorrectness";
 import { convertToJSON } from "./generate/JsonConverter";
-
 import { nodeTypes, edgeTypes } from "./index";
-
 import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
-
 import "./Schema.css";
 import { renameDiagram } from "../diagrams/fetch.js";
 import { uploadToCloudinary } from "../../uploadToCloudinary.js";
@@ -115,7 +103,7 @@ const SchemaContent = () => {
 			setDiagramExistFlag(true);
 
 		} catch (err) {
-			// showError(err.message);
+
 			setDiagramExistFlag(false);
 
 		} finally {
@@ -129,14 +117,14 @@ const SchemaContent = () => {
 
 	useEffect(() => {
 		const handleKeyDown = (e) => {
-			// Check for Ctrl (Windows) or Meta (Mac)
+
 			if (e.ctrlKey || e.metaKey) {
 				if (e.key === "z") {
 					e.preventDefault();
 					if (e.shiftKey) {
-						redo(); // Ctrl + Shift + Z
+						redo();
 					} else {
-						undo(); // Ctrl + Z
+						undo();
 					}
 				} else if (e.key === "y") {
 					e.preventDefault();
@@ -204,7 +192,7 @@ const SchemaContent = () => {
 		const id = `${nodes.length + 1}_${Date.now()}`;
 		const newNode = {
 			id,
-			type: "Defult-Node", // Make sure this matches your nodeTypes key
+			type: "Defult-Node",
 			data: {
 				tableName: `Entity_${nodes.length + 1}`,
 				columns: [
@@ -382,8 +370,6 @@ const SchemaContent = () => {
 						undo={undo}
 						redo={redo}
 					/>
-
-
 				</div>
 
 			)}

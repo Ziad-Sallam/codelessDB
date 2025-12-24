@@ -23,7 +23,6 @@ import { useNotification } from "./NotificationContext";
 export default function ShareWindow({ diagramId, shareOpen, setShareOpen }) {
 	const { showSuccess, showError } = useNotification();
 
-	// const [shareOpen, setShareOpen] = useState(false);
 	const [shareUsername, setShareUsername] = useState("");
 	const [shareRole, setShareRole] = useState("READER");
 	const [shareLoading, setShareLoading] = useState(false);
