@@ -26,6 +26,7 @@ import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import backend.config.ApplicationProperties;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class DatabaseManagementService {
     private final UserRepository userRepository;
     private final ServerRepository serverRepository;
     private final OnlineUserTracker tracker;
+    private final ApplicationProperties applicationProperties;
 
     public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId) {
         if (createServerDTO == null)
@@ -144,7 +146,7 @@ public class DatabaseManagementService {
         dto.setDatabaseName(database.getName());
         dto.setDdl(database.getDdl());
         dto.setContainerId(id);
-        dto.setWsUrl("ws://localhost:8080/agent-ws");
+        dto.setWsUrl(applicationProperties.getAgentUrl());
         dto.setContainerName("mysql" + id);
         return dto;
     }

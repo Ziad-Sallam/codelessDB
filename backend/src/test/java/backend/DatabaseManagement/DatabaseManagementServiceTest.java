@@ -21,6 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import backend.config.ApplicationProperties;
 import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.DatabaseManagementService;
 import backend.databaseManagement.ServerRepository;
@@ -47,6 +48,7 @@ class DatabaseManagementServiceTest {
     private DatabaseManagementService service;
     private ServerRepository serverRepository;
     private OnlineUserTracker tracker;
+    private ApplicationProperties applicationProperties;
 
     @BeforeEach
     void setUp() {
@@ -54,8 +56,10 @@ class DatabaseManagementServiceTest {
         userRepository = mock(UserRepository.class);
         serverRepository = mock(ServerRepository.class);
         tracker = mock(OnlineUserTracker.class);
+        applicationProperties = mock(ApplicationProperties.class);
 
-        service = new DatabaseManagementService(userDatabaseRepository, userRepository, serverRepository, tracker);
+        service = new DatabaseManagementService(userDatabaseRepository, userRepository, serverRepository, tracker,
+                applicationProperties);
     }
 
     @Test
@@ -279,6 +283,7 @@ class DatabaseManagementServiceTest {
         database.setDdl("CREATE TABLE test2(id INT)");
 
         when(userDatabaseRepository.findById(10)).thenReturn(Optional.of(database));
+        when(applicationProperties.getAgentUrl()).thenReturn("ws://localhost:8080/agent-ws");
 
         InitiateDatabaseDTO dto = service.initiateDatabase(10);
         assertEquals("InitDB", dto.getDatabaseName());

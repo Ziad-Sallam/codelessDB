@@ -1,6 +1,8 @@
 package backend.agent.HTTPHandler;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import backend.agent.WebSocketHandler.AgentMessageDTO;
 import backend.agent.WebSocketHandler.ClientResponseDTO;
@@ -56,33 +59,25 @@ public class MessageController {
         return ResponseEntity.ok(online);
     }
 
-    @GetMapping("/create-container")
-    public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
-        Path path = Paths.get(
-                "backend/uploads/agent/dist/create_container.exe")
-                .toAbsolutePath();
+@GetMapping("/create-container")
+public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
 
-        Resource resource = new UrlResource(path.toUri());
+    Path path = Paths.get("backend/uploads/agent/dist/codeless_agent.exe")
+            .toAbsolutePath();
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + resource.getFilename() + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(resource);
+    if (!Files.exists(path)) {
+        return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/communicate")
-    public ResponseEntity<Resource> downloadCommunicate() throws IOException {
-        Path path = Paths.get(
-                "backend/uploads/agent/dist/communicate.exe")
-                .toAbsolutePath();
+    Resource resource = new UrlResource(path.toUri());
 
-        Resource resource = new UrlResource(path.toUri());
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + path.getFileName() + "\"")
+            .header(HttpHeaders.CONTENT_ENCODING, "identity") // 🔴 IMPORTANT
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .contentLength(Files.size(path))
+            .body(resource);
+}
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + resource.getFilename() + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(resource);
-    }
 }
