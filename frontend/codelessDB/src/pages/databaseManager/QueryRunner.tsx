@@ -8,7 +8,6 @@ import { Snackbar, Alert } from '@mui/material';
 import CodeMirror from '@uiw/react-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import { placeholder } from '@codemirror/view';
-import Snowfall from 'react-snowfall';
 
 import axios from 'axios';
 
@@ -211,7 +210,7 @@ const RECONNECT_COMMANDS = [
 
   return (
     <div className="databaseManager">
-    <Snowfall color={"#82c3d9"}/>
+    
       <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
       <div className="query-runner-container db-manager-container">
 

@@ -16,6 +16,7 @@ import {
   validateToken,
 } from "./fetch.js";
 import "./Register.css";
+import Snowfall from 'react-snowfall';
 
 // Step constants
 const STEPS = {
@@ -770,6 +771,7 @@ const Register = () => {
           <div className="wrapper">{renderContent()}</div>
         </div>
       </div>
+      <Snowfall color={"#82c3d9"}/>
     </div>
   );
 };

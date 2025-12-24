@@ -2,6 +2,7 @@ import { Box, Typography, Button, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Home as HomeIcon, ArrowBack as ArrowBackIcon } from "@mui/icons-material";
 import { useAuth } from "../../components/AuthProvider.jsx";
+import Snowfall from 'react-snowfall';
 
 export default function PageNotFound() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function PageNotFound() {
         background: "linear-gradient(135deg, #0b3d91 0%, #082043 100%)",
       }}
     >
+      <Snowfall color={"#82c3d9"}/>
       <Container maxWidth="sm">
         <Box
           sx={{
