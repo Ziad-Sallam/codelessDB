@@ -30,4 +30,6 @@ public interface IUserDiagramService {
     DiagramShareResponseDto shareDiagram(int userId, UUID diagramId, DiagramShareRequestDto request);
 
     void updateDDL(UUID diagramId, String ddl);
+    
+    String getDDL(UUID diagramId);
 }
