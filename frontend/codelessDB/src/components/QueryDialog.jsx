@@ -294,7 +294,23 @@ export default function QueryDialog({ open, onClose, query, onSave, onSaveError,
                       <CircularProgress size={24} />
                     </Box>
                   ) : (
-                    <pre className="ddl-content">
+                    <pre
+                      className="ddl-content"
+                      style={{
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        fontFamily: 'monospace',
+                        fontSize: '13px',
+                        lineHeight: '1.5',
+                        margin: 0,
+                        padding: '12px',
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '4px',
+                        maxHeight: '300px',
+                        overflow: 'auto'
+                      }}
+                    >
                       <code>{ddlContent}</code>
                     </pre>
                   )}

@@ -72,6 +72,22 @@ export default function DatabaseSelector({ value, onChange, disabled = false }) 
         value={value || ""}
         label="Database"
         onChange={handleChange}
+        MenuProps={{
+          disablePortal: true,
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left',
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left',
+          },
+        }}
+        slotProps={{
+          backdrop: {
+            invisible: true,
+          },
+        }}
       >
         {databases.map((db) => (
           <MenuItem key={db.databaseId} value={db.databaseId}>

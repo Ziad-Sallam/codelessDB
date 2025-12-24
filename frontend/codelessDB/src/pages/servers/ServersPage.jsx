@@ -47,7 +47,30 @@ export default function ServersPage() {
             }
         } catch (error) {
             console.error("Error fetching servers and databases:", error);
-            showSnackbar("Failed to load servers and databases: " + (error.response?.data || error.message), "error");
+
+            // Determine error type and message
+            let errorType = "Error";
+            let rawErrorMessage = "Failed to load servers and databases";
+
+            if (error.response) {
+                // Server responded with error status
+                errorType = `Server Error (${error.response.status})`;
+                rawErrorMessage = error.response.data?.message || error.response.data || error.message;
+            } else if (error.request) {
+                // Request was made but no response received
+                errorType = "Network Error";
+                rawErrorMessage = "No response from server. Please check your connection.";
+            } else {
+                // Something else happened
+                errorType = "Request Error";
+                rawErrorMessage = error.message;
+            }
+
+            const errorMessage = (typeof rawErrorMessage === 'object')
+                ? JSON.stringify(rawErrorMessage)
+                : rawErrorMessage;
+
+            showSnackbar(`[${errorType}] ${errorMessage}`, "error");
         } finally {
             setLoading(false);
         }
@@ -100,6 +123,22 @@ export default function ServersPage() {
                                     value={selectedServerId}
                                     label="Select Server"
                                     onChange={handleServerChange}
+                                    MenuProps={{
+                                        disablePortal: true,
+                                        anchorOrigin: {
+                                            vertical: 'bottom',
+                                            horizontal: 'left',
+                                        },
+                                        transformOrigin: {
+                                            vertical: 'top',
+                                            horizontal: 'left',
+                                        },
+                                    }}
+                                    slotProps={{
+                                        backdrop: {
+                                            invisible: true,
+                                        },
+                                    }}
                                 >
                                     {servers.map((server) => (
                                         <MenuItem key={server.serverId} value={server.serverId}>

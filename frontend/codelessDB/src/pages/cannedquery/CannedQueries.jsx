@@ -45,9 +45,10 @@ export default function CannedQueriesPage() {
       setQueries(transformedQueries);
     } catch (error) {
       console.error("Error fetching queries:", error);
+      const errorMessage = error.response?.data?.message || error.response?.data || error.message || "Unknown error";
       setSnackbar({
         open: true,
-        message: "Failed to load queries: " + (error.response?.data || error.message),
+        message: "Failed to load queries: " + (typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage),
         severity: "error",
       });
     } finally {
@@ -101,9 +102,10 @@ export default function CannedQueriesPage() {
       });
     } catch (error) {
       console.error("Error deleting query:", error);
+      const errorMessage = error.response?.data?.message || error.response?.data || error.message || "Unknown error";
       setSnackbar({
         open: true,
-        message: "Failed to delete query: " + (error.response?.data || error.message),
+        message: "Failed to delete query: " + (typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage),
         severity: "error",
       });
     }
@@ -168,10 +170,10 @@ export default function CannedQueriesPage() {
       }
     } catch (error) {
       console.error("Error saving query:", error);
-      const errorMessage = error.response?.data || error.message;
+      const errorMessage = error.response?.data?.message || error.response?.data || error.message || "Unknown error";
       setSnackbar({
         open: true,
-        message: "Failed to save query: " + errorMessage,
+        message: "Failed to save query: " + (typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage),
         severity: "error",
       });
     }
