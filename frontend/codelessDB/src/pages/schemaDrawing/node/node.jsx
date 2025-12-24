@@ -190,7 +190,7 @@ const Node = ({ id, data, dragging }) => {
           onChange={onNameChange}
         />
       </div>
-      {!dragging ? (
+      <div className={`node-content ${dragging ? "collapsed" : ""}`}>
         <div className="table-body">
           {data.columns.map((col) => (
             <ColumnRow
@@ -205,23 +205,10 @@ const Node = ({ id, data, dragging }) => {
             />
           ))}
         </div>
-      ) : (
-        <div className="table-body">
-          {data.columns.map((col) => (
-            <div
-              key={col.id}
-              style={{
-                height: "45px",
-                borderBottom: "1px solid #eee",
-                backgroundColor: "#fafafa",
-              }}
-            />
-          ))}
-        </div>
-      )}
-      <button className="nodrag add-btn" onClick={addColumn}>
-        + Add Column
-      </button>
+        <button className="nodrag add-btn" onClick={addColumn}>
+          + Add Column
+        </button>
+      </div>
     </div>
   );
 };
