@@ -44,6 +44,7 @@ import { nodeTypes, edgeTypes } from "./index";
 import DiagramNotFound from "../notFound/DiagramNotFound.jsx";
 
 import "./Schema.css";
+import { renameDiagram } from "../diagrams/fetch.js";
 
 
 const SchemaContent = () => {
@@ -64,19 +65,19 @@ const SchemaContent = () => {
 		undo,
 		redo
 	} = useCollaboration();
-	
+
 	const { roomId } = useParams();
 	const { showSuccess, showError, showWarning } = useNotification();
 
-  const [selectedRelationType, setSelectedRelationType] = useState("1:N");
-  const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
-  const [generatedSql, setGeneratedSql] = useState("");
-  const [isReadOnly, setIsReadOnly] = useState(false);
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  const [shareOpen,setShareOpen] = useState(false);
-  const [diagramExistFlag, setDiagramExistFlag] = useState(true);
+	const [selectedRelationType, setSelectedRelationType] = useState("1:N");
+	const [isSqlPanelOpen, setIsSqlPanelOpen] = useState(false);
+	const [generatedSql, setGeneratedSql] = useState("");
+	const [isReadOnly, setIsReadOnly] = useState(false);
+	const [reactFlowInstance, setReactFlowInstance] = useState(null);
+	const [shareOpen, setShareOpen] = useState(false);
+	const [diagramExistFlag, setDiagramExistFlag] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(true);
 
 	const { screenToFlowPosition } = useReactFlow();
 
@@ -101,18 +102,18 @@ const SchemaContent = () => {
 			// 1. Fetch Snapshot (Binary)
 			const snapshotBuffer = await fetchDiagramSnapshot(roomId);
 			applySnapshot(new Uint8Array(snapshotBuffer));
-			
+
 			// 2. Fetch Metadata (JSON)
 			const meta = await fetchDiagramMetadata(roomId);
 
 			updateSchemaName(meta.diagramName);
 			setIsReadOnly(meta.role === "READER");
 			setDiagramExistFlag(true);
-			
+
 		} catch (err) {
 			// showError(err.message);
 			setDiagramExistFlag(false);
-		
+
 		} finally {
 			setIsLoading(false);
 		}
@@ -226,55 +227,66 @@ const SchemaContent = () => {
 
 		const finalJson = convertToJSON(schemaName, nodes);
 
-    try {
-      const data = await generateSQLFromBackend(finalJson);
-      setGeneratedSql(data);
-      setIsSqlPanelOpen(true);
-    } catch (err) {
-      showError(err.message);
-      setIsSqlPanelOpen(false);
-    }
-  };
+		try {
+			const data = await generateSQLFromBackend(finalJson);
+			setGeneratedSql(data);
+			setIsSqlPanelOpen(true);
+		} catch (err) {
+			showError(err.message);
+			setIsSqlPanelOpen(false);
+		}
+	};
 
-  function handleShareClick() {
+	function handleShareClick() {
 		setShareOpen(true);
 	}
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", justifyContent: "center", alignItems: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
 
-  if (!diagramExistFlag) {
-    return <DiagramNotFound />;
-  }
+	async function rename(newName) {
+		try {
+			newName = newName.trim();
+			await renameDiagram(roomId, newName);
+			showSuccess("Name Changed Successfuly")
+		} catch {
+			showError("Error")
+		}
+	}
+	if (isLoading) {
+		return (
+			<Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", justifyContent: "center", alignItems: "center" }}>
+				<CircularProgress />
+			</Box>
+		);
+	}
 
-  return (
-    <div className="drawing-container" onMouseMove={onMouseMove}>
-      {isSqlPanelOpen && (
-        <CodeEditor
-          initialCode={generatedSql}
-          onClose={() => setIsSqlPanelOpen(false)}
-          diagramId={roomId}
-        />
-      )}
+	if (!diagramExistFlag) {
+		return <DiagramNotFound />;
+	}
 
-      <input
-        className="schema-name"
-        placeholder="Database Name"
-        value={schemaName}
-        onChange={(e) => updateSchemaName(e.target.value)}
-        disabled={isReadOnly}
-      />
-      <div className="active-users">
-        <ActiveUsers />
-        <button className="add-user" onClick={handleShareClick}>+</button>
-      </div>
-      <div className="share-window">
-        <ShareWindow diagramId={roomId} shareOpen={shareOpen} setShareOpen={setShareOpen}/>
-      </div>
+	return (
+		<div className="drawing-container" onMouseMove={onMouseMove}>
+			{isSqlPanelOpen && (
+				<CodeEditor
+					initialCode={generatedSql}
+					onClose={() => setIsSqlPanelOpen(false)}
+					diagramId={roomId}
+				/>
+			)}
+
+			<input
+				className="schema-name"
+				placeholder="Database Name"
+				value={schemaName}
+				onChange={(e) => updateSchemaName(e.target.value)}
+				onBlur={(e) => rename(e.target.value)}
+				disabled={isReadOnly}
+			/>
+			<div className="active-users">
+				<ActiveUsers />
+				<button className="add-user" onClick={handleShareClick}>+</button>
+			</div>
+			<div className="share-window">
+				<ShareWindow diagramId={roomId} shareOpen={shareOpen} setShareOpen={setShareOpen} />
+			</div>
 
 			<div className="drawing-canva">
 				<ReactFlow
