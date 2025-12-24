@@ -1,8 +1,10 @@
 package backend.SQLGeneration.dto.constraint;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
+@Schema(description = "Action applied on foreign key update/delete")
 public enum ForeignKeyAction {
     CASCADE("CASCADE"),
     RESTRICT("RESTRICT"),
