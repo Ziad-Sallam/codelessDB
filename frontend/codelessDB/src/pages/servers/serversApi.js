@@ -49,6 +49,10 @@ export const serversApi = {
       role
     });
   },
+  createServer: async (serverName) => {
+    const { data } = await api.post('/database/create-server', { serverName });
+    return data;
+  },
 };
 
 export default serversApi;
