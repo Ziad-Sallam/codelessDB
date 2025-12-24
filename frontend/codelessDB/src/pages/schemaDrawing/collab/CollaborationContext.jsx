@@ -1,4 +1,5 @@
 import throttle from "lodash/throttle";
+import { applyNodeChanges, applyEdgeChanges } from "@xyflow/react";
 import {
 	createContext,
 	useCallback,
@@ -16,28 +17,28 @@ import { useAuth } from "../../../components/AuthProvider";
 const CollaborationContext = createContext(null);
 
 function hslToHex(h, s, l) {
-  s /= 100;
-  l /= 100;
+	s /= 100;
+	l /= 100;
 
-  const k = n => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = n =>
-    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+	const k = n => (n + h / 30) % 12;
+	const a = s * Math.min(l, 1 - l);
+	const f = n =>
+		l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
 
-  return (
-    "#" +
-    [f(0), f(8), f(4)]
-      .map(x => Math.round(255 * x).toString(16).padStart(2, "0"))
-      .join("")
-  );
+	return (
+		"#" +
+		[f(0), f(8), f(4)]
+			.map(x => Math.round(255 * x).toString(16).padStart(2, "0"))
+			.join("")
+	);
 }
 
 function getReadableRandomHex() {
-  const h = Math.floor(Math.random() * 360);
-  const s = 65 + Math.random() * 20;
-  const l = 45 + Math.random() * 10;
+	const h = Math.floor(Math.random() * 360);
+	const s = 65 + Math.random() * 20;
+	const l = 45 + Math.random() * 10;
 
-  return hslToHex(h, s, l);
+	return hslToHex(h, s, l);
 }
 
 
@@ -102,7 +103,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		const handleAwarenessChange = () => {
 			const states = awareness.getStates();
 			const newCursors = [];
-			
+
 			// Use a Map to deduplicate users by their unique DB ID (user.id)
 			// instead of just listing every socket client.
 			const uniqueUsersMap = new Map();
@@ -116,7 +117,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 						clientId: clientId, // Store the primary client ID
 						...state.user,
 						// Check if this user is the current user based on ID, not just ClientID
-						isMe: state.user.name === user.username, 
+						isMe: state.user.name === user.username,
 					});
 				}
 
@@ -139,9 +140,50 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		awareness.on("change", handleAwarenessChange);
 
 		// ----------------- Yjs → React Sync -----------------
-		const syncObserver = () => {
-			setNodes(Array.from(nodesMap.values()));
-			setEdges(Array.from(edgesMap.values()));
+		// ----------------- Yjs → React Sync -----------------
+		const syncObserver = (event, transaction) => {
+			// Ignore local position updates (throttled from flushPositions)
+			// This prevents "echo" updates that cause jitter during smooth local dragging.
+			if (transaction && transaction.origin === "position") {
+				return;
+			}
+
+			setNodes((prevNodes) => {
+				const yNodes = Array.from(nodesMap.values());
+				const prevMap = new Map((prevNodes || []).map((n) => [n.id, n]));
+
+				return yNodes.map((yNode) => {
+					const prevNode = prevMap.get(yNode.id);
+					if (prevNode) {
+						return {
+							...prevNode, // Keep local state (width, height, measured, dragging)
+							...yNode,    // Apply Remote updates
+							// strictly prioritize local position if dragging
+							position: prevNode.dragging ? prevNode.position : yNode.position,
+							selected: prevNode.selected,
+							dragging: prevNode.dragging,
+						};
+					}
+					return yNode;
+				});
+			});
+
+			setEdges((prevEdges) => {
+				const yEdges = Array.from(edgesMap.values());
+				const prevMap = new Map((prevEdges || []).map((e) => [e.id, e]));
+
+				return yEdges.map((yEdge) => {
+					const prevEdge = prevMap.get(yEdge.id);
+					if (prevEdge) {
+						return {
+							...prevEdge,
+							...yEdge,
+							selected: prevEdge.selected,
+						};
+					}
+					return yEdge;
+				});
+			});
 
 			const name = metaMap.get("name");
 			if (name) setSchemaName(name);
@@ -162,15 +204,15 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 		return () => {
 			window.removeEventListener("beforeunload", handleBeforeUnload);
-			
+
 			// Explicitly nullify local state so other clients remove this user immediately
 			awareness.setLocalState(null);
 			awareness.off("change", handleAwarenessChange);
-			
+
 			provider.destroy();
 			doc.destroy();
 		};
-	}, [roomId, user]); 
+	}, [roomId, user]);
 
 	// ----------------- Snapshot Loader -----------------
 	// snapshotBytes is Uint8Array
@@ -184,7 +226,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 				try {
 					Y.applyUpdate(ydoc, snapshotBytes);
 					console.log(`✅ Snapshot applied (${snapshotBytes.byteLength} bytes)`);
-				
+
 				} catch (err) {
 					console.error("❌ CRITICAL: Database Snapshot is corrupt!", err);
 				}
@@ -238,36 +280,48 @@ export const CollaborationProvider = ({ roomId, children }) => {
 
 	// ----------------- React Flow Handlers -----------------
 	const onNodesChange = useCallback((changes) => {
+		// 1. Immediate Local Update (Smoother Dragging)
+		setNodes((nds) => applyNodeChanges(changes, nds));
+
 		const doc = ydocRef.current;
 		if (!doc) return;
 
 		const nodesMap = doc.getMap("nodes");
 
-		changes.forEach((change) => {
-			if (change.type === "position" && change.position) {
-				pendingPositions.current.set(change.id, change.position);
-				flushPositions();
+		// 2. Sync to Yjs (Batched)
+		doc.transact(() => {
+			changes.forEach((change) => {
+				if (change.type === "position" && change.position) {
+					pendingPositions.current.set(change.id, change.position);
+					flushPositions();
 
-			} else if (change.type === "remove") {
-				nodesMap.delete(change.id);
-				pendingPositions.current.delete(change.id);
+				} else if (change.type === "remove") {
+					nodesMap.delete(change.id);
+					pendingPositions.current.delete(change.id);
 
-			} else if (change.type === "add") {
-				nodesMap.set(change.item.id, change.item);
-			}
+				} else if (change.type === "add") {
+					nodesMap.set(change.item.id, change.item);
+				}
+			});
 		});
 	}, []);
 
 	const onEdgesChange = useCallback((changes) => {
+		// 1. Immediate Local Update
+		setEdges((eds) => applyEdgeChanges(changes, eds));
+
 		const doc = ydocRef.current;
 		if (!doc) return;
 
 		const edgesMap = doc.getMap("edges");
 
-		changes.forEach((change) => {
-			if (change.type === "remove") {
-				edgesMap.delete(change.id);
-			}
+		// 2. Sync to Yjs
+		doc.transact(() => {
+			changes.forEach((change) => {
+				if (change.type === "remove") {
+					edgesMap.delete(change.id);
+				}
+			});
 		});
 	}, []);
 
