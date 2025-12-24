@@ -8,13 +8,13 @@ import backend.agent.WebSocketHandler.ClientResponseDTO;
 import backend.agent.WebSocketHandler.OnlineUserTracker;
 import backend.databaseManagement.UserDatabaseRepository;
 import backend.databaseManagement.exception.DatabaseException;
+import backend.entities.joins.UserDatabaseAccess;
 import backend.entities.User;
 import backend.entities.UserDatabase;
-import backend.entities.joins.UserDatabaseAccess;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotConnectedException;
-
+import backend.user.Role;
 import backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -32,17 +32,21 @@ public class MessageService {
         if (user == null)
             throw new UserNotFoundException("User not found");
 
-        UserDatabase database = userDatabaseRepository.findById(databaseId)
+        userDatabaseRepository.findById(databaseId)
                 .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
-        boolean hasAccess = user.getDatabaseAccess().stream()
-                .anyMatch(access -> access.getDatabase().getId() == databaseId);
+        UserDatabaseAccess databaseAccess = user.getDatabaseAccess().stream()
+                .filter(access -> access.getDatabase().getId() == databaseId)
+                .findFirst()
+                .orElseThrow(() -> new DatabaseException.UnauthorizedAccessException("Unauthorized access"));
 
-        if (!hasAccess)
-            throw new DatabaseException.UnauthorizedAccessException("Unauthorized access");
+        Role userRole = databaseAccess.getRole();
 
         if (!tracker.isOnline(String.valueOf(databaseId)))
             throw new DatabaseNotConnectedException("Database not connected");
+
+        QueryAuthorizer.validateSql(message.getContent());
+        QueryAuthorizer.authorize(userRole, message.getContent());
 
         try {
             clientResponse = agentController.sendToUser(databaseId, message);
@@ -58,8 +62,8 @@ public class MessageService {
         if (user == null)
             throw new UserNotFoundException("User not found");
 
-        UserDatabase database = userDatabaseRepository.findById(databaseId)
-                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+        userDatabaseRepository.findById(databaseId)
+            .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
 
         boolean hasAccess = user.getDatabaseAccess().stream()
                 .anyMatch(access -> access.getDatabase().getId() == databaseId);
