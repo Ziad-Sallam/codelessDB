@@ -1,5 +1,6 @@
 package backend.SQLOptimization.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,22 +32,43 @@ public class SQLOptimizationController {
     private final SQLOptimizationService optimizationService;
     private final UserService userService;
 
-    @PostMapping("/optimize-sql")
-    @Operation(summary = "Optimize SQL query", description = "Uses AI to analyze and optimize SQL queries, providing performance suggestions and improvements. Consumes AI quota.")
-    @ApiResponse(responseCode = "200", description = "SQL optimized successfully with suggestions",
-            content = @Content(schema = @Schema(implementation = OptimizeSQLResponse.class)))
-    @ApiResponse(responseCode = "429", description = "AI quota exceeded", 
-                 content = @Content(schema = @Schema(implementation = ErrorResponse.class),
-                 examples = @ExampleObject(name = "Quota Exceeded", 
-                                          value = "{\"message\": \"AI optimization quota exceeded. Please try again tomorrow.\", \"status\": 429}")))
+    @PostMapping(value = "/optimize-sql", consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "Optimize SQL query",
+            description = "Uses AI to analyze and optimize SQL queries, providing performance suggestions and improvements. Consumes AI quota."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "SQL optimized successfully with suggestions",
+            content = @Content(schema = @Schema(implementation = OptimizeSQLResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "429",
+            description = "AI quota exceeded",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(
+                            name = "Quota Exceeded",
+                            value = "{\"message\": \"AI optimization quota exceeded. Please try again tomorrow.\", \"status\": 429}"
+                    )
+            )
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "SQL code to optimize",
+            required = true,
+            content = @Content(
+                    schema = @Schema(implementation = OptimizeSQLRequest.class),
+                    examples = @ExampleObject(value = "{ \"sqlCode\": \"SELECT * FROM users\" }")
+            )
+    )
     public ResponseEntity<OptimizeSQLResponse> optimizeSQL(
             @AuthenticationPrincipal AuthUser authUser,
-            @Parameter(description = "SQL code to optimize") @RequestBody OptimizeSQLRequest request) {
+            @Valid @RequestBody OptimizeSQLRequest request) {
 
-        // Check and decrement AI quota before processing
         userService.checkAndDecrementAiQuota(authUser.userId());
 
         OptimizeSQLResponse response = optimizationService.optimizeSQL(request.getSqlCode());
         return ResponseEntity.ok(response);
     }
 }
+

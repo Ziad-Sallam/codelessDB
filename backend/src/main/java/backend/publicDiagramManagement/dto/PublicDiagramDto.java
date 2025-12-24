@@ -10,6 +10,7 @@ import backend.entities.Diagram;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.userDiagramManagement.dto.ContributorDto;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,7 +40,12 @@ public class PublicDiagramDto {
     @Schema(description = "The timestamp when the diagram was last modified")
     private LocalDateTime lastModified;
 
-    @Schema(description = "List of contributors to the diagram", implementation = ContributorDto.class)
+    @ArraySchema(
+            schema = @Schema(
+                    implementation = ContributorDto.class,
+                    description = "List of contributors to the diagram"
+            )
+    )
     private List<ContributorDto> contributors;
 
     @Schema(description = "A short description of the diagram", example = "A simple schema for an e-commerce platform")
@@ -51,10 +57,20 @@ public class PublicDiagramDto {
     @Schema(description = "The DDL (Data Definition Language) of the diagram", example = "CREATE TABLE users...")
     private String ddl;
 
-    @Schema(description = "List of hashtags associated with the diagram")
+    @ArraySchema(
+            schema = @Schema(
+                    description = "Hashtag associated with the diagram",
+                    example = "database"
+            )
+    )
     private List<String> hashTags;
 
-    @Schema(description = "List of canned queries associated with the diagram", implementation = DiagramCannedQueryDto.class)
+    @ArraySchema(
+            schema = @Schema(
+                    implementation = DiagramCannedQueryDto.class,
+                    description = "List of canned queries associated with the diagram"
+            )
+    )
     private List<DiagramCannedQueryDto> cannedQueries;
 
     @Schema(description = "Number of stars the diagram has received", example = "10")

@@ -7,8 +7,17 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@Schema(description = "Represents a unique constraint")
+@Schema(description = "Represents a unique constraint",
+        example = "{ \"type\": \"UNIQUE\" }")
 public class UniqueConstraintDTO implements ConstraintDTO {
+
+    @Schema(
+            description = "Constraint type",
+            example = "UNIQUE",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private final String type = "UNIQUE";
+
     @Override
     public String toSQL() {
         return "UNIQUE";

@@ -7,8 +7,17 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@Schema(description = "Represents a NOT NULL constraint")
+@Schema(description = "Represents a NOT NULL constraint",
+        example = "{ \"type\": \"NOT_NULL\" }")
 public class NotNullConstraintDTO implements ConstraintDTO {
+
+    @Schema(
+            description = "Constraint type",
+            example = "NOT_NULL",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private final String type = "NOT_NULL";
+
     @Override
     public String toSQL() {
         return "NOT NULL";

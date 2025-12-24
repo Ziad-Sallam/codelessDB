@@ -7,8 +7,17 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@Schema(description = "Represents a primary key constraint")
+@Schema(description = "Represents a primary key constraint",
+        example = "{ \"type\": \"PRIMARY_KEY\" }")
 public class PrimaryKeyConstraintDTO implements ConstraintDTO {
+
+    @Schema(
+            description = "Constraint type",
+            example = "PRIMARY_KEY",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private final String type = "PRIMARY_KEY";
+
     @Override
     public String toSQL() {
         return "PRIMARY KEY";

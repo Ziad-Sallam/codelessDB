@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import backend.entities.publicDiagramEntities.Hashtag;
 import backend.entities.publicDiagramEntities.PublicDiagram;
 import backend.userDiagramManagement.dto.ContributorDto;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,13 +39,23 @@ public class PublicDiagramInfoDto {
     @Schema(description = "The timestamp when the diagram was last modified")
     private LocalDateTime lastModified;
 
-    @Schema(description = "List of contributors to the diagram")
+    @ArraySchema(
+            schema = @Schema(
+                    implementation = ContributorDto.class,
+                    description = "List of contributors to the diagram"
+            )
+    )
     private List<ContributorDto> contributors;
 
     @Schema(description = "A short description of the diagram", example = "A simple schema for an e-commerce platform")
     private String shortDescription;
 
-    @Schema(description = "List of hashtags associated with the diagram")
+    @ArraySchema(
+            schema = @Schema(
+                    description = "Hashtag associated with the diagram",
+                    example = "database"
+            )
+    )
     private List<String> hashTags;
 
     @Schema(description = "Number of stars the diagram has received", example = "10")

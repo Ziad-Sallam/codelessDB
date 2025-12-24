@@ -14,10 +14,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Schema(description = "User Data Transfer Object")
 public class UserDto {
-	@Schema(description = "Unique username for the user", example = "johndoe")
+	@Schema(description = "Unique username for the user", example = "nour")
 	private String username;
 	
-	@Schema(description = "Valid email address", example = "john@example.com")
+	@Schema(description = "Valid email address", example = "nourakram94@gmail.com")
 	private String email;
 
 	@JsonProperty("password")
@@ -34,10 +34,10 @@ public class UserDto {
 	@Schema(description = "User's biography", example = "Expert database architect")
 	private String bio;
 
-	@Schema(description = "Link to the user's public profile", example = "johndoe-profile")
+	@Schema(description = "Link to the user's public profile", example = "nour-profile")
 	private String publicProfile;
 
-	@Schema(description = "User's personal website URL", example = "https://johndoe.me")
+	@Schema(description = "User's personal website URL", example = "https://nour.me")
 	private String profileWebsiteUrl;
 
 	@Schema(description = "Remaining AI quota for SQL optimization", example = "50")

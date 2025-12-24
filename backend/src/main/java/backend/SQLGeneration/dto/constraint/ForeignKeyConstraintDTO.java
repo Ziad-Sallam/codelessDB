@@ -9,8 +9,16 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Represents a foreign key constraint")
+@Schema(description = "Represents a foreign key constraint",
+        example = "{ \"type\": \"FOREIGN_KEY\", \"referencedTable\": \"users\", \"referencedColumn\": \"id\", \"onDelete\": \"CASCADE\", \"onUpdate\": \"RESTRICT\" }")
 public class ForeignKeyConstraintDTO implements ConstraintDTO {
+    @Schema(
+            description = "Constraint type",
+            example = "FOREIGN_KEY",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private final String type = "FOREIGN_KEY";
+
     @Schema(description = "The name of the referenced table", example = "users")
     private String referencedTable;
 
