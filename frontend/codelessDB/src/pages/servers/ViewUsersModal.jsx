@@ -90,13 +90,13 @@ export default function ViewUsersModal({ open, onClose, databaseId, databaseName
     const getRoleColor = (role) => {
         switch (role) {
             case 'OWNER':
-                return '#d32f2f';
+                return '#06275F'; // primary.dark from theme
             case 'WRITER':
-                return '#ed6c02';
+                return '#FF8C00'; // secondary.main from theme
             case 'READER':
-                return '#2e7d32';
+                return '#4C84FF'; // primary.light from theme
             default:
-                return '#757575';
+                return '#64748b'; // text.secondary from theme
         }
     };
 
@@ -192,11 +192,30 @@ export default function ViewUsersModal({ open, onClose, databaseId, databaseName
                                         OWNER
                                     </Box>
                                 ) : (
-                                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                                    <FormControl size="small" sx={{ minWidth: 120, maxWidth: 120 }}>
                                         <Select
                                             value={user.role}
                                             onChange={(e) => handleRoleChange(user.userId, e.target.value)}
                                             disabled={updating === user.userId}
+                                            MenuProps={{
+                                                disableScrollLock: true,
+                                                hideBackdrop: true,
+                                                sx: {
+                                                    pointerEvents: 'none',
+                                                    "& .MuiPaper-root": {
+                                                        pointerEvents: 'auto',
+                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                                    }
+                                                },
+                                                anchorOrigin: {
+                                                    vertical: 'bottom',
+                                                    horizontal: 'left',
+                                                },
+                                                transformOrigin: {
+                                                    vertical: 'top',
+                                                    horizontal: 'left',
+                                                }
+                                            }}
                                             sx={{
                                                 backgroundColor: getRoleColor(user.role),
                                                 color: 'white',
