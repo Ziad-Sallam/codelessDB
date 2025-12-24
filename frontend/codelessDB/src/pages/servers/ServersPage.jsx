@@ -124,7 +124,14 @@ export default function ServersPage() {
                                     label="Select Server"
                                     onChange={handleServerChange}
                                     MenuProps={{
-                                        disablePortal: true,
+                                        disableScrollLock: true,
+                                        hideBackdrop: true,
+                                        sx: {
+                                            pointerEvents: 'none',
+                                            "& .MuiPaper-root": {
+                                                pointerEvents: 'auto',
+                                            }
+                                        },
                                         anchorOrigin: {
                                             vertical: 'bottom',
                                             horizontal: 'left',
@@ -132,11 +139,6 @@ export default function ServersPage() {
                                         transformOrigin: {
                                             vertical: 'top',
                                             horizontal: 'left',
-                                        },
-                                    }}
-                                    slotProps={{
-                                        backdrop: {
-                                            invisible: true,
                                         },
                                     }}
                                 >
