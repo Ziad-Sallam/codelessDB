@@ -45,7 +45,10 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/agent-ws/**",
                                 "/database/create-mysql-container",
-                                "/ws/collab/**")
+                                "/ws/collab/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth

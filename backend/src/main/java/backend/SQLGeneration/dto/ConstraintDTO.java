@@ -9,6 +9,7 @@ import backend.SQLGeneration.dto.constraint.ForeignKeyConstraintDTO;
 import backend.SQLGeneration.dto.constraint.NotNullConstraintDTO;
 import backend.SQLGeneration.dto.constraint.PrimaryKeyConstraintDTO;
 import backend.SQLGeneration.dto.constraint.UniqueConstraintDTO;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
@@ -18,6 +19,14 @@ import backend.SQLGeneration.dto.constraint.UniqueConstraintDTO;
                 @JsonSubTypes.Type(value = DefaultConstraintDTO.class, name = "DEFAULT"),
                 @JsonSubTypes.Type(value = CheckConstraintDTO.class, name = "CHECK"),
                 @JsonSubTypes.Type(value = UniqueConstraintDTO.class, name = "UNIQUE")
+})
+@Schema(description = "Base interface for various database constraints", subTypes = {
+                PrimaryKeyConstraintDTO.class,
+                NotNullConstraintDTO.class,
+                ForeignKeyConstraintDTO.class,
+                DefaultConstraintDTO.class,
+                CheckConstraintDTO.class,
+                UniqueConstraintDTO.class
 })
 public interface ConstraintDTO {
         default String toSQL() {

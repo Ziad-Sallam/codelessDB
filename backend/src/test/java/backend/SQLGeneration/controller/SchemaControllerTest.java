@@ -62,7 +62,11 @@ class SchemaControllerTest {
     @Test
     void generateDDL_success_returns200() throws Exception {
         SchemaDTO schemaDTO = new SchemaDTO();
-        String mockDDL = "CREATE TABLE test (...)";
+        String mockDDL = "CREATE TABLE users (\n" +
+                         "  id INT PRIMARY KEY AUTO_INCREMENT,\n" +
+                         "  username VARCHAR(255) NOT NULL UNIQUE,\n" +
+                         "  email VARCHAR(255) NOT NULL\n" +
+                         ");";
         
         when(schemaService.generateDDL(any(SchemaDTO.class))).thenReturn(mockDDL);
 

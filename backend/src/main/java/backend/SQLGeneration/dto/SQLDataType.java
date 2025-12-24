@@ -2,6 +2,7 @@ package backend.SQLGeneration.dto;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,11 +10,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Represents a SQL data type with optional modifiers like length and precision")
 public class SQLDataType {
+    @Schema(description = "The base name of the SQL data type", example = "VARCHAR")
     private SQLTypeName name;
+    @Schema(description = "Length for character types (e.g. VARCHAR(255))", example = "255")
     private Integer length; // CHAR/VARCHAR
+    @Schema(description = "Precision for numeric types (e.g. DECIMAL(10,2))", example = "10")
     private Integer precision; // DECIMAL/NUMERIC
+    @Schema(description = "Scale for numeric types (e.g. DECIMAL(10,2))", example = "2")
     private Integer scale; // DECIMAL/NUMERIC
+    @Schema(description = "List of allowed values for ENUM or SET types", example = "[\"ACTIVE\", \"INACTIVE\"]")
     private List<String> values; // ENUM/SET
 
     public String toDDL() {
