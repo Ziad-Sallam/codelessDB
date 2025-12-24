@@ -37,7 +37,9 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final UserService userService;
+
     private final JwtUtil jwtUtil;
+
     private final Cloudinary cloudinary;
 
     @Value("${cloudinary.upload_preset}")
@@ -75,7 +77,7 @@ public class UserController {
             userService.validateSignUp(userDto);
             return ResponseEntity.ok("Valid signup data");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage(), "status", 400));
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -186,7 +188,7 @@ public class UserController {
     public ResponseEntity<?> checkEmailExists(@PathVariable String email) {
         User user = userService.findUserByEmail(email);
         if (user == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email does not exist", "status", 400));
+            return ResponseEntity.badRequest().body("Email does not exist");
         }
         return ResponseEntity.ok(jwtUtil.generateToken(user.getId(), user.getUsername()));
     }
@@ -363,20 +365,20 @@ public class UserController {
     public Map<String, Object> getSignature(@RequestParam String publicId) {
         long timestamp = System.currentTimeMillis() / 1000;
 
-		Map<String, Object> paramsToSign = Map.of(
-				"timestamp", timestamp,
-				"upload_preset", uploadPreset,
-				"public_id", publicId,
-				"overwrite", true,
-				"invalidate", true);
+        Map<String, Object> paramsToSign = Map.of(
+                "timestamp", timestamp,
+                "upload_preset", uploadPreset,
+                "public_id", publicId,
+                "overwrite", true,
+                "invalidate", true);
 
         String signature = cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
 
-		return Map.of(
-				"signature", signature,
-				"timestamp", timestamp,
-				"apiKey", cloudinary.config.apiKey,
-				"cloudName", cloudinary.config.cloudName,
-				"uploadPreset", uploadPreset);
-	}
+        return Map.of(
+                "signature", signature,
+                "timestamp", timestamp,
+                "apiKey", cloudinary.config.apiKey,
+                "cloudName", cloudinary.config.cloudName,
+                "uploadPreset", uploadPreset);
+    }
 }

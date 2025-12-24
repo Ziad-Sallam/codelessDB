@@ -63,7 +63,7 @@ public class SQLOptimizationController {
     )
     public ResponseEntity<OptimizeSQLResponse> optimizeSQL(
             @AuthenticationPrincipal AuthUser authUser,
-            @Valid @RequestBody OptimizeSQLRequest request) {
+            @RequestBody OptimizeSQLRequest request) {
 
         userService.checkAndDecrementAiQuota(authUser.userId());
 
