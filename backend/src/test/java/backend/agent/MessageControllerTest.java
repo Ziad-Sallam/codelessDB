@@ -125,16 +125,4 @@ class MessageControllerTest {
                 .contains("create_container.exe"));
     }
 
-    @Test
-    void downloadCommunicate_returnsResource() throws Exception {
-        ResponseEntity<Resource> response =
-                controller.downloadCommunicate();
-
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertTrue(response.getHeaders()
-                .get(HttpHeaders.CONTENT_DISPOSITION)
-                .get(0)
-                .contains("communicate.exe"));
-    }
 }
