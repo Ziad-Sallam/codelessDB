@@ -125,7 +125,9 @@ public class MessageServiceTest {
         when(agentController.sendToUser(eq(5), any())).thenReturn(mockResponse);
 
         // Call the service
-        ClientResponseDTO result = messageService.runQuery(5, new AgentMessageDTO(), 10);
+        AgentMessageDTO agentMessageDTO = new AgentMessageDTO();
+        agentMessageDTO.setContent("SELECT * FROM users");
+        ClientResponseDTO result = messageService.runQuery(5, agentMessageDTO, 10);
 
         // Assertions
         assertNotNull(result);

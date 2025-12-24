@@ -34,9 +34,6 @@ public class MessageController {
             @RequestBody MessageDTO request,
             @AuthenticationPrincipal AuthUser user) {
 
-        if (user == null)
-            throw new RuntimeException("Unauthorized");
-
         AgentMessageDTO message = new AgentMessageDTO("Server", request.getContent());
 
         ClientResponseDTO res = messageService.runQuery(

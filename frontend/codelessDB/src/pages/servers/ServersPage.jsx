@@ -54,7 +54,7 @@ export default function ServersPage() {
             }
         } catch (error) {
             console.error("Error fetching servers and databases:", error);
-            showSnackbar("Failed to load servers and databases: " + (error.response?.data || error.message), "error");
+            showSnackbar("Failed to load servers and databases: " + (error.message), "error");
         } finally {
             setLoading(false);
         }

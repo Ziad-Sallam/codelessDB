@@ -10,7 +10,6 @@ import backend.databaseManagement.UserDatabaseRepository;
 import backend.databaseManagement.exception.DatabaseException;
 import backend.entities.joins.UserDatabaseAccess;
 import backend.entities.User;
-import backend.entities.UserDatabase;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotConnectedException;
