@@ -8,13 +8,16 @@ import java.nio.file.Paths;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpRange;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +35,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
 
 @RestController
 @RequestMapping("/agent")
@@ -44,9 +48,7 @@ public class MessageController {
     @PostMapping("/send")
     @Operation(summary = "Send message to AI agent", description = "Sends a natural language query or command to the AI agent for processing against a database")
     @ApiResponse(responseCode = "200", description = "Returns AI agent response with query results")
-    @ApiResponse(responseCode = "401", description = "Unauthorized", 
-                 content = @Content(schema = @Schema(implementation = ErrorResponse.class),
-                 examples = @ExampleObject(name = "Auth Error", value = "{\"message\": \"Full authentication is required to access this resource\", \"status\": 401}")))
+    @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponse.class), examples = @ExampleObject(name = "Auth Error", value = "{\"message\": \"Full authentication is required to access this resource\", \"status\": 401}")))
     public ResponseEntity<ClientResponseDTO> sendToUser(
             @Parameter(description = "Message content and database ID") @RequestBody MessageDTO request,
             @AuthenticationPrincipal AuthUser user) {
@@ -78,23 +80,23 @@ public class MessageController {
     @GetMapping("/create-container")
     @Operation(summary = "Download container creation agent", description = "Downloads the agent executable for creating database containers")
     @ApiResponse(responseCode = "200", description = "Returns executable file")
-    public ResponseEntity<Resource> downloadCreateContainer() throws IOException {
-    Path path = Paths.get("backend/uploads/agent/dist/codeless_agent.exe")
-            .toAbsolutePath();
+public ResponseEntity<Resource> downloadAgent(@RequestHeader HttpHeaders headers) throws IOException {
+    Path path = Paths.get("backend/uploads/agent/dist/codeless_agent.exe").toAbsolutePath().normalize();
+    Resource resource = new UrlResource(path.toUri());
 
-    if (!Files.exists(path)) {
+    if (!resource.exists()) {
         return ResponseEntity.notFound().build();
     }
 
-    Resource resource = new UrlResource(path.toUri());
+    long contentLength = Files.size(path);
 
+    // If no range is requested, send the WHOLE file (18MB), not just a 1MB chunk
     return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"" + path.getFileName() + "\"")
-            .header(HttpHeaders.CONTENT_ENCODING, "identity") 
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
-            .contentLength(Files.size(path))
-            .body(resource);
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+            .header(HttpHeaders.ACCEPT_RANGES, "bytes") // Tells PowerShell it CAN resume
+            .contentLength(contentLength)
+            .body(resource); 
 }
 
 }
