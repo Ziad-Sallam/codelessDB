@@ -144,6 +144,7 @@ const SchemaContent = () => {
 			const thumbnail = await toPng(viewport, {
 				backgroundColor: "#ffffff",
 				quality: 1,
+				skipFonts: true,
 			});
 
 			return thumbnail;
@@ -221,14 +222,16 @@ const SchemaContent = () => {
 
 	const handleSaveAndExit = async () => {
 		setIsLoading(true);
-		try {
-			const screenShot = await takeThumbnail();
-			if (screenShot) {
-				const screenShotUrl = await uploadToCloudinary(screenShot, roomId);
-				await updateDiagramMetadata(roomId, { thumbnail: screenShotUrl });
+		if (nodes.length !== 0) {
+			try {
+				const screenShot = await takeThumbnail();
+				if (screenShot) {
+					const screenShotUrl = await uploadToCloudinary(screenShot, roomId);
+					await updateDiagramMetadata(roomId, { thumbnail: screenShotUrl });
+				}
+			} catch (error) {
+				console.error("Thumbnail update failed:", error);
 			}
-		} catch (error) {
-			console.error("Auto-save failed:", error);
 		}
 	};
 
