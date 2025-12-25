@@ -197,7 +197,7 @@ const SchemaContent = () => {
 						id: `attr1_${id}`,
 						name: "id",
 						dataType: "INT",
-						constraints: { PRIMARY_KEY: true },
+						constraints: { PRIMARY_KEY: true, AUTO_INCREMENT: true },
 					},
 				],
 			},
