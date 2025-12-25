@@ -4,7 +4,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { routes } from "./routes.jsx";
 import { NotificationProvider } from "./components/NotificationContext.jsx";
 import { useAuth } from "./components/AuthProvider.jsx";
-
+import LoadingPage from "./components/LoadingPage.jsx";
 export const RecoveryContext = createContext();
 
 function App() {
@@ -14,7 +14,7 @@ function App() {
   const { loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingPage />;
   }
 
   const router = createBrowserRouter(routes);

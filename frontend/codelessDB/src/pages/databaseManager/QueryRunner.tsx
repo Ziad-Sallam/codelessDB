@@ -8,6 +8,7 @@ import { Snackbar, Alert } from '@mui/material';
 import CodeMirror from '@uiw/react-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import { placeholder } from '@codemirror/view';
+import {v4 as uuidv4} from 'uuid';
 
 import axios from 'axios';
 
@@ -46,7 +47,7 @@ const executeQuery = async (request: QueryRequest): Promise<QueryResponse> => {
     return response.data;
   } catch (error: any) {
     return {
-      correlationId: crypto.randomUUID(),
+      correlationId: uuidv4(),
       type: null,
       columns: null,
       rows: null,

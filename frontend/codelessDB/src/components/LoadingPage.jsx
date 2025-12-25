@@ -1,6 +1,6 @@
 
 import React from 'react';
-import './LoadingPage.css';
+import './styling/LoadingPage.css';
 import { CircularProgress } from '@mui/material';
 
 export default function LoadingPage() {

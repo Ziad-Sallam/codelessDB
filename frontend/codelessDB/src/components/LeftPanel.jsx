@@ -72,7 +72,7 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 				</ListItemButton>
 
 				<ListItemButton
-					selected={leftNav === "servers"}
+					selected={leftNav === "all"}
 					onClick={() => navigate('/servers')}
 					sx={{ borderRadius: 1, mb: 1 }}
 				>
@@ -83,7 +83,7 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 				</ListItemButton>
 
 				<ListItemButton
-					selected={leftNav === "cannedQueries"}
+					selected={leftNav === "all"}
 					onClick={() => navigate('/canned-queries')}
 					sx={{ borderRadius: 1, mb: 1 }}
 				>

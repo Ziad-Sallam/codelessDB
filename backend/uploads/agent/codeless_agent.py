@@ -21,7 +21,7 @@ from collections.abc import Iterable
 from docker.errors import DockerException, NotFound
 from mysql.connector import Error, OperationalError, InterfaceError
 
-MAX_RETRIES = 5
+MAX_RETRIES = 30
 retries = 0
 ws_global = None
 connection_global = None
@@ -125,91 +125,107 @@ def create_mysql_container(url: str, database_id: int):
         sys.exit(1)
 
     db = get_database_info(url, database_id)
-    container_name = db["databaseName"]
+    container_name = db["containerName"]
+    db_name = db["databaseName"]
     volume_name = f"{container_name}_data"
     image = "mysql:8.0"
-    volFound = True
-    containerFound = True
-    # Ensure volume exists
+
     try:
         client.volumes.get(volume_name)
+        volume_exists = True
     except NotFound:
-        volFound = False
         client.volumes.create(volume_name)
+        volume_exists = False
 
     def create_container():
         print("Creating MySQL container...")
-        global password
         return client.containers.run(
             image=image,
             name=container_name,
             environment={
-                "MYSQL_ROOT_PASSWORD": password,
-                "MYSQL_DATABASE": container_name,
+                "MYSQL_ROOT_PASSWORD": password
             },
             ports={"3306/tcp": None},
             volumes={volume_name: {"bind": "/var/lib/mysql", "mode": "rw"}},
             detach=True,
         )
-
+    exists = False
     try:
         container = client.containers.get(container_name)
         container.reload()
 
         ports = container.attrs["NetworkSettings"]["Ports"]
-
-        if not ports or ports.get("3306/tcp") is None:
-            print("Container has no exposed MySQL port → recreating...")
+        if not ports or not ports.get("3306/tcp"):
+            print("Container has no MySQL port → recreating...")
             container.remove(force=True)
             container = create_container()
-
+        elif container.status != "running":
+            print("Restarting MySQL container...")
+            container.restart()
         else:
-            if container.status != "running":
-                print("Restarting container...")
-                container.restart()
-            else:
-                print("Container already running")
+            print("Using existing MySQL container")
+            exists = True
+
 
     except NotFound:
-        containerFound = False
         container = create_container()
 
     time.sleep(2)
     container.reload()
 
     host_port = container.attrs["NetworkSettings"]["Ports"]["3306/tcp"][0]["HostPort"]
-    print(f"MySQL ready on port {host_port}")
-    time.sleep(20)
-    connection = None
-    cursor = None
-    if not volFound:
-        if containerFound:
-            print(
-                f"\033[31mVolume '{volume_name}' was missing and has been created.\033[0m"
-            )
-        connection = mysql.connector.connect(
-            host="localhost",
-            port=host_port,
-            user="root",
-            password=password,
-            database=db["databaseName"],
-        )
-        ddl_statements = db.get("ddl", "").split(";")
-        cursor = connection.cursor()
+    print(f"MySQL exposed on port {host_port}")
+
+    def wait_for_mysql(timeout=150):
+        start = time.time()
+        while time.time() - start < timeout:
+            try:
+                conn = mysql.connector.connect(
+                    host="localhost",
+                    port=host_port,
+                    user="root",
+                    password=password,
+                )
+                conn.close()
+                print("MySQL is ready")
+                return
+            except mysql.connector.Error as e:
+                print("Waiting for MySQL...", e)
+                time.sleep(3)
+
+        raise RuntimeError("MySQL did not become ready in time")
+
+    wait_for_mysql()
+
+    connection = mysql.connector.connect(
+        host="localhost",
+        port=host_port,
+        user="root",
+        password=password,
+        autocommit=False,
+    )
+
+    cursor = connection.cursor()
+
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")
+    cursor.execute(f"USE `{db_name}`")
+
+    ddl_statements = [
+        stmt.strip()
+        for stmt in db.get("ddl", "").split(";")
+        if stmt.strip()
+    ]
+    if not exists:
         for stmt in ddl_statements:
-            stmt = stmt.strip()
             print("Executing DDL:", stmt)
-            if stmt:
-                cursor.execute(stmt)
-        connection.commit()
-        print(f"New MySQL container '{container_name}' created.")
+            cursor.execute(stmt)
+
+    connection.commit()
+
+    print(f"MySQL container '{container_name}' is fully ready")
 
     return container, db, host_port, connection, cursor
 
-
-# -----------------------------
-# SQL Execution and Data Conversion Logic
-# -----------------------------
 
 
 def mysql_value_to_json(value):
@@ -271,19 +287,16 @@ def execute_sql(cursor, query, params=None):
         return {"success": False, "message": str(e)}
 
 
-def connect_to_mysql(host=None, port=None, user=None, password_=None, database=None):
-    global connection_global, cursor_global, host_port_global, data, password
+def connect_to_mysql(host="localhost", user="root", database=None):
+    global connection_global, cursor_global, host_port_global
 
-    host = host or "localhost"
-    port = port or host_port_global
-    user = user or "root"
-    password = password
-    database = database or data.get("databaseName")
+    database = database or data["databaseName"]
 
-    backoff = 5
     while not shutdown_event.is_set():
-        ensure_container_running()
         try:
+            ensure_container_running()
+            port = host_port_global  # always fresh
+
             connection = mysql.connector.connect(
                 host=host,
                 port=port,
@@ -292,33 +305,57 @@ def connect_to_mysql(host=None, port=None, user=None, password_=None, database=N
                 database=database,
             )
             cursor = connection.cursor()
-            print("Connected to MySQL!")
+            print(f"Connected to MySQL on port {port}")
             return connection, cursor
 
         except Error as e:
-            print(f"MySQL connection failed: {e}. Retrying in {backoff}s")
-            time.sleep(backoff)
+            print(f"MySQL connect failed (port {host_port_global}). Retrying...")
+            time.sleep(5)
+
     return None, None
 
+
+def get_mysql_host_port(container_name):
+    client = docker.from_env()
+    container = client.containers.get(container_name)
+    container.reload()
+
+    ports = container.attrs["NetworkSettings"]["Ports"]
+    if not ports or not ports.get("3306/tcp"):
+        raise RuntimeError("MySQL port not exposed")
+
+    return int(ports["3306/tcp"][0]["HostPort"])
+
 def ensure_container_running(container_name=None):
-    container_name = container_name or data["databaseName"]
+    global host_port_global
+
+    container_name = container_name or data["containerName"]
+    client = docker.from_env()
+
     try:
-        client = docker.from_env()
         container = client.containers.get(container_name)
         container.reload()
 
         if container.status != "running":
             print(f"Starting container '{container_name}'...")
             container.start()
-            time.sleep(10)
+            time.sleep(8)
+
+        # 🔴 ALWAYS refresh port after start/restart
+        host_port_global = get_mysql_host_port(container_name)
+        print("Updated MySQL port:", host_port_global)
 
     except NotFound:
-        print(f"Container '{container_name}' not found.")
-        sys.exit(1)
+        print(f"Container '{container_name}' not found. Recreating...")
+        container, _, host_port, connection, cursor = create_mysql_container(
+            argv[1], int(argv[2])
+        )
+        host_port_global = host_port
 
     except DockerException as e:
         print("Docker error:", e)
-        sys.exit(1)
+        time.sleep(5)
+
 
 
 def ensure_mysql_connection():
