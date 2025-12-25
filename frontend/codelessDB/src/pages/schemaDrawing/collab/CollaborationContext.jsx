@@ -139,9 +139,9 @@ export const CollaborationProvider = ({ roomId, children }) => {
 		// ----------------- Yjs → React Sync -----------------
 		const syncObserver = (event, transaction) => {
 			
-			if (transaction && transaction.origin === "position") {
-				return;
-			}
+			// if (transaction && transaction.origin === "position") {
+			// 	return;
+			// }
 
 			setNodes((prevNodes) => {
 				const yNodes = Array.from(nodesMap.values());
@@ -203,7 +203,7 @@ export const CollaborationProvider = ({ roomId, children }) => {
 			provider.destroy();
 			doc.destroy();
 		};
-	}, [roomId, user]);
+	}, [roomId, user?.username]);
 
 	// ----------------- Snapshot Loader -----------------
 	const applySnapshot = useCallback((snapshotBytes) => {

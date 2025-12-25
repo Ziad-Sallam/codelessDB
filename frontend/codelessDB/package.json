@@ -33,6 +33,7 @@
     "react-syntax-highlighter": "^16.1.0",
     "snowfall": "^2.1.0",
     "sql-parser-cst": "^0.37.2",
+    "uuid": "^13.0.0",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.27"
   },
