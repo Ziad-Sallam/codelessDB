@@ -26,7 +26,7 @@ export default function ServersPage() {
     const navigate = useNavigate();
     const { user, setUser } = useAuth();
 
-    const [leftNav, setLeftNav] = useState("servers");
+    const [leftNav, setLeftNav] = useState("all");
     const [servers, setServers] = useState([]);
     const [databases, setDatabases] = useState([]);
     const [selectedServerId, setSelectedServerId] = useState("");
