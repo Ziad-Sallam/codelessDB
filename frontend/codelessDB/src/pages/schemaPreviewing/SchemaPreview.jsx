@@ -30,7 +30,8 @@ import {
   Description as BookOpenIcon,
   Code as CodeIcon,
   Storage as DatabaseIcon,
-  ListAlt as FileTextIcon
+  ListAlt as FileTextIcon,
+  Comment as CommentIcon
 } from "@mui/icons-material";
 
 import LeftPanel from "../../components/LeftPanel";
@@ -47,6 +48,7 @@ import { MarkdownRenderer } from "./preview/MarkdownRenderer";
 import { ContributorsSection } from "./preview/ContributorsSection";
 import { AboutSection } from "./preview/AboutSection";
 import { QueriesSection } from "./preview/QueriesSection";
+import { CommentsSection } from "./preview/CommentsSection";
 
 
 export default function SchemaPreview() {
@@ -89,8 +91,6 @@ export default function SchemaPreview() {
         const data = await getPublicDiagram(id);
         setSchemaData(data);
         setIsStarred(data.stared || false);
-      } catch (err) {
-        showError(err.message);
       } finally {
         setLoading(false);
       }
@@ -158,9 +158,6 @@ export default function SchemaPreview() {
             {schemaData.name || "Untitled Schema"}
           </Typography>
         </Box>
-        <Typography variant="caption" color="text.secondary" noWrap display="block">
-          {schemaData.shortDescription || "No description"}
-        </Typography>
       </Box>
 
       <Box sx={{ flexGrow: 1 }} />
@@ -208,15 +205,20 @@ export default function SchemaPreview() {
         <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
           <SimpleTopBar title="Preview" />
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4 }}>
-            <Card sx={{ maxWidth: 400, textAlign: 'center', p: 4 }}>
+            <Card sx={{ maxWidth: 600, textAlign: 'center', p: 4 }}>
               <DatabaseIcon sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
               <Typography variant="h6" gutterBottom>No Schema to Preview</Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
                 Select a schema from the Discover page or create a new one.
-              </Typography>
-              <Button variant="contained" onClick={() => navigate("/schema/create")}>
-                Create Schema
-              </Button>
+              </Typography >
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2 }}>
+                <Button variant="contained" onClick={() => navigate("/discover")}>
+                  Discover Schemas
+                </Button>
+                <Button variant="contained" onClick={() => navigate("/schema/create")}>
+                  Create Schema
+                </Button>
+              </Box>
             </Card>
           </Box>
         </Box>
@@ -235,9 +237,7 @@ export default function SchemaPreview() {
           <Container maxWidth="xl">
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4 }}>
 
-              {/* Left Column - Main Content */}
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                {/* Schema Diagram Thumbnail */}
                 <Card variant="outlined" sx={{ mb: 4, overflow: 'hidden' }}>
                   <Box sx={{ position: 'relative', paddingTop: '56.25%', bgcolor: 'action.hover' }}>
                     {schemaData.thumbnail ? (
@@ -258,13 +258,13 @@ export default function SchemaPreview() {
                   </Box>
                 </Card>
 
-                {/* Tabs */}
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs value={activeTab} onChange={handleTabChange} aria-label="schema tabs">
-                    <Tab icon={<BookOpenIcon fontSize="small" />} iconPosition="start" label="Detailed Description" />
-                    {/* <Tab icon={<CodeIcon fontSize="small" />} iconPosition="start" label="DDL" /> */}
+                    <Tab value={0} icon={<BookOpenIcon fontSize="small" />} iconPosition="start" label="Detailed Description" />
+                    <Tab value={1} icon={<CodeIcon fontSize="small" />} iconPosition="start" label="DDL" />
                     {schemaData.cannedQueries?.length > 0 && (
                       <Tab
+                        value={2}
                         icon={<FileTextIcon fontSize="small" />}
                         iconPosition="start"
                         label={
@@ -278,8 +278,7 @@ export default function SchemaPreview() {
                   </Tabs>
                 </Box>
 
-                <Box sx={{ mt: 3 }}>
-                  {/* README Tab */}
+                <Box sx={{ mt: 3, mb: 6 }}>
                   {activeTab === 0 && (
                     <Card variant="outlined">
                       <CardContent>
@@ -295,7 +294,6 @@ export default function SchemaPreview() {
                     </Card>
                   )}
 
-                  {/* DDL Tab */}
                   {activeTab === 1 && (
                     <Card variant="outlined">
                       <CardHeader
@@ -331,14 +329,17 @@ export default function SchemaPreview() {
                     </Card>
                   )}
 
-                  {/* Queries Tab */}
                   {activeTab === 2 && (
                     <QueriesSection queries={schemaData.cannedQueries} />
                   )}
                 </Box>
+
+                {/* Comments Section moved here to match tab width */}
+                <Box sx={{ mt: 6, pt: 4, borderTop: 1, borderColor: 'divider' }}>
+                  <CommentsSection diagramId={schemaData.diagramId} />
+                </Box>
               </Box>
 
-              {/* Right Sidebar */}
               <Box sx={{ width: { lg: 320 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <AboutSection
                   shortDescription={schemaData.shortDescription || "No description provided"}
@@ -357,19 +358,7 @@ export default function SchemaPreview() {
                 {schemaData.contributors && schemaData.contributors.length > 0 && (
                   <ContributorsSection collaborators={schemaData.contributors} />
                 )}
-
-                {/* <Card variant="outlined" sx={{ bgcolor: 'primary.50', borderColor: 'primary.200' }}>
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      This is a preview. Clone this schema to edit it in your workspace.
-                    </Typography>
-                    <Button variant="contained" fullWidth onClick={handleClone}>
-                      Clone Schema
-                    </Button>
-                  </CardContent>
-                </Card> */}
               </Box>
-
             </Box>
           </Container>
         </Box>

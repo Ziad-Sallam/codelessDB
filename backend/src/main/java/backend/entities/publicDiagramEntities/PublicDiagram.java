@@ -40,8 +40,11 @@ public class PublicDiagram {
     @Size(max = 2000)
     private String detailedDescription;
 
+    @Builder.Default
     private int stars = 0;
+    @Builder.Default
     private int forks = 0;
+    @Builder.Default
     private int views = 0;
 
     @Column(updatable = false)

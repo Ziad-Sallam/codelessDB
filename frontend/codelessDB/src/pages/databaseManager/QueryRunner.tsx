@@ -8,6 +8,7 @@ import { Snackbar, Alert } from '@mui/material';
 import CodeMirror from '@uiw/react-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import { placeholder } from '@codemirror/view';
+import {v4 as uuidv4} from 'uuid';
 
 import axios from 'axios';
 
@@ -46,7 +47,7 @@ const executeQuery = async (request: QueryRequest): Promise<QueryResponse> => {
     return response.data;
   } catch (error: any) {
     return {
-      correlationId: crypto.randomUUID(),
+      correlationId: uuidv4(),
       type: null,
       columns: null,
       rows: null,
@@ -56,16 +57,6 @@ const executeQuery = async (request: QueryRequest): Promise<QueryResponse> => {
     };
   }
 };
-
-const request: QueryRequest = {
-  databaseId: 1,
-  content: 'SELECT * FROM my_table'
-};
-
-executeQuery(request).then(response => {
-  console.log(response);
-});
-
 
 
 const QueryRunner: React.FC = () => {
@@ -206,22 +197,46 @@ const QueryRunner: React.FC = () => {
         message: 'Only one SQL query is allowed.',
         severity: 'warning'
       });
-      setQueryContent(statements[0]+";");
+      setQueryContent(statements[0] + ";");
     } else {
       setQueryContent(value);
     }
   };
 
-const RECONNECT_COMMANDS = [
-  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/communicate" -OutFile ".\\communicate.exe"`,
-  `Invoke-WebRequest -Uri "http://${API_BASE_URL}/agent/create-container" -OutFile ".\\create_container.exe"`,
-  `.\\create_container.exe "http://${API_BASE_URL}" ${databaseId}`,
-  `.\\communicate.exe "ws://${API_BASE_URL}" ${databaseId}`
-];
+
+  const [downloadMethod, setDownloadMethod] = useState<'powershell' | 'curl' | 'wget'>('powershell');
+
+  const getDownloadCommand = () => {
+    const url = `${API_BASE_URL}/agent/create-container`;
+    switch (downloadMethod) {
+      case 'curl':
+        return `curl "${url}" -o codeless_agent.exe`;
+      case 'wget':
+        return `wget "${url}" -O codeless_agent.exe`;
+      case 'powershell':
+      default:
+        return `Invoke-WebRequest -Uri "${url}" -OutFile "codeless_agent.exe"`;
+    }
+  };
+
+  const RECONNECT_COMMANDS = [
+    getDownloadCommand(),
+    `./codeless_agent.exe "${API_BASE_URL}" ${databaseId}`,
+  ];
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setSnackbar({
+      open: true,
+      message: 'Command copied to clipboard',
+      severity: 'success'
+    });
+  };
 
 
   return (
     <div className="databaseManager">
+
       <LeftPanel leftNav={leftNav} setLeftNav={setLeftNav} />
       <div className="query-runner-container db-manager-container">
 
@@ -248,10 +263,55 @@ const RECONNECT_COMMANDS = [
                 Run the following commands in order to reconnect:
               </p>
 
+              <div style={{ marginBottom: '10px', display: 'flex', gap: '8px' }}>
+                {(['powershell', 'curl', 'wget'] as const).map((method) => (
+                  <button
+                    key={method}
+                    onClick={() => setDownloadMethod(method)}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '4px',
+                      border: '1px solid #e5e7eb',
+                      background: downloadMethod === method ? '#06275F' : 'white',
+                      color: downloadMethod === method ? 'white' : '#374151',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    {method.charAt(0).toUpperCase() + method.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+
               <ol className="reconnect-steps">
                 {RECONNECT_COMMANDS.map((cmd, index) => (
                   <li key={index}>
-                    <code>{cmd}</code>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <code>{cmd}</code>
+                      <button
+                        className="copy-btn"
+                        onClick={() => handleCopy(cmd)}
+                        title="Copy command"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: '#6b7280',
+                          transition: 'color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#06275F'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#6b7280'}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ol>

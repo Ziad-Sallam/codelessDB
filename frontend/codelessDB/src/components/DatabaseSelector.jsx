@@ -72,6 +72,24 @@ export default function DatabaseSelector({ value, onChange, disabled = false }) 
         value={value || ""}
         label="Database"
         onChange={handleChange}
+        MenuProps={{
+          disableScrollLock: true,
+          hideBackdrop: true,
+          sx: {
+            pointerEvents: 'none',
+            "& .MuiPaper-root": {
+              pointerEvents: 'auto',
+            }
+          },
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left',
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left',
+          },
+        }}
       >
         {databases.map((db) => (
           <MenuItem key={db.databaseId} value={db.databaseId}>

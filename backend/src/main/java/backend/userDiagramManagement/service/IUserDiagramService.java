@@ -15,6 +15,8 @@ import backend.userDiagramManagement.dto.share.DiagramShareResponseDto;
 import backend.userDiagramManagement.dto.update.DiagramUpdateRequestDto;
 
 public interface IUserDiagramService {
+    Page<DiagramInfoDto> getDiagramsByUserId(int userId, Pageable pageable);
+
     DiagramInfoDto createDiagram(int userId, DiagramCreateRequestDto request);
 
     LocalDateTime updateDiagram(int userId, DiagramUpdateRequestDto request, UUID diagramID);
@@ -27,5 +29,7 @@ public interface IUserDiagramService {
 
     DiagramShareResponseDto shareDiagram(int userId, UUID diagramId, DiagramShareRequestDto request);
 
-    Page<DiagramInfoDto> getDiagramsByUserId(int userId, Pageable pageable);
+    void updateDDL(UUID diagramId, String ddl);
+    
+    String getDDL(UUID diagramId);
 }

@@ -1,6 +1,5 @@
 package backend.publicDiagramManagement.service;
 
-
 import backend.publicDiagramManagement.dto.PublicDiagramDto;
 import backend.publicDiagramManagement.dto.PublicDiagramInfoDto;
 import backend.publicDiagramManagement.dto.get.ToBePublishedDiagramDto;
@@ -16,6 +15,8 @@ import java.util.UUID;
 public interface PublicDiagramService {
 
     void publishDiagram(int userId, PublishDiagramRequestDto publishDiagramDto);
+
+    void updatePublicDiagram(int userId, PublishDiagramRequestDto dto);
 
     PublicDiagramDto viewPublicDiagram(int userId, UUID diagramId);
 
@@ -33,7 +34,7 @@ public interface PublicDiagramService {
 
     Page<PublicDiagramInfoDto> searchPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable);
 
-    Page<PublicUserInfoDto> searchUsersByPublicDiagrams(SearchRequestDto searchRequestDto, Pageable pageable);
+    Page<PublicUserInfoDto> searchUsersByPublicDiagrams(int userId, SearchRequestDto searchRequestDto, Pageable pageable);
 
     void unPublishPublicDiagram(int userId, @NonNull UUID diagramId);
 }

@@ -48,8 +48,9 @@ export async function validateToken() {
   return response.data;
 }
 
-export async function sendOtp(email) {
-  const response = await api.post(`/user/signup/send-otp/${encodeURIComponent(email)}`);
+export async function sendOtp(email, username) {
+  const query = username ? `?username=${encodeURIComponent(username)}` : "";
+  const response = await api.post(`/user/signup/send-otp/${encodeURIComponent(email)}${query}`);
   return response.data;
 }
 

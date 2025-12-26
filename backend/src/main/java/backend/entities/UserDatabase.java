@@ -1,7 +1,11 @@
 package backend.entities;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import backend.entities.joins.UserDatabaseAccess;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -45,8 +49,8 @@ public class UserDatabase {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @ManyToMany(mappedBy = "accessibleDatabases")
-    private List<User> usersWithAccess = new ArrayList<>();
+    @OneToMany(mappedBy = "database", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserDatabaseAccess> userAccess = new HashSet<>();
 
     @Column(nullable = false)
     private String password;

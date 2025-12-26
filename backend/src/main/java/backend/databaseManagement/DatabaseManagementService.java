@@ -4,8 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import backend.agent.WebSocketHandler.OnlineUserTracker;
+import backend.databaseManagement.dto.CreateDatabaseDTO;
+import backend.databaseManagement.dto.CreateServerDTO;
+import backend.databaseManagement.dto.DatabaseUserDto;
+import backend.databaseManagement.dto.InitiateDatabaseDTO;
+import backend.databaseManagement.dto.SendDatabasesDTO;
 import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
@@ -15,9 +21,12 @@ import backend.databaseManagement.exception.DatabaseException.UnauthorizedAccess
 import backend.entities.Server;
 import backend.entities.User;
 import backend.entities.UserDatabase;
+import backend.entities.joins.UserDatabaseAccess;
+import backend.user.Role;
 import backend.user.UserRepository;
 import backend.user.exceptions.UserException.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import backend.config.ApplicationProperties;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +35,9 @@ public class DatabaseManagementService {
     private final UserRepository userRepository;
     private final ServerRepository serverRepository;
     private final OnlineUserTracker tracker;
+    private final ApplicationProperties applicationProperties;
 
-    public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId){
+    public CreateServerDTO createServer(CreateServerDTO createServerDTO, int ownerId) {
         if (createServerDTO == null)
             throw new MissingFieldException("DTO cannot be null");
 
@@ -96,7 +106,8 @@ public class DatabaseManagementService {
             dto.setServerId(server.getId());
         }
 
-        boolean exists = owner.getAccessibleDatabases().stream()
+        boolean exists = owner.getDatabaseAccess().stream()
+                .map(UserDatabaseAccess::getDatabase)
                 .anyMatch(db -> db.getServer().getId() == server.getId()
                         && db.getName().equals(dto.getDatabaseName()));
         if (exists) {
@@ -109,7 +120,13 @@ public class DatabaseManagementService {
         db.setOwner(owner);
         db.setDdl(dto.getDdl());
         db.setServer(server);
-        owner.getAccessibleDatabases().add(db);
+
+        UserDatabaseAccess ownerAccess = UserDatabaseAccess.builder()
+                .user(owner)
+                .database(db)
+                .role(Role.OWNER)
+                .build();
+        owner.getDatabaseAccess().add(ownerAccess);
 
         userDatabaseRepository.save(db);
         dto.setDatabaseId(db.getId());
@@ -118,7 +135,6 @@ public class DatabaseManagementService {
     }
 
     public InitiateDatabaseDTO initiateDatabase(int id) {
-
         if (id <= 0) {
             throw new DatabaseNotFoundException("Invalid database ID");
         }
@@ -128,25 +144,26 @@ public class DatabaseManagementService {
 
         InitiateDatabaseDTO dto = new InitiateDatabaseDTO();
         dto.setDatabaseName(database.getName());
-        dto.setPassword(database.getPassword());
         dto.setDdl(database.getDdl());
         dto.setContainerId(id);
-        dto.setWsUrl("ws://localhost:8080/agent-ws");
+        dto.setWsUrl(applicationProperties.getAgentUrl());
         dto.setContainerName("mysql" + id);
         return dto;
     }
 
     public SendDatabasesDTO getUserDatabases(int userId) {
         User usr = userRepository.findById(userId);
-        List<UserDatabase> dbs = usr.getAccessibleDatabases().stream().toList();
         SendDatabasesDTO ans = new SendDatabasesDTO();
-        for (UserDatabase db : dbs) {
+
+        for (UserDatabaseAccess access : usr.getDatabaseAccess()) {
+            UserDatabase db = access.getDatabase();
             Database temp = new Database();
             temp.setDatabaseId(db.getId());
             temp.setServerName(db.getServer().getName());
             temp.setDatabaseName(db.getName());
             temp.setDatabaseddl(db.getDdl());
             temp.setConnected(tracker.isOnline(Integer.toString(db.getId())));
+            temp.setRole(access.getRole().toString());
             ans.getDatabases().add(temp);
         }
         return ans;
@@ -165,6 +182,121 @@ public class DatabaseManagementService {
         }
 
         return ans;
+    }
+
+    public boolean checkDatabasePassword(int databaseId, String password) {
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+
+        return database.getPassword().equals(password);
+    }
+
+    public void deleteDatabase(int userId, int databaseId) {
+        User user = userRepository.findById(userId);
+        if (user == null)
+            throw new UserNotFoundException("User not found");
+
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+        User owner = database.getOwner();
+        if (owner.getId() != userId)
+            throw new UnauthorizedAccessException("Unauthorized Access");
+
+        userDatabaseRepository.delete(database);
+    }
+
+    public void addDatabaseToUser(int databaseId, int userId, int ownerId, String roleStr) {
+        if (databaseId <= 0 || userId <= 0 || ownerId <= 0)
+            throw new IllegalArgumentException("Invalid IDs");
+        if (userId == ownerId)
+            throw new IllegalArgumentException("Cannot add yourself to your own database");
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+        User owner = userRepository.findById(ownerId);
+        if (owner == null)
+            throw new UserNotFoundException("Owner not found");
+        if (owner.getId() != ownerId)
+            throw new UnauthorizedAccessException("Unauthorized Access");
+
+        User user = userRepository.findById(userId);
+        if (user == null)
+            throw new UserNotFoundException("User not found");
+        Role role = Role.valueOf(roleStr.toUpperCase());
+
+        UserDatabaseAccess access = UserDatabaseAccess.builder()
+                .user(user)
+                .database(database)
+                .role(role)
+                .build();
+        user.getDatabaseAccess().add(access);
+        userRepository.save(user);
+    }
+
+    public void removeDatabaseFromUser(int databaseId, int userId, int ownerId) {
+        userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+        User owner = userRepository.findById(ownerId);
+        if (owner == null)
+            throw new UserNotFoundException("Owner not found");
+        if (owner.getId() != ownerId)
+            throw new UnauthorizedAccessException("Unauthorized Access");
+        User user = userRepository.findById(userId);
+        if (user == null)
+            throw new UserNotFoundException("User not found");
+        user.getDatabaseAccess().removeIf(access -> access.getDatabase().getId() == databaseId);
+        userRepository.save(user);
+    }
+
+    public List<DatabaseUserDto> getDatabaseUsers(int databaseId, int ownerId) {
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+
+        // Verify the requesting user has access to this database
+        User owner = userRepository.findById(ownerId);
+        if (owner == null)
+            throw new UserNotFoundException("User not found");
+
+        boolean hasAccess = owner.getDatabaseAccess().stream()
+                .anyMatch(access -> access.getDatabase().getId() == databaseId);
+
+        if (!hasAccess)
+            throw new UnauthorizedAccessException("Unauthorized Access");
+
+        return database.getUserAccess().stream()
+                .map(DatabaseUserDto::new)
+                .toList();
+    }
+
+    public void updateUserRole(int databaseId, int userId, int ownerId, String roleStr) {
+        UserDatabase database = userDatabaseRepository.findById(databaseId)
+                .orElseThrow(() -> new DatabaseNotFoundException("Database not found"));
+
+        // Verify the requesting user is the owner
+        User owner = userRepository.findById(ownerId);
+        if (owner == null)
+            throw new UserNotFoundException("Owner not found");
+        if (database.getOwner().getId() != ownerId)
+            throw new UnauthorizedAccessException("Only the owner can change roles");
+
+        User user = userRepository.findById(userId);
+        if (user == null)
+            throw new UserNotFoundException("User not found");
+
+        // Cannot change the owner's role
+        if (userId == database.getOwner().getId()) {
+            throw new IllegalArgumentException("Cannot change the owner's role");
+        }
+
+        Role newRole = Role.valueOf(roleStr.toUpperCase());
+
+        // Find and update the user's access
+        UserDatabaseAccess access = user.getDatabaseAccess().stream()
+                .filter(a -> a.getDatabase().getId() == databaseId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("User does not have access to this database"));
+
+        access.setRole(newRole);
+        userRepository.save(user);
     }
 
 }

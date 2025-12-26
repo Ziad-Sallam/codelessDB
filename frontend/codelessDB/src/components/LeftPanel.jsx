@@ -25,13 +25,14 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 		<Drawer
 			variant="permanent"
 			sx={{
-				width: 240,
+				width: 280,
 				[`& .MuiDrawer-paper`]: {
-					width: 250,
+					width: 280,
 					boxSizing: "border-box",
 					p: 2,
-					bgcolor: "background.dark",
+					background:  (theme) => theme.palette.background.gradient,
 					color: "white",
+					boxShadow: "0 5px 22px rgba(0,0,0,0.2)", // simple shadow
 				},
 			}}
 		>
@@ -47,18 +48,6 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 			<Divider sx={{ borderColor: "rgba(255,255,255,0.08)", my: 1 }} />
 
 			<List>
-				{/* <ListItemButton
-					selected={leftNav === "recents"}
-					onClick={() => navigate('/recents')}
-					sx={{ borderRadius: 1 }}
-				>
-					<ListItemIcon sx={{ color: "white" }}>
-						<AccessTimeIcon />
-					</ListItemIcon>
-
-					<ListItemText primary="Recents" />
-				</ListItemButton>
-				 */}
 
 				<ListItemButton
 					selected={leftNav === "all"}
@@ -94,7 +83,7 @@ export default function LeftPanel({ leftNav, setLeftNav }) {
 				</ListItemButton>
 
 				<ListItemButton
-					selected={leftNav === "cannedQueries"}
+					selected={leftNav === "all"}
 					onClick={() => navigate('/canned-queries')}
 					sx={{ borderRadius: 1, mb: 1 }}
 				>

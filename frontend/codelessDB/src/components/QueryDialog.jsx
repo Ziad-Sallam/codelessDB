@@ -57,6 +57,22 @@ const sqlLinter = linter((view) => {
   return diagnostics;
 });
 
+// Simple SQL formatter for DDL
+const formatDDL = (sqlString) => {
+  if (!sqlString) return "";
+
+  // Basic formatting: newlines after semicolons and before CREATE statements
+  return sqlString
+    .replace(/;/g, ";\n\n") // Add double newline after semicolons
+    .replace(/CREATE TABLE/gi, "CREATE TABLE")
+    .replace(/CREATE DATABASE/gi, "CREATE DATABASE")
+    .replace(/\(/g, " (\n  ") // Simple indentation for parenthesis
+    .replace(/\),/g, "\n),\n")
+    .replace(/\);/g, "\n);")
+    .replace(/,\s*/g, ",\n  ") // Newline for comma separated lists
+    .replace(/\n\s*\n/g, "\n\n"); // Remove extra newlines
+};
+
 export default function QueryDialog({ open, onClose, query, onSave, onSaveError, databaseId }) {
   const [formData, setFormData] = useState({
     title: "",
@@ -294,9 +310,21 @@ export default function QueryDialog({ open, onClose, query, onSave, onSaveError,
                       <CircularProgress size={24} />
                     </Box>
                   ) : (
-                    <pre className="ddl-content">
-                      <code>{ddlContent}</code>
-                    </pre>
+                    <Box className="codemirror-container" sx={{ border: '1px solid #d0d0d0', borderRadius: 1, overflow: 'hidden' }}>
+                      <CodeMirror
+                        value={formatDDL(ddlContent)}
+                        height="300px"
+                        extensions={[sql()]}
+                        editable={false}
+                        theme="light"
+                        basicSetup={{
+                          lineNumbers: true,
+                          highlightActiveLineGutter: false,
+                          foldGutter: true,
+                          highlightActiveLine: false,
+                        }}
+                      />
+                    </Box>
                   )}
                 </Box>
               </Collapse>

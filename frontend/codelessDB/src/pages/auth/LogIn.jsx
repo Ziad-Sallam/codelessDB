@@ -1,19 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./LogIn.css";
 
-import { FaUser } from "react-icons/fa";
-import { TbLockPassword } from "react-icons/tb";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { TbLockPassword } from "react-icons/tb";
 
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { login, redirectToGoogleAuth, parseApiError, validateToken } from "./fetch.js";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../components/AuthProvider.jsx";
+import { login, parseApiError, redirectToGoogleAuth, validateToken } from "./fetch.js";
+import Snowfall from 'react-snowfall';
 
 const LogIn = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const location = useLocation();
+  const [email, setEmail] = useState(location.state?.email || "");
+  const [password, setPassword] = useState(location.state?.password || "");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
@@ -21,18 +22,16 @@ const LogIn = () => {
   const { user, setUser } = useAuth();
 
   useEffect(() => {
-    document.title = "Log in | CodeLess";
-  }, []);
-
-  useEffect(() => {
     const handleOAuthCallback = async () => {
       const token = searchParams.get("token");
+
       const oauthError = searchParams.get("error");
 
       if (token) {
         try {
           // Save token
           localStorage.setItem("authToken", token);
+          
 
           // Validate token and update auth context
           const userData = await validateToken();
@@ -49,7 +48,6 @@ const LogIn = () => {
 
       if (oauthError) {
         setError("Google login failed. Please try again.");
-        window.history.replaceState({}, document.title, "/login");
       }
     };
 
@@ -73,6 +71,7 @@ const LogIn = () => {
     try {
       const data = await login(email, password);
       const token = data?.token ?? data;
+      
       console.log(data);
 
       if (!token) {
@@ -83,8 +82,15 @@ const LogIn = () => {
       const userData = await validateToken();
       setUser(userData);
       navigate("/diagrams", { replace: true });
+
     } catch (err) {
-      setError(parseApiError(err));
+      if (err.response?.status === 401) {
+        setError("Oops! That login didn’t work.\nCheck your password and try again.");
+      } else if (err.response?.status === 404) {
+        setError("Oops! Email not found.\nPlease check the email or sign up.");
+      } else {
+        setError(parseApiError(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -92,11 +98,14 @@ const LogIn = () => {
 
   const handleForgotPassword = () => {
     // Navigate to register page with forgot password flow
-    navigate("/register?flow=forgot");
+    navigate(`/register?flow=forgot&email=${encodeURIComponent(email)}`, {
+      state: { email, password }
+    });
   };
 
   return (
     <div className="login">
+      
       <div className="bg">
         <div className="title-section">
           <h1 className="Title">CodeLess</h1>
@@ -152,7 +161,7 @@ const LogIn = () => {
                 {loading ? "Please wait..." : "Log In"}
               </button>
 
-              {error && <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>{error}</p>}
+              {error && <p style={{ color: "red", textAlign: "center", marginTop: "10px", whiteSpace: "pre-line" }}>{error}</p>}
 
               <div className="divider">
                 <span>OR</span>
@@ -177,6 +186,7 @@ const LogIn = () => {
           </div>
         </div>
       </div>
+      <Snowfall color={"#82c3d9"}/>
     </div>
   );
 };

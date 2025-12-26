@@ -19,8 +19,8 @@ async function handleResponse(response) {
   return data;
 }
 
-export async function fetchDiagram(diagramId) {
-  const response = await fetch(`${API_URL}/diagrams/search/${diagramId}`, {
+export async function fetchDiagramMetadata(diagramId) {
+  const response = await fetch(`${API_URL}/snapshot/${diagramId}/meta`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -29,6 +29,22 @@ export async function fetchDiagram(diagramId) {
   });
 
   return handleResponse(response);
+}
+
+export async function fetchDiagramSnapshot(diagramId) {
+  const response = await fetch(`${API_URL}/snapshot/${diagramId}/binary`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/octet-stream",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch snapshot binary");
+  }
+
+  return response.arrayBuffer();
 }
 
 export async function generateSQLFromBackend(finalJson) {
@@ -45,6 +61,19 @@ export async function generateSQLFromBackend(finalJson) {
 }
 
 export async function updateDiagram(id, payload) {
+  const response = await fetch(`${API_URL}/snapshot/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+}
+
+export async function updateDiagramMetadata(id, payload) {
   const response = await fetch(`${API_URL}/diagrams/update/${id}`, {
     method: "PUT",
     headers: {
@@ -56,3 +85,4 @@ export async function updateDiagram(id, payload) {
 
   return handleResponse(response);
 }
+

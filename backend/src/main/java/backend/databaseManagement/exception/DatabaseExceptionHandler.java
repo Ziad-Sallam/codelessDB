@@ -1,18 +1,18 @@
 package backend.databaseManagement.exception;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import backend.config.ErrorResponse;
+import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotConnectedException;
 import backend.databaseManagement.exception.DatabaseException.DatabaseNotFoundException;
-import backend.databaseManagement.exception.DatabaseException.DatabaseAlreadyExistsException;
 import backend.databaseManagement.exception.DatabaseException.MissingFieldException;
 import backend.databaseManagement.exception.DatabaseException.ServerAlreadyExistsException;
 import backend.databaseManagement.exception.DatabaseException.ServerNotFoundException;
 import backend.databaseManagement.exception.DatabaseException.UnauthorizedAccessException;
-import backend.config.ErrorResponse;
 
 @ControllerAdvice
 public class DatabaseExceptionHandler {
@@ -54,12 +54,6 @@ public class DatabaseExceptionHandler {
     @ExceptionHandler(UnauthorizedAccessException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedAccess(UnauthorizedAccessException ex) {
         return build(HttpStatus.FORBIDDEN, ex.getMessage());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred");
     }
 
 }

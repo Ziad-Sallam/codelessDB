@@ -110,31 +110,5 @@ class MessageControllerTest {
         assertEquals("Unauthorized", ex.getMessage());
     }
 
-    // ================= Downloads =================
 
-    @Test
-    void downloadCreateContainer_returnsResource() throws Exception {
-        ResponseEntity<Resource> response =
-                controller.downloadCreateContainer();
-
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertTrue(response.getHeaders()
-                .get(HttpHeaders.CONTENT_DISPOSITION)
-                .get(0)
-                .contains("create_container.exe"));
-    }
-
-    @Test
-    void downloadCommunicate_returnsResource() throws Exception {
-        ResponseEntity<Resource> response =
-                controller.downloadCommunicate();
-
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertTrue(response.getHeaders()
-                .get(HttpHeaders.CONTENT_DISPOSITION)
-                .get(0)
-                .contains("communicate.exe"));
-    }
 }

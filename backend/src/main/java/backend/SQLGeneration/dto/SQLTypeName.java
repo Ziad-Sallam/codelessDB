@@ -1,5 +1,8 @@
 package backend.SQLGeneration.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Supported SQL data types for generation")
 public enum SQLTypeName {
 
     // --- Integer Types ---

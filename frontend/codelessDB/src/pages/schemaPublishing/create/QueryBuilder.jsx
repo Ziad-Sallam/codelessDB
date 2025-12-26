@@ -22,7 +22,7 @@ export const QueryBuilder = ({ queries, onChange }) => {
 
   const addQuery = () => {
     const newQuery = {
-      id: Date.now().toString(),
+      id: Math.floor(Math.random() * 1000000),
       name: "",
       description: "",
       query: "",

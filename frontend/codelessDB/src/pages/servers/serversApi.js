@@ -7,7 +7,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization' : `Bearer ${localStorage.getItem('authToken')}`
+    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
   },
 });
 
@@ -32,6 +32,25 @@ export const serversApi = {
 
   getUserDatabases: async () => {
     const { data } = await api.get('/database/get-user-databases');
+    return data;
+  },
+
+  searchUsers: async (query, page = 0, size = 10) => {
+    const { data } = await api.get('/user/search', {
+      params: { query, page, size }
+    });
+    return data;
+  },
+
+  addUserToDatabase: async (databaseId, userId, role) => {
+    await api.post('/database/add-database-to-user', {
+      databaseId,
+      userId,
+      role
+    });
+  },
+  createServer: async (serverName) => {
+    const { data } = await api.post('/database/create-server', { serverName });
     return data;
   },
 };

@@ -1,24 +1,23 @@
 import {
+  CallSplit as ForkIcon,
+  InsertPhoto as InsertPhotoIcon,
+  Star as StarIcon,
+  Visibility as ViewIcon,
+} from "@mui/icons-material";
+import {
+  Avatar,
+  Box,
   Card,
   CardContent,
   CardMedia,
-  Typography,
-  Box,
   Chip,
-  Avatar,
   Stack,
-  Tooltip
+  Tooltip,
+  Typography
 } from "@mui/material";
-import {
-  Star as StarIcon,
-  CallSplit as ForkIcon,
-  Visibility as ViewIcon,
-  InsertPhoto as InsertPhotoIcon
-} from "@mui/icons-material";
 
 import { useNavigate } from "react-router-dom";
 
-// Helper function to get initials (copied from DiagramCard to ensure consistency)
 function getInitials(name) {
   if (!name) return "";
   const parts = name.trim().split(/\s+/);
@@ -27,7 +26,6 @@ function getInitials(name) {
 }
 
 export default function DiscoverDiagramCard({ d, onClick }) {
-  // Mock stats if not present in data
   const stars = d.stars || 0;
   const forks = d.forks || 0;
   const views = d.views || 0;
@@ -35,186 +33,243 @@ export default function DiscoverDiagramCard({ d, onClick }) {
 
   const navigate = useNavigate();
 
-  // Use contributors list if available, otherwise just show owner
   const contributors = d.contributors || (d.owner ? [d.owner] : []);
 
   const handleContributorClick = (e, user) => {
     e.stopPropagation();
-    if (user?.username) {
-      navigate(`/designer/${user.username.replace("@", "").replace("%20", "")}`);
+    if (user?.name) {
+      navigate(`/designer/${user.name.replace("@", "").replace("%20", "")}`);
     }
   };
 
   return (
     <Card
-      className="diagram-card" // Use same class for potential global CSS sharing
+      className="diagram-card"
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        cursor: 'pointer',
-        position: 'relative',
-        transition: "all 0.2s ease-in-out",
+        display: "flex",
+        flexDirection: "column",
+        cursor: "pointer",
+        position: "relative",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        height: "100%",
+        borderRadius: 3,
+        overflow: "hidden",
+        border: "1px solid",
+        borderColor: "divider",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: 6
+          boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
+          borderColor: "primary.main",
+          "& .thumbnail": {
+            transform: "scale(1.05)",
+          }
         },
-        height: "100%"
       }}
       onClick={() => onClick(d)}
     >
-      {/* Thumbnail Section */}
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: "relative", overflow: "hidden" }}>
         {d.thumbnail ? (
           <CardMedia
             component="img"
-            height="210" // Matched DiagramCard height
+            height="180"
             image={d.thumbnail}
             alt={d.name}
             className="thumbnail"
-            sx={{ objectFit: 'cover' }}
+            sx={{ 
+              objectFit: "cover",
+              transition: "transform 0.3s ease" 
+            }}
           />
         ) : (
           <Box
+            className="thumbnail"
             sx={{
-              height: 210,
-              bgcolor: 'grey.200',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              height: 180,
+              bgcolor: "grey.100",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "transform 0.3s ease" 
             }}
           >
-            <InsertPhotoIcon sx={{ fontSize: 56, color: "#9aa4b2", opacity: 0.5 }} />
+            <InsertPhotoIcon
+              sx={{ fontSize: 48, color: "text.disabled", opacity: 0.5 }}
+            />
           </Box>
         )}
 
-        {/* Star Badge Overlay */}
-        <Box
+        {/* Floating Stats Badge */}
+        <Stack
+          direction="row"
+          spacing={1}
           sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            bgcolor: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(4px)',
-            borderRadius: 12,
-            px: 1,
-            py: 0.5,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            boxShadow: 1
+            position: "absolute",
+            top: 12,
+            right: 12,
+            zIndex: 1,
           }}
         >
-          <StarIcon sx={{ fontSize: 14, color: '#ffb400' }} />
-          <Typography variant="caption" fontWeight="bold">
-            {stars}
-          </Typography>
-        </Box>
+          <Box
+            sx={{
+              bgcolor: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(8px)",
+              borderRadius: 20,
+              px: 1,
+              py: 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            <StarIcon sx={{ fontSize: 14, color: "#ffb400" }} />
+            <Typography variant="caption" fontWeight={700} sx={{ lineHeight: 1 }}>
+              {stars}
+            </Typography>
+          </Box>
+        </Stack>
       </Box>
 
-      <CardContent className="card-content" sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ mb: 1 }}>
-          <Typography variant="h6" noWrap sx={{ fontWeight: 600, fontSize: '1rem' }}>
+      <CardContent
+        sx={{ 
+          flexGrow: 1, 
+          p: 2.5, 
+          display: "flex", 
+          flexDirection: "column",
+          gap: 1.5
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{ 
+              fontWeight: 700, 
+              fontSize: "1.1rem",
+              lineHeight: 1.3,
+              mb: 0.5,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap"
+            }}
+          >
             {d.name}
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block">
-            Updated: {d.lastModified || "Recently"}
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+            Updated {d.lastModified || "recently"}
           </Typography>
         </Box>
 
-        <Typography variant="body2" color="text.secondary" sx={{
-          mb: 2,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          height: 40, // Fixed height for 2 lines
-          lineHeight: 1.43
-        }}>
-          {d.shortDescription || "No description available."}
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            minHeight: "2.5em", // Reserve space for 2 lines approximately
+            lineHeight: 1.5,
+          }}
+        >
+          {d.shortDescription || "No description provided."}
         </Typography>
 
-        {/* Hashtags */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2, height: 24, overflow: 'hidden' }}>
+        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", minHeight: 24 }}>
           {hashtags.slice(0, 3).map((tag) => (
             <Chip
               key={tag}
               label={`#${tag}`}
               size="small"
               sx={{
-                height: 20,
-                fontSize: '0.65rem',
-                bgcolor: 'primary.50',
-                color: 'primary.main'
+                height: 22,
+                fontSize: "0.7rem",
+                bgcolor: "primary.50",
+                color: "primary.main",
+                fontWeight: 500,
+                border: "1px solid",
+                borderColor: "primary.100"
               }}
             />
           ))}
         </Box>
 
-        {/* Footer: Contributors and Stats */}
-        <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ borderTop: '1px solid', borderColor: 'divider', my: 1 }} />
 
-          {/* Contributors Stack */}
+        <Box
+          sx={{
+            mt: "auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Box
-            className="avatar-stack"
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1
+              pl: 0.5 // Offset for overlapping avatars
             }}
           >
-            {contributors.slice(0, 6).map((c, i) => (
-              <Box key={i} sx={{ zIndex: contributors.length - i }}>
-                <Tooltip title={c.name}>
-                  <Avatar
-                    src={c.picture}
-                    alt={c.name}
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      fontSize: 12,
-                      border: "2px solid white",
-                      boxShadow: 1,
-                      ml: i === 0 ? 0 : -1.2,
-                      bgcolor: (c.picture) ? undefined : "primary.main",
-                      color: (c.picture) ? undefined : "white",
-                      cursor: 'pointer'
-                    }}
-                    onClick={(e) => handleContributorClick(e, c)}
-                  >
-                    {!(c.picture) && getInitials(c.name)}
-                  </Avatar>
-                </Tooltip>
-              </Box>
+            {contributors.slice(0, 4).map((c, i) => (
+              <Tooltip key={i} title={c.name}>
+                <Avatar
+                  src={c.picture}
+                  alt={c.name}
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    fontSize: 12,
+                    border: "2px solid white",
+                    ml: -1,
+                    bgcolor: !c.picture ? `hsl(${(c.name?.charCodeAt(0) || 0) * 10}, 70%, 50%)` : undefined,
+                    cursor: "pointer",
+                    transition: "transform 0.1s",
+                    "&:hover": { transform: "scale(1.1) translateY(-2px)", zIndex: 10 }
+                  }}
+                  onClick={(e) => handleContributorClick(e, c)}
+                >
+                  {!c.picture && getInitials(c.name)}
+                </Avatar>
+              </Tooltip>
             ))}
-
-            {contributors.length > 6 && (
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  fontSize: 12,
-                  ml: -1.2,
-                  border: "2px solid white",
-                  bgcolor: "grey.400"
-                }}
+            {contributors.length > 4 && (
+              <Box
+                 sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    bgcolor: "grey.100",
+                    color: "text.secondary",
+                    fontSize: "0.7rem",
+                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid white",
+                    ml: -1,
+                    zIndex: 0
+                  }}
               >
-                +{contributors.length - 6}
-              </Avatar>
+                +{contributors.length - 4}
+              </Box>
             )}
           </Box>
 
-          {/* Stats */}
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={2} alignItems="center">
             <Tooltip title="Forks">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <ForkIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                <Typography variant="caption" color="text.secondary">{forks}</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <ForkIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                  {forks}
+                </Typography>
               </Box>
             </Tooltip>
             <Tooltip title="Views">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <ViewIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                <Typography variant="caption" color="text.secondary">{views}</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <ViewIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                  {views}
+                </Typography>
               </Box>
             </Tooltip>
           </Stack>

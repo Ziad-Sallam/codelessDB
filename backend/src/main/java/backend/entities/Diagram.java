@@ -42,12 +42,13 @@ public class Diagram {
     @Column(nullable = false, length = 200)
     private String name = "Untitled Diagram";
 
-    @Column(columnDefinition = "JSON")
-    private String content;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] content;
 
     @Builder.Default
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String ddl = "";
 
     private String thumbnail;
