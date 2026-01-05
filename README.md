@@ -26,7 +26,7 @@ CodelessDB targets software engineers, database designers, administrators, and n
 
 Database development traditionally relies on hand-written SQL scripts, manual schema synchronization, and complex deployment workflows. These practices are time-consuming, error-prone, and difficult to coordinate across distributed teams.
 
-**codelessDB** introduces a schema-first approach where the visual database diagram becomes the single source of truth. From this diagram, the system derives SQL generation, optimization, collaboration, and deployment workflows in a consistent and automated manner.
+**CodelessDB** introduces a schema-first approach where the visual database diagram becomes the single source of truth. From this diagram, the system derives SQL generation, optimization, collaboration, and deployment workflows in a consistent and automated manner.
 
 ---
 
@@ -69,7 +69,8 @@ The primary objectives of codelessDB are:
 ### 4.2 Real-Time Collaboration
 - Concurrent multi-user schema editing  
 - WebSocket-based synchronization  
-- CRDT-based conflict resolution  
+- CRDT-based conflict resolution
+- Node.js snapshot microservice
 - Live user presence, cursors, and role-based permissions  
 
 ### 4.3 AI-Assisted SQL Optimization
@@ -130,9 +131,9 @@ The system consists of the following logical layers:
 | Layer | Technologies |
 |------|--------------|
 | Frontend | React, TypeScript, TailwindCSS |
-| Backend | Spring Boot, Java |
+| Backend | Spring Boot, Java, Node.js snapshot microservice |
 | Real-Time | WebSockets, CRDT (Yjs) |
-| Database | MySQL |
+| Database | MySQL, Redis |
 | AI | Google Gemini API |
 | Authentication | JWT, OAuth 2.0 |
 | DevOps | Docker, GitHub Actions |
@@ -143,7 +144,10 @@ The system consists of the following logical layers:
 ## 7. Installation & Setup
 
 ### 7.1 Prerequisites
-- Node.js (>= 16)
 - Java JDK (>= 11)
-- Docker & Docker Compose
+- React & React Flow
+- Y.js CRDT
+- Node.js (>= 16)
+- Docker
 - MySQL
+- Redis
