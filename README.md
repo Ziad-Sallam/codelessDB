@@ -1,14 +1,14 @@
-# codelessDB
+# CodelessDB
 **Collaborative Database Schema Design, Generation, and Deployment Platform**
 
 ---
 
 ## Abstract
 
-**codelessDB** is a full-stack, web-based platform that enables users to visually design relational database schemas, collaborate on them in real time, automatically generate and optimize SQL code, and deploy databases directly to connected servers.  
+**CodelessDB** is a full-stack, web-based platform that enables users to visually design relational database schemas, collaborate on them in real time, automatically generate and optimize SQL code, and deploy databases directly to connected servers.  
 The platform eliminates the need for manual SQL scripting during early design and deployment phases while preserving flexibility, scalability, and control for advanced users.
 
-codelessDB targets software engineers, database designers, administrators, and non-technical stakeholders who require a unified, reliable, and collaborative database design workflow.
+CodelessDB targets software engineers, database designers, administrators, and non-technical stakeholders who require a unified, reliable, and collaborative database design workflow.
 
 ---
 
@@ -20,14 +20,6 @@ codelessDB targets software engineers, database designers, administrators, and n
 4. Core Features  
 5. System Architecture  
 6. Technology Stack  
-7. Installation & Setup  
-8. API Overview  
-9. Quality Assurance  
-10. Security Considerations  
-11. Project Team  
-12. Future Work  
-13. License  
-
 ---
 
 ## 1. Overview
@@ -140,7 +132,7 @@ The system consists of the following logical layers:
 | Frontend | React, TypeScript, TailwindCSS |
 | Backend | Spring Boot, Java |
 | Real-Time | WebSockets, CRDT (Yjs) |
-| Database | PostgreSQL |
+| Database | MySQL |
 | AI | Google Gemini API |
 | Authentication | JWT, OAuth 2.0 |
 | DevOps | Docker, GitHub Actions |
@@ -154,4 +146,4 @@ The system consists of the following logical layers:
 - Node.js (>= 16)
 - Java JDK (>= 11)
 - Docker & Docker Compose
-- PostgreSQL
+- MySQL
