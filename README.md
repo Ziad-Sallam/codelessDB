@@ -10,6 +10,9 @@ The platform eliminates the need for manual SQL scripting during early design an
 
 CodelessDB targets software engineers, database designers, administrators, and non-technical stakeholders who require a unified, reliable, and collaborative database design workflow.
 
+<img width="1917" height="878" alt="Screenshot 2025-12-30 025616" src="https://github.com/user-attachments/assets/6dea2b9b-fa75-439c-86bc-be177829d827" />
+
+
 ---
 
 ## Table of Contents
@@ -64,14 +67,22 @@ The primary objectives of codelessDB are:
 - Entity–Relationship (ER) diagram-based modeling  
 - Definition of tables, columns, constraints, and relationships  
 - Drag-and-drop canvas with real-time validation  
-- Automatic SQL DDL generation  
+- Automatic SQL DDL generation
+  
+<img width="1920" height="877" alt="Screenshot 2025-12-30 031645" src="https://github.com/user-attachments/assets/d59269c8-229f-4d6b-9bcb-7873f1e83f6c" />
+
+  <img width="1916" height="881" alt="Screenshot 2025-12-30 031620" src="https://github.com/user-attachments/assets/33de4280-189c-48c4-8726-100a57ada431" />
+
 
 ### 4.2 Real-Time Collaboration
 - Concurrent multi-user schema editing  
 - WebSocket-based synchronization  
 - CRDT-based conflict resolution
 - Node.js snapshot microservice
-- Live user presence, cursors, and role-based permissions  
+- Live user presence, cursors, and role-based permissions
+
+  <img width="1942" height="880" alt="Screenshot 2025-12-30 032121" src="https://github.com/user-attachments/assets/b6f9d228-4db2-4d46-b337-d6368ea69388" />
+
 
 ### 4.3 AI-Assisted SQL Optimization
 - SQL generation directly from schema diagrams  
@@ -83,7 +94,10 @@ The primary objectives of codelessDB are:
 - Private schema storage per user  
 - Public schema publishing with metadata and hashtags  
 - Searchable public schema library  
-- Ownership-based permission enforcement  
+- Ownership-based permission enforcement
+
+  <img width="1916" height="877" alt="Screenshot 2025-12-30 032636" src="https://github.com/user-attachments/assets/e93a32d0-a67f-495f-9d2e-b1535c182779" />
+
 
 ### 4.5 Database Deployment & Server Management
 - Secure registration of user-owned servers  
@@ -94,18 +108,29 @@ The primary objectives of codelessDB are:
 ### 4.6 Database Interaction & API Access
 - Web-based SQL query editor with syntax highlighting  
 - Secure REST API endpoints per deployed database  
-- Authentication, authorization, rate limiting, and audit logging  
+- Authentication, authorization, rate limiting, and audit logging
+
+  
 
 ### 4.7 Social & Collaboration Features
 - User follow and unfollow functionality  
 - Public schema comments and replies  
-- Real-time UI synchronization  
+- Real-time UI synchronization
+
+  <img width="1900" height="871" alt="Screenshot 2025-12-30 032429" src="https://github.com/user-attachments/assets/122e5e46-932d-4358-99c8-698c8d918a7c" />
+
+  <img width="1897" height="881" alt="Screenshot 2025-12-30 032322" src="https://github.com/user-attachments/assets/4b12e0df-f27d-4bdf-b751-231643e9c890" />
+
+
 
 ---
 
 ## 5. System Architecture
 
 ### High-Level Architecture
+
+<img width="4242" height="2558" alt="1" src="https://github.com/user-attachments/assets/66319e2d-0c5a-4a45-9b56-c3dca01f73c5" />
+
 
 The system consists of the following logical layers:
 
@@ -116,13 +141,18 @@ The system consists of the following logical layers:
   Spring Boot REST API responsible for business logic, authentication, authorization, and WebSocket communication.
 
 - **Database Layer**  
-  PostgreSQL used for persistent storage of schemas, metadata, and application data.
+  MySQL used for persistent storage of schemas, metadata, and application data.
 
 - **Agent Layer**  
   Lightweight agent running on user servers responsible for database creation, deployment, and management.
 
 - **AI Integration Layer**  
   Google Gemini API used for SQL optimization and enhancement.
+
+  <img width="7092" height="2734" alt="2" src="https://github.com/user-attachments/assets/2a3ce8ce-5d18-4d0a-b9fa-99284d1a904f" />
+<img width="2852" height="2182" alt="3" src="https://github.com/user-attachments/assets/3752dff3-b0cd-4b7f-aac0-e8e56384fecc" />
+<img width="5704" height="3812" alt="4" src="https://github.com/user-attachments/assets/45a4f246-ffd3-4aa0-9d01-fb57303a614c" />
+
 
 ---
 
